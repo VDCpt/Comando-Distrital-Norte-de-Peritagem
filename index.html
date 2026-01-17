@@ -19,7 +19,7 @@
             <p><strong>REESTRUTURAÇÃO DE AUDITORIA - VALIDAÇÃO HIERÁRQUICA</strong></p>
             <p>Este sistema opera com prioridade de ingestão: primeiro carregue o ficheiro de controlo de autenticidade (.csv), depois os documentos fiscais.</p>
             <p style="color: #93c5fd; font-size: 1rem; margin-top: 25px; padding: 15px; background: rgba(30, 64, 175, 0.1); border-radius: 10px;">
-                <i class="fas fa-info-circle"></i> <strong>FORMATO CSV:</strong> "Algorithm","Hash","Path" | Mapeamento por palavra-chave no Path
+                <i class="fas fa-info-circle"></i> Cada documento será validado contra hashes pré-registadas no ficheiro de controlo.
             </p>
             <button class="modal-btn" id="closeModalBtn">
                 <i class="fas fa-check-circle"></i> INICIAR SISTEMA DE PERITAGEM
@@ -101,10 +101,10 @@
                         <div class="file-input-container">
                             <input type="file" id="controlFile" accept=".csv" class="file-input">
                             <label for="controlFile" class="file-label" style="background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);">
-                                <i class="fas fa-cloud-upload-alt"></i> CARREGAR CONTROLO_AUTENTICIDADE.CSV
+                                <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV)
                             </label>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #94a3b8; text-align: center;">
-                                <i class="fas fa-info-circle"></i> Formato: "Algorithm","Hash","Path" | Mapeamento por palavra-chave no Path
+                                <i class="fas fa-info-circle"></i> Este ficheiro contém as hashes de referência para validação dos documentos fiscais
                             </div>
                         </div>
                         <div id="controlStatus" class="status-message">
@@ -134,21 +134,11 @@
                                     <span id="hash-extrato-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
                                 </div>
                             </div>
-                            <div style="margin-top: 15px; padding: 10px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; border-left: 3px solid #f59e0b;">
-                                <p style="color: #cbd5e1; font-size: 0.75rem; margin: 0;">
-                                    <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
-                                    <strong>Lógica de Mapeamento:</strong> 
-                                    <span style="color: #93c5fd;">.csv/131509 → SAF-T</span> | 
-                                    <span style="color: #93c5fd;">Fatura/PT1126 → Fatura</span> | 
-                                    <span style="color: #93c5fd;">Ganhos/Extrato → Extrato</span>
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- [O RESTO DO HTML PERMANECE IGUAL...] -->
             <!-- Painel de Uploads de Documentos -->
             <div class="upload-section" id="documentUploadSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s ease;">
                 <!-- 2. SAF-T -->
@@ -266,7 +256,6 @@
                 </div>
             </div>
 
-            <!-- [O RESTO DO HTML PERMANECE EXATAMENTE IGUAL...] -->
             <!-- Botão de Análise -->
             <div class="analyze-section">
                 <button id="analyzeBtn" class="analyze-btn" disabled>
@@ -391,4 +380,120 @@
                         <div style="margin-bottom: 15px;">
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">IV. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO:</h6>
                             <ul style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; line-height: 1.5;">
-                                <li>IVA em falta (23%): <span id="parecerIVA" style="color: #f59e0b; font-weight: bold;">39
+                                <li>IVA em falta (23%): <span id="parecerIVA" style="color: #f59e0b; font-weight: bold;">39,19€</span> omitidos ao erário público.</li>
+                                <li><span id="parecerFiscal">Agravamento artificial do lucro tributável. Impacto estimado em IRC/Derrama (21%+1.5%) de 38,34€/mês. Projeção anual de 460,04€.</span></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h6 style="color: #93c5fd; margin-bottom: 8px;">V. AUTENTICIDADE E VALIDAÇÃO EXTERNA:</h6>
+                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
+                                <span id="parecerAutenticidade">As hashes dos ficheiros processados coincidem com os registos oficiais de controlo.</span>
+                            </p>
+                            <p style="color: #94a3b8; font-size: 0.8rem; font-family: 'Monaco', 'Courier New', monospace; margin-top: 5px; word-break: break-all;">
+                                <span id="parecerMasterHash">AGUARDANDO GERAÇÃO DE MASTER HASH...</span>
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h6 style="color: #93c5fd; margin-bottom: 8px;">VI. CONCLUSÃO:</h6>
+                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; font-weight: bold;">
+                                Indícios de infração ao Artigo 108.º do Código do IVA. Recomenda-se comunicação imediata à Autoridade Tributária.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalhes Técnicos -->
+                <div class="technical-details" style="margin-top: 30px; padding: 20px; background: rgba(15,23,42,0.8); border-radius: 10px;">
+                    <h4 style="color: #60a5fa; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-microscope"></i> DETALHES TÉCNICOS DA ANÁLISE
+                    </h4>
+                    <div class="data-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="data-item"><span>Ficheiro SAF-T:</span> <span id="detSaftFile">-</span></div>
+                        <div class="data-item"><span>Ficheiro Fatura:</span> <span id="detInvoiceFile">-</span></div>
+                        <div class="data-item"><span>Ficheiro Extrato:</span> <span id="detStatementFile">-</span></div>
+                        <div class="data-item"><span>Referência Fatura:</span> <span id="detInvoiceRef" style="color: #3b82f6;">-</span></div>
+                        <div class="data-item"><span>Regime Autoliquidação:</span> <span id="detAutoliquidação" style="color: #10b981;">-</span></div>
+                        <div class="data-item"><span>Timestamp Análise:</span> <span id="detTimestamp">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="action-buttons" id="actionButtons" style="display: none; margin: 40px 0; text-align: center; gap: 20px; justify-content: center;">
+                <button id="generateReportBtn" class="action-btn report-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    <i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF
+                </button>
+                <button id="saveReportBtn" class="action-btn save-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    <i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA
+                </button>
+            </div>
+
+            <!-- Metodologia e Fundamentos -->
+            <div class="methodology-section">
+                <div class="methodology-card">
+                    <h4><i class="fas fa-gavel"></i> ENQUADRAMENTO LEGAL</h4>
+                    <p><strong>Artigo 2.º, n.º 1, alínea i) do Código do IVA:</strong> Regime de autoliquidação aplicável a serviços prestados por sujeitos passivos não residentes em território português.</p>
+                    <ul>
+                        <li><strong>IVA Omitido:</strong> 23% sobre comissão real vs faturada</li>
+                        <li><strong>Base Tributável:</strong> Diferença detetada na matriz</li>
+                        <li><strong>Prazo Regularização:</strong> 30 dias após deteção</li>
+                        <li><strong>Sanções Aplicáveis:</strong> Artigo 108.º do CIVA</li>
+                    </ul>
+                </div>
+
+                <div class="methodology-card">
+                    <h4><i class="fas fa-balance-scale"></i> METODOLOGIA PERICIAL</h4>
+                    <p><strong>BTOR (Bank Transactions Over Reality):</strong> Análise comparativa entre movimentos bancários reais e documentação fiscal declarada.</p>
+                    <ul>
+                        <li>Mapeamento posicional de dados SAF-T</li>
+                        <li>Extração precisa de valores de extrato</li>
+                        <li>Cálculo de divergência automático</li>
+                        <li>Geração de prova técnica auditável</li>
+                    </ul>
+                </div>
+
+                <div class="methodology-card">
+                    <h4><i class="fas fa-shield-alt"></i> VALIDAÇÃO HIERÁRQUICA</h4>
+                    <p>Sistema de prioridade de ingestão: primeiro carregamento do registo de autenticidade (.csv), depois validação dos documentos fiscais contra hashes de referência.</p>
+                    <div class="data-grid" style="margin-top: 15px;">
+                        <div class="data-item"><span>Algoritmo Hash:</span> <span style="color: #10b981;">SHA-256</span></div>
+                        <div class="data-item"><span>Validação Externa:</span> <span style="color: #f59e0b;">Registo .csv</span></div>
+                        <div class="data-item"><span>Validade Prova:</span> <span style="color: #10b981;">Indeterminada</span></div>
+                        <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v4.3</span></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer CORRIGIDO - Estrutura de 4 linhas separadas com quebra de linha para Hash -->
+        <footer>
+            <div class="footer-content">
+                <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.3</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
+                <p class="timestamp"><i class="fas fa-database"></i> VALIDAÇÃO HIERÁRQUICA: PRIORIDADE DE INGESTÃO DO REGISTO DE AUTENTICIDADE</p>
+                <p class="timestamp"><i class="fas fa-clock"></i> TIMESTAMP: <span id="currentTimestamp">carregando...</span></p>
+                <p class="timestamp">
+                    <i class="fas fa-hashtag"></i> MASTER HASH: 
+                    <br>
+                    <span id="currentMasterHash" style="display: block; color: #93c5fd; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; word-break: break-all; margin-top: 3px; line-height: 1.2;">
+                        AGUARDANDO CONTROLO...
+                    </span>
+                </p>
+                <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">
+                    © 2024 VDC - VOZ DO CONDUTOR | PERITAGEM FISCAL REGISTADA | NIF: 999 999 999
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Script Local -->
+    <script src="script.js"></script>
+</body>
+</html>
