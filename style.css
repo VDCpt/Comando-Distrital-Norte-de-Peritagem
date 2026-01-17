@@ -1,6 +1,6 @@
 /* ============================================
-   VDC UNIDADE DE PERITAGEM - STYLESHEET v4.1
-   CONTROLO DE AUTENTICIDADE EXTERNO
+   VDC UNIDADE DE PERITAGEM - STYLESHEET v4.2
+   REESTRUTURAÇÃO DE AUDITORIA - PRIORIDADE DE INGESTÃO
    ============================================ */
 
 :root {
@@ -229,6 +229,29 @@ body {
     color: var(--secondary-green);
 }
 
+/* CONTROL SECTION - PRIORIDADE */
+.control-section {
+    margin: 30px 40px;
+    padding: 25px;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border-radius: 15px;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+}
+
+.control-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.control-card:hover {
+    border-color: var(--primary-blue);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+}
+
 /* UPLOAD SECTION */
 .upload-section {
     display: grid;
@@ -236,6 +259,7 @@ body {
     gap: 25px;
     padding: 40px;
     background: rgba(30, 41, 59, 0.6);
+    transition: var(--transition);
 }
 
 .upload-card {
@@ -251,6 +275,11 @@ body {
     transform: translateY(-8px);
     border-color: var(--primary-blue);
     box-shadow: 0 15px 35px rgba(59, 130, 246, 0.25);
+}
+
+.upload-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .upload-card::before {
@@ -276,6 +305,17 @@ body {
     align-items: center;
     gap: 15px;
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.validation-badge {
+    margin-left: auto;
+    display: none;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 .step-number {
@@ -335,11 +375,17 @@ body {
     font-size: 0.95rem;
 }
 
-.file-label:hover {
+.file-label:hover:not(.disabled) {
     background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
     transform: translateY(-2px);
     border-color: #93c5fd;
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.file-label.disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 /* STATUS MESSAGES */
