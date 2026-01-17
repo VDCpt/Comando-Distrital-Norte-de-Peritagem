@@ -1,6 +1,6 @@
 /* ============================================
-   VDC UNIDADE DE PERITAGEM - STYLESHEET v4.3
-   IMPLEMENTAÇÃO RIGOROSA - ORDEM TÉCNICA
+   VDC UNIDADE DE PERITAGEM - STYLESHEET v4.4
+   VERSÃO DEFINITIVA - APENAS AJUSTES PARA NOVAS FUNCIONALIDADES
    ============================================ */
 
 :root {
@@ -253,7 +253,7 @@ body {
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
 }
 
-/* UPLOAD SECTION */
+/* UPLOAD SECTION - ESTADO INICIAL DESATIVADO */
 .upload-section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -261,6 +261,11 @@ body {
     padding: 40px;
     background: rgba(30, 41, 59, 0.6);
     transition: var(--transition);
+}
+
+.upload-section.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .upload-card {
@@ -309,6 +314,7 @@ body {
     position: relative;
 }
 
+/* NOVO: Estilos para selos de validação */
 .validation-badge {
     margin-left: auto;
     display: none;
@@ -317,6 +323,21 @@ body {
     font-size: 0.9rem;
     padding: 5px 10px;
     border-radius: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.validation-badge.autentico {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.validation-badge.divergente {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .step-number {
@@ -389,7 +410,13 @@ body {
     opacity: 0.7;
 }
 
-/* STATUS MESSAGES */
+.file-label.disabled span {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-left: auto;
+}
+
+/* STATUS MESSAGES - NOVOS ESTILOS PARA HASHES */
 .status-message {
     padding: 15px;
     background: rgba(30, 41, 59, 0.8);
@@ -403,6 +430,16 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     transition: var(--transition);
+}
+
+.status-message.hash-calculada {
+    border-left-color: #93c5fd;
+    background: rgba(147, 197, 253, 0.1);
+}
+
+.status-message.hash-oficial {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
 }
 
 .status-success {
@@ -447,6 +484,24 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* NOVO: Estilos para display de hash */
+.hash-display {
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: #93c5fd;
+    word-break: break-all;
+    text-align: right;
+    line-height: 1.2;
+}
+
+.hash-display.oficial {
+    color: #f59e0b;
+}
+
+.hash-display.calculada {
+    color: #93c5fd;
 }
 
 /* DATA PREVIEW */
@@ -501,14 +556,6 @@ body {
     color: var(--secondary-green);
     font-weight: 600;
     font-size: 0.95rem;
-}
-
-.data-item span:last-child.hash-display {
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.7rem;
-    color: #93c5fd;
-    word-break: break-all;
-    text-align: right;
 }
 
 /* ANALYZE SECTION */
@@ -1043,52 +1090,6 @@ footer {
     background: rgba(239, 68, 68, 0.1);
 }
 
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-    .config-section,
-    .upload-section,
-    .tax-grid,
-    .methodology-section {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .config-section,
-    .upload-section,
-    .tax-grid,
-    .methodology-section {
-        grid-template-columns: 1fr;
-    }
-    
-    .header-top {
-        flex-direction: column;
-        text-align: center;
-        gap: 20px;
-    }
-    
-    .config-inputs {
-        flex-direction: column;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .action-btn {
-        min-width: 100%;
-    }
-    
-    footer {
-        padding: 20px;
-    }
-    
-    .footer-content p {
-        font-size: 0.85rem !important;
-    }
-}
-
 /* MODAL DE INICIALIZAÇÃO */
 .modal-overlay {
     display: flex;
@@ -1158,4 +1159,50 @@ footer {
 canvas {
     max-width: 100%;
     height: auto;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    .config-section,
+    .upload-section,
+    .tax-grid,
+    .methodology-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .config-section,
+    .upload-section,
+    .tax-grid,
+    .methodology-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-top {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .config-inputs {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-btn {
+        min-width: 100%;
+    }
+    
+    footer {
+        padding: 20px;
+    }
+    
+    .footer-content p {
+        font-size: 0.85rem !important;
+    }
 }
