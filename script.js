@@ -1,6 +1,7 @@
 // ============================================
 // VDC UNIDADE DE PERITAGEM - SCRIPT v4.3
-// CORREÇÃO DE PARSING - MAPEAMENTO POR PALAVRA-CHAVE NO PATH
+// IMPLEMENTAÇÃO RIGOROSA - ORDEM TÉCNICA
+// PARSING CORRIGIDO: "Algorithm","Hash","Path"
 // ============================================
 
 // 1. OBJETO GLOBAL DE PERSISTÊNCIA
@@ -60,8 +61,8 @@ window.vdcStore = {
 
 // 2. INICIALIZAÇÃO DO SISTEMA
 function inicializarSistema() {
-    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v4.3 - PARSING POR PATH');
-    console.log('🔐 CORREÇÃO: Mapeamento por palavra-chave na coluna Path');
+    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v4.3 - PARSING CORRIGIDO');
+    console.log('🔐 FORMATO: "Algorithm","Hash","Path"');
     
     // Mostrar modal inicial
     const modal = document.getElementById('modalOverlay');
@@ -125,7 +126,7 @@ function configurarEventListeners() {
     setInterval(atualizarEstadoBotoes, 1000);
 }
 
-// 3. PROCESSAR FICHEIRO DE CONTROLO DE AUTENTICIDADE (CORRIGIDO - PARSING POR PATH)
+// 3. PROCESSAR FICHEIRO DE CONTROLO DE AUTENTICIDADE (PRIORIDADE) - PARSING CORRIGIDO
 function processarControloAutenticidade(ficheiro) {
     console.log('📁 Processando ficheiro de controlo de autenticidade:', ficheiro.name);
     
@@ -136,69 +137,51 @@ function processarControloAutenticidade(ficheiro) {
     }
     
     Papa.parse(ficheiro, {
-        header: false, // SEM HEADER - Vamos processar as colunas diretamente
+        header: true,
         skipEmptyLines: true,
         complete: function(resultados) {
             try {
                 const dados = resultados.data;
-                console.log('📊 Dados brutos do ficheiro de controlo:', dados);
+                console.log('📊 Dados do ficheiro de controlo (CORRIGIDO):', dados);
                 
                 // Limpar referências anteriores
                 window.vdcStore.referencia.hashes = { saft: null, fatura: null, extrato: null };
                 window.vdcStore.hashesReferenciaCarregadas = false;
                 
-                // Contador para estatísticas
-                let totalLinhas = 0;
-                let linhasProcessadas = 0;
-                
-                // Processar cada linha do CSV
-                dados.forEach((linha, index) => {
-                    totalLinhas++;
+                // Processar cada linha do CSV - FORMATO: "Algorithm","Hash","Path"
+                dados.forEach(linha => {
+                    const algorithm = linha.Algorithm || '';
+                    const hash = linha.Hash || '';
+                    const path = linha.Path || '';
                     
-                    // Verificar se a linha tem pelo menos 3 colunas (Algorithm, Hash, Path)
-                    if (linha.length >= 3) {
-                        const algorithm = linha[0]?.replace(/"/g, '').trim() || '';
-                        let hash = linha[1]?.replace(/"/g, '').trim() || '';
-                        const path = linha[2]?.replace(/"/g, '').trim() || '';
+                    if (algorithm && hash && path) {
+                        // Limpar aspas e espaços
+                        const hashLimpo = hash.replace(/"/g, '').trim();
+                        const pathLimpo = path.replace(/"/g, '').toLowerCase();
                         
-                        console.log(`📝 Linha ${index}: Algorithm="${algorithm}", Hash="${hash}", Path="${path}"`);
+                        console.log(`🔍 Processando linha: Algo=${algorithm}, Hash=${hashLimpo}, Path=${pathLimpo}`);
                         
-                        // Limpar hash de possíveis espaços ou caracteres extras
-                        hash = hash.replace(/\s+/g, '');
-                        
-                        // LÓGICA DE MAPEAMENTO POR PALAVRA-CHAVE NO PATH
-                        const pathUpper = path.toUpperCase();
-                        
-                        // 1. Se o Path contiver .csv ou 131509 (referência SAFT) → Atribuir ao SAF-T
-                        if (pathUpper.includes('.CSV') || pathUpper.includes('131509') || pathUpper.includes('SAF') || pathUpper.includes('SAFT')) {
-                            window.vdcStore.referencia.hashes.saft = hash;
-                            atualizarHashDashboard('saft', hash);
-                            linhasProcessadas++;
-                            console.log(`✅ Hash atribuída ao SAF-T: ${hash.substring(0, 16)}... (Path: ${path})`);
+                        // LÓGICA DE ATRIBUIÇÃO POR PALAVRA-CHAVE NO PATH
+                        if (pathLimpo.includes('.csv') || pathLimpo.includes('131509')) {
+                            // Referência SAF-T
+                            window.vdcStore.referencia.hashes.saft = hashLimpo;
+                            console.log(`✓ Hash atribuída ao SAF-T: ${hashLimpo}`);
+                            atualizarHashDashboard('saft', hashLimpo);
+                        } 
+                        else if (pathLimpo.includes('fatura') || pathLimpo.includes('pt1126')) {
+                            // Referência Fatura
+                            window.vdcStore.referencia.hashes.fatura = hashLimpo;
+                            console.log(`✓ Hash atribuída à Fatura: ${hashLimpo}`);
+                            atualizarHashDashboard('fatura', hashLimpo);
+                        } 
+                        else if (pathLimpo.includes('ganhos') || pathLimpo.includes('extrato')) {
+                            // Referência Extrato
+                            window.vdcStore.referencia.hashes.extrato = hashLimpo;
+                            console.log(`✓ Hash atribuída ao Extrato: ${hashLimpo}`);
+                            atualizarHashDashboard('extrato', hashLimpo);
                         }
-                        // 2. Se o Path contiver Fatura ou PT1126 → Atribuir à Fatura
-                        else if (pathUpper.includes('FATURA') || pathUpper.includes('PT1126') || pathUpper.includes('INVOICE')) {
-                            window.vdcStore.referencia.hashes.fatura = hash;
-                            atualizarHashDashboard('fatura', hash);
-                            linhasProcessadas++;
-                            console.log(`✅ Hash atribuída à FATURA: ${hash.substring(0, 16)}... (Path: ${path})`);
-                        }
-                        // 3. Se o Path contiver Ganhos ou Extrato → Atribuir ao Extrato
-                        else if (pathUpper.includes('GANHOS') || pathUpper.includes('EXTRATO') || pathUpper.includes('STATEMENT') || pathUpper.includes('BANC')) {
-                            window.vdcStore.referencia.hashes.extrato = hash;
-                            atualizarHashDashboard('extrato', hash);
-                            linhasProcessadas++;
-                            console.log(`✅ Hash atribuída ao EXTRATO: ${hash.substring(0, 16)}... (Path: ${path})`);
-                        }
-                        // Fallback: Tentar identificar pelo algoritmo ou formato da hash
-                        else if (hash && hash.length >= 32) {
-                            // Se não identificamos pelo Path, tentar pelo conteúdo
-                            if (!window.vdcStore.referencia.hashes.saft && (algorithm.includes('SHA') || hash.length === 64)) {
-                                window.vdcStore.referencia.hashes.saft = hash;
-                                atualizarHashDashboard('saft', hash);
-                                linhasProcessadas++;
-                                console.log(`⚠️ Hash atribuída ao SAF-T (fallback): ${hash.substring(0, 16)}...`);
-                            }
+                        else {
+                            console.log(`⚠️ Path não reconhecido: ${pathLimpo}`);
                         }
                     }
                 });
@@ -217,7 +200,7 @@ function processarControloAutenticidade(ficheiro) {
                 // Atualizar interface
                 if (statusEl) {
                     const count = Object.values(window.vdcStore.referencia.hashes).filter(h => h).length;
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO: ${count} HASHES (${linhasProcessadas}/${totalLinhas} linhas processadas)`;
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO: ${count} HASHES`;
                     statusEl.className = 'status-message status-success';
                 }
                 
@@ -241,12 +224,7 @@ function processarControloAutenticidade(ficheiro) {
                 if (todasHashesCarregadas) {
                     mostrarMensagem('✅ Todas as 3 hashes de referência foram carregadas com sucesso!', 'success');
                 } else {
-                    const faltantes = [];
-                    if (!window.vdcStore.referencia.hashes.saft) faltantes.push('SAF-T');
-                    if (!window.vdcStore.referencia.hashes.fatura) faltantes.push('Fatura');
-                    if (!window.vdcStore.referencia.hashes.extrato) faltantes.push('Extrato');
-                    
-                    mostrarMensagem(`⚠️ Faltam hashes de referência: ${faltantes.join(', ')}`, 'warning');
+                    mostrarMensagem(`⚠️ Carregadas ${Object.values(window.vdcStore.referencia.hashes).filter(h => h).length}/3 hashes de referência`, 'warning');
                 }
                 
                 // Atualizar estado dos botões
@@ -257,11 +235,6 @@ function processarControloAutenticidade(ficheiro) {
                 mostrarMensagem('❌ Erro no processamento do ficheiro de controlo', 'error');
                 statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO NO PROCESSAMENTO`;
                 statusEl.className = 'status-message status-error';
-                
-                // Tentar processamento simulado para demonstração
-                setTimeout(() => {
-                    processarControloSimulado();
-                }, 1000);
             }
         },
         error: function(erro) {
@@ -276,68 +249,13 @@ function processarControloAutenticidade(ficheiro) {
     });
 }
 
-function processarControloSimulado() {
-    console.log('🔄 Usando dados de controlo simulados (fallback)...');
-    
-    // Dados de controlo simulados para demonstração
-    window.vdcStore.referencia.hashes = {
-        saft: 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2',
-        fatura: 'C412FE87A9B5D3E6F2C412FE87A9B5D3E6F2C412FE87A9B5D3E6F2C412',
-        extrato: 'F8E9D7C6B5A4F3E2D1F8E9D7C6B5A4F3E2D1F8E9D7C6B5A4F3E2D1F8E9'
-    };
-    
-    window.vdcStore.hashesReferenciaCarregadas = true;
-    window.vdcStore.referencia.carregado = true;
-    window.vdcStore.referencia.timestamp = new Date().toISOString();
-    window.vdcStore.referencia.dadosCSV = [
-        ['SHA256', window.vdcStore.referencia.hashes.saft, '/path/to/saf-t_131509.csv'],
-        ['SHA256', window.vdcStore.referencia.hashes.fatura, '/path/to/Fatura_PT1126_2025.txt'],
-        ['SHA256', window.vdcStore.referencia.hashes.extrato, '/path/to/Extrato_Ganhos_2025.txt']
-    ];
-    
-    const statusEl = document.getElementById('controlStatus');
-    if (statusEl) {
-        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO SIMULADO CARREGADO: 3 HASHES`;
-        statusEl.className = 'status-message status-success';
-    }
-    
-    const hashStatusEl = document.getElementById('controlHashStatus');
-    if (hashStatusEl) {
-        hashStatusEl.style.display = 'block';
-        document.getElementById('controlHashCount').textContent = '3';
-    }
-    
-    // Atualizar dashboard com hashes simuladas
-    atualizarHashDashboard('saft', window.vdcStore.referencia.hashes.saft);
-    atualizarHashDashboard('fatura', window.vdcStore.referencia.hashes.fatura);
-    atualizarHashDashboard('extrato', window.vdcStore.referencia.hashes.extrato);
-    
-    const dashboardEl = document.getElementById('controlHashDashboard');
-    if (dashboardEl) {
-        dashboardEl.style.display = 'block';
-    }
-    
-    habilitarUploadsDocumentos();
-    mostrarMensagem('✅ Hashes de referência simuladas carregadas para demonstração', 'warning');
-    atualizarEstadoBotoes();
-}
-
 function atualizarHashDashboard(tipo, hash) {
     const elemento = document.getElementById(`hash-${tipo}-ref`);
     if (elemento && hash) {
-        // Mostrar hash completa com quebra se muito longa
-        if (hash.length > 40) {
-            const hashCurta = hash.substring(0, 20) + '...' + hash.substring(hash.length - 10);
-            elemento.textContent = hashCurta;
-        } else {
-            elemento.textContent = hash;
-        }
-        elemento.title = `Hash ${tipo.toUpperCase()}: ${hash}`;
+        const hashCurta = hash.length > 32 ? hash.substring(0, 16) + '...' + hash.substring(hash.length - 8) : hash;
+        elemento.textContent = hashCurta;
+        elemento.title = hash;
         elemento.style.color = '#10b981';
-        
-        // Adicionar tooltip visual
-        elemento.style.cursor = 'help';
-        elemento.style.borderBottom = '1px dotted #93c5fd';
     }
 }
 
@@ -357,7 +275,10 @@ function habilitarUploadsDocumentos() {
         document.querySelectorAll('.file-label.disabled').forEach(label => {
             label.classList.remove('disabled');
             label.style.background = 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)';
-            label.innerHTML = label.innerHTML.replace(/AGUARDANDO CONTROLO/g, 'PRONTO PARA CARREGAR');
+            const span = label.querySelector('span');
+            if (span) {
+                span.innerHTML = '<i class="fas fa-unlock"></i> PRONTO PARA CARREGAR';
+            }
             const icon = label.querySelector('i.fa-cloud-upload-alt');
             if (icon) icon.style.color = 'white';
         });
@@ -366,8 +287,7 @@ function habilitarUploadsDocumentos() {
     }
 }
 
-// [AS RESTANTES FUNÇÕES PERMANECEM IGUAIS...]
-// 4. REGISTO DE CLIENTE
+// 4. REGISTO DE CLIENTE (PRESERVADA)
 function registarCliente() {
     const nome = document.getElementById('clientName')?.value?.trim();
     const nif = document.getElementById('clientNIF')?.value?.trim();
@@ -524,7 +444,7 @@ function processarSAFT(ficheiro) {
                     processado: true
                 };
                 
-                // Calcular hash local
+                // Calcular hash local (PRESERVADA)
                 const dadosParaHash = JSON.stringify(window.vdcStore.saft.dados) + ficheiro.name + ficheiro.size;
                 window.vdcStore.hashesLocais.saft = CryptoJS.SHA256(dadosParaHash).toString();
                 
@@ -615,7 +535,7 @@ function processarFatura(ficheiro) {
                 processado: true
             };
             
-            // Calcular hash local
+            // Calcular hash local (PRESERVADA)
             const dadosParaHash = JSON.stringify(window.vdcStore.fatura.dados) + ficheiro.name + ficheiro.size;
             window.vdcStore.hashesLocais.fatura = CryptoJS.SHA256(dadosParaHash).toString();
             
@@ -700,7 +620,7 @@ function processarExtrato(ficheiro) {
                 processado: true
             };
     
-            // Calcular hash local
+            // Calcular hash local (PRESERVADA)
             const dadosParaHash = JSON.stringify(window.vdcStore.extrato.dados) + ficheiro.name + ficheiro.size;
             window.vdcStore.hashesLocais.extrato = CryptoJS.SHA256(dadosParaHash).toString();
             
@@ -887,7 +807,7 @@ function executarAnaliseForense() {
             clearInterval(intervalo);
             calcularDivergenciaCompleta();
             gerarMasterHashFinal();
-            gerarParecerTecnicoPericial();
+            gerarParecerTecnicoPericial(); // NOVO: Parecer técnico estruturado
             apresentarResultadosForenses();
             criarGraficosPericiais();
             atualizarDetalhesTecnicos();
@@ -1058,7 +978,7 @@ function apresentarResultadosForenses() {
                 </td>
                 <td>
                     <span style="color: #dc2626; font-weight: bold; padding: 5px 10px; background: rgba(220, 38, 38, 0.1); border-radius: 5px;">
-                        ● ${a.risco}
+                        ● ${a.risko}
                     </span>
                 </td>
             </tr>
@@ -1093,8 +1013,8 @@ function apresentarResultadosForenses() {
     
     const statusEl = document.getElementById('divergenceStatus');
     if (statusEl) {
-        statusEl.textContent = a.risco;
-        statusEl.style.background = a.risco === 'CRÍTICO' ? 
+        statusEl.textContent = a.risko;
+        statusEl.style.background = a.risko === 'CRÍTICO' ? 
             'linear-gradient(90deg, #7f1d1d 0%, #dc2626 100%)' :
             'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)';
     }
@@ -1321,7 +1241,7 @@ async function gerarRelatorioPDFPericial() {
     }
 }
 
-// 18. GUARDAR ANÁLISE COMPLETA COM FILE SYSTEM ACCESS API (PRESERVADA)
+// 18. GUARDAR ANÁLISE COMPLETA COM FILE SYSTEM ACCESS API
 async function guardarAnaliseCompletaComDisco() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -1367,7 +1287,7 @@ async function guardarAnaliseCompletaComDisco() {
         
         const jsonData = JSON.stringify(dadosCompletos, null, 2);
         
-        // FILE SYSTEM ACCESS API (OBRIGATÓRIO - PRESERVADA)
+        // FILE SYSTEM ACCESS API (OBRIGATÓRIO)
         if ('showSaveFilePicker' in window) {
             try {
                 const opcoes = {
