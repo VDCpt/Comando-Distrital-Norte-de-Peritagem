@@ -15,7 +15,7 @@
     <!-- Modal de Inicialização -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
-            <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v4.3</h2>
+            <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v4.4</h2>
             <p><strong>REESTRUTURAÇÃO DE AUDITORIA - VALIDAÇÃO HIERÁRQUICA</strong></p>
             <p>Este sistema opera com prioridade de ingestão: primeiro carregue o ficheiro de controlo de autenticidade (.csv), depois os documentos fiscais.</p>
             <p style="color: #93c5fd; font-size: 1rem; margin-top: 25px; padding: 15px; background: rgba(30, 64, 175, 0.1); border-radius: 10px;">
@@ -32,7 +32,7 @@
         <header>
             <div class="header-top">
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h1><i class="fas fa-balance-scale"></i> SISTEMA DE PERITAGEM FORENSE VDC</h1>
+                    <h1><i class="fas fa-balance-scale"></i> SISTEMA DE PERITAGEM FORENSE VDC v4.4</h1>
                     <div class="vdc-banner" style="text-align: right;">
                         <p class="vdc-link">https://vdcpt.github.io/CENTRO-DE-COMANDO-DE-ANALISE-VDC/</p>
                         <h2>ANÁLISE FISCAL AUTOMATIZADA | CERTIFICAÇÃO DIGITAL</h2>
@@ -92,7 +92,7 @@
                         <i class="fas fa-key"></i>
                     </div>
                     <h3 style="color: #60a5fa; margin: 0; font-size: 1.3rem;">
-                        <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV)
+                        <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV) - PRIMEIRO PASSO
                     </h3>
                 </div>
                 
@@ -104,14 +104,14 @@
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV)
                             </label>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #94a3b8; text-align: center;">
-                                <i class="fas fa-info-circle"></i> Este ficheiro contém as hashes de referência para validação dos documentos fiscais
+                                <i class="fas fa-info-circle"></i> Formato: "Algorithm","Hash","Path" - Carregue primeiro este ficheiro
                             </div>
                         </div>
                         <div id="controlStatus" class="status-message">
-                            <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
+                            <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO (PRIORIDADE)
                         </div>
                         
-                        <!-- VISUALIZAÇÃO DAS HASHES DE REFERÊNCIA (OBRIGATÓRIO) -->
+                        <!-- VISUALIZAÇÃO DAS HASHES DE REFERÊNCIA -->
                         <div id="controlHashStatus" class="status-message" style="display: none; margin-top: 10px; background: rgba(30, 64, 175, 0.1);">
                             <i class="fas fa-hashtag"></i> HASHES DE REFERÊNCIA CARREGADAS: <span id="controlHashCount" style="color: #60a5fa; font-weight: bold;">0</span>
                         </div>
@@ -139,7 +139,7 @@
                 </div>
             </div>
 
-            <!-- Painel de Uploads de Documentos -->
+            <!-- Painel de Uploads de Documentos (INICIALMENTE DESATIVADO) -->
             <div class="upload-section" id="documentUploadSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s ease;">
                 <!-- 2. SAF-T -->
                 <div class="upload-card">
@@ -162,7 +162,10 @@
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
                         <div id="saftHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="saftValidationText" style="color: #94a3b8;">AGUARDANDO</span>
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="saftHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        </div>
+                        <div id="saftValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="saftHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
                         </div>
                         <div class="data-preview" id="saftPreview" style="display: none;">
                             <h5><i class="fas fa-table"></i> METADADOS DO FICHEIRO SAF-T:</h5>
@@ -202,7 +205,10 @@
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
                         <div id="invoiceHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="invoiceValidationText" style="color: #94a3b8;">AGUARDANDO</span>
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="invoiceHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        </div>
+                        <div id="invoiceValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="invoiceHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
                         </div>
                         <div class="data-preview" id="invoicePreview" style="display: none;">
                             <h5><i class="fas fa-receipt"></i> METADADOS DA FATURA:</h5>
@@ -239,7 +245,10 @@
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
                         <div id="statementHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="statementValidationText" style="color: #94a3b8;">AGUARDANDO</span>
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="statementHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        </div>
+                        <div id="statementValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="statementHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
                         </div>
                         <div class="data-preview" id="statementPreview" style="display: none;">
                             <h5><i class="fas fa-bank"></i> METADADOS DO EXTRATO:</h5>
@@ -328,7 +337,7 @@
                     <div class="tax-card">
                         <h4>SELO DE INTEGRIDADE</h4>
                         <div class="hash-value" id="hashValue" style="font-size: 0.65rem; line-height: 1.1;">AGUARDANDO CARREGAMENTO DO REGISTO DE CONTROLO</div>
-                        <small>Master Hash SHA-256</small>
+                        <small>Master Hash SHA-256 (baseada em referência)</small>
                     </div>
                 </div>
                 
@@ -378,17 +387,19 @@
                         </div>
                         
                         <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">IV. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO:</h6>
+                            <h6 style="color: #93c5fd; margin-bottom: 8px;">IV. IMPACTO FISCAL E PROJEÇÃO:</h6>
                             <ul style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; line-height: 1.5;">
                                 <li>IVA em falta (23%): <span id="parecerIVA" style="color: #f59e0b; font-weight: bold;">39,19€</span> omitidos ao erário público.</li>
-                                <li><span id="parecerFiscal">Agravamento artificial do lucro tributável. Impacto estimado em IRC/Derrama (21%+1.5%) de 38,34€/mês. Projeção anual de 460,04€.</span></li>
+                                <li>Impacto IRC/Derrama (22.5%): <span id="parecerImpactoIRC" style="color: #f59e0b; font-weight: bold;">38,34€</span> sobre divergência.</li>
+                                <li><span id="parecerFiscal">Impacto Mensal Global (extrapolação): <span id="parecerImpactoMensalGlobal" style="color: #dc2626; font-weight: bold;">6.474.820,00€</span>.</span></li>
+                                <li><span id="parecerImpacto7Anos">Projeção a 7 anos: <span id="parecerImpacto7AnosValor" style="color: #dc2626; font-weight: bold;">543.884.880,00€</span>.</span></li>
                             </ul>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">V. AUTENTICIDADE E VALIDAÇÃO EXTERNA:</h6>
                             <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                <span id="parecerAutenticidade">As hashes dos ficheiros processados coincidem com os registos oficiais de controlo.</span>
+                                <span id="parecerAutenticidade">As hashes dos ficheiros processados foram validadas contra o registo oficial de controlo.</span>
                             </p>
                             <p style="color: #94a3b8; font-size: 0.8rem; font-family: 'Monaco', 'Courier New', monospace; margin-top: 5px; word-break: break-all;">
                                 <span id="parecerMasterHash">AGUARDANDO GERAÇÃO DE MASTER HASH...</span>
@@ -461,16 +472,16 @@
                         <div class="data-item"><span>Algoritmo Hash:</span> <span style="color: #10b981;">SHA-256</span></div>
                         <div class="data-item"><span>Validação Externa:</span> <span style="color: #f59e0b;">Registo .csv</span></div>
                         <div class="data-item"><span>Validade Prova:</span> <span style="color: #10b981;">Indeterminada</span></div>
-                        <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v4.3</span></div>
+                        <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v4.4</span></div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Footer CORRIGIDO - Estrutura de 4 linhas separadas com quebra de linha para Hash -->
+        <!-- Footer -->
         <footer>
             <div class="footer-content">
-                <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.3</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
+                <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.4</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
                 <p class="timestamp"><i class="fas fa-database"></i> VALIDAÇÃO HIERÁRQUICA: PRIORIDADE DE INGESTÃO DO REGISTO DE AUTENTICIDADE</p>
                 <p class="timestamp"><i class="fas fa-clock"></i> TIMESTAMP: <span id="currentTimestamp">carregando...</span></p>
                 <p class="timestamp">
