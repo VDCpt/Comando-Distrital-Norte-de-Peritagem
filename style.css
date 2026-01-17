@@ -1,7 +1,6 @@
 /* ============================================
    VDC UNIDADE DE PERITAGEM - STYLESHEET v4.3
-   REESTRUTURAÇÃO DE AUDITORIA - PRIORIDADE DE INGESTÃO
-   LÓGICA DE HASH CORRIGIDA - SEM BLOQUEIO DE UI
+   IMPLEMENTAÇÃO RIGOROSA - ORDEM TÉCNICA
    ============================================ */
 
 :root {
@@ -431,28 +430,23 @@ body {
     color: var(--info-cyan);
 }
 
-/* HASH STATUS */
-.hash-status {
-    padding: 12px;
-    background: rgba(30, 41, 59, 0.9);
-    border-radius: 8px;
-    border-left: 4px solid var(--info-cyan);
-    margin-top: 10px;
-    font-size: 0.85rem;
+/* HASH DASHBOARD */
+#controlHashDashboard {
     display: none;
-    align-items: center;
-    gap: 10px;
+    margin-top: 20px;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.hash-status i {
-    color: var(--info-cyan);
-}
-
-.hash-status span {
+#controlHashDashboard h5 {
     color: #93c5fd;
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.8rem;
-    word-break: break-all;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* DATA PREVIEW */
@@ -507,6 +501,14 @@ body {
     color: var(--secondary-green);
     font-weight: 600;
     font-size: 0.95rem;
+}
+
+.data-item span:last-child.hash-display {
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: #93c5fd;
+    word-break: break-all;
+    text-align: right;
 }
 
 /* ANALYZE SECTION */
@@ -939,7 +941,7 @@ body {
     font-size: 1.2rem;
 }
 
-/* FOOTER - ESTRUTURA DE 4 LINHAS CORRIGIDA */
+/* FOOTER - ESTRUTURA DE 4 LINHAS COM QUEBRA DE LINHA PARA HASH */
 footer {
     background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
     padding: 25px 40px;
@@ -965,6 +967,16 @@ footer {
     color: #94a3b8 !important;
     font-size: 0.85rem !important;
     font-family: 'Monaco', 'Courier New', monospace;
+}
+
+#currentMasterHash {
+    display: block;
+    color: #93c5fd;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.75rem;
+    word-break: break-all;
+    margin-top: 3px;
+    line-height: 1.2;
 }
 
 .footer-content p:last-child {
@@ -1077,57 +1089,7 @@ footer {
     }
 }
 
-/* CORREÇÕES ADICIONAIS */
-#controlHashDetails {
-    display: none;
-    margin-top: 15px;
-    background: rgba(15, 23, 42, 0.8);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-#controlHashDetails h5 {
-    color: #93c5fd;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#documentUploadSection {
-    opacity: 0.5;
-    pointer-events: none;
-    transition: all 0.3s ease;
-}
-
-.hash-status span#saftCalculatedHash,
-.hash-status span#invoiceCalculatedHash,
-.hash-status span#statementCalculatedHash {
-    display: block;
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.75rem;
-    color: #93c5fd;
-    word-break: break-all;
-    margin-top: 5px;
-}
-
-/* CORREÇÃO PARA BOTÕES DE AÇÃO NO FOOTER */
-.footer-content p:not(:last-child) {
-    margin-bottom: 5px;
-}
-
-/* MELHORIAS DE VISUALIZAÇÃO PARA HASHES */
-.data-item span:last-child.hash-display {
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.75rem;
-    color: #93c5fd;
-    word-break: break-all;
-    text-align: right;
-}
-
-/* ESTILOS PARA MODAL DE INICIALIZAÇÃO */
+/* MODAL DE INICIALIZAÇÃO */
 .modal-overlay {
     display: flex;
     position: fixed;
@@ -1190,4 +1152,10 @@ footer {
     background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
     transform: translateY(-3px);
     box-shadow: 0 12px 25px rgba(37, 99, 235, 0.5);
+}
+
+/* GRÁFICOS */
+canvas {
+    max-width: 100%;
+    height: auto;
 }
