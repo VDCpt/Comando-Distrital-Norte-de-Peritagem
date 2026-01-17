@@ -1,6 +1,6 @@
 /* ============================================
-   VDC UNIDADE DE PERITAGEM - STYLESHEET v4.4
-   VERSÃO DEFINITIVA - APENAS AJUSTES PARA NOVAS FUNCIONALIDADES
+   VDC UNIDADE DE PERITAGEM - STYLESHEET v5.0
+   VERSÃO DEFINITIVA COM PATCHES DE VALIDAÇÃO
    ============================================ */
 
 :root {
@@ -13,6 +13,8 @@
     --info-cyan: #06b6d4;
     --peritagem-gold: #d97706;
     --forense-purple: #8b5cf6;
+    --valida-verde: #27ae60;
+    --analise-laranja: #f39c12;
     
     --bg-dark: #0f172a;
     --bg-medium: #1e293b;
@@ -314,30 +316,30 @@ body {
     position: relative;
 }
 
-/* NOVO: Estilos para selos de validação */
+/* NOVO: Estilos para selos de validação PERICIADA */
 .validation-badge {
     margin-left: auto;
     display: none;
     align-items: center;
     gap: 5px;
-    font-size: 0.9rem;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
-.validation-badge.autentico {
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+.validation-badge.periciado {
+    color: var(--valida-verde);
+    background: rgba(39, 174, 96, 0.15);
+    border: 1px solid rgba(39, 174, 96, 0.4);
 }
 
-.validation-badge.divergente {
-    color: #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+.validation-badge.divergencia {
+    color: var(--analise-laranja);
+    background: rgba(243, 156, 18, 0.15);
+    border: 1px solid rgba(243, 156, 18, 0.4);
 }
 
 .step-number {
