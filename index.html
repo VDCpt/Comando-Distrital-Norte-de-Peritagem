@@ -10,92 +10,6 @@
     
     <!-- CSS Local -->
     <link rel="stylesheet" href="style.css">
-    
-    <style>
-        /* CSS de emergência */
-        body { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color: #e2e8f0; 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            background: rgba(15,23,42,0.95); 
-            border-radius: 20px; 
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        
-        .modal-overlay {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        
-        .modal-content {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 40px;
-            border-radius: 20px;
-            border: 2px solid #3b82f6;
-            max-width: 600px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-        }
-        
-        .modal-content h2 {
-            color: #60a5fa;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: 1.8rem;
-        }
-        
-        .modal-content p {
-            color: #cbd5e1;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            font-size: 1.1rem;
-        }
-        
-        .modal-btn {
-            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-        }
-        
-        .modal-btn:hover {
-            background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(37, 99, 235, 0.5);
-        }
-    </style>
 </head>
 <body>
     <!-- Modal de Inicialização -->
@@ -196,22 +110,28 @@
                         <div id="controlStatus" class="status-message">
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
+                        
+                        <!-- VISUALIZAÇÃO DAS HASHES DE REFERÊNCIA (OBRIGATÓRIO) -->
                         <div id="controlHashStatus" class="status-message" style="display: none; margin-top: 10px; background: rgba(30, 64, 175, 0.1);">
                             <i class="fas fa-hashtag"></i> HASHES DE REFERÊNCIA CARREGADAS: <span id="controlHashCount" style="color: #60a5fa; font-weight: bold;">0</span>
                         </div>
-                        <div id="controlHashDetails" style="display: none; margin-top: 15px; background: rgba(15, 23, 42, 0.8); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                            <h5 style="color: #93c5fd; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-hashtag"></i> REFERÊNCIAS DE HASH CARREGADAS
+                        
+                        <div id="controlHashDashboard" style="display: none; margin-top: 20px; background: rgba(15, 23, 42, 0.8); padding: 20px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <h5 style="color: #93c5fd; font-size: 0.9rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-hashtag"></i> REFERÊNCIAS DE AUTENTICIDADE CARREGADAS
                             </h5>
-                            <div class="data-grid" style="grid-template-columns: 1fr; gap: 5px;">
-                                <div class="data-item" id="refSaftHash" style="display: none;">
-                                    <span>SAF-T:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                            <div class="data-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                                <div class="data-item">
+                                    <span>Hash SAF-T (Referência):</span> 
+                                    <span id="hash-saft-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
                                 </div>
-                                <div class="data-item" id="refInvoiceHash" style="display: none;">
-                                    <span>Fatura:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                                <div class="data-item">
+                                    <span>Hash Fatura (Referência):</span> 
+                                    <span id="hash-fatura-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
                                 </div>
-                                <div class="data-item" id="refStatementHash" style="display: none;">
-                                    <span>Extrato:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                                <div class="data-item">
+                                    <span>Hash Extrato (Referência):</span> 
+                                    <span id="hash-extrato-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
                                 </div>
                             </div>
                         </div>
@@ -219,7 +139,7 @@
                 </div>
             </div>
 
-            <!-- Painel de Uploads de Documentos (Inicialmente Disabled) -->
+            <!-- Painel de Uploads de Documentos -->
             <div class="upload-section" id="documentUploadSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s ease;">
                 <!-- 2. SAF-T -->
                 <div class="upload-card">
@@ -243,13 +163,6 @@
                         </div>
                         <div id="saftHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="saftValidationText" style="color: #94a3b8;">AGUARDANDO</span>
-                        </div>
-                        <div id="saftHashDetails" class="hash-status" style="display: none;">
-                            <i class="fas fa-hashtag"></i>
-                            <div>
-                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
-                                <span id="saftCalculatedHash" style="color: #93c5fd;">-</span>
-                            </div>
                         </div>
                         <div class="data-preview" id="saftPreview" style="display: none;">
                             <h5><i class="fas fa-table"></i> METADADOS DO FICHEIRO SAF-T:</h5>
@@ -291,13 +204,6 @@
                         <div id="invoiceHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="invoiceValidationText" style="color: #94a3b8;">AGUARDANDO</span>
                         </div>
-                        <div id="invoiceHashDetails" class="hash-status" style="display: none;">
-                            <i class="fas fa-hashtag"></i>
-                            <div>
-                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
-                                <span id="invoiceCalculatedHash" style="color: #93c5fd;">-</span>
-                            </div>
-                        </div>
                         <div class="data-preview" id="invoicePreview" style="display: none;">
                             <h5><i class="fas fa-receipt"></i> METADADOS DA FATURA:</h5>
                             <div class="data-grid">
@@ -334,13 +240,6 @@
                         </div>
                         <div id="statementHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="statementValidationText" style="color: #94a3b8;">AGUARDANDO</span>
-                        </div>
-                        <div id="statementHashDetails" class="hash-status" style="display: none;">
-                            <i class="fas fa-hashtag"></i>
-                            <div>
-                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
-                                <span id="statementCalculatedHash" style="color: #93c5fd;">-</span>
-                            </div>
                         </div>
                         <div class="data-preview" id="statementPreview" style="display: none;">
                             <h5><i class="fas fa-bank"></i> METADADOS DO EXTRATO:</h5>
@@ -458,7 +357,7 @@
                         <div style="margin-bottom: 15px;">
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">I. ANÁLISE PERICIAL:</h6>
                             <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                Discrepância grave detetada entre valores retidos pela Bolt e valores faturados.
+                                <span id="parecerAnalise">Discrepância grave detetada entre valores retidos pela Bolt e valores faturados.</span>
                             </p>
                         </div>
                         
@@ -474,7 +373,7 @@
                         <div style="margin-bottom: 15px;">
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">III. ENQUADRAMENTO LEGAL:</h6>
                             <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                Artigo 2.º, n.º 1, alínea i) do CIVA (Autoliquidação). Artigo 108.º do CIVA (Infrações).
+                                <span id="parecerLegal">Violação do Artigo 2.º, n.º 1, alínea i) do CIVA (Autoliquidação) e indícios de infração ao Artigo 108.º do CIVA.</span>
                             </p>
                         </div>
                         
@@ -482,16 +381,14 @@
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">IV. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO:</h6>
                             <ul style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; line-height: 1.5;">
                                 <li>IVA em falta (23%): <span id="parecerIVA" style="color: #f59e0b; font-weight: bold;">39,19€</span> omitidos ao erário público.</li>
-                                <li>Agravamento Bruto/IRC: A diferença de <span id="parecerDivergencia2" style="color: #dc2626; font-weight: bold;">170,39€</span> não faturada pela plataforma impacta diretamente a contabilidade do cliente. Este valor, ao não ser reconhecido como custo faturado, aumenta artificialmente o lucro tributável, agravando o IRC + Derrama (22.5%) no final do exercício. Projeção anual de base omitida: <span id="parecerProjecaoAnual" style="color: #ef4444; font-weight: bold;">2.044,68€</span>.</li>
-                                <li>Impacto IRC (22.5%): A discrepância de 170,39€ (71.04%) agrava consideravelmente a posição do cliente, pois ao não ser reconhecida como custo faturado, aumenta o lucro tributável em sede de IRC + Derrama (22.5%), com um impacto mensal de <span id="parecerImpactoIRC" style="color: #dc2626; font-weight: bold;">38,34€</span> e impacto anual projetado de <span id="parecerImpactoIRCAnual" style="color: #ef4444; font-weight: bold;">460,06€</span>.</li>
+                                <li><span id="parecerFiscal">Agravamento artificial do lucro tributável. Impacto estimado em IRC/Derrama (21%+1.5%) de 38,34€/mês. Projeção anual de 460,04€.</span></li>
                             </ul>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">V. CADEIA DE CUSTÓDIA E VALIDAÇÃO EXTERNA:</h6>
+                            <h6 style="color: #93c5fd; margin-bottom: 8px;">V. AUTENTICIDADE E VALIDAÇÃO EXTERNA:</h6>
                             <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                Validação efetuada contra registo de autenticidade externo (.csv).
-                                Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura + Cliente).
+                                <span id="parecerAutenticidade">As hashes dos ficheiros processados coincidem com os registos oficiais de controlo.</span>
                             </p>
                             <p style="color: #94a3b8; font-size: 0.8rem; font-family: 'Monaco', 'Courier New', monospace; margin-top: 5px; word-break: break-all;">
                                 <span id="parecerMasterHash">AGUARDANDO GERAÇÃO DE MASTER HASH...</span>
@@ -501,7 +398,7 @@
                         <div>
                             <h6 style="color: #93c5fd; margin-bottom: 8px;">VI. CONCLUSÃO:</h6>
                             <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; font-weight: bold;">
-                                Indícios de infração ao Artigo 108.º do Código do IVA.
+                                Indícios de infração ao Artigo 108.º do Código do IVA. Recomenda-se comunicação imediata à Autoridade Tributária.
                             </p>
                         </div>
                     </div>
@@ -570,13 +467,19 @@
             </div>
         </main>
 
-        <!-- Footer CORRIGIDO - Estrutura de 4 linhas separadas -->
+        <!-- Footer CORRIGIDO - Estrutura de 4 linhas separadas com quebra de linha para Hash -->
         <footer>
             <div class="footer-content">
                 <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.3</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
                 <p class="timestamp"><i class="fas fa-database"></i> VALIDAÇÃO HIERÁRQUICA: PRIORIDADE DE INGESTÃO DO REGISTO DE AUTENTICIDADE</p>
-                <p class="timestamp" id="timestamp">ÚLTIMA ATUALIZAÇÃO: <span id="currentTimestamp">carregando...</span></p>
-                <p class="timestamp">MASTER HASH: <span id="currentMasterHash" style="color: #93c5fd; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.8rem;">AGUARDANDO CONTROLO...</span></p>
+                <p class="timestamp"><i class="fas fa-clock"></i> TIMESTAMP: <span id="currentTimestamp">carregando...</span></p>
+                <p class="timestamp">
+                    <i class="fas fa-hashtag"></i> MASTER HASH: 
+                    <br>
+                    <span id="currentMasterHash" style="display: block; color: #93c5fd; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; word-break: break-all; margin-top: 3px; line-height: 1.2;">
+                        AGUARDANDO CONTROLO...
+                    </span>
+                </p>
                 <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">
                     © 2024 VDC - VOZ DO CONDUTOR | PERITAGEM FISCAL REGISTADA | NIF: 999 999 999
                 </p>
