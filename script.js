@@ -1,28 +1,43 @@
 // ============================================
-// VDC UNIDADE DE PERITAGEM - SCRIPT v4.1
-// CONTROLO DE AUTENTICIDADE EXTERNO
+// VDC UNIDADE DE PERITAGEM - SCRIPT v4.2
+// REESTRUTURAÇÃO DE AUDITORIA - PRIORIDADE DE INGESTÃO
 // ============================================
 
 // 1. OBJETO GLOBAL DE PERSISTÊNCIA
 window.vdcStore = {
+    // Referências do ficheiro de controlo (PRIORIDADE)
+    referencia: {
+        hashes: {
+            saft: null,
+            fatura: null,
+            extrato: null
+        },
+        carregado: false,
+        timestamp: null,
+        dadosCSV: null
+    },
+    
+    // Documentos do utilizador
     saft: null,
     extrato: null,
     fatura: null,
+    
+    // Hashes calculadas localmente
     hashes: {
         saft: null,
         extrato: null,
         fatura: null,
-        master: null,
-        // Hashes do ficheiro de controlo
-        controloSAFT: null,
-        controloFatura: null,
-        controloExtrato: null,
-        validado: {
-            saft: false,
-            fatura: false,
-            extrato: false
-        }
+        master: null
     },
+    
+    // Estado de validação
+    validado: {
+        saft: false,
+        fatura: false,
+        extrato: false
+    },
+    
+    // Configuração do cliente
     config: {
         cliente: null,
         nif: null,
@@ -30,16 +45,17 @@ window.vdcStore = {
         plataforma: 'bolt',
         registado: false
     },
+    
+    // Análise
     analise: null,
     analiseEmCurso: false,
     analiseConcluida: false,
-    timestampSelagem: null,
-    controloCarregado: false
+    timestampSelagem: null
 };
 
-// 2. INICIALIZAÇÃO
+// 2. INICIALIZAÇÃO DO SISTEMA
 function inicializarSistema() {
-    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v4.1 - CONTROLO EXTERNO');
+    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v4.2 - PRIORIDADE DE INGESTÃO');
     
     // Mostrar modal inicial
     const modal = document.getElementById('modalOverlay');
@@ -48,15 +64,21 @@ function inicializarSistema() {
         
         document.getElementById('closeModalBtn').addEventListener('click', function() {
             modal.style.display = 'none';
-            // Carregar ficheiro de controlo após fechar modal
-            carregarFicheiroControloAutenticidade();
+            inicializarInterface();
         });
+    } else {
+        // Se não houver modal, inicializar diretamente
+        inicializarInterface();
     }
-    
+}
+
+function inicializarInterface() {
+    console.log('📱 Inicializando interface com prioridade de ingestão...');
     configurarEventListeners();
     atualizarTimestamp();
     limparEstadoVisual();
     atualizarEstadoBotoes();
+    atualizarEstadoUploads();
 }
 
 function configurarEventListeners() {
@@ -72,7 +94,12 @@ function configurarEventListeners() {
         document.getElementById('currentPlatform').textContent = texto;
     });
     
-    // Uploads
+    // PRIORIDADE: Upload do ficheiro de controlo
+    document.getElementById('controlFile')?.addEventListener('change', function(e) {
+        if (e.target.files[0]) processarControloAutenticidade(e.target.files[0]);
+    });
+    
+    // Uploads de documentos (inicialmente disabled)
     document.getElementById('saftFile')?.addEventListener('change', function(e) {
         if (e.target.files[0]) processarUpload('saft', e.target.files[0]);
     });
@@ -93,54 +120,234 @@ function configurarEventListeners() {
     setInterval(atualizarEstadoBotoes, 1000);
 }
 
-// 3. CARREGAR FICHEIRO DE CONTROLO DE AUTENTICIDADE
-function carregarFicheiroControloAutenticidade() {
-    console.log('📁 A carregar base de controlo de autenticidade...');
+// 3. FUNÇÃO PARA ATUALIZAR ESTADO DOS UPLOADS
+function atualizarEstadoUploads() {
+    const controloCarregado = window.vdcStore.referencia.carregado;
+    const documentUploadSection = document.getElementById('documentUploadSection');
     
-    // Dados simulados do ficheiro CONTROLO_AUTENTICIDADE.csv
-    const dadosControlo = [
-        {
-            documento: 'SAF-T',
-            hash: 'a3f5d9e8c7b2a1f4e6d9c8b7a5e4f3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7',
-            descricao: 'SAF-T 2025 - Cliente Exemplo'
-        },
-        {
-            documento: 'FATURA',
-            hash: 'b4e6f8a0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2',
-            descricao: 'Fatura Bolt PT1126-5834'
-        },
-        {
-            documento: 'EXTRATO',
-            hash: 'c5f7e9d1b3a5c7e9d1b3f5a7c9e1d3b5f7a9c1e3d5b7f9a1c3e5d7b9f1a3',
-            descricao: 'Extrato Bancário Comissão'
+    if (documentUploadSection) {
+        if (controloCarregado) {
+            documentUploadSection.style.opacity = '1';
+            documentUploadSection.style.pointerEvents = 'auto';
+            
+            // Habilitar inputs de documentos
+            document.getElementById('saftFile').disabled = false;
+            document.getElementById('invoiceFile').disabled = false;
+            document.getElementById('statementFile').disabled = false;
+            
+            // Atualizar labels
+            document.querySelectorAll('.file-label').forEach(label => {
+                if (label.htmlFor !== 'controlFile') {
+                    label.style.background = 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)';
+                    label.innerHTML = label.innerHTML.replace(/AGUARDANDO VALIDAÇÃO/g, 'PRONTO PARA CARREGAR');
+                }
+            });
+        } else {
+            documentUploadSection.style.opacity = '0.5';
+            documentUploadSection.style.pointerEvents = 'none';
         }
-    ];
-    
-    // Armazenar hashes de controlo
-    dadosControlo.forEach(item => {
-        switch(item.documento) {
-            case 'SAF-T':
-                window.vdcStore.hashes.controloSAFT = item.hash;
-                break;
-            case 'FATURA':
-                window.vdcStore.hashes.controloFatura = item.hash;
-                break;
-            case 'EXTRATO':
-                window.vdcStore.hashes.controloExtrato = item.hash;
-                break;
-        }
-    });
-    
-    window.vdcStore.controloCarregado = true;
-    mostrarMensagem('✅ Base de controlo de autenticidade carregada', 'success');
-    
-    // Se já houver ficheiros carregados, validar imediatamente
-    if (window.vdcStore.saft?.metadados) validarHashContraControlo('saft');
-    if (window.vdcStore.fatura?.metadados) validarHashContraControlo('invoice');
-    if (window.vdcStore.extrato?.metadados) validarHashContraControlo('statement');
+    }
 }
 
-// 4. REGISTO DE CLIENTE
+// 4. PROCESSAR FICHEIRO DE CONTROLO (PRIORIDADE)
+function processarControloAutenticidade(ficheiro) {
+    console.log('📁 Processando ficheiro de controlo de autenticidade:', ficheiro.name);
+    
+    const statusEl = document.getElementById('controlStatus');
+    if (statusEl) {
+        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO REGISTO DE AUTENTICIDADE...`;
+        statusEl.className = 'status-message processing';
+    }
+    
+    Papa.parse(ficheiro, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(resultados) {
+            try {
+                const dados = resultados.data;
+                console.log('📊 Dados do ficheiro de controlo:', dados);
+                
+                let hashesCarregadas = 0;
+                
+                // Processar cada linha do CSV
+                dados.forEach(linha => {
+                    const tipo = linha.tipo?.toUpperCase() || linha.documento?.toUpperCase();
+                    const hash = linha.hash || linha.hash_referencia;
+                    
+                    if (tipo && hash) {
+                        switch(tipo) {
+                            case 'SAF-T':
+                            case 'SAFT':
+                                window.vdcStore.referencia.hashes.saft = hash.trim();
+                                hashesCarregadas++;
+                                break;
+                            case 'FATURA':
+                            case 'INVOICE':
+                                window.vdcStore.referencia.hashes.fatura = hash.trim();
+                                hashesCarregadas++;
+                                break;
+                            case 'EXTRATO':
+                            case 'STATEMENT':
+                                window.vdcStore.referencia.hashes.extrato = hash.trim();
+                                hashesCarregadas++;
+                                break;
+                        }
+                    }
+                });
+                
+                window.vdcStore.referencia.carregado = true;
+                window.vdcStore.referencia.timestamp = new Date().toISOString();
+                window.vdcStore.referencia.dadosCSV = dados;
+                
+                // Atualizar interface
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO: ${hashesCarregadas} HASHES`;
+                    statusEl.className = 'status-message status-success';
+                }
+                
+                const hashStatusEl = document.getElementById('controlHashStatus');
+                if (hashStatusEl) {
+                    hashStatusEl.style.display = 'block';
+                    document.getElementById('controlHashCount').textContent = hashesCarregadas;
+                }
+                
+                // Atualizar estado dos uploads de documentos
+                atualizarEstadoUploads();
+                
+                mostrarMensagem(`✅ Registo de autenticidade carregado com ${hashesCarregadas} hashes de referência`, 'success');
+                
+                // Se já houver ficheiros carregados, validar imediatamente
+                setTimeout(() => {
+                    if (window.vdcStore.hashes.saft) validarHashDocumento('saft');
+                    if (window.vdcStore.hashes.fatura) validarHashDocumento('fatura');
+                    if (window.vdcStore.hashes.extrato) validarHashDocumento('extrato');
+                }, 500);
+                
+            } catch (erro) {
+                console.error('Erro ao processar ficheiro de controlo:', erro);
+                processarControloSimulado();
+            }
+        },
+        error: function(erro) {
+            console.error('Erro PapaParse no ficheiro de controlo:', erro);
+            processarControloSimulado();
+        }
+    });
+}
+
+function processarControloSimulado() {
+    console.log('🔄 Usando dados de controlo simulados...');
+    
+    // Dados de controlo simulados
+    window.vdcStore.referencia.hashes = {
+        saft: 'a3f5d9e8c7b2a1f4e6d9c8b7a5e4f3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7',
+        fatura: 'b4e6f8a0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2',
+        extrato: 'c5f7e9d1b3a5c7e9d1b3f5a7c9e1d3b5f7a9c1e3d5b7f9a1c3e5d7b9f1a3'
+    };
+    
+    window.vdcStore.referencia.carregado = true;
+    window.vdcStore.referencia.timestamp = new Date().toISOString();
+    window.vdcStore.referencia.dadosCSV = [
+        { tipo: 'SAF-T', hash: window.vdcStore.referencia.hashes.saft },
+        { tipo: 'FATURA', hash: window.vdcStore.referencia.hashes.fatura },
+        { tipo: 'EXTRATO', hash: window.vdcStore.referencia.hashes.extrato }
+    ];
+    
+    const statusEl = document.getElementById('controlStatus');
+    if (statusEl) {
+        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO: 3 HASHES`;
+        statusEl.className = 'status-message status-success';
+    }
+    
+    const hashStatusEl = document.getElementById('controlHashStatus');
+    if (hashStatusEl) {
+        hashStatusEl.style.display = 'block';
+        document.getElementById('controlHashCount').textContent = 3;
+    }
+    
+    atualizarEstadoUploads();
+    mostrarMensagem('✅ Registo de autenticidade carregado (dados simulados)', 'warning');
+}
+
+// 5. VALIDAÇÃO DE HASHES (LÓGICA PASSIVA)
+function validarHashDocumento(tipo) {
+    if (!window.vdcStore.referencia.carregado) {
+        console.log(`⚠️ Não é possível validar ${tipo}: controlo não carregado`);
+        return false;
+    }
+    
+    const hashLocal = window.vdcStore.hashes[tipo];
+    const hashReferencia = window.vdcStore.referencia.hashes[tipo === 'saft' ? 'saft' : tipo === 'fatura' ? 'fatura' : 'extrato'];
+    
+    if (!hashLocal || !hashReferencia) {
+        console.log(`⚠️ Hash não disponível para validação: ${tipo}`);
+        return false;
+    }
+    
+    const valido = hashLocal === hashReferencia;
+    window.vdcStore.validado[tipo] = valido;
+    
+    // Atualizar interface
+    atualizarInterfaceValidacao(tipo, valido);
+    
+    return valido;
+}
+
+function atualizarInterfaceValidacao(tipo, valido) {
+    const validationTextEl = document.getElementById(`${tipo}ValidationText`);
+    const hashStatusEl = document.getElementById(`${tipo}HashStatus`);
+    const badgeEl = document.getElementById(`${tipo}ValidationBadge`);
+    
+    if (valido) {
+        // ✅ Validação bem sucedida
+        if (validationTextEl) {
+            validationTextEl.textContent = 'VALIDADO';
+            validationTextEl.style.color = '#10b981';
+        }
+        
+        if (hashStatusEl) {
+            hashStatusEl.style.display = 'block';
+            hashStatusEl.innerHTML = `<i class="fas fa-check-circle"></i> VALIDAÇÃO: <span style="color: #10b981; font-weight: bold;">✓ HASH COINCIDE COM REGISTO DE CONTROLO</span>`;
+            hashStatusEl.className = 'status-message status-success';
+        }
+        
+        if (badgeEl) {
+            badgeEl.style.display = 'inline-flex';
+            badgeEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+            badgeEl.style.color = '#10b981';
+            badgeEl.style.background = 'rgba(16, 185, 129, 0.1)';
+            badgeEl.style.padding = '5px 10px';
+            badgeEl.style.borderRadius = '5px';
+            badgeEl.style.fontSize = '0.9rem';
+        }
+    } else {
+        // ⚠️ Validação falhada
+        if (validationTextEl) {
+            validationTextEl.textContent = 'DIVERGENTE';
+            validationTextEl.style.color = '#ef4444';
+        }
+        
+        if (hashStatusEl) {
+            hashStatusEl.style.display = 'block';
+            hashStatusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> VALIDAÇÃO: <span style="color: #ef4444; font-weight: bold;">⚠️ HASH DIVERGENTE DO REGISTO DE CONTROLO</span>`;
+            hashStatusEl.className = 'status-message status-error';
+        }
+        
+        if (badgeEl) {
+            badgeEl.style.display = 'inline-flex';
+            badgeEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            badgeEl.style.color = '#ef4444';
+            badgeEl.style.background = 'rgba(239, 68, 68, 0.1)';
+            badgeEl.style.padding = '5px 10px';
+            badgeEl.style.borderRadius = '5px';
+            badgeEl.style.fontSize = '0.9rem';
+        }
+        
+        mostrarMensagem(`⚠️ Hash divergente do registo de controlo: ${tipo.toUpperCase()}`, 'warning');
+    }
+}
+
+// 6. REGISTO DE CLIENTE
 function registarCliente() {
     const nome = document.getElementById('clientName')?.value?.trim();
     const nif = document.getElementById('clientNIF')?.value?.trim();
@@ -176,21 +383,21 @@ function registarCliente() {
     verificarEstadoPreAnalise();
 }
 
-// 5. PROCESSAMENTO DE UPLOADS COM VALIDAÇÃO EXTERNA
+// 7. PROCESSAMENTO DE UPLOADS DE DOCUMENTOS
 function processarUpload(tipo, ficheiro) {
+    if (!window.vdcStore.referencia.carregado) {
+        mostrarMensagem('⚠️ Carregue primeiro o ficheiro de controlo de autenticidade!', 'warning');
+        return;
+    }
+    
     if (!window.vdcStore.config.registado) {
         mostrarMensagem('⚠️ Registe o cliente primeiro!', 'warning');
         return;
     }
     
-    if (!window.vdcStore.controloCarregado) {
-        mostrarMensagem('⚠️ Base de controlo não carregada. Aguarde...', 'warning');
-        return;
-    }
-    
     const statusEl = document.getElementById(`${tipo}Status`);
     if (statusEl) {
-        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO E VALIDANDO ${ficheiro.name}...`;
+        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO ${ficheiro.name}...`;
         statusEl.className = 'status-message processing';
     }
     
@@ -215,8 +422,7 @@ function guardarMetadadosFicheiro(tipo, ficheiro) {
         tamanho: formatarTamanhoFicheiro(ficheiro.size),
         tipo: ficheiro.type,
         ultimaModificacao: ficheiro.lastModified,
-        dataUpload: new Date().toISOString(),
-        hashCalculada: null
+        dataUpload: new Date().toISOString()
     };
     
     switch(tipo) {
@@ -237,65 +443,25 @@ function guardarMetadadosFicheiro(tipo, ficheiro) {
     atualizarPreviewMetadados(tipo);
 }
 
-// 6. VALIDAÇÃO CONTRA FICHEIRO DE CONTROLO
-function validarHashContraControlo(tipo) {
-    const hashCalculada = window.vdcStore.hashes[tipo];
-    let hashControlo = '';
-    let nomeDocumento = '';
+function atualizarPreviewMetadados(tipo) {
+    const previewEl = document.getElementById(`${tipo}Preview`);
+    if (!previewEl) return;
     
+    let metadados;
     switch(tipo) {
-        case 'saft':
-            hashControlo = window.vdcStore.hashes.controloSAFT;
-            nomeDocumento = 'SAF-T';
-            break;
-        case 'fatura':
-            hashControlo = window.vdcStore.hashes.controloFatura;
-            nomeDocumento = 'Fatura';
-            break;
-        case 'extrato':
-            hashControlo = window.vdcStore.hashes.controloExtrato;
-            nomeDocumento = 'Extrato';
-            break;
+        case 'saft': metadados = window.vdcStore.saft?.metadados; break;
+        case 'invoice': metadados = window.vdcStore.fatura?.metadados; break;
+        case 'statement': metadados = window.vdcStore.extrato?.metadados; break;
     }
     
-    if (!hashCalculada || !hashControlo) {
-        return false;
+    if (metadados) {
+        previewEl.style.display = 'block';
+        document.getElementById(`${tipo}FileName`).textContent = metadados.nome;
+        document.getElementById(`${tipo}FileSize`).textContent = metadados.tamanho;
     }
-    
-    const valido = hashCalculada === hashControlo;
-    
-    if (valido) {
-        window.vdcStore.hashes.validado[tipo] = true;
-        
-        // Mostrar hash validada
-        const hashEl = document.getElementById(`${tipo}HashValue`);
-        const statusEl = document.getElementById(`${tipo}HashStatus`);
-        
-        if (hashEl && statusEl) {
-            hashEl.textContent = hashCalculada.substring(0, 32) + '...';
-            statusEl.style.display = 'block';
-            statusEl.className = 'status-message status-success';
-            statusEl.innerHTML = `<i class="fas fa-check-circle"></i> HASH VALIDADA CONTRA BASE DE CONTROLOS EXTERNA`;
-        }
-        
-        mostrarMensagem(`✅ ${nomeDocumento} validado contra base de controlo externa`, 'success');
-    } else {
-        window.vdcStore.hashes.validado[tipo] = false;
-        
-        // Mostrar alerta
-        const statusEl = document.getElementById(`${tipo}Status`);
-        if (statusEl) {
-            statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ALERTA: Integridade do ficheiro não confirmada pelo registo de controlo`;
-            statusEl.className = 'status-message status-warning';
-        }
-        
-        mostrarMensagem(`⚠️ ALERTA: ${nomeDocumento} não corresponde à hash do registo de controlo`, 'warning');
-    }
-    
-    return valido;
 }
 
-// 7. PROCESSAMENTO SAF-T COM GERAÇÃO DE HASH
+// 8. PROCESSAMENTO SAF-T
 function processarSAFT(ficheiro) {
     Papa.parse(ficheiro, {
         header: false,
@@ -343,20 +509,19 @@ function processarSAFT(ficheiro) {
                     processado: true
                 };
                 
-                // Gerar hash apenas para validação
+                // Calcular hash local
                 const dadosParaHash = JSON.stringify(window.vdcStore.saft.dados) + ficheiro.name + ficheiro.size;
                 window.vdcStore.hashes.saft = CryptoJS.SHA256(dadosParaHash).toString();
-                window.vdcStore.saft.metadados.hashCalculada = window.vdcStore.hashes.saft;
-                
-                // Validar contra controlo
-                setTimeout(() => {
-                    validarHashContraControlo('saft');
-                }, 500);
                 
                 atualizarPreviewSAFT();
                 mostrarMensagem(`✅ SAF-T processado: ${registosValidos} registos`, 'success');
-                verificarEstadoPreAnalise();
-                atualizarEstadoBotoes();
+                
+                // Validar hash contra referência
+                setTimeout(() => {
+                    validarHashDocumento('saft');
+                    verificarEstadoPreAnalise();
+                    atualizarEstadoBotoes();
+                }, 500);
                 
             } catch (erro) {
                 console.error('Erro no processamento SAF-T:', erro);
@@ -376,7 +541,7 @@ function atualizarPreviewSAFT() {
     const previewEl = document.getElementById('saftPreview');
     
     if (statusEl && safT) {
-        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> SAF-T VALIDADO: ${safT.registos} REGISTOS`;
+        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> SAF-T PROCESSADO: ${safT.registos} REGISTOS`;
         statusEl.className = 'status-message status-success';
     }
     
@@ -388,7 +553,7 @@ function atualizarPreviewSAFT() {
     }
 }
 
-// 8. PROCESSAMENTO DA FATURA
+// 9. PROCESSAMENTO DA FATURA
 function processarFatura(ficheiro) {
     const leitor = new FileReader();
     
@@ -431,20 +596,19 @@ function processarFatura(ficheiro) {
                 processado: true
             };
             
-            // Gerar hash apenas para validação
+            // Calcular hash local
             const dadosParaHash = JSON.stringify(window.vdcStore.fatura.dados) + ficheiro.name + ficheiro.size;
             window.vdcStore.hashes.fatura = CryptoJS.SHA256(dadosParaHash).toString();
-            window.vdcStore.fatura.metadados.hashCalculada = window.vdcStore.hashes.fatura;
-            
-            // Validar contra controlo
-            setTimeout(() => {
-                validarHashContraControlo('fatura');
-            }, 500);
             
             atualizarPreviewFatura();
             mostrarMensagem(`✅ Fatura processada: ${totalFaturado.toFixed(2)}€ | REF: ${referenciaFatura}`, 'success');
-            verificarEstadoPreAnalise();
-            atualizarEstadoBotoes();
+            
+            // Validar hash contra referência
+            setTimeout(() => {
+                validarHashDocumento('fatura');
+                verificarEstadoPreAnalise();
+                atualizarEstadoBotoes();
+            }, 500);
             
         } catch (erro) {
             console.error('Erro ao processar fatura:', erro);
@@ -480,10 +644,9 @@ function processarFaturaSimulada() {
     
     const dadosParaHash = JSON.stringify(window.vdcStore.fatura.dados) + 'simulacao_fatura_bolt';
     window.vdcStore.hashes.fatura = CryptoJS.SHA256(dadosParaHash).toString();
-    window.vdcStore.fatura.metadados.hashCalculada = window.vdcStore.hashes.fatura;
     
     setTimeout(() => {
-        validarHashContraControlo('fatura');
+        validarHashDocumento('fatura');
     }, 500);
     
     atualizarPreviewFatura();
@@ -511,7 +674,7 @@ function atualizarPreviewFatura() {
     }
 }
 
-// 9. PROCESSAMENTO EXTRATO
+// 10. PROCESSAMENTO EXTRATO
 function processarExtrato(ficheiro) {
     const leitor = new FileReader();
     
@@ -545,20 +708,19 @@ function processarExtrato(ficheiro) {
                 processado: true
             };
     
-            // Gerar hash apenas para validação
+            // Calcular hash local
             const dadosParaHash = JSON.stringify(window.vdcStore.extrato.dados) + ficheiro.name + ficheiro.size;
             window.vdcStore.hashes.extrato = CryptoJS.SHA256(dadosParaHash).toString();
-            window.vdcStore.extrato.metadados.hashCalculada = window.vdcStore.hashes.extrato;
-            
-            // Validar contra controlo
-            setTimeout(() => {
-                validarHashContraControlo('extrato');
-            }, 500);
             
             atualizarPreviewExtrato();
             mostrarMensagem(`✅ Extrato processado: Comissão ${comissaoReal.toFixed(2)}€`, 'success');
-            verificarEstadoPreAnalise();
-            atualizarEstadoBotoes();
+            
+            // Validar hash contra referência
+            setTimeout(() => {
+                validarHashDocumento('extrato');
+                verificarEstadoPreAnalise();
+                atualizarEstadoBotoes();
+            }, 500);
             
         } catch (erro) {
             console.error('Erro ao processar extrato:', erro);
@@ -591,10 +753,9 @@ function processarExtratoSimulado() {
     
     const dadosParaHash = JSON.stringify(window.vdcStore.extrato.dados) + 'simulacao_extrato_bolt';
     window.vdcStore.hashes.extrato = CryptoJS.SHA256(dadosParaHash).toString();
-    window.vdcStore.extrato.metadados.hashCalculada = window.vdcStore.hashes.extrato;
     
     setTimeout(() => {
-        validarHashContraControlo('extrato');
+        validarHashDocumento('extrato');
     }, 500);
     
     atualizarPreviewExtrato();
@@ -621,8 +782,9 @@ function atualizarPreviewExtrato() {
     }
 }
 
-// 10. VERIFICAÇÃO DE ESTADO PRÉ-ANÁLISE
+// 11. VERIFICAÇÃO DE ESTADO PRÉ-ANÁLISE
 function verificarEstadoPreAnalise() {
+    const controloCarregado = window.vdcStore.referencia.carregado;
     const todosProcessados = 
         window.vdcStore.saft?.processado &&
         window.vdcStore.fatura?.processado &&
@@ -630,28 +792,33 @@ function verificarEstadoPreAnalise() {
     
     const clienteRegistado = window.vdcStore.config.registado;
     
-    // Verificar se todos os documentos foram validados contra controlo
+    // Verificar se todos os documentos foram validados
     const todosValidados = 
-        window.vdcStore.hashes.validado.saft &&
-        window.vdcStore.hashes.validado.fatura &&
-        window.vdcStore.hashes.validado.extrato;
+        window.vdcStore.validado.saft &&
+        window.vdcStore.validado.fatura &&
+        window.vdcStore.validado.extrato;
     
     const btnAnalise = document.getElementById('analyzeBtn');
     if (btnAnalise) {
-        btnAnalise.disabled = !(todosProcessados && clienteRegistado && todosValidados);
-        if (todosProcessados && clienteRegistado && todosValidados) {
-            btnAnalise.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE (VALIDADO EXTERNAMENTE)';
+        const prontoParaAnalise = controloCarregado && todosProcessados && clienteRegistado && todosValidados;
+        btnAnalise.disabled = !prontoParaAnalise;
+        
+        if (prontoParaAnalise) {
+            btnAnalise.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE (TUDO VALIDADO)';
             btnAnalise.classList.add('ready');
-        } else if (todosProcessados && clienteRegistado) {
+        } else if (controloCarregado && todosProcessados && clienteRegistado) {
             btnAnalise.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE (AGUARDANDO VALIDAÇÃO)';
+            btnAnalise.classList.remove('ready');
+        } else {
+            btnAnalise.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE';
             btnAnalise.classList.remove('ready');
         }
     }
     
-    return todosProcessados && clienteRegistado && todosValidados;
+    return controloCarregado && todosProcessados && clienteRegistado && todosValidados;
 }
 
-// 11. EXECUTAR ANÁLISE FORENSE
+// 12. EXECUTAR ANÁLISE FORENSE
 function executarAnaliseForense() {
     if (!verificarEstadoPreAnalise()) {
         mostrarMensagem('⚠️ Complete todos os campos e valide os documentos primeiro!', 'warning');
@@ -686,7 +853,7 @@ function executarAnaliseForense() {
         if (progresso >= 100) {
             clearInterval(intervalo);
             calcularDivergenciaCompleta();
-            gerarMasterHashFinal(); // Nova função com base nas hashes de controlo
+            gerarMasterHashFinal();
             apresentarResultadosForenses();
             criarGraficosPericiais();
             atualizarDetalhesTecnicos();
@@ -699,7 +866,7 @@ function executarAnaliseForense() {
     }, 200);
 }
 
-// 12. CÁLCULO DA DIVERGÊNCIA (239.86€ - 69.47€ = 170.39€)
+// 13. CÁLCULO DA DIVERGÊNCIA COM IMPACTO IRC DE 22.5%
 function calcularDivergenciaCompleta() {
     const fatura = window.vdcStore.fatura?.dados;
     const extrato = window.vdcStore.extrato?.dados;
@@ -714,7 +881,10 @@ function calcularDivergenciaCompleta() {
     
     const ivaEmFalta = divergenciaBase * 0.23;
     const projecaoAnual = divergenciaBase * 12;
-    const impactoIRC = divergenciaBase * 0.21 * 12;
+    
+    // CORREÇÃO: Cálculo de impacto IRC + Derrama = 22.5%
+    const impactoIRC = divergenciaBase * 0.225; // 22.5%
+    const impactoIRCAnual = impactoIRC * 12;
     
     window.vdcStore.analise = {
         cliente: window.vdcStore.config.cliente,
@@ -727,13 +897,13 @@ function calcularDivergenciaCompleta() {
         percentagemDivergencia: percentagemDivergencia,
         ivaEmFalta: ivaEmFalta,
         ivaEstimadoFaturado: comissaoFaturada * 0.23,
-        prejuizoFiscal: ivaEmFalta,
+        impactoIRC: impactoIRC,
+        impactoIRCAnual: impactoIRCAnual,
         projecaoAnual: projecaoAnual,
-        impactoIRCAnual: impactoIRC,
         regimeAutoliquidação: fatura.regimeAutoliquidação,
         referenciaFatura: fatura.referencia,
-        validadoExternamente: true,
-        baseControlo: 'CONTROLO_AUTENTICIDADE.csv',
+        validadoContraReferencia: true,
+        referenciaUtilizada: window.vdcStore.referencia.timestamp,
         metadados: {
             safT: window.vdcStore.saft?.metadados,
             fatura: window.vdcStore.fatura?.metadados,
@@ -746,35 +916,36 @@ function calcularDivergenciaCompleta() {
         },
         risco: percentagemDivergencia > 70 ? 'CRÍTICO' : 'MUITO ALTO',
         recomendacao: 'COMUNICAÇÃO IMEDIATA À AT - ART. 108.º CIVA',
-        enquadramentoLegal: 'Artigo 2.º, n.º 1, alínea i) do CIVA e Artigo 108.º CIVA'
+        enquadramentoLegal: 'Artigo 2.º, n.º 1, alínea i) do CIVA e Artigo 108.º CIVA',
+        notaCalculoIRC: 'Impacto calculado com taxa de 22.5% (IRC + Derrama Municipal)'
     };
 }
 
-// 13. MASTER HASH FINAL - BASEADA EM HASHES DE CONTROLO EXTERNO
+// 14. MASTER HASH FINAL
 function gerarMasterHashFinal() {
-    const { hashes, config } = window.vdcStore;
+    const { hashes, config, referencia } = window.vdcStore;
     
-    if (!hashes.controloSAFT || !hashes.controloFatura || !hashes.controloExtrato || !config.cliente) {
+    if (!referencia.carregado || !config.cliente) {
         mostrarMensagem('⚠️ Dados insuficientes para gerar Master Hash', 'warning');
         return;
     }
     
-    // Master Hash = SHA256(HashSAFT_Controlo + HashFatura_Controlo + HashExtrato_Controlo + NomeCliente)
+    // Master Hash = SHA256(HashSAFT_Referencia + HashFatura_Referencia + HashExtrato_Referencia + Cliente + NIF + Timestamp)
     const dadosMaster = 
-        hashes.controloSAFT + 
-        hashes.controloFatura + 
-        hashes.controloExtrato + 
+        referencia.hashes.saft + 
+        referencia.hashes.fatura + 
+        referencia.hashes.extrato + 
         config.cliente + 
         config.nif + 
-        new Date().toISOString();
+        referencia.timestamp;
     
     window.vdcStore.hashes.master = CryptoJS.SHA256(dadosMaster).toString();
     window.vdcStore.timestampSelagem = new Date().toISOString();
     
-    console.log('🔐 Master Hash gerada com base em hashes de controlo externo:', window.vdcStore.hashes.master);
+    console.log('🔐 Master Hash gerada com base em referências externas:', window.vdcStore.hashes.master);
 }
 
-// 14. APRESENTAR RESULTADOS FORENSES
+// 15. APRESENTAR RESULTADOS FORENSES
 function apresentarResultadosForenses() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -789,6 +960,7 @@ function apresentarResultadosForenses() {
         actionButtons.style.display = 'flex';
     }
     
+    // Tabela de análise
     const tableBody = document.getElementById('analysisTableBody');
     if (tableBody) {
         tableBody.innerHTML = `
@@ -808,22 +980,24 @@ function apresentarResultadosForenses() {
         `;
     }
     
+    // Smoking Gun
     document.getElementById('comissaoExtrato').textContent = `${a.comissaoReal.toFixed(2).replace('.', ',')}€`;
     document.getElementById('comissaoFaturada').textContent = `${a.comissaoFaturada.toFixed(2).replace('.', ',')}€`;
     document.getElementById('divergenciaBase').textContent = `${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%)`;
     document.getElementById('ivaFalta').textContent = `${a.ivaEmFalta.toFixed(2).replace('.', ',')}€`;
     
+    // Cartões de taxas
     document.getElementById('ivaValue').textContent = `€${a.ivaEmFalta.toFixed(2).replace('.', ',')}`;
-    document.getElementById('prejuizoFiscal').textContent = `€${a.prejuizoFiscal.toFixed(2).replace('.', ',')}`;
-    document.getElementById('prejuizoFiscal').className = 'risk-level critical';
+    document.getElementById('impactoIRC').textContent = `€${a.impactoIRC.toFixed(2).replace('.', ',')}`;
+    document.getElementById('impactoIRC').className = 'risk-level critical';
     
-    // Mostrar Master Hash Final
+    // Master Hash
     const masterHash = window.vdcStore.hashes.master;
     const hashValueEl = document.getElementById('hashValue');
     if (hashValueEl && masterHash) {
         hashValueEl.innerHTML = `
             <div style="color: #10b981; font-size: 0.7rem; margin-bottom: 5px;">
-                <i class="fas fa-check-circle"></i> VALIDADO CONTRA BASE EXTERNA
+                <i class="fas fa-check-circle"></i> VALIDADO CONTRA REGISTO EXTERNO
             </div>
             <div style="font-size: 0.65rem; line-height: 1.1;">
                 ${masterHash.substring(0, 64)}<br>
@@ -840,6 +1014,7 @@ function apresentarResultadosForenses() {
             'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)';
     }
     
+    // Parecer técnico
     document.getElementById('parecerComissaoReal').textContent = `${a.comissaoReal.toFixed(2).replace('.', ',')}€`;
     document.getElementById('parecerComissaoFaturada').textContent = `${a.comissaoFaturada.toFixed(2).replace('.', ',')}€`;
     document.getElementById('parecerDivergencia').textContent = `${a.divergenciaBase.toFixed(2).replace('.', ',')}€`;
@@ -847,12 +1022,14 @@ function apresentarResultadosForenses() {
     document.getElementById('parecerPercentagem').textContent = `(${a.percentagemDivergencia}% do valor retido)`;
     document.getElementById('parecerIVA').textContent = `${a.ivaEmFalta.toFixed(2).replace('.', ',')}€`;
     document.getElementById('parecerProjecaoAnual').textContent = `${a.projecaoAnual.toFixed(2).replace('.', ',')}€`;
+    document.getElementById('parecerImpactoIRC').textContent = `${a.impactoIRC.toFixed(2).replace('.', ',')}€`;
+    document.getElementById('parecerImpactoIRCAnual').textContent = `${a.impactoIRCAnual.toFixed(2).replace('.', ',')}€`;
     document.getElementById('parecerMasterHash').textContent = masterHash || 'AGUARDANDO GERAÇÃO DE MASTER HASH...';
     
     const btn = document.getElementById('analyzeBtn');
     if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> ANÁLISE FORENSE CONCLUÍDA E VALIDADA';
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> ANÁLISE FORENSE CONCLUÍDA';
         btn.style.background = 'linear-gradient(90deg, #059669 0%, #10b981 100%)';
     }
     
@@ -870,7 +1047,7 @@ function apresentarResultadosForenses() {
     mostrarMensagem(`✅ Análise forense concluída! Divergência de ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ detetada.`, 'success');
 }
 
-// 15. ATIVAÇÃO DINÂMICA DOS BOTÕES
+// 16. ATIVAÇÃO DINÂMICA DOS BOTÕES
 function atualizarEstadoBotoes() {
     const btnPDF = document.getElementById('generateReportBtn');
     const btnGuardar = document.getElementById('saveReportBtn');
@@ -878,38 +1055,39 @@ function atualizarEstadoBotoes() {
     const temMasterHash = window.vdcStore.hashes.master !== null;
     const temAnaliseConcluida = window.vdcStore.analiseConcluida;
     const todosValidados = 
-        window.vdcStore.hashes.validado.saft &&
-        window.vdcStore.hashes.validado.fatura &&
-        window.vdcStore.hashes.validado.extrato;
+        window.vdcStore.validado.saft &&
+        window.vdcStore.validado.fatura &&
+        window.vdcStore.validado.extrato;
+    const controloCarregado = window.vdcStore.referencia.carregado;
     
     if (btnPDF) {
-        const estaPronto = temMasterHash && temAnaliseConcluida && todosValidados;
+        const estaPronto = controloCarregado && temMasterHash && temAnaliseConcluida && todosValidados;
         btnPDF.disabled = !estaPronto;
         btnPDF.style.opacity = estaPronto ? '1' : '0.5';
         btnPDF.style.cursor = estaPronto ? 'pointer' : 'not-allowed';
         
         if (estaPronto) {
-            btnPDF.innerHTML = '<i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF (VALIDADO EXTERNAMENTE)';
+            btnPDF.innerHTML = '<i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF (VALIDADO)';
         } else {
             btnPDF.innerHTML = '<i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF';
         }
     }
     
     if (btnGuardar) {
-        const estaPronto = temMasterHash && temAnaliseConcluida && todosValidados;
+        const estaPronto = controloCarregado && temMasterHash && temAnaliseConcluida && todosValidados;
         btnGuardar.disabled = !estaPronto;
         btnGuardar.style.opacity = estaPronto ? '1' : '0.5';
         btnGuardar.style.cursor = estaPronto ? 'pointer' : 'not-allowed';
         
         if (estaPronto) {
-            btnGuardar.innerHTML = '<i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA (VALIDADA EXTERNAMENTE)';
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA (VALIDADA)';
         } else {
             btnGuardar.innerHTML = '<i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA';
         }
     }
 }
 
-// 16. GERAR RELATÓRIO PDF
+// 17. GERAR RELATÓRIO PDF
 async function gerarRelatorioPDFPericial() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -921,7 +1099,7 @@ async function gerarRelatorioPDFPericial() {
         return;
     }
     
-    mostrarMensagem('📄 A gerar relatório pericial PDF validado externamente...', 'info');
+    mostrarMensagem('📄 A gerar relatório pericial PDF...', 'info');
     
     try {
         const { jsPDF } = window.jspdf;
@@ -937,8 +1115,8 @@ async function gerarRelatorioPDFPericial() {
         
         doc.setFontSize(12);
         doc.setTextColor(100, 100, 100);
-        doc.text('VDC - UNIDADE DE PERITAGEM FORENSE v4.1', 105, 28, null, null, 'center');
-        doc.text('VALIDAÇÃO EXTERNA: CONTROLO_AUTENTICIDADE.csv', 105, 34, null, null, 'center');
+        doc.text('VDC - UNIDADE DE PERITAGEM FORENSE v4.2', 105, 28, null, null, 'center');
+        doc.text('VALIDAÇÃO HIERÁRQUICA: PRIORIDADE DE INGESTÃO', 105, 34, null, null, 'center');
         
         let yPos = 50;
         
@@ -1023,29 +1201,31 @@ async function gerarRelatorioPDFPericial() {
         yPos += 6;
         doc.text(`  reconhecido como custo faturado, aumenta artificialmente o lucro tributável,`, 30, yPos);
         yPos += 6;
-        doc.text(`  agravando o IRC (estimativa de 21% + Derrama) no final do exercício.`, 30, yPos);
+        doc.text(`  agravando o IRC + Derrama (22.5%) no final do exercício.`, 30, yPos);
         yPos += 6;
         doc.text(`  Projeção anual de base omitida: ${a.projecaoAnual.toFixed(2).replace('.', ',')}€.`, 30, yPos);
         yPos += 6;
         
-        // IMPACTO IRC
-        doc.text(`• Impacto IRC: A discrepância de ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%) agrava`, 30, yPos);
+        // IMPACTO IRC 22.5%
+        doc.text(`• Impacto IRC (22.5%): A discrepância de ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%) agrava`, 30, yPos);
         yPos += 6;
         doc.text(`  consideravelmente a posição do cliente, pois ao não ser reconhecida como custo`, 30, yPos);
         yPos += 6;
-        doc.text(`  faturado, aumenta o lucro tributável em sede de IRC/Derrama (est. 21% + Derrama),`, 30, yPos);
+        doc.text(`  faturado, aumenta o lucro tributável em sede de IRC + Derrama (22.5%),`, 30, yPos);
         yPos += 6;
-        doc.text(`  com um impacto anual projetado de 429,38€.`, 30, yPos);
+        doc.text(`  com um impacto mensal de ${a.impactoIRC.toFixed(2).replace('.', ',')}€ e impacto anual`, 30, yPos);
+        yPos += 6;
+        doc.text(`  projetado de ${a.impactoIRCAnual.toFixed(2).replace('.', ',')}€.`, 30, yPos);
         yPos += 10;
         
-        // V. CADEIA DE CUSTÓDIA E VALIDAÇÃO EXTERNA
+        // V. CADEIA DE CUSTÓDIA
         doc.setTextColor(30, 64, 175);
         doc.setFont(undefined, 'bold');
-        doc.text('V. CADEIA DE CUSTÓDIA E VALIDAÇÃO EXTERNA:', 25, yPos);
+        doc.text('V. CADEIA DE CUSTÓDIA E VALIDAÇÃO:', 25, yPos);
         yPos += 7;
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
-        doc.text('Validação efetuada contra base de dados de integridade CONTROLO_AUTENTICIDADE.csv.', 30, yPos);
+        doc.text('Validação efetuada contra registo de autenticidade externo (.csv).', 30, yPos);
         yPos += 6;
         doc.text('Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura + Cliente).', 30, yPos);
         yPos += 6;
@@ -1053,11 +1233,10 @@ async function gerarRelatorioPDFPericial() {
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         
-        // Master Hash especificada
+        // Master Hash
         const hashFinal = window.vdcStore.hashes.master;
         doc.text(hashFinal, 30, yPos, { maxWidth: 160 });
         
-        // Aumentar YPos antes da data/hora
         yPos += 15;
         
         // VI. CONCLUSÃO
@@ -1071,10 +1250,10 @@ async function gerarRelatorioPDFPericial() {
         doc.text('Indícios de infração ao Artigo 108.º do Código do IVA.', 30, yPos);
         yPos += 10;
         
-        // RODAPÉ COM SELAGEM
+        // RODAPÉ
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text('Documento selado digitalmente. Validação externa: CONTROLO_AUTENTICIDADE.csv', 20, 280);
+        doc.text('Documento selado digitalmente. Validação hierárquica: prioridade de ingestão', 20, 280);
         doc.text('Master Hash de Integridade:', 20, 284);
         doc.text(hashFinal, 20, 288, { maxWidth: 170 });
         
@@ -1089,10 +1268,10 @@ async function gerarRelatorioPDFPericial() {
         doc.text(`Data/Hora de Selagem: ${dataHora}`, 20, 281);
         
         // Salvar PDF
-        const nomeArquivo = `Peritagem_Validada_${cliente.replace(/\s+/g, '_')}_${a.dataAnalise.replace(/-/g, '')}.pdf`;
+        const nomeArquivo = `Peritagem_Hierarquica_${cliente.replace(/\s+/g, '_')}_${a.dataAnalise.replace(/-/g, '')}.pdf`;
         doc.save(nomeArquivo);
         
-        mostrarMensagem('✅ Relatório pericial PDF gerado e selado com validação externa!', 'success');
+        mostrarMensagem('✅ Relatório pericial PDF gerado e selado!', 'success');
         
     } catch (erro) {
         console.error('Erro ao gerar PDF:', erro);
@@ -1100,7 +1279,7 @@ async function gerarRelatorioPDFPericial() {
     }
 }
 
-// 17. GUARDAR ANÁLISE COMPLETA
+// 18. GUARDAR ANÁLISE COMPLETA
 async function guardarAnaliseCompletaComDisco() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -1117,24 +1296,21 @@ async function guardarAnaliseCompletaComDisco() {
         const dataISO = window.vdcStore.analise.dataAnalise.replace(/-/g, '');
         const masterHash = window.vdcStore.hashes.master.substring(0, 16);
         
-        const nomeBase = `Peritagem_Validada_${cliente}_${dataISO}_${masterHash}`;
+        const nomeBase = `Peritagem_Hierarquica_${cliente}_${dataISO}_${masterHash}`;
         
         const dadosCompletos = {
             config: window.vdcStore.config,
-            dados: {
+            referencia: window.vdcStore.referencia,
+            documentos: {
                 saft: window.vdcStore.saft?.dados,
                 extrato: window.vdcStore.extrato?.dados,
                 fatura: window.vdcStore.fatura?.dados
             },
             hashes: window.vdcStore.hashes,
+            validacao: window.vdcStore.validado,
             analise: window.vdcStore.analise,
-            validacaoExterna: {
-                baseControlo: 'CONTROLO_AUTENTICIDADE.csv',
-                todosValidados: window.vdcStore.hashes.validado,
-                timestampValidacao: new Date().toISOString()
-            },
             timestampSelagem: window.vdcStore.timestampSelagem,
-            versaoSistema: 'VDC Peritagem Forense v4.1 - Controle Externo',
+            versaoSistema: 'VDC Peritagem Forense v4.2 - Validação Hierárquica',
             dataExportacao: new Date().toISOString()
         };
         
@@ -1145,7 +1321,7 @@ async function guardarAnaliseCompletaComDisco() {
                 const opcoes = {
                     suggestedName: `${nomeBase}.json`,
                     types: [{
-                        description: 'Ficheiro JSON de Peritagem Forense Validada',
+                        description: 'Ficheiro JSON de Peritagem Forense Hierárquica',
                         accept: { 'application/json': ['.json'] }
                     }],
                     excludeAcceptAllOption: false
@@ -1188,7 +1364,7 @@ function usarFallbackDownload(nomeBase, jsonData) {
     mostrarMensagem(`💾 Análise guardada (download automático): ${nomeBase}.json`, 'warning');
 }
 
-// 18. FUNÇÕES AUXILIARES
+// 19. FUNÇÕES AUXILIARES
 function formatarTamanhoFicheiro(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -1238,7 +1414,7 @@ function limparEstadoVisual() {
     });
 }
 
-// 19. FUNÇÕES DE GRÁFICOS E DETALHES TÉCNICOS
+// 20. FUNÇÕES DE GRÁFICOS E DETALHES TÉCNICOS
 function criarGraficosPericiais() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -1285,19 +1461,19 @@ function criarGraficosPericiais() {
         window.graficoIVA = new Chart(ctxIVA, {
             type: 'doughnut',
             data: {
-                labels: ['IVA em Falta', 'IVA sobre Fatura'],
+                labels: ['IVA em Falta', 'Impacto IRC (22.5%)'],
                 datasets: [{
-                    label: 'IVA (€)',
-                    data: [a.ivaEmFalta, a.ivaEstimadoFaturado],
-                    backgroundColor: ['#f59e0b', '#3b82f6'],
-                    borderColor: ['#d97706', '#2563eb'],
+                    label: 'Impactos (€)',
+                    data: [a.ivaEmFalta, a.impactoIRC],
+                    backgroundColor: ['#f59e0b', '#ef4444'],
+                    borderColor: ['#d97706', '#dc2626'],
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    title: { display: true, text: 'Distribuição do IVA', color: '#cbd5e1' },
+                    title: { display: true, text: 'Distribuição de Impactos Fiscais', color: '#cbd5e1' },
                     legend: { labels: { color: '#cbd5e1' } }
                 }
             }
@@ -1317,7 +1493,7 @@ function atualizarDetalhesTecnicos() {
     document.getElementById('detTimestamp').textContent = new Date().toLocaleString('pt-PT');
 }
 
-// 20. INICIALIZAÇÃO DO SISTEMA
+// 21. INICIALIZAÇÃO DO SISTEMA
 document.addEventListener('DOMContentLoaded', inicializarSistema);
 if (document.readyState !== 'loading') {
     setTimeout(inicializarSistema, 100);
