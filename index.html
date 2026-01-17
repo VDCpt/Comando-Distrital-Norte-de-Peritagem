@@ -8,15 +8,6 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PapaParse para CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
-    <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Crypto-js para SHA-256 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    
     <!-- CSS Local -->
     <link rel="stylesheet" href="style.css">
     
@@ -41,9 +32,8 @@
             border: 1px solid rgba(59, 130, 246, 0.2);
         }
         
-        /* Modal de Controlo */
         .modal-overlay {
-            display: none;
+            display: flex;
             position: fixed;
             top: 0;
             left: 0;
@@ -111,7 +101,7 @@
     <!-- Modal de Inicialização -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
-            <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v4.2</h2>
+            <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v4.3</h2>
             <p><strong>REESTRUTURAÇÃO DE AUDITORIA - VALIDAÇÃO HIERÁRQUICA</strong></p>
             <p>Este sistema opera com prioridade de ingestão: primeiro carregue o ficheiro de controlo de autenticidade (.csv), depois os documentos fiscais.</p>
             <p style="color: #93c5fd; font-size: 1rem; margin-top: 25px; padding: 15px; background: rgba(30, 64, 175, 0.1); border-radius: 10px;">
@@ -180,16 +170,15 @@
             </div>
         </header>
 
-        <!-- Painel de Uploads - REESTRUTURADO -->
         <main>
             <!-- SECÇÃO DE CONTROLO DE AUTENTICIDADE (PRIORIDADE) -->
             <div class="control-section" style="margin: 30px 40px; padding: 25px; background: linear-gradient(135deg, rgba(30, 64, 175, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 15px; border: 2px solid #3b82f6;">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                     <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-key"></i>
                     </div>
                     <h3 style="color: #60a5fa; margin: 0; font-size: 1.3rem;">
-                        <i class="fas fa-key"></i> CARREGAR REGISTO DE AUTENTICIDADE (.CSV)
+                        <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV)
                     </h3>
                 </div>
                 
@@ -210,26 +199,42 @@
                         <div id="controlHashStatus" class="status-message" style="display: none; margin-top: 10px; background: rgba(30, 64, 175, 0.1);">
                             <i class="fas fa-hashtag"></i> HASHES DE REFERÊNCIA CARREGADAS: <span id="controlHashCount" style="color: #60a5fa; font-weight: bold;">0</span>
                         </div>
+                        <div id="controlHashDetails" style="display: none; margin-top: 15px; background: rgba(15, 23, 42, 0.8); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <h5 style="color: #93c5fd; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-hashtag"></i> REFERÊNCIAS DE HASH CARREGADAS
+                            </h5>
+                            <div class="data-grid" style="grid-template-columns: 1fr; gap: 5px;">
+                                <div class="data-item" id="refSaftHash" style="display: none;">
+                                    <span>SAF-T:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                                </div>
+                                <div class="data-item" id="refInvoiceHash" style="display: none;">
+                                    <span>Fatura:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                                </div>
+                                <div class="data-item" id="refStatementHash" style="display: none;">
+                                    <span>Extrato:</span> <span style="font-family: 'Monaco', monospace; font-size: 0.75rem; color: #93c5fd; word-break: break-all;"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Painel de Uploads de Documentos (Inicialmente Disabled) -->
             <div class="upload-section" id="documentUploadSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s ease;">
-                <!-- 1. SAF-T -->
+                <!-- 2. SAF-T -->
                 <div class="upload-card">
                     <div class="card-header">
-                        <span class="step-number">1</span>
+                        <span class="step-number">2</span>
                         <h4><i class="fas fa-file-csv"></i> FICHEIRO SAF-T (CSV)</h4>
                         <span class="validation-badge" id="saftValidationBadge" style="margin-left: auto; display: none;"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="saftFile" accept=".csv" class="file-input" disabled>
-                            <label for="saftFile" class="file-label" style="background: #475569;">
+                            <label for="saftFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO SAF-T
                                 <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
-                                    <i class="fas fa-lock"></i> AGUARDANDO VALIDAÇÃO
+                                    <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
                         </div>
@@ -238,6 +243,13 @@
                         </div>
                         <div id="saftHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="saftValidationText" style="color: #94a3b8;">AGUARDANDO</span>
+                        </div>
+                        <div id="saftHashDetails" class="hash-status" style="display: none;">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
+                                <span id="saftCalculatedHash" style="color: #93c5fd;">-</span>
+                            </div>
                         </div>
                         <div class="data-preview" id="saftPreview" style="display: none;">
                             <h5><i class="fas fa-table"></i> METADADOS DO FICHEIRO SAF-T:</h5>
@@ -253,20 +265,20 @@
                     </div>
                 </div>
 
-                <!-- 2. Fatura Comissão -->
+                <!-- 3. Fatura Comissão -->
                 <div class="upload-card">
                     <div class="card-header">
-                        <span class="step-number">2</span>
+                        <span class="step-number">3</span>
                         <h4><i class="fas fa-file-invoice-euro"></i> FATURA DE COMISSÃO</h4>
                         <span class="validation-badge" id="invoiceValidationBadge" style="margin-left: auto; display: none;"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="invoiceFile" accept=".pdf,.txt" class="file-input" disabled>
-                            <label for="invoiceFile" class="file-label" style="background: #475569;">
+                            <label for="invoiceFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR FATURA (PDF ou TXT)
                                 <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
-                                    <i class="fas fa-lock"></i> AGUARDANDO VALIDAÇÃO
+                                    <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
                             <div style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">
@@ -279,12 +291,19 @@
                         <div id="invoiceHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="invoiceValidationText" style="color: #94a3b8;">AGUARDANDO</span>
                         </div>
+                        <div id="invoiceHashDetails" class="hash-status" style="display: none;">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
+                                <span id="invoiceCalculatedHash" style="color: #93c5fd;">-</span>
+                            </div>
+                        </div>
                         <div class="data-preview" id="invoicePreview" style="display: none;">
                             <h5><i class="fas fa-receipt"></i> METADADOS DA FATURA:</h5>
                             <div class="data-grid">
                                 <div class="data-item"><span>Nome do Ficheiro:</span> <span id="invoiceFileName" style="color: #93c5fd;">-</span></div>
                                 <div class="data-item"><span>Tamanho:</span> <span id="invoiceFileSize" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Referência Fatura:</span> <span id="invoiceReference" style="color: #3b82f6;">  -</span></div>
+                                <div class="data-item"><span>Referência Fatura:</span> <span id="invoiceReference" style="color: #3b82f6;">-</span></div>
                                 <div class="data-item"><span>Total Faturado (EUR):</span> <span id="invoiceTotal">0,00€</span></div>
                                 <div class="data-item"><span>IVA Estimado (23%):</span> <span id="invoiceIVA">0,00€</span></div>
                                 <div class="data-item"><span>Regime de Autoliquidação:</span> <span id="invoiceRegime" style="color: #f59e0b;">Não identificado</span></div>
@@ -293,20 +312,20 @@
                     </div>
                 </div>
 
-                <!-- 3. Extrato/Transferências -->
+                <!-- 4. Extrato/Transferências -->
                 <div class="upload-card">
                     <div class="card-header">
-                        <span class="step-number">3</span>
+                        <span class="step-number">4</span>
                         <h4><i class="fas fa-file-invoice-dollar"></i> EXTRATO BANCÁRIO</h4>
                         <span class="validation-badge" id="statementValidationBadge" style="margin-left: auto; display: none;"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="statementFile" accept=".pdf,.jpg,.jpeg,.png,.csv,.txt" class="file-input" disabled>
-                            <label for="statementFile" class="file-label" style="background: #475569;">
+                            <label for="statementFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR EXTRATO
                                 <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
-                                    <i class="fas fa-lock"></i> AGUARDANDO VALIDAÇÃO
+                                    <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
                         </div>
@@ -315,6 +334,13 @@
                         </div>
                         <div id="statementHashStatus" class="status-message" style="display: none; margin-top: 10px;">
                             <i class="fas fa-hashtag"></i> VALIDAÇÃO: <span id="statementValidationText" style="color: #94a3b8;">AGUARDANDO</span>
+                        </div>
+                        <div id="statementHashDetails" class="hash-status" style="display: none;">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 3px;">Hash Calculada:</div>
+                                <span id="statementCalculatedHash" style="color: #93c5fd;">-</span>
+                            </div>
                         </div>
                         <div class="data-preview" id="statementPreview" style="display: none;">
                             <h5><i class="fas fa-bank"></i> METADADOS DO EXTRATO:</h5>
@@ -538,7 +564,7 @@
                         <div class="data-item"><span>Algoritmo Hash:</span> <span style="color: #10b981;">SHA-256</span></div>
                         <div class="data-item"><span>Validação Externa:</span> <span style="color: #f59e0b;">Registo .csv</span></div>
                         <div class="data-item"><span>Validade Prova:</span> <span style="color: #10b981;">Indeterminada</span></div>
-                        <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v4.2</span></div>
+                        <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v4.3</span></div>
                     </div>
                 </div>
             </div>
@@ -547,9 +573,10 @@
         <!-- Footer CORRIGIDO - Estrutura de 4 linhas separadas -->
         <footer>
             <div class="footer-content">
-                <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.2</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
+                <p><i class="fas fa-shield-alt"></i> <strong>VDC - UNIDADE DE PERITAGEM FORENSE v4.3</strong> | SISTEMA CERTIFICADO DE AUDITORIA FISCAL</p>
                 <p class="timestamp"><i class="fas fa-database"></i> VALIDAÇÃO HIERÁRQUICA: PRIORIDADE DE INGESTÃO DO REGISTO DE AUTENTICIDADE</p>
                 <p class="timestamp" id="timestamp">ÚLTIMA ATUALIZAÇÃO: <span id="currentTimestamp">carregando...</span></p>
+                <p class="timestamp">MASTER HASH: <span id="currentMasterHash" style="color: #93c5fd; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.8rem;">AGUARDANDO CONTROLO...</span></p>
                 <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">
                     © 2024 VDC - VOZ DO CONDUTOR | PERITAGEM FISCAL REGISTADA | NIF: 999 999 999
                 </p>
@@ -557,11 +584,13 @@
         </footer>
     </div>
 
-    <!-- Scripts POSICIONADOS CORRETAMENTE após o footer -->
-    <!-- jsPDF -->
+    <!-- Scripts externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Script Local - CRUCIAL: após tudo o resto -->
+    <!-- Script Local -->
     <script src="script.js"></script>
 </body>
 </html>
