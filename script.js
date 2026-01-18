@@ -689,7 +689,7 @@ function processarFatura(ficheiro) {
                 metadados: window.vdcStore.fatura?.metadados || {},
                 processado: true
             };
-            
+    
             atualizarPreviewFatura();
             mostrarMensagem(`✅ Fatura processada: ${totalFaturado.toFixed(2)}€ | REF: ${referenciaFatura}`, 'success');
             
@@ -1106,7 +1106,7 @@ function formatarNumeroGrande(numero) {
     return numero.toFixed(2).replace('.', ',');
 }
 
-// 15. APRESENTAR RESULTADOS FORENSES
+// 15. APRESENTAR RESULTADOS FORENSES (CORREÇÃO APLICADA AQUI)
 function apresentarResultadosForenses() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -1121,9 +1121,29 @@ function apresentarResultadosForenses() {
         actionButtons.style.display = 'flex';
     }
     
-    // Tabela de análise
+    // Tabela de análise - CORREÇÃO DO STATUS PERICIAL APLICADA AQUI
     const tableBody = document.getElementById('analysisTableBody');
     if (tableBody) {
+        // VERIFICAÇÃO REAL DO STATUS BASEADO NAS VALIDAÇÕES DE HASH
+        let statusPericial = 'AGUARDANDO DADOS';
+        let statusClass = 'aguardando';
+        
+        if (window.vdcStore.referencia.carregado && a) {
+            // Verificar se todas as hashes foram validadas
+            const todasValidadas = 
+                window.vdcStore.validado.saft && 
+                window.vdcStore.validado.fatura && 
+                window.vdcStore.validado.extrato;
+            
+            if (todasValidadas) {
+                statusPericial = 'PERICIADO & VALIDADO';
+                statusClass = 'validado';
+            } else {
+                statusPericial = 'ANÁLISE DE DIVERGÊNCIA';
+                statusClass = 'divergente';
+            }
+        }
+        
         tableBody.innerHTML = `
             <tr>
                 <td><strong>Fatura ${a.referenciaFatura || 'Bolt'}</strong></td>
@@ -1133,8 +1153,8 @@ function apresentarResultadosForenses() {
                     ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%)
                 </td>
                 <td>
-                    <span style="color: #dc2626; font-weight: bold; padding: 5px 10px; background: rgba(220, 38, 38, 0.1); border-radius: 5px;">
-                        ● ${a.risko}
+                    <span class="status-badge-${statusClass}" style="display: inline-block; padding: 6px 12px; border-radius: 5px; font-weight: 700; font-size: 0.9rem;">
+                        ${statusPericial}
                     </span>
                 </td>
             </tr>
