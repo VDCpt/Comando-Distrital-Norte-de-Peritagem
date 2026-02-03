@@ -1,263 +1,66 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v5.2 - Terminal de Prova Legal</title>
-    
-    <!-- Fontes -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS -->
+    <title>VDC Peritagem Forense v5.2</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Scripts (adiados para o final do body) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div class="main-container">
-        
-        <!-- SEÇÃO DE IDENTIFICAÇÃO (15vh máximo) -->
-        <section class="identification-section">
-            <div class="system-title">
-                <i class="fas fa-balance-scale"></i>
-                SISTEMA DE PERITAGEM FORENSE VDC v5.2
-                <span class="system-badge">TERMINAL DE PROVA LEGAL</span>
-            </div>
-            
-            <div class="identification-form">
-                <input type="text" 
-                       id="client-name" 
-                       placeholder="Nome do Cliente"
-                       autocomplete="off">
-                <input type="text" 
-                       id="client-nif" 
-                       placeholder="NIF (9 dígitos)"
-                       autocomplete="off"
-                       pattern="\d{9}"
-                       maxlength="9">
-                <button id="register-client-btn" class="register-btn">
-                    <i class="fas fa-fingerprint"></i> REGISTAR CLIENTE
-                </button>
-            </div>
-            
-            <div class="session-info">
-                <span id="current-session">Sessão: <span id="session-id">-</span></span>
-            </div>
-        </section>
-        
-        <!-- PASSO 1 - REGISTO DE AUTENTICIDADE (Barra horizontal estreita) -->
-        <section class="steps-section">
-            <div class="step-1-container" data-state="pending">
-                <div class="step-icon">
-                    <i class="fas fa-key"></i>
-                </div>
-                
-                <div class="step-title">
-                    <i class="fas fa-database"></i>
-                    <span>PASSO 1: REGISTO DE AUTENTICIDADE (.CSV)</span>
-                </div>
-                
-                <div class="step-controls">
-                    <input type="file" 
-                           id="control-file-input" 
-                           accept=".csv,text/csv" 
-                           class="control-file-input">
-                    <label for="control-file-input" class="control-file-label">
-                        <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO
-                    </label>
-                    
-                    <div class="control-status" id="step1-status" data-state="pending">
-                        <i class="fas fa-clock"></i> Aguardando ficheiro de controlo
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- PASSOS 2, 3, 4 - DOCUMENTOS (Lado a lado obrigatório) -->
-        <div class="documents-grid">
-            
-            <!-- PASSO 2: SAF-T -->
-            <div class="document-card" data-type="saft" data-state="locked">
-                <div class="card-header">
-                    <div class="card-step">2</div>
-                    <div class="card-title">
-                        <i class="fas fa-file-csv"></i> FICHEIRO SAF-T
-                    </div>
-                    <div class="card-status" data-state="pending">
-                        AGUARDANDO
-                    </div>
-                </div>
-                
-                <div class="card-content">
-                    <div class="file-upload-area" data-state="locked">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">
-                            Clique para carregar ficheiro SAF-T (.csv/.xml)
-                        </div>
-                        <input type="file" 
-                               id="saft-file-input" 
-                               accept=".csv,.xml,.txt" 
-                               class="file-input">
-                    </div>
-                    
-                    <div class="hash-display-area">
-                        <div class="hash-title">
-                            Hash SHA-256 Calculada
-                        </div>
-                        <div class="hash-value pending">
-                            Nenhum ficheiro carregado
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- PASSO 3: FATURA -->
-            <div class="document-card" data-type="fatura" data-state="locked">
-                <div class="card-header">
-                    <div class="card-step">3</div>
-                    <div class="card-title">
-                        <i class="fas fa-file-invoice-euro"></i> FATURA DE COMISSÃO
-                    </div>
-                    <div class="card-status" data-state="pending">
-                        AGUARDANDO
-                    </div>
-                </div>
-                
-                <div class="card-content">
-                    <div class="file-upload-area" data-state="locked">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">
-                            Clique para carregar fatura (.pdf/.txt)
-                        </div>
-                        <input type="file" 
-                               id="fatura-file-input" 
-                               accept=".pdf,.txt" 
-                               class="file-input">
-                    </div>
-                    
-                    <div class="hash-display-area">
-                        <div class="hash-title">
-                            Hash SHA-256 Calculada
-                        </div>
-                        <div class="hash-value pending">
-                            Nenhum ficheiro carregado
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- PASSO 4: EXTRATO -->
-            <div class="document-card" data-type="extrato" data-state="locked">
-                <div class="card-header">
-                    <div class="card-step">4</div>
-                    <div class="card-title">
-                        <i class="fas fa-file-invoice-dollar"></i> EXTRATO BANCÁRIO
-                    </div>
-                    <div class="card-status" data-state="pending">
-                        AGUARDANDO
-                    </div>
-                </div>
-                
-                <div class="card-content">
-                    <div class="file-upload-area" data-state="locked">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">
-                            Clique para carregar extrato
-                        </div>
-                        <input type="file" 
-                               id="extrato-file-input" 
-                               accept=".pdf,.jpg,.jpeg,.png,.csv,.txt" 
-                               class="file-input">
-                    </div>
-                    
-                    <div class="hash-display-area">
-                        <div class="hash-title">
-                            Hash SHA-256 Calculada
-                        </div>
-                        <div class="hash-value pending">
-                            Nenhum ficheiro carregado
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
+    <header class="top-bar">
+        <div class="logo">VDC <span>Unidade de Peritagem v5.2</span></div>
+        <div class="client-auth">
+            <input type="text" id="clientName" placeholder="CLIENTE">
+            <input type="text" id="clientNIF" placeholder="NIF">
+            <button onclick="iniciarSessao()" id="btnSessao">REGISTAR SESSÃO</button>
         </div>
-        
-        <!-- SEÇÃO DE ANÁLISE E CONTROLES -->
-        <section class="analysis-section">
-            <div class="analysis-controls">
-                <button id="analyze-btn" class="analyze-btn" disabled>
-                    <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
-                </button>
-                
-                <button id="clear-session-btn" class="clear-session-btn">
-                    <i class="fas fa-broom"></i> LIMPAR SESSÃO
-                </button>
+    </header>
+
+    <main class="dashboard">
+        <section class="control-row">
+            <div class="control-label">1. FICHEIRO DE CONTROLO (CSV):</div>
+            <input type="file" id="controlFile" accept=".csv" hidden>
+            <label for="controlFile" class="btn-upload">CARREGAR REGISTO DE AUTENTICIDADE</label>
+            <div id="controlStatus" class="status-indicator">AGUARDANDO...</div>
+        </section>
+
+        <section class="evidence-grid">
+            <div class="card disabled" id="card-saft">
+                <div class="card-title">FICHEIRO SAF-T (PT)</div>
+                <input type="file" id="file-saft" disabled>
+                <div class="hash-box" id="hash-saft">HASH: PENDENTE</div>
+                <div class="match-msg" id="msg-saft">---</div>
             </div>
-            
-            <div class="report-controls">
-                <button id="full-report-btn" class="analyze-btn" disabled>
-                    <i class="fas fa-file-pdf"></i> RELATÓRIO COMPLETO
-                </button>
-                
-                <button id="partial-report-btn" class="analyze-btn" disabled>
-                    <i class="fas fa-file-contract"></i> RELATÓRIO PARCIAL
-                </button>
+
+            <div class="card disabled" id="card-invoice">
+                <div class="card-title">FATURAÇÃO / DOCS</div>
+                <input type="file" id="file-invoice" disabled>
+                <div class="hash-box" id="hash-invoice">HASH: PENDENTE</div>
+                <div class="match-msg" id="msg-invoice">---</div>
+            </div>
+
+            <div class="card disabled" id="card-statement">
+                <div class="card-title">EXTRATO BANCÁRIO</div>
+                <input type="file" id="file-statement" disabled>
+                <div class="hash-box" id="hash-statement">HASH: PENDENTE</div>
+                <div class="match-msg" id="msg-statement">---</div>
             </div>
         </section>
-        
-        <!-- ASSINATURA DIGITAL DA SESSÃO -->
-        <section class="signature-section">
-            <div class="signature-header">
-                <div class="signature-title">
-                    <i class="fas fa-hashtag"></i> ASSINATURA DIGITAL DA SESSÃO
-                </div>
-                <div class="session-info">
-                    ID: <span id="session-display-id">-</span> | 
-                    Timestamp: <span id="session-timestamp">-</span>
-                </div>
-            </div>
-            
-            <div id="master-hash-value" class="master-hash-display pending">
-                AGUARDANDO GERAÇÃO...
-            </div>
-        </section>
-        
-        <!-- CONSOLE DE AUDITORIA -->
-        <section class="audit-console">
-            <div class="console-header">
-                <div class="console-title">
-                    <i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA
-                </div>
-                <div class="console-controls">
-                    <button id="clear-console-btn" class="console-btn">
-                        <i class="fas fa-broom"></i> Limpar
-                    </button>
-                    <button id="export-logs-btn" class="console-btn">
-                        <i class="fas fa-download"></i> Exportar
-                    </button>
-                </div>
-            </div>
-            
-            <div id="console-output" class="console-output">
-                <!-- Logs serão injetados aqui -->
-            </div>
-        </section>
-        
-    </div>
-    
-    <!-- SCRIPTS EXTERNOS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
-    <!-- SCRIPT PRINCIPAL -->
+    </main>
+
+    <footer class="action-bar">
+        <div class="master-info">
+            <span id="mHashLabel">MASTER HASH:</span>
+            <span id="mHashValue">SESSÃO NÃO SELADA</span>
+        </div>
+        <div class="btns-final">
+            <button id="btnRelatorio" disabled onclick="gerarRelatorio()">GERAR PARECER TÉCNICO</button>
+        </div>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
