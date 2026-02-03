@@ -126,27 +126,46 @@
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO (PRIORIDADE)
                         </div>
                         
-                        <!-- VISUALIZAÇÃO DAS HASHES DE REFERÊNCIA -->
-                        <div id="controlHashStatus" class="status-message" style="display: none; margin-top: 10px; background: rgba(30, 64, 175, 0.1);">
-                            <i class="fas fa-hashtag"></i> HASHES DE REFERÊNCIA CARREGADAS: <span id="controlHashCount" style="color: #60a5fa; font-weight: bold;">0</span>
-                        </div>
-                        
+                        <!-- DASHBOARD SIMPLIFICADO - APENAS FICHEIROS CARREGADOS -->
                         <div id="controlHashDashboard" style="display: none; margin-top: 20px; background: rgba(15, 23, 42, 0.8); padding: 20px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.2);">
                             <h5 style="color: #93c5fd; font-size: 0.9rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-hashtag"></i> REFERÊNCIAS DE AUTENTICIDADE CARREGADAS
+                                <i class="fas fa-hashtag"></i> VALIDAÇÃO DOS FICHEIROS CARREGADOS
                             </h5>
                             <div class="data-grid" style="grid-template-columns: 1fr; gap: 10px;">
-                                <div class="data-item">
-                                    <span>Hash SAF-T (Referência):</span> 
-                                    <span id="hash-saft-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
+                                <!-- Estas linhas serão preenchidas dinamicamente apenas quando o utilizador carregar ficheiros -->
+                                <div id="hash-saft-container" style="display: none;">
+                                    <div class="data-item">
+                                        <span>Ficheiro SAF-T:</span> 
+                                        <span id="hash-saft-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
+                                    </div>
+                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
+                                        <span id="hash-saft-ref"></span>
+                                    </div>
                                 </div>
-                                <div class="data-item">
-                                    <span>Hash Fatura (Referência):</span> 
-                                    <span id="hash-fatura-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
+                                
+                                <div id="hash-fatura-container" style="display: none;">
+                                    <div class="data-item">
+                                        <span>Ficheiro Fatura:</span> 
+                                        <span id="hash-fatura-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
+                                    </div>
+                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
+                                        <span id="hash-fatura-ref"></span>
+                                    </div>
                                 </div>
-                                <div class="data-item">
-                                    <span>Hash Extrato (Referência):</span> 
-                                    <span id="hash-extrato-ref" style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #93c5fd; word-break: break-all; text-align: right;">NÃO CARREGADA</span>
+                                
+                                <div id="hash-extrato-container" style="display: none;">
+                                    <div class="data-item">
+                                        <span>Ficheiro Extrato:</span> 
+                                        <span id="hash-extrato-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
+                                    </div>
+                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
+                                        <span id="hash-extrato-ref"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Mensagem quando nenhum ficheiro foi carregado -->
+                                <div id="no-files-message" style="text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 15px;">
+                                    <i class="fas fa-info-circle"></i> Nenhum ficheiro carregado no Passo 2
                                 </div>
                             </div>
                         </div>
