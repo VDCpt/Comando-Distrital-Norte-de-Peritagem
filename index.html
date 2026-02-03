@@ -1,150 +1,441 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC PERITAGEM FORENSE</title>
-    <link rel="stylesheet" href="style.css">
+    <title>VDC | Sistema de Peritagem Forense v5.2</title>
+    
+    <!-- Fontes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+    
+    <style>
+        /* Estilos críticos de inicialização */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            font-family: 'Inter', sans-serif;
+            color: #f1f5f9;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-logo {
+            font-size: 3.5rem;
+            color: #3b82f6;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .loading-text {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .loading-progress {
+            width: 300px;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc2626;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 10000;
+            display: none;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Overlay de carregamento -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-logo">
+            <i class="fas fa-balance-scale"></i>
+        </div>
+        <div class="loading-text">
+            <strong>VDC SISTEMA DE PERITAGEM FORENSE v5.2</strong><br>
+            Inicializando Terminal de Prova Legal...
+        </div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="loadingProgress"></div>
+        </div>
+    </div>
+    
+    <!-- Mensagem de erro -->
+    <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="errorText"></span>
+    </div>
+    
+    <!-- Conteúdo principal -->
+    <div class="main-container" id="mainContainer" style="display: none;">
+        
         <!-- Cabeçalho -->
-        <header>
-            <h1><i class="fas fa-fingerprint"></i> VDC PERITAGEM FORENSE</h1>
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1>
+                        <i class="fas fa-balance-scale"></i>
+                        VDC PERITAGEM FORENSE
+                    </h1>
+                    <div class="version-badge">v5.2</div>
+                </div>
+                
+                <div class="session-info">
+                    <div class="session-id">
+                        <i class="fas fa-fingerprint"></i>
+                        Sessão: <span id="sessionIdDisplay">VDC-XXXX-XXXX</span>
+                    </div>
+                    <div class="timestamp">
+                        <i class="fas fa-clock"></i>
+                        <span id="currentTime">--:--:--</span>
+                    </div>
+                </div>
+            </div>
         </header>
-
-        <!-- Identificação do Cliente -->
-        <section class="card">
-            <h2><i class="fas fa-user"></i> IDENTIFICAÇÃO DO CLIENTE</h2>
-            <div class="form-group">
-                <label for="clientName">Nome do Cliente</label>
-                <input type="text" id="clientName" placeholder="Ex: João Silva">
-            </div>
-            <div class="form-group">
-                <label for="clientNIF">NIF</label>
-                <input type="text" id="clientNIF" placeholder="9 dígitos" maxlength="9">
+        
+        <!-- Seção de identificação -->
+        <section class="identification-section">
+            <div class="identification-card">
+                <div class="card-header">
+                    <i class="fas fa-user-shield"></i>
+                    <h3>IDENTIFICAÇÃO DO CLIENTE</h3>
+                </div>
+                
+                <div class="identification-form">
+                    <div class="form-group">
+                        <label for="clientName">
+                            <i class="fas fa-user"></i> Nome do Cliente
+                        </label>
+                        <input type="text" 
+                               id="clientName" 
+                               placeholder="Ex: João Silva"
+                               autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientNIF">
+                            <i class="fas fa-id-card"></i> NIF
+                        </label>
+                        <input type="text" 
+                               id="clientNIF" 
+                               placeholder="9 dígitos"
+                               maxlength="9"
+                               pattern="\d{9}"
+                               autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button id="registerClientBtn" class="primary-btn">
+                            <i class="fas fa-save"></i> REGISTAR CLIENTE
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="client-status" id="clientStatus" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="clientNameDisplay">Cliente registado</span>
+                </div>
             </div>
         </section>
-
-        <!-- Registo de Autenticidade -->
-        <section class="card">
-            <h2><i class="fas fa-file-csv"></i> REGISTO DE AUTENTICIDADE</h2>
-            <p>Carregue o ficheiro CSV com as hashes de referência</p>
-            <div class="upload-area" id="csvUploadArea">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Aguardando ficheiro de controlo</p>
-                <p class="small">O ficheiro deve conter as colunas: "Algorithm", "Hash", "Path"</p>
-                <input type="file" id="csvFile" accept=".csv">
-                <button onclick="document.getElementById('csvFile').click()">
-                    <i class="fas fa-upload"></i> Carregar CSV
-                </button>
+        
+        <!-- Passo 1: Controlo de Autenticidade -->
+        <section class="step-section step-1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">
+                    <i class="fas fa-database"></i>
+                    <h3>REGISTO DE AUTENTICIDADE</h3>
+                    <small>Carregue o ficheiro CSV com as hashes de referência</small>
+                </div>
             </div>
-            <div id="csvStatus"></div>
-            <div id="csvContent" class="hidden">
-                <h3>Conteúdo do CSV:</h3>
-                <table id="hashTable">
-                    <thead>
-                        <tr>
-                            <th>Algorithm</th>
-                            <th>Hash</th>
-                            <th>Path</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            
+            <div class="step-content">
+                <div class="file-upload-area" id="controlUploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <strong>Arraste ou clique para carregar</strong>
+                        <p>Ficheiro CSV de controlo (.csv)</p>
+                    </div>
+                    <input type="file" 
+                           id="controlFile" 
+                           accept=".csv"
+                           class="file-input">
+                </div>
+                
+                <div class="status-display" id="controlStatus">
+                    <div class="status-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="status-text">
+                        Aguardando ficheiro de controlo
+                    </div>
+                </div>
+                
+                <div class="file-info">
+                    <i class="fas fa-info-circle"></i>
+                    O ficheiro deve conter as colunas: "Algorithm", "Hash", "Path"
+                </div>
             </div>
         </section>
-
-        <!-- Validação de Documentos -->
-        <section class="card">
-            <h2><i class="fas fa-file-contract"></i> VALIDAÇÃO DE DOCUMENTOS</h2>
+        
+        <!-- Passos 2, 3, 4: Documentos -->
+        <div class="documents-grid" id="documentsGrid" style="opacity: 0.5; pointer-events: none;">
             
             <!-- SAF-T -->
-            <div class="document-box">
-                <div class="doc-header">
-                    <i class="fas fa-database"></i>
-                    <h3>FICHEIRO SAF-T</h3>
+            <div class="document-card" data-type="saft">
+                <div class="card-header">
+                    <div class="card-step">2</div>
+                    <h4>
+                        <i class="fas fa-file-csv"></i>
+                        FICHEIRO SAF-T
+                    </h4>
                 </div>
-                <div class="upload-area" id="saftUploadArea">
-                    <input type="file" id="saftFile" accept=".xml">
-                    <button onclick="document.getElementById('saftFile').click()">
-                        <i class="fas fa-upload"></i> Carregar SAF-T
-                    </button>
+                
+                <div class="card-body">
+                    <div class="upload-container">
+                        <div class="upload-area" id="saftUploadArea">
+                            <i class="fas fa-upload"></i>
+                            <p>Carregar SAF-T</p>
+                            <input type="file" 
+                                   id="saftFile" 
+                                   accept=".csv,.xml,.txt"
+                                   disabled
+                                   class="file-input">
+                        </div>
+                    </div>
+                    
+                    <div class="validation-status" id="saftStatus">
+                        <div class="status-indicator status-pending"></div>
+                        <span>Aguardando validação</span>
+                    </div>
+                    
+                    <div class="hash-display" id="saftHashDisplay" style="display: none;">
+                        <div class="hash-label">Hash Calculada:</div>
+                        <div class="hash-value" id="saftHashValue">-</div>
+                    </div>
                 </div>
-                <div id="saftStatus" class="status-box">
-                    <i class="fas fa-hourglass-half"></i> Aguardando validação
-                </div>
-                <div id="saftDetails" class="hidden"></div>
             </div>
-
+            
             <!-- Fatura -->
-            <div class="document-box">
-                <div class="doc-header">
-                    <i class="fas fa-file-invoice"></i>
-                    <h3>FATURA</h3>
+            <div class="document-card" data-type="fatura">
+                <div class="card-header">
+                    <div class="card-step">3</div>
+                    <h4>
+                        <i class="fas fa-file-invoice"></i>
+                        FATURA
+                    </h4>
                 </div>
-                <div class="upload-area" id="invoiceUploadArea">
-                    <input type="file" id="invoiceFile" accept=".pdf,.xml,.txt">
-                    <button onclick="document.getElementById('invoiceFile').click()">
-                        <i class="fas fa-upload"></i> Carregar Fatura
-                    </button>
+                
+                <div class="card-body">
+                    <div class="upload-container">
+                        <div class="upload-area" id="invoiceUploadArea">
+                            <i class="fas fa-upload"></i>
+                            <p>Carregar Fatura</p>
+                            <input type="file" 
+                                   id="invoiceFile" 
+                                   accept=".pdf,.txt"
+                                   disabled
+                                   class="file-input">
+                        </div>
+                    </div>
+                    
+                    <div class="validation-status" id="invoiceStatus">
+                        <div class="status-indicator status-pending"></div>
+                        <span>Aguardando validação</span>
+                    </div>
+                    
+                    <div class="hash-display" id="invoiceHashDisplay" style="display: none;">
+                        <div class="hash-label">Hash Calculada:</div>
+                        <div class="hash-value" id="invoiceHashValue">-</div>
+                    </div>
                 </div>
-                <div id="invoiceStatus" class="status-box">
-                    <i class="fas fa-hourglass-half"></i> Aguardando validação
-                </div>
-                <div id="invoiceDetails" class="hidden"></div>
             </div>
-
+            
             <!-- Extrato -->
-            <div class="document-box">
-                <div class="doc-header">
-                    <i class="fas fa-file-alt"></i>
-                    <h3>EXTRATO</h3>
+            <div class="document-card" data-type="extrato">
+                <div class="card-header">
+                    <div class="card-step">4</div>
+                    <h4>
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        EXTRATO
+                    </h4>
                 </div>
-                <div class="upload-area" id="extractUploadArea">
-                    <input type="file" id="extractFile" accept=".pdf,.txt,.csv">
-                    <button onclick="document.getElementById('extractFile').click()">
-                        <i class="fas fa-upload"></i> Carregar Extrato
+                
+                <div class="card-body">
+                    <div class="upload-container">
+                        <div class="upload-area" id="statementUploadArea">
+                            <i class="fas fa-upload"></i>
+                            <p>Carregar Extrato</p>
+                            <input type="file" 
+                                   id="statementFile" 
+                                   accept=".pdf,.jpg,.jpeg,.png,.csv,.txt"
+                                   disabled
+                                   class="file-input">
+                        </div>
+                    </div>
+                    
+                    <div class="validation-status" id="statementStatus">
+                        <div class="status-indicator status-pending"></div>
+                        <span>Aguardando validação</span>
+                    </div>
+                    
+                    <div class="hash-display" id="statementHashDisplay" style="display: none;">
+                        <div class="hash-label">Hash Calculada:</div>
+                        <div class="hash-value" id="statementHashValue">-</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Controles de análise -->
+        <section class="analysis-controls">
+            <div class="controls-container">
+                <button id="analyzeBtn" class="analyze-btn" disabled>
+                    <i class="fas fa-search"></i>
+                    EXECUTAR ANÁLISE FORENSE
+                </button>
+                
+                <div class="secondary-controls">
+                    <button id="clearSessionBtn" class="secondary-btn">
+                        <i class="fas fa-redo"></i> NOVA SESSÃO
+                    </button>
+                    
+                    <button id="exportLogsBtn" class="secondary-btn">
+                        <i class="fas fa-download"></i> EXPORTAR LOGS
                     </button>
                 </div>
-                <div id="extractStatus" class="status-box">
-                    <i class="fas fa-hourglass-half"></i> Aguardando validação
+            </div>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+        </section>
+        
+        <!-- Console de auditoria -->
+        <section class="audit-section">
+            <div class="audit-header">
+                <h4>
+                    <i class="fas fa-terminal"></i>
+                    CONSOLE DE AUDITORIA
+                </h4>
+                <div class="audit-controls">
+                    <button id="clearConsoleBtn" class="icon-btn">
+                        <i class="fas fa-broom"></i>
+                    </button>
                 </div>
-                <div id="extractDetails" class="hidden"></div>
+            </div>
+            
+            <div class="audit-output" id="auditOutput">
+                <!-- Logs serão injetados aqui -->
             </div>
         </section>
-
-        <!-- Resumo -->
-        <section class="card">
-            <h2><i class="fas fa-clipboard-check"></i> RESUMO DA VALIDAÇÃO</h2>
-            <div id="validationSummary">
-                <p>Carregue os documentos e o ficheiro CSV para iniciar a validação.</p>
+        
+        <!-- Rodapé -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="system-info">
+                    <div class="master-hash" id="masterHashDisplay">
+                        <strong>Assinatura Digital:</strong>
+                        <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
+                    </div>
+                    <div class="copyright">
+                        © 2024 VDC - Sistema de Peritagem Forense v5.2
+                    </div>
+                </div>
             </div>
-            <div id="finalStatus" class="hidden">
-                <h3>Estado Final:</h3>
-                <p id="finalMessage"></p>
-            </div>
-        </section>
-
-        <!-- Botões de Ação -->
-        <div class="action-buttons">
-            <button id="validateBtn" onclick="validateAll()">
-                <i class="fas fa-check-circle"></i> Validar Todos os Documentos
-            </button>
-            <button id="resetBtn" onclick="resetAll()">
-                <i class="fas fa-redo"></i> Limpar Tudo
-            </button>
-        </div>
-
-        <!-- Log de Eventos -->
-        <section class="card">
-            <h2><i class="fas fa-history"></i> LOG DE EVENTOS</h2>
-            <div id="eventLog"></div>
-        </section>
+        </footer>
+        
     </div>
-
-    <script src="script.js"></script>
+    
+    <!-- Scripts externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <!-- Script principal (adiado para evitar bloqueio) -->
+    <script>
+        // Carregar script principal após o DOM estar pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar um pequeno delay para garantir que tudo está carregado
+            setTimeout(function() {
+                const script = document.createElement('script');
+                script.src = 'script.js';
+                script.onload = function() {
+                    console.log('Script principal carregado com sucesso');
+                };
+                script.onerror = function() {
+                    showError('Erro ao carregar o script principal');
+                };
+                document.head.appendChild(script);
+            }, 100);
+        });
+        
+        // Função para mostrar erros
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            if (errorEl && errorText) {
+                errorText.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => {
+                    errorEl.style.display = 'none';
+                }, 5000);
+            }
+            console.error(message);
+        }
+    </script>
 </body>
 </html>
