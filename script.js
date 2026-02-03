@@ -1,6 +1,6 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v5.2
-// SCRIPT PRINCIPAL - CORREÇÃO DE UPLOADS
+// SCRIPT PRINCIPAL - CORREÇÃO FINAL
 // ============================================
 
 // 1. ESTADO DO SISTEMA
@@ -17,7 +17,7 @@ const VDCSystem = {
         extrato: null
     },
     
-    // Todos os hashes do control file (nova propriedade)
+    // Todos os hashes do control file
     allReferenceHashes: null,
     
     // Documentos carregados
@@ -61,7 +61,7 @@ async function initializeSystem() {
         setupEventListeners();
         updateLoadingProgress(50);
         
-        // Inicializar IndexedDB (VERSÃO ALTERADA: 1 → 3)
+        // Inicializar IndexedDB
         await initializeDatabase();
         updateLoadingProgress(70);
         
@@ -146,7 +146,7 @@ function startClock() {
     setInterval(updateClock, 1000);
 }
 
-// 4. EVENT LISTENERS (CORRIGIDO)
+// 4. EVENT LISTENERS
 function setupEventListeners() {
     console.log('🔗 Configurando event listeners...');
     
@@ -227,15 +227,15 @@ function setupFileUploads() {
         });
     }
     
-    // Document files (CORRIGIDO - IDs corretos)
+    // Document files - CORRIGIDO: IDs corretos
     setupDocumentUpload('saft', 'saftFile');
-    setupDocumentUpload('fatura', 'invoiceFile'); // ID correto para Fatura
-    setupDocumentUpload('extrato', 'statementFile'); // ID correto para Extrato
+    setupDocumentUpload('fatura', 'invoiceFile'); // ID CORRETO: invoiceFile
+    setupDocumentUpload('extrato', 'statementFile'); // ID CORRETO: statementFile
 }
 
 function setupDocumentUpload(type, inputId) {
     const uploadArea = document.getElementById(`${type}UploadArea`);
-    const fileInput = document.getElementById(inputId); // Usar ID correto passado como parâmetro
+    const fileInput = document.getElementById(inputId);
     
     if (uploadArea && fileInput) {
         uploadArea.addEventListener('click', () => {
@@ -244,7 +244,6 @@ function setupDocumentUpload(type, inputId) {
             }
         });
         
-        // Configurar drag and drop para cada área
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '#3b82f6';
@@ -273,15 +272,13 @@ function setupDocumentUpload(type, inputId) {
     }
 }
 
-// 5. PROCESSAMENTO DE FICHEIROS (CORRIGIDO - Match Direto por Hash)
+// 5. PROCESSAMENTO DE FICHEIROS
 async function processControlFile(file) {
     try {
         logMessage(`Processando ficheiro de controlo: ${file.name}`, 'info');
         
-        // Atualizar status
         updateControlStatus('processing', 'Processando CSV...');
         
-        // Ler e parsear CSV
         const text = await readFileAsText(file);
         const results = Papa.parse(text, {
             header: true,
@@ -289,18 +286,16 @@ async function processControlFile(file) {
             encoding: 'UTF-8'
         });
         
-        // RESET das referências
         VDCSystem.referenceHashes = { saft: null, fatura: null, extrato: null };
-        VDCSystem.allReferenceHashes = {}; // INICIALIZAR CORRETAMENTE
+        VDCSystem.allReferenceHashes = {};
         let foundHashes = 0;
         
-        // Processar hashes com MATCH DIRETO POR HASH
         results.data.forEach((row, index) => {
             const path = (row.Path || row.path || '').toLowerCase();
             const hash = (row.Hash || row.hash || '').toLowerCase().trim();
             const algorithm = row.Algorithm || row.algorithm || '';
             
-            // REGRA DE EXCLUSÃO CRÍTICA 1: Ignorar CONTROLO_AUTENTICIDADE
+            // Ignorar autorreferências
             if (path.includes('controlo_autenticidade') || 
                 path.includes('autenticidade') ||
                 path.includes('controlo')) {
@@ -308,20 +303,12 @@ async function processControlFile(file) {
                 return;
             }
             
-            // REGRA DE EXCLUSÃO CRÍTICA 2: Ignorar campos Hash vazios/nulos
             if (!hash || hash === '' || hash === 'null' || hash === 'undefined') {
                 logMessage(`[LINHA ${index + 1}] Ignorado: Campo Hash vazio ou nulo`, 'warn');
                 return;
             }
             
-            // LÓGICA FLEXÍVEL DE ATRIBUIÇÃO POR HASH
             if (hash && algorithm) {
-                // Armazenar hash para match posterior
-                if (!VDCSystem.allReferenceHashes) {
-                    VDCSystem.allReferenceHashes = {};
-                }
-                
-                // Registrar hash com informações do caminho
                 VDCSystem.allReferenceHashes[hash] = {
                     hash: hash,
                     path: path,
@@ -329,7 +316,6 @@ async function processControlFile(file) {
                     rowIndex: index + 1
                 };
                 
-                // Tentativa inteligente de atribuição baseada no path (mas não obrigatória)
                 let suggestedType = null;
                 if (path.includes('saft') || path.includes('saf-t') || path.includes('.xml')) {
                     suggestedType = 'saft';
@@ -340,7 +326,6 @@ async function processControlFile(file) {
                 }
                 
                 if (suggestedType) {
-                    // Atribuir apenas se ainda não estiver atribuído
                     if (!VDCSystem.referenceHashes[suggestedType]) {
                         VDCSystem.referenceHashes[suggestedType] = hash;
                         logMessage(`[LINHA ${index + 1}] Hash atribuída a ${suggestedType.toUpperCase()}: ${hash.substring(0, 16)}...`, 'info');
@@ -359,10 +344,8 @@ async function processControlFile(file) {
             throw new Error('Nenhuma hash válida encontrada no ficheiro de controlo');
         }
         
-        // Atualizar estado
         VDCSystem.validation.controlLoaded = true;
         
-        // Atualizar UI
         updateControlStatus('valid', `Controlo carregado: ${foundHashes} referências`);
         enableDocumentUploads();
         
@@ -379,16 +362,11 @@ async function processDocumentUpload(type, file) {
     try {
         logMessage(`Processando upload para ${type.toUpperCase()}: ${file.name}`, 'info');
         
-        // Atualizar status
         updateDocumentStatus(type, 'processing', 'Calculando hash...');
         
-        // Calcular hash do ficheiro carregado
         const hash = await calculateFileHash(file);
-        
-        // DETERMINAR FORMATO DO FICHEIRO
         const fileFormat = determineFileFormat(file);
         
-        // PROCESSAR CONTEÚDO BASEADO NO FORMATO
         let parsedData = null;
         try {
             if (fileFormat === 'xml') {
@@ -400,32 +378,26 @@ async function processDocumentUpload(type, file) {
             } else {
                 parsedData = { content: await readFileAsText(file), format: fileFormat };
             }
-            
         } catch (parseError) {
             logMessage(`AVISO: Erro no parse do conteúdo: ${parseError.message}`, 'warn');
         }
         
-        // VALIDAÇÃO POR HASH - LÓGICA FLEXÍVEL
         let isValid = false;
         let referenceMatch = null;
         let validationSource = '';
         
-        // 1. Primeiro, verificar match exato com hashes registadas
         if (VDCSystem.allReferenceHashes && VDCSystem.allReferenceHashes[hash]) {
             referenceMatch = VDCSystem.allReferenceHashes[hash];
             isValid = true;
             validationSource = 'match_hash_exato';
             logMessage(`✅ Hash encontrada no controlo (${referenceMatch.path})`, 'success');
         }
-        // 2. Verificar contra referência específica para o tipo
         else if (VDCSystem.referenceHashes[type] && VDCSystem.referenceHashes[type] === hash) {
             isValid = true;
             validationSource = 'referencia_especifica';
             logMessage(`✅ Hash validada contra referência específica para ${type.toUpperCase()}`, 'success');
         }
-        // 3. Fallback: verificar se hash existe em qualquer referência (flexibilidade máxima)
         else if (VDCSystem.allReferenceHashes) {
-            // Procurar hash em todas as referências (caso nome não corresponda exatamente)
             const foundHash = Object.values(VDCSystem.allReferenceHashes).find(ref => ref.hash === hash);
             if (foundHash) {
                 referenceMatch = foundHash;
@@ -435,7 +407,6 @@ async function processDocumentUpload(type, file) {
             }
         }
         
-        // Atualizar estado do documento
         VDCSystem.documents[type] = {
             file: file,
             hash: hash,
@@ -452,12 +423,10 @@ async function processDocumentUpload(type, file) {
             referenceMatch: referenceMatch
         };
         
-        // Atualizar UI
         if (isValid) {
             updateDocumentStatus(type, 'valid', `Validado ✓ (${fileFormat.toUpperCase()})`);
             updateHashDisplay(type, hash, true);
             
-            // Exibir dados extraídos se disponíveis
             if (parsedData) {
                 displayExtractedData(type, parsedData);
             }
@@ -465,7 +434,6 @@ async function processDocumentUpload(type, file) {
             updateDocumentStatus(type, 'error', 'Hash não encontrada ✗');
             updateHashDisplay(type, hash, false);
             
-            // Log informativo para debug
             logMessage(`Hash do ${type.toUpperCase()}: ${hash.substring(0, 16)}...`, 'info');
             if (VDCSystem.allReferenceHashes) {
                 const availableHashes = Object.keys(VDCSystem.allReferenceHashes).length;
@@ -473,12 +441,10 @@ async function processDocumentUpload(type, file) {
             }
         }
         
-        // Verificar se pode analisar
         checkAnalysisReady();
         
-        // Gerar master hash se válido
         if (isValid) {
-            await generateMasterHash();
+            generateMasterHash(); // REMOVIDO await - função síncrona agora
         }
         
         logMessage(`${type.toUpperCase()} ${isValid ? 'VALIDADO ✓' : 'INVALIDO ✗'}: ${hash.substring(0, 16)}...`, isValid ? 'success' : 'error');
@@ -511,20 +477,15 @@ function determineFileFormat(file) {
 async function parseSAFTXML(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        
         reader.onload = function(e) {
             try {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
-                
-                const extractedData = {
+                resolve({
                     format: 'saft-xml',
                     fileName: file.name,
                     extractionDate: new Date().toISOString()
-                };
-                
-                resolve(extractedData);
-                
+                });
             } catch (error) {
                 resolve({
                     format: 'xml',
@@ -533,7 +494,6 @@ async function parseSAFTXML(file) {
                 });
             }
         };
-        
         reader.onerror = () => reject(new Error('Erro na leitura do ficheiro XML'));
         reader.readAsText(file, 'UTF-8');
     });
@@ -547,15 +507,12 @@ async function parseCSVFile(file) {
             encoding: 'UTF-8',
             complete: function(results) {
                 try {
-                    const extractedData = {
+                    resolve({
                         format: 'csv',
                         fileName: file.name,
                         rowCount: results.data.length,
                         columns: results.meta.fields || []
-                    };
-                    
-                    resolve(extractedData);
-                    
+                    });
                 } catch (error) {
                     reject(new Error('Erro no processamento do CSV: ' + error.message));
                 }
@@ -596,7 +553,6 @@ function displayExtractedData(type, parsedData) {
 async function calculateFileHash(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        
         reader.onload = function(e) {
             try {
                 const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
@@ -606,7 +562,6 @@ async function calculateFileHash(file) {
                 reject(error);
             }
         };
-        
         reader.onerror = () => reject(new Error('Erro na leitura do ficheiro'));
         reader.readAsArrayBuffer(file);
     });
@@ -652,7 +607,6 @@ function updateDocumentStatus(type, state, message) {
         text.textContent = message;
     }
     
-    // Atualizar card
     const card = document.querySelector(`.document-card[data-type="${type}"]`);
     if (card) {
         card.classList.remove('file-valid', 'file-invalid', 'file-processing');
@@ -672,11 +626,11 @@ function updateHashDisplay(type, hash, isValid) {
 }
 
 function enableDocumentUploads() {
-    // Habilitar inputs com IDs CORRETOS
+    // CORRIGIDO: IDs corretos para todos os inputs
     const inputs = [
         { id: 'saftFile', type: 'saft' },
-        { id: 'invoiceFile', type: 'fatura' }, // ID correto
-        { id: 'statementFile', type: 'extrato' } // ID correto
+        { id: 'invoiceFile', type: 'fatura' },    // ID CORRETO: invoiceFile
+        { id: 'statementFile', type: 'extrato' }  // ID CORRETO: statementFile
     ];
     
     inputs.forEach(input => {
@@ -689,7 +643,6 @@ function enableDocumentUploads() {
         }
     });
     
-    // Habilitar grid
     const grid = document.getElementById('documentsGrid');
     if (grid) {
         grid.style.opacity = '1';
@@ -702,16 +655,13 @@ function checkAnalysisReady() {
     const hasControl = VDCSystem.validation.controlLoaded;
     const hasClient = VDCSystem.validation.clientRegistered;
     
-    // Verificar se todos os documentos estão carregados
     const documents = VDCSystem.documents;
     const allLoaded = documents.saft.file && documents.fatura.file && documents.extrato.file;
     
-    // Verificar se pelo menos um é válido
     const anyValid = documents.saft.valid || documents.fatura.valid || documents.extrato.valid;
     
     VDCSystem.validation.readyForAnalysis = hasControl && hasClient && allLoaded && anyValid;
     
-    // Atualizar botão
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) {
         analyzeBtn.disabled = !VDCSystem.validation.readyForAnalysis;
@@ -731,7 +681,6 @@ function registerClient() {
     const name = nameInput?.value.trim();
     const nif = nifInput?.value.trim();
     
-    // Validações
     if (!name || name.length < 3) {
         showError('Nome do cliente inválido (mínimo 3 caracteres)');
         nameInput?.focus();
@@ -744,27 +693,18 @@ function registerClient() {
         return;
     }
     
-    // Registrar cliente
     VDCSystem.client = { name, nif };
     VDCSystem.validation.clientRegistered = true;
     
-    // Atualizar UI
     const status = document.getElementById('clientStatus');
     const nameDisplay = document.getElementById('clientNameDisplay');
     
-    if (status) {
-        status.style.display = 'flex';
-    }
+    if (status) status.style.display = 'flex';
+    if (nameDisplay) nameDisplay.textContent = name;
     
-    if (nameDisplay) {
-        nameDisplay.textContent = name;
-    }
-    
-    // Limpar inputs
     if (nameInput) nameInput.value = '';
     if (nifInput) nifInput.value = '';
     
-    // Verificar se pode analisar
     checkAnalysisReady();
     
     logMessage(`Cliente registado: ${name} (NIF: ${nif})`, 'success');
@@ -780,10 +720,8 @@ async function performAnalysis() {
     try {
         logMessage('Iniciando análise forense...', 'info');
         
-        // Mostrar progresso
         showProgress();
         
-        // Simular análise
         let progress = 0;
         const interval = setInterval(() => {
             progress += 10;
@@ -792,10 +730,8 @@ async function performAnalysis() {
             if (progress >= 100) {
                 clearInterval(interval);
                 
-                // Gerar resultados
                 generateAnalysisResults();
                 
-                // Esconder progresso
                 setTimeout(() => {
                     hideProgress();
                     logMessage('Análise forense concluída com sucesso', 'success');
@@ -832,16 +768,13 @@ function hideProgress() {
 }
 
 function generateAnalysisResults() {
-    // Gerar master hash
     generateMasterHash();
-    
     logMessage('Resultados da análise gerados', 'success');
 }
 
-// 11. MASTER HASH
-async function generateMasterHash() {
+// 11. MASTER HASH - CORRIGIDO: função síncrona sem IndexedDB
+function generateMasterHash() {
     try {
-        // Coletar hashes válidas
         const validHashes = [];
         
         Object.entries(VDCSystem.documents).forEach(([type, doc]) => {
@@ -855,7 +788,6 @@ async function generateMasterHash() {
             return;
         }
         
-        // Adicionar metadados
         const data = [
             ...validHashes,
             VDCSystem.sessionId,
@@ -863,10 +795,8 @@ async function generateMasterHash() {
             VDCSystem.version
         ].join('|');
         
-        // Calcular hash
         const masterHash = CryptoJS.SHA256(data).toString().toLowerCase();
         
-        // Atualizar UI
         const display = document.getElementById('masterHashValue');
         if (display) {
             display.textContent = masterHash;
@@ -875,24 +805,16 @@ async function generateMasterHash() {
         
         logMessage(`Master Hash gerada: ${masterHash.substring(0, 32)}...`, 'success');
         
-        // Salvar no IndexedDB
-        await saveToDatabase('master_hash', {
-            hash: masterHash,
-            timestamp: new Date().toISOString(),
-            documents: validHashes.length,
-            sessionId: VDCSystem.sessionId
-        });
-        
     } catch (error) {
         console.error('Erro ao gerar Master Hash:', error);
         logMessage(`Erro ao gerar Master Hash: ${error.message}`, 'error');
     }
 }
 
-// 12. INDEXEDDB (VERSÃO ALTERADA: 1 → 3)
+// 12. INDEXEDDB - CORRIGIDO: object store 'master_hash' adicionado
 async function initializeDatabase() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('VDC_Forensic_DB', 3); // ALTERADO: versão 1 para 3
+        const request = indexedDB.open('VDC_Forensic_DB', 4); // Versão aumentada para 4
         
         request.onerror = (event) => {
             console.error('IndexedDB error:', event.target.error);
@@ -919,21 +841,12 @@ async function initializeDatabase() {
             if (!db.objectStoreNames.contains('analysis')) {
                 db.createObjectStore('analysis', { keyPath: 'sessionId' });
             }
+            
+            // ADICIONADO: object store 'master_hash'
+            if (!db.objectStoreNames.contains('master_hash')) {
+                db.createObjectStore('master_hash', { keyPath: 'sessionId' });
+            }
         };
-    });
-}
-
-async function saveToDatabase(storeName, data) {
-    if (!VDCSystem.db) return;
-    
-    return new Promise((resolve, reject) => {
-        const transaction = VDCSystem.db.transaction([storeName], 'readwrite');
-        const store = transaction.objectStore(storeName);
-        
-        const request = store.add(data);
-        
-        request.onsuccess = () => resolve();
-        request.onerror = (event) => reject(event.target.error);
     });
 }
 
@@ -969,10 +882,8 @@ function logMessage(message, level = 'info') {
     
     VDCSystem.logs.push(logEntry);
     
-    // Atualizar console
     updateAuditConsole(logEntry);
     
-    // Log no console do navegador
     console.log(`[VDC ${level.toUpperCase()}] ${message}`);
 }
 
@@ -1026,7 +937,6 @@ function exportLogs() {
 
 function clearSession() {
     if (confirm('Tem certeza que deseja iniciar uma nova sessão? Todos os dados não salvos serão perdidos.')) {
-        // Resetar estado
         VDCSystem.sessionId = generateSessionId();
         VDCSystem.client = null;
         VDCSystem.referenceHashes = { saft: null, fatura: null, extrato: null };
@@ -1042,7 +952,6 @@ function clearSession() {
             readyForAnalysis: false
         };
         
-        // Resetar UI
         document.getElementById('sessionIdDisplay').textContent = VDCSystem.sessionId;
         document.getElementById('clientStatus').style.display = 'none';
         document.getElementById('controlStatus').innerHTML = `
@@ -1054,14 +963,12 @@ function clearSession() {
             </div>
         `;
         
-        // Resetar documentos
         ['saft', 'fatura', 'extrato'].forEach(type => {
             updateDocumentStatus(type, 'pending', 'Aguardando validação');
             const display = document.getElementById(`${type}HashDisplay`);
             if (display) display.style.display = 'none';
         });
         
-        // Desabilitar uploads
         const grid = document.getElementById('documentsGrid');
         if (grid) {
             grid.style.opacity = '0.5';
@@ -1073,10 +980,8 @@ function clearSession() {
             if (input) input.disabled = true;
         });
         
-        // Resetar master hash
         document.getElementById('masterHashValue').textContent = 'AGUARDANDO GERAÇÃO...';
         
-        // Resetar botão de análise
         const analyzeBtn = document.getElementById('analyzeBtn');
         if (analyzeBtn) {
             analyzeBtn.disabled = true;
@@ -1092,7 +997,6 @@ function showError(message) {
     console.error('Erro:', message);
     logMessage(message, 'error');
     
-    // Mostrar alerta temporário
     const errorDiv = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
     
