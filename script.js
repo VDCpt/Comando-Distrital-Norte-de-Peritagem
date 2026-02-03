@@ -1,43 +1,30 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v5.2
-// SCRIPT PRINCIPAL - CORREÇÃO FINAL
+// SCRIPT PRINCIPAL - IDs CORRIGIDOS
 // ============================================
 
 // 1. ESTADO DO SISTEMA
 const VDCSystem = {
-    // Configuração
     version: 'v5.2',
     sessionId: null,
     client: null,
-    
-    // Referência de hashes
     referenceHashes: {
         saft: null,
         fatura: null,
         extrato: null
     },
-    
-    // Todos os hashes do control file
     allReferenceHashes: null,
-    
-    // Documentos carregados
     documents: {
         saft: { file: null, hash: null, valid: false, metadata: null, parsedData: null, format: null },
         fatura: { file: null, hash: null, valid: false, metadata: null, parsedData: null, format: null },
         extrato: { file: null, hash: null, valid: false, metadata: null, parsedData: null, format: null }
     },
-    
-    // Validação
     validation: {
         controlLoaded: false,
         clientRegistered: false,
         readyForAnalysis: false
     },
-    
-    // Auditoria
     logs: [],
-    
-    // IndexedDB
     db: null
 };
 
@@ -45,31 +32,18 @@ const VDCSystem = {
 async function initializeSystem() {
     try {
         console.log('🔧 Inicializando sistema VDC v5.2...');
-        
-        // Atualizar progresso de carregamento
         updateLoadingProgress(10);
-        
-        // Gerar ID de sessão
         VDCSystem.sessionId = generateSessionId();
         updateLoadingProgress(20);
-        
-        // Inicializar UI
         initializeUI();
         updateLoadingProgress(30);
-        
-        // Configurar event listeners
         setupEventListeners();
         updateLoadingProgress(50);
-        
-        // Inicializar IndexedDB
         await initializeDatabase();
         updateLoadingProgress(70);
-        
-        // Atualizar timestamp
         startClock();
         updateLoadingProgress(90);
         
-        // Finalizar carregamento
         setTimeout(() => {
             updateLoadingProgress(100);
             showMainInterface();
@@ -110,19 +84,16 @@ function showMainInterface() {
 
 // 3. INTERFACE DO USUÁRIO
 function initializeUI() {
-    // Atualizar ID da sessão
     const sessionIdDisplay = document.getElementById('sessionIdDisplay');
     if (sessionIdDisplay && VDCSystem.sessionId) {
         sessionIdDisplay.textContent = VDCSystem.sessionId;
     }
     
-    // Atualizar master hash
     const masterHashValue = document.getElementById('masterHashValue');
     if (masterHashValue) {
         masterHashValue.textContent = 'AGUARDANDO GERAÇÃO...';
     }
     
-    // Configurar uploads de ficheiro
     setupFileUploads();
 }
 
@@ -135,28 +106,24 @@ function startClock() {
             minute: '2-digit',
             second: '2-digit'
         });
-        
         const timeElement = document.getElementById('currentTime');
         if (timeElement) {
             timeElement.textContent = timeString;
         }
     }
-    
     updateClock();
     setInterval(updateClock, 1000);
 }
 
-// 4. EVENT LISTENERS
+// 4. EVENT LISTENERS - CORRIGIDO
 function setupEventListeners() {
     console.log('🔗 Configurando event listeners...');
     
-    // Registro de cliente
     const registerBtn = document.getElementById('registerClientBtn');
     if (registerBtn) {
         registerBtn.addEventListener('click', registerClient);
     }
     
-    // Inputs de cliente (Enter key)
     const clientNameInput = document.getElementById('clientName');
     const clientNIFInput = document.getElementById('clientNIF');
     
@@ -164,31 +131,26 @@ function setupEventListeners() {
         clientNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') clientNIFInput.focus();
         });
-        
         clientNIFInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') registerClient();
         });
     }
     
-    // Botão de análise
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) {
         analyzeBtn.addEventListener('click', performAnalysis);
     }
     
-    // Botão de nova sessão
     const clearBtn = document.getElementById('clearSessionBtn');
     if (clearBtn) {
         clearBtn.addEventListener('click', clearSession);
     }
     
-    // Botão de limpar console
     const clearConsoleBtn = document.getElementById('clearConsoleBtn');
     if (clearConsoleBtn) {
         clearConsoleBtn.addEventListener('click', clearConsole);
     }
     
-    // Botão de exportar logs
     const exportLogsBtn = document.getElementById('exportLogsBtn');
     if (exportLogsBtn) {
         exportLogsBtn.addEventListener('click', exportLogs);
@@ -219,7 +181,6 @@ function setupFileUploads() {
                 processControlFile(e.dataTransfer.files[0]);
             }
         });
-        
         controlFileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 processControlFile(e.target.files[0]);
@@ -227,10 +188,10 @@ function setupFileUploads() {
         });
     }
     
-    // Document files - CORRIGIDO: IDs corretos
+    // Document files - IDs CORRIGIDOS para match com HTML
     setupDocumentUpload('saft', 'saftFile');
-    setupDocumentUpload('fatura', 'invoiceFile'); // ID CORRETO: invoiceFile
-    setupDocumentUpload('extrato', 'statementFile'); // ID CORRETO: statementFile
+    setupDocumentUpload('fatura', 'faturaFile');     // ID CORRETO: faturaFile (não invoiceFile)
+    setupDocumentUpload('extrato', 'extratoFile');   // ID CORRETO: extratoFile (não statementFile)
 }
 
 function setupDocumentUpload(type, inputId) {
@@ -243,16 +204,13 @@ function setupDocumentUpload(type, inputId) {
                 fileInput.click();
             }
         });
-        
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '#3b82f6';
         });
-        
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.style.borderColor = '';
         });
-        
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '';
@@ -261,7 +219,6 @@ function setupDocumentUpload(type, inputId) {
                 processDocumentUpload(type, e.dataTransfer.files[0]);
             }
         });
-        
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 processDocumentUpload(type, e.target.files[0]);
@@ -276,7 +233,6 @@ function setupDocumentUpload(type, inputId) {
 async function processControlFile(file) {
     try {
         logMessage(`Processando ficheiro de controlo: ${file.name}`, 'info');
-        
         updateControlStatus('processing', 'Processando CSV...');
         
         const text = await readFileAsText(file);
@@ -295,7 +251,6 @@ async function processControlFile(file) {
             const hash = (row.Hash || row.hash || '').toLowerCase().trim();
             const algorithm = row.Algorithm || row.algorithm || '';
             
-            // Ignorar autorreferências
             if (path.includes('controlo_autenticidade') || 
                 path.includes('autenticidade') ||
                 path.includes('controlo')) {
@@ -345,10 +300,8 @@ async function processControlFile(file) {
         }
         
         VDCSystem.validation.controlLoaded = true;
-        
         updateControlStatus('valid', `Controlo carregado: ${foundHashes} referências`);
         enableDocumentUploads();
-        
         logMessage(`Ficheiro de controlo processado: ${foundHashes} hashes registadas`, 'success');
         
     } catch (error) {
@@ -361,7 +314,6 @@ async function processControlFile(file) {
 async function processDocumentUpload(type, file) {
     try {
         logMessage(`Processando upload para ${type.toUpperCase()}: ${file.name}`, 'info');
-        
         updateDocumentStatus(type, 'processing', 'Calculando hash...');
         
         const hash = await calculateFileHash(file);
@@ -444,7 +396,7 @@ async function processDocumentUpload(type, file) {
         checkAnalysisReady();
         
         if (isValid) {
-            generateMasterHash(); // REMOVIDO await - função síncrona agora
+            generateMasterHash();
         }
         
         logMessage(`${type.toUpperCase()} ${isValid ? 'VALIDADO ✓' : 'INVALIDO ✗'}: ${hash.substring(0, 16)}...`, isValid ? 'success' : 'error');
@@ -537,13 +489,10 @@ async function parsePDFFile(file) {
 
 function displayExtractedData(type, parsedData) {
     if (!parsedData) return;
-    
     const format = parsedData.format || 'unknown';
-    
     logMessage(`Dados extraídos (${type.toUpperCase()} - ${format.toUpperCase()}):`, 'info');
     logMessage(`• Ficheiro: ${parsedData.fileName || 'N/A'}`, 'info');
     logMessage(`• Formato: ${format.toUpperCase()}`, 'info');
-    
     if (format === 'csv' && parsedData.rowCount) {
         logMessage(`• Linhas: ${parsedData.rowCount}`, 'info');
     }
@@ -626,11 +575,11 @@ function updateHashDisplay(type, hash, isValid) {
 }
 
 function enableDocumentUploads() {
-    // CORRIGIDO: IDs corretos para todos os inputs
+    // IDs CORRIGIDOS para match com HTML
     const inputs = [
         { id: 'saftFile', type: 'saft' },
-        { id: 'invoiceFile', type: 'fatura' },    // ID CORRETO: invoiceFile
-        { id: 'statementFile', type: 'extrato' }  // ID CORRETO: statementFile
+        { id: 'faturaFile', type: 'fatura' },    // CORRETO: faturaFile
+        { id: 'extratoFile', type: 'extrato' }   // CORRETO: extratoFile
     ];
     
     inputs.forEach(input => {
@@ -654,10 +603,8 @@ function enableDocumentUploads() {
 function checkAnalysisReady() {
     const hasControl = VDCSystem.validation.controlLoaded;
     const hasClient = VDCSystem.validation.clientRegistered;
-    
     const documents = VDCSystem.documents;
     const allLoaded = documents.saft.file && documents.fatura.file && documents.extrato.file;
-    
     const anyValid = documents.saft.valid || documents.fatura.valid || documents.extrato.valid;
     
     VDCSystem.validation.readyForAnalysis = hasControl && hasClient && allLoaded && anyValid;
@@ -665,7 +612,6 @@ function checkAnalysisReady() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) {
         analyzeBtn.disabled = !VDCSystem.validation.readyForAnalysis;
-        
         if (VDCSystem.validation.readyForAnalysis) {
             analyzeBtn.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE (PRONTO)';
             analyzeBtn.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
@@ -677,7 +623,6 @@ function checkAnalysisReady() {
 function registerClient() {
     const nameInput = document.getElementById('clientName');
     const nifInput = document.getElementById('clientNIF');
-    
     const name = nameInput?.value.trim();
     const nif = nifInput?.value.trim();
     
@@ -706,7 +651,6 @@ function registerClient() {
     if (nifInput) nifInput.value = '';
     
     checkAnalysisReady();
-    
     logMessage(`Cliente registado: ${name} (NIF: ${nif})`, 'success');
 }
 
@@ -719,19 +663,15 @@ async function performAnalysis() {
     
     try {
         logMessage('Iniciando análise forense...', 'info');
-        
         showProgress();
         
         let progress = 0;
         const interval = setInterval(() => {
             progress += 10;
             updateProgress(progress);
-            
             if (progress >= 100) {
                 clearInterval(interval);
-                
                 generateAnalysisResults();
-                
                 setTimeout(() => {
                     hideProgress();
                     logMessage('Análise forense concluída com sucesso', 'success');
@@ -756,7 +696,6 @@ function showProgress() {
 function updateProgress(percent) {
     const bar = document.getElementById('progressBar');
     const text = document.getElementById('progressText');
-    
     if (bar) bar.style.width = percent + '%';
     if (text) text.textContent = percent + '%';
 }
@@ -772,11 +711,10 @@ function generateAnalysisResults() {
     logMessage('Resultados da análise gerados', 'success');
 }
 
-// 11. MASTER HASH - CORRIGIDO: função síncrona sem IndexedDB
+// 11. MASTER HASH
 function generateMasterHash() {
     try {
         const validHashes = [];
-        
         Object.entries(VDCSystem.documents).forEach(([type, doc]) => {
             if (doc.valid && doc.hash) {
                 validHashes.push(doc.hash);
@@ -796,7 +734,6 @@ function generateMasterHash() {
         ].join('|');
         
         const masterHash = CryptoJS.SHA256(data).toString().toLowerCase();
-        
         const display = document.getElementById('masterHashValue');
         if (display) {
             display.textContent = masterHash;
@@ -811,10 +748,10 @@ function generateMasterHash() {
     }
 }
 
-// 12. INDEXEDDB - CORRIGIDO: object store 'master_hash' adicionado
+// 12. INDEXEDDB
 async function initializeDatabase() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('VDC_Forensic_DB', 4); // Versão aumentada para 4
+        const request = indexedDB.open('VDC_Forensic_DB', 5);
         
         request.onerror = (event) => {
             console.error('IndexedDB error:', event.target.error);
@@ -829,20 +766,15 @@ async function initializeDatabase() {
         
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            
             if (!db.objectStoreNames.contains('sessions')) {
                 db.createObjectStore('sessions', { keyPath: 'id' });
             }
-            
             if (!db.objectStoreNames.contains('documents')) {
                 db.createObjectStore('documents', { keyPath: 'id', autoIncrement: true });
             }
-            
             if (!db.objectStoreNames.contains('analysis')) {
                 db.createObjectStore('analysis', { keyPath: 'sessionId' });
             }
-            
-            // ADICIONADO: object store 'master_hash'
             if (!db.objectStoreNames.contains('master_hash')) {
                 db.createObjectStore('master_hash', { keyPath: 'sessionId' });
             }
@@ -873,17 +805,9 @@ function logMessage(message, level = 'info') {
         minute: '2-digit',
         second: '2-digit'
     });
-    
-    const logEntry = {
-        timestamp,
-        level,
-        message
-    };
-    
+    const logEntry = { timestamp, level, message };
     VDCSystem.logs.push(logEntry);
-    
     updateAuditConsole(logEntry);
-    
     console.log(`[VDC ${level.toUpperCase()}] ${message}`);
 }
 
@@ -893,13 +817,11 @@ function updateAuditConsole(logEntry) {
     
     const entry = document.createElement('div');
     entry.className = 'log-entry';
-    
     entry.innerHTML = `
         <span class="log-time">[${logEntry.timestamp}]</span>
         <span class="log-level ${logEntry.level}">${logEntry.level.toUpperCase()}</span>
         <span class="log-message">${logEntry.message}</span>
     `;
-    
     output.appendChild(entry);
     output.scrollTop = output.scrollHeight;
 }
@@ -923,7 +845,6 @@ function exportLogs() {
     
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    
     const a = document.createElement('a');
     a.href = url;
     a.download = `vdc-logs-${new Date().toISOString().split('T')[0]}.txt`;
@@ -931,7 +852,6 @@ function exportLogs() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
     logMessage('Logs exportados com sucesso', 'success');
 }
 
@@ -975,7 +895,7 @@ function clearSession() {
             grid.style.pointerEvents = 'none';
         }
         
-        ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
+        ['saftFile', 'faturaFile', 'extratoFile'].forEach(id => {
             const input = document.getElementById(id);
             if (input) input.disabled = true;
         });
@@ -1003,11 +923,26 @@ function showError(message) {
     if (errorDiv && errorText) {
         errorText.textContent = message;
         errorDiv.style.display = 'block';
-        
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
     }
+}
+
+// Funções auxiliares do console
+function copyConsole() {
+    const logs = VDCSystem.logs.map(log => 
+        `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}`
+    ).join('\n');
+    
+    navigator.clipboard.writeText(logs).then(() => {
+        logMessage('Logs copiados para a área de transferência', 'success');
+    });
+}
+
+function toggleConsole() {
+    const consoleElement = document.querySelector('.audit-section');
+    consoleElement.classList.toggle('expanded');
 }
 
 // 14. INICIALIZAÇÃO
