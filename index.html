@@ -17,7 +17,7 @@
         <div class="modal-content">
             <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v5.1</h2>
             <p><strong>REESTRUTURAÇÃO DE AUDITORIA - VALIDAÇÃO HIERÁRQUICA</strong></p>
-            <p>Este sistema opera com prioridade de ingestão: primeiro carregue o ficheiro de controlo de autenticidade (.csv ou .txt), depois os documentos fiscais.</p>
+            <p>Este sistema opera com prioridade de ingestão: primeiro carregue o ficheiro de controlo de autenticidade (.csv), depois os documentos fiscais.</p>
             <p style="color: #93c5fd; font-size: 1rem; margin-top: 25px; padding: 15px; background: rgba(30, 64, 175, 0.1); border-radius: 10px;">
                 <i class="fas fa-info-circle"></i> Cada documento será validado contra hashes pré-registadas no ficheiro de controlo.
             </p>
@@ -107,16 +107,16 @@
                         <i class="fas fa-key"></i>
                     </div>
                     <h3 style="color: #60a5fa; margin: 0; font-size: 1.3rem;">
-                        <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV ou .TXT) - PRIMEIRO PASSO
+                        <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV) - PRIMEIRO PASSO
                     </h3>
                 </div>
                 
                 <div class="control-card">
                     <div class="card-body">
                         <div class="file-input-container">
-                            <input type="file" id="controlFile" accept=".csv,.txt" class="file-input">
+                            <input type="file" id="controlFile" accept=".csv" class="file-input">
                             <label for="controlFile" class="file-label" style="background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);">
-                                <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV ou .TXT)
+                                <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV)
                             </label>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #94a3b8; text-align: center;">
                                 <i class="fas fa-info-circle"></i> Formato: "Algorithm","Hash","Path" - Carregue primeiro este ficheiro
@@ -483,10 +483,10 @@
 
                 <div class="methodology-card">
                     <h4><i class="fas fa-shield-alt"></i> VALIDAÇÃO HIERÁRQUICA</h4>
-                    <p>Sistema de prioridade de ingestão: primeiro carregamento do registo de autenticidade (.csv ou .txt), depois validação dos documentos fiscais contra hashes de referência.</p>
+                    <p>Sistema de prioridade de ingestão: primeiro carregamento do registo de autenticidade (.csv), depois validação dos documentos fiscais contra hashes de referência.</p>
                     <div class="data-grid" style="margin-top: 15px;">
                         <div class="data-item"><span>Algoritmo Hash:</span> <span style="color: #10b981;">SHA-256</span></div>
-                        <div class="data-item"><span>Validação Externa:</span> <span style="color: #f59e0b;">Registo .csv/.txt</span></div>
+                        <div class="data-item"><span>Validação Externa:</span> <span style="color: #f59e0b;">Registro .csv</span></div>
                         <div class="data-item"><span>Validade Prova:</span> <span style="color: #10b981;">Indeterminada</span></div>
                         <div class="data-item"><span>Certificação:</span> <span style="color: #f59e0b;">VDC Forense v5.1</span></div>
                     </div>
