@@ -11,8 +11,8 @@
     <!-- CSS Local -->
     <link rel="stylesheet" href="style.css">
     
+    <!-- Estilos específicos para modal -->
     <style>
-        /* Estilos CSS embutidos para garantir funcionamento */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -99,23 +99,21 @@
         <!-- Cabeçalho -->
         <header>
             <div class="header-top">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h1><i class="fas fa-balance-scale"></i> SISTEMA DE PERITAGEM FORENSE VDC v5.1</h1>
-                    <div class="vdc-banner" style="text-align: right;">
-                        <p class="vdc">VALIDAÇÃO SELETIVA DE INTEGRIDADE</p>
-                        <h2>ASSINATURA DIGITAL DA SESSÃO</h2>
-                    </div>
+                <h1><i class="fas fa-balance-scale"></i> SISTEMA DE PERITAGEM FORENSE VDC v5.1</h1>
+                <div class="vdc-banner">
+                    <p class="vdc">VALIDAÇÃO SELETIVA DE INTEGRIDADE</p>
+                    <h2>ASSINATURA DIGITAL DA SESSÃO</h2>
                 </div>
             </div>
             
-            <!-- SECÇÃO DE CONFIGURAÇÃO -->
+            <!-- SECÇÃO DE CONFIGURAÇÃO (LAYOUT CORRIGIDO) -->
             <div class="config-section">
                 <!-- Cliente -->
                 <div class="config-group">
                     <h4><i class="fas fa-user-shield"></i> IDENTIFICAÇÃO DO CLIENTE</h4>
                     <div class="config-inputs">
-                        <input type="text" id="clientName" placeholder="Nome Completo do Cliente" style="flex: 2;">
-                        <input type="text" id="clientNIF" placeholder="NIF (9 dígitos)" style="flex: 1;">
+                        <input type="text" id="clientName" placeholder="Nome Completo do Cliente">
+                        <input type="text" id="clientNIF" placeholder="NIF (9 dígitos)">
                         <button id="setClientBtn" class="config-btn">
                             <i class="fas fa-fingerprint"></i> REGISTAR CLIENTE
                         </button>
@@ -159,7 +157,7 @@
                 </div>
                 
                 <!-- Status do Cliente -->
-                <div id="clientStatus" class="status-message" style="display: none; grid-column: 1 / -1;">
+                <div id="clientStatus" class="status-message" style="display: none;">
                     <i class="fas fa-user-check"></i> CLIENTE REGISTADO: <span id="currentClient" style="font-weight: bold;">Aguardando...</span>
                     | EXERCÍCIO: <span id="currentYear" style="font-weight: bold;">2025</span>
                     | ORIGEM: <span id="currentPlatform" style="font-weight: bold;">Bolt (Estónia)</span>
@@ -169,71 +167,63 @@
 
         <main>
             <!-- SECÇÃO DE CONTROLO DE AUTENTICIDADE (PRIORIDADE) -->
-            <div class="control-section" style="margin: 30px 40px; padding: 25px; background: linear-gradient(135deg, rgba(30, 64, 175, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 15px; border: 2px solid #3b82f6;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);">
+            <div class="control-section">
+                <div class="control-header">
+                    <div class="control-icon">
                         <i class="fas fa-key"></i>
                     </div>
-                    <h3 style="color: #60a5fa; margin: 0; font-size: 1.3rem;">
+                    <h3>
                         <i class="fas fa-database"></i> 1. REGISTO DE AUTENTICIDADE (.CSV) - PRIMEIRO PASSO
                     </h3>
                 </div>
                 
                 <div class="control-card">
-                    <div class="card-body">
-                        <div class="file-input-container">
-                            <input type="file" id="controlFile" accept=".csv" class="file-input">
-                            <label for="controlFile" class="file-label" style="background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);">
-                                <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV)
-                            </label>
-                            <div style="margin-top: 10px; font-size: 0.85rem; color: #94a3b8; text-align: center;">
-                                <i class="fas fa-info-circle"></i> Formato: "Algorithm","Hash","Path" - Ficheiro excluído de cálculos de hash (FILTRO DE RUÍDO)
+                    <div class="file-input-container">
+                        <input type="file" id="controlFile" accept=".csv" class="file-input">
+                        <label for="controlFile" class="file-label control-file-label">
+                            <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO DE CONTROLO (.CSV)
+                        </label>
+                        <div class="file-info">
+                            <i class="fas fa-info-circle"></i> Formato: "Algorithm","Hash","Path" - Ficheiro excluído de cálculos de hash (FILTRO DE RUÍDO)
+                        </div>
+                    </div>
+                    <div id="controlStatus" class="status-message">
+                        <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO (PRIORIDADE)
+                    </div>
+                    
+                    <!-- DASHBOARD DE VALIDAÇÃO SELETIVA -->
+                    <div id="controlHashDashboard" class="hash-dashboard">
+                        <h5>
+                            <i class="fas fa-hashtag"></i> VALIDAÇÃO SELETIVA DOS FICHEIROS CARREGADOS
+                        </h5>
+                        <div class="data-grid dashboard-grid">
+                            <div id="hash-saft-container" class="hash-container">
+                                <div class="data-item">
+                                    <span>Ficheiro SAF-T:</span> 
+                                    <span id="hash-saft-status" class="hash-status">AGUARDANDO</span>
+                                </div>
+                                <div class="hash-value-ref" id="hash-saft-ref"></div>
                             </div>
-                        </div>
-                        <div id="controlStatus" class="status-message">
-                            <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO (PRIORIDADE)
-                        </div>
-                        
-                        <!-- DASHBOARD DE VALIDAÇÃO SELETIVA -->
-                        <div id="controlHashDashboard" style="display: none; margin-top: 20px; background: rgba(15, 23, 42, 0.8); padding: 20px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                            <h5 style="color: #93c5fd; font-size: 0.9rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-hashtag"></i> VALIDAÇÃO SELETIVA DOS FICHEIROS CARREGADOS
-                            </h5>
-                            <div class="data-grid" style="grid-template-columns: 1fr; gap: 10px;">
-                                <div id="hash-saft-container" style="display: none;">
-                                    <div class="data-item">
-                                        <span>Ficheiro SAF-T:</span> 
-                                        <span id="hash-saft-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
-                                    </div>
-                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
-                                        <span id="hash-saft-ref"></span>
-                                    </div>
+                            
+                            <div id="hash-fatura-container" class="hash-container">
+                                <div class="data-item">
+                                    <span>Ficheiro Fatura:</span> 
+                                    <span id="hash-fatura-status" class="hash-status">AGUARDANDO</span>
                                 </div>
-                                
-                                <div id="hash-fatura-container" style="display: none;">
-                                    <div class="data-item">
-                                        <span>Ficheiro Fatura:</span> 
-                                        <span id="hash-fatura-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
-                                    </div>
-                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
-                                        <span id="hash-fatura-ref"></span>
-                                    </div>
+                                <div class="hash-value-ref" id="hash-fatura-ref"></div>
+                            </div>
+                            
+                            <div id="hash-extrato-container" class="hash-container">
+                                <div class="data-item">
+                                    <span>Ficheiro Extrato:</span> 
+                                    <span id="hash-extrato-status" class="hash-status">AGUARDANDO</span>
                                 </div>
-                                
-                                <div id="hash-extrato-container" style="display: none;">
-                                    <div class="data-item">
-                                        <span>Ficheiro Extrato:</span> 
-                                        <span id="hash-extrato-status" style="font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px;">AGUARDANDO</span>
-                                    </div>
-                                    <div style="font-family: 'Monaco', monospace; font-size: 0.7rem; color: #94a3b8; word-break: break-all; text-align: right; margin-top: 3px;">
-                                        <span id="hash-extrato-ref"></span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Mensagem quando nenhum ficheiro foi carregado -->
-                                <div id="no-files-message" style="text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 15px;">
-                                    <i class="fas fa-info-circle"></i> Nenhum ficheiro carregado no Passo 2
-                                </div>
+                                <div class="hash-value-ref" id="hash-extrato-ref"></div>
+                            </div>
+                            
+                            <!-- Mensagem quando nenhum ficheiro foi carregado -->
+                            <div id="no-files-message" class="no-files-message">
+                                <i class="fas fa-info-circle"></i> Nenhum ficheiro carregado no Passo 2
                             </div>
                         </div>
                     </div>
@@ -241,20 +231,20 @@
             </div>
 
             <!-- Painel de Uploads de Documentos -->
-            <div class="upload-section" id="documentUploadSection" style="opacity: 0.5; pointer-events: none; transition: all 0.3s ease;">
+            <div class="upload-section" id="documentUploadSection">
                 <!-- 2. SAF-T -->
                 <div class="upload-card">
                     <div class="card-header">
                         <span class="step-number">2</span>
                         <h4><i class="fas fa-file-csv"></i> FICHEIRO SAF-T (CSV)</h4>
-                        <span class="validation-badge" id="saftValidationBadge" style="margin-left: auto; display: none;"></span>
+                        <span class="validation-badge" id="saftValidationBadge"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="saftFile" accept=".csv" class="file-input" disabled>
                             <label for="saftFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR FICHEIRO SAF-T
-                                <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
+                                <span class="lock-status">
                                     <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
@@ -262,17 +252,17 @@
                         <div id="saftStatus" class="status-message">
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
-                        <div id="saftHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="saftHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="saftHashStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="saftHashCalculada" class="hash-value-display">-</span>
                         </div>
-                        <div id="saftValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
-                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="saftHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="saftValidationStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="saftHashOficial" class="hash-value-display official">-</span>
                         </div>
-                        <div class="data-preview" id="saftPreview" style="display: none;">
+                        <div class="data-preview" id="saftPreview">
                             <h5><i class="fas fa-table"></i> METADADOS DO FICHEIRO SAF-T:</h5>
                             <div class="data-grid">
-                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="saftFileName" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Tamanho:</span> <span id="saftFileSize" style="color: #93c5fd;">-</span></div>
+                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="saftFileName">-</span></div>
+                                <div class="data-item"><span>Tamanho:</span> <span id="saftFileSize">-</span></div>
                                 <div class="data-item"><span>Total de Registos:</span> <span id="saftRegistos">0</span></div>
                                 <div class="data-item"><span>Ilíquido (Índice 14):</span> <span id="saftIliquido">0,00€</span></div>
                                 <div class="data-item"><span>IVA 6% (Índice 13):</span> <span id="saftIVA">0,00€</span></div>
@@ -287,39 +277,39 @@
                     <div class="card-header">
                         <span class="step-number">3</span>
                         <h4><i class="fas fa-file-invoice-euro"></i> FATURA DE COMISSÃO</h4>
-                        <span class="validation-badge" id="invoiceValidationBadge" style="margin-left: auto; display: none;"></span>
+                        <span class="validation-badge" id="invoiceValidationBadge"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="invoiceFile" accept=".pdf,.txt" class="file-input" disabled>
                             <label for="invoiceFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR FATURA (PDF ou TXT)
-                                <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
+                                <span class="lock-status">
                                     <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
-                            <div style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">
+                            <div class="file-info">
                                 <i class="fas fa-info-circle"></i> Para PDFs, extraia o texto primeiro ou use ficheiro TXT
                             </div>
                         </div>
                         <div id="invoiceStatus" class="status-message">
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
-                        <div id="invoiceHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="invoiceHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="invoiceHashStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="invoiceHashCalculada" class="hash-value-display">-</span>
                         </div>
-                        <div id="invoiceValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
-                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="invoiceHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="invoiceValidationStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="invoiceHashOficial" class="hash-value-display official">-</span>
                         </div>
-                        <div class="data-preview" id="invoicePreview" style="display: none;">
+                        <div class="data-preview" id="invoicePreview">
                             <h5><i class="fas fa-receipt"></i> METADADOS DA FATURA:</h5>
                             <div class="data-grid">
-                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="invoiceFileName" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Tamanho:</span> <span id="invoiceFileSize" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Referência Fatura:</span> <span id="invoiceReference" style="color: #3b82f6;">-</span></div>
+                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="invoiceFileName">-</span></div>
+                                <div class="data-item"><span>Tamanho:</span> <span id="invoiceFileSize">-</span></div>
+                                <div class="data-item"><span>Referência Fatura:</span> <span id="invoiceReference">-</span></div>
                                 <div class="data-item"><span>Total Faturado (EUR):</span> <span id="invoiceTotal">0,00€</span></div>
                                 <div class="data-item"><span>IVA Estimado (23%):</span> <span id="invoiceIVA">0,00€</span></div>
-                                <div class="data-item"><span>Regime de Autoliquidação:</span> <span id="invoiceRegime" style="color: #f59e0b;">Não identificado</span></div>
+                                <div class="data-item"><span>Regime de Autoliquidação:</span> <span id="invoiceRegime">Não identificado</span></div>
                             </div>
                         </div>
                     </div>
@@ -330,14 +320,14 @@
                     <div class="card-header">
                         <span class="step-number">4</span>
                         <h4><i class="fas fa-file-invoice-dollar"></i> EXTRATO BANCÁRIO</h4>
-                        <span class="validation-badge" id="statementValidationBadge" style="margin-left: auto; display: none;"></span>
+                        <span class="validation-badge" id="statementValidationBadge"></span>
                     </div>
                     <div class="card-body">
                         <div class="file-input-container">
                             <input type="file" id="statementFile" accept=".pdf,.jpg,.jpeg,.png,.csv,.txt" class="file-input" disabled>
                             <label for="statementFile" class="file-label disabled">
                                 <i class="fas fa-cloud-upload-alt"></i> CARREGAR EXTRATO
-                                <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.8;">
+                                <span class="lock-status">
                                     <i class="fas fa-lock"></i> AGUARDANDO CONTROLO
                                 </span>
                             </label>
@@ -345,19 +335,19 @@
                         <div id="statementStatus" class="status-message">
                             <i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...
                         </div>
-                        <div id="statementHashStatus" class="status-message" style="display: none; margin-top: 10px;">
-                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="statementHashCalculada" style="color: #93c5fd; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="statementHashStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH CALCULADA: <span id="statementHashCalculada" class="hash-value-display">-</span>
                         </div>
-                        <div id="statementValidationStatus" class="status-message" style="display: none; margin-top: 5px;">
-                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="statementHashOficial" style="color: #f59e0b; font-family: 'Monaco', monospace; font-size: 0.7rem; word-break: break-all;">-</span>
+                        <div id="statementValidationStatus" class="hash-status-message">
+                            <i class="fas fa-hashtag"></i> HASH OFICIAL (CSV): <span id="statementHashOficial" class="hash-value-display official">-</span>
                         </div>
-                        <div class="data-preview" id="statementPreview" style="display: none;">
+                        <div class="data-preview" id="statementPreview">
                             <h5><i class="fas fa-bank"></i> METADADOS DO EXTRATO:</h5>
                             <div class="data-grid">
-                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="statementFileName" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Tamanho:</span> <span id="statementFileSize" style="color: #93c5fd;">-</span></div>
-                                <div class="data-item"><span>Total Recebido:</span> <span id="totalRecebido" style="color: #3b82f6;">0,00€</span></div>
-                                <div class="data-item"><span>Comissão da App (Real):</span> <span id="comissaoReal" style="color: #ef4444;">0,00€</span></div>
+                                <div class="data-item"><span>Nome do Ficheiro:</span> <span id="statementFileName">-</span></div>
+                                <div class="data-item"><span>Tamanho:</span> <span id="statementFileSize">-</span></div>
+                                <div class="data-item"><span>Total Recebido:</span> <span id="totalRecebido">0,00€</span></div>
+                                <div class="data-item"><span>Comissão da App (Real):</span> <span id="comissaoReal">0,00€</span></div>
                                 <div class="data-item"><span>Ganhos Campanha:</span> <span id="ganhosCampanha">0,00€</span></div>
                                 <div class="data-item"><span>Gorjetas:</span> <span id="gorjetas">0,00€</span></div>
                             </div>
@@ -371,14 +361,14 @@
                 <button id="analyzeBtn" class="analyze-btn" disabled>
                     <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
                 </button>
-                <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-container" id="progressContainer">
                     <div class="progress-bar" id="progressBar"></div>
                     <span class="progress-text" id="progressText">0%</span>
                 </div>
             </div>
 
             <!-- Tabela de Análise Comparativa -->
-            <div class="analysis-section" id="analysisSection" style="display: none;">
+            <div class="analysis-section" id="analysisSection">
                 <h3><i class="fas fa-chart-line"></i> ANÁLISE COMPARATIVA FORENSE - <span id="analysisClient">CLIENTE</span></h3>
                 <table class="analysis-table">
                     <thead>
@@ -395,26 +385,26 @@
             </div>
 
             <!-- Cálculo Tributário -->
-            <div class="tax-section" id="taxSection" style="display: none;">
+            <div class="tax-section" id="taxSection">
                 <h3><i class="fas fa-calculator"></i> CÁLCULO TRIBUTÁRIO PERICIAL - <span id="taxClient">CLIENTE</span></h3>
                 
                 <!-- SMOKING GUN - PROVA RAINHA -->
-                <div class="smoking-gun" style="margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, rgba(127, 29, 29, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%); border-radius: 10px; border: 2px solid #dc2626;">
-                    <h4 style="color: #dc2626; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <div class="smoking-gun">
+                    <h4>
                         <i class="fas fa-exclamation-triangle"></i> PROVA RAINHA (SMOKING GUN) - DIVERGÊNCIA CRÍTICA
                     </h4>
-                    <div class="data-grid" style="grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                        <div class="data-item" style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px;">
-                            <span>Comissão Retida (Extrato):</span> <span id="comissaoExtrato" style="color: #10b981; font-weight: bold; font-size: 1.1rem;">239,86€</span>
+                    <div class="data-grid smoking-grid">
+                        <div class="data-item smoking-item real">
+                            <span>Comissão Retida (Extrato):</span> <span id="comissaoExtrato">239,86€</span>
                         </div>
-                        <div class="data-item" style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px;">
-                            <span>Comissão Faturada (Bolt):</span> <span id="comissaoFaturada" style="color: #ef4444; font-weight: bold; font-size: 1.1rem;">69,47€</span>
+                        <div class="data-item smoking-item faturado">
+                            <span>Comissão Faturada (Bolt):</span> <span id="comissaoFaturada">69,47€</span>
                         </div>
-                        <div class="data-item" style="grid-column: 1 / -1; background: rgba(220, 38, 38, 0.2); padding: 15px; border-radius: 8px; border: 2px solid #dc2626;">
-                            <span>DIVERGÊNCIA DE BASE (OMISSÃO):</span> <span id="divergenciaBase" style="color: #dc2626; font-size: 1.3rem; font-weight: bold;">170,39€ (71%)</span>
+                        <div class="data-item smoking-item divergencia">
+                            <span>DIVERGÊNCIA DE BASE (OMISSÃO):</span> <span id="divergenciaBase">170,39€ (71%)</span>
                         </div>
-                        <div class="data-item" style="grid-column: 1 / -1; background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 8px;">
-                            <span>IVA EM FALTA (23% sobre divergência):</span> <span id="ivaFalta" style="color: #f59e0b; font-size: 1.2rem; font-weight: bold;">39,19€</span>
+                        <div class="data-item smoking-item iva">
+                            <span>IVA EM FALTA (23% sobre divergência):</span> <span id="ivaFalta">39,19€</span>
                         </div>
                     </div>
                 </div>
@@ -437,108 +427,96 @@
                     </div>
                     <div class="tax-card">
                         <h4>ASSINATURA DIGITAL DA SESSÃO</h4>
-                        <div class="hash-value" id="hashValue" style="font-size: 0.65rem; line-height: 1.1;">AGUARDANDO CARREGAMENTO DE FICHEIROS</div>
+                        <div class="hash-value" id="hashValue">AGUARDANDO CARREGAMENTO DE FICHEIROS</div>
                         <small>Master Hash SHA-256 (baseada em ficheiros válidos)</small>
                     </div>
                 </div>
                 
                 <!-- Gráficos -->
-                <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                    <div style="background: rgba(15,23,42,0.7); padding: 20px; border-radius: 10px;">
-                        <h4 style="color: #60a5fa; margin-bottom: 15px;"><i class="fas fa-chart-bar"></i> DISCREPÂNCIA DE COMISSÃO</h4>
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <h4><i class="fas fa-chart-bar"></i> DISCREPÂNCIA DE COMISSÃO</h4>
                         <canvas id="comissaoChart"></canvas>
                     </div>
-                    <div style="background: rgba(15,23,42,0.7); padding: 20px; border-radius: 10px;">
-                        <h4 style="color: #60a5fa; margin-bottom: 15px;"><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO DE IMPACTOS FISCAIS</h4>
+                    <div class="chart-box">
+                        <h4><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO DE IMPACTOS FISCAIS</h4>
                         <canvas id="ivaChart"></canvas>
                     </div>
                 </div>
                 
                 <!-- PARECER TÉCNICO FORENSE DINÂMICO -->
-                <div class="technical-details" id="parecerTecnico" style="margin-top: 30px; padding: 20px; background: rgba(15,23,42,0.8); border-radius: 10px; display: none;">
-                    <h4 style="color: #60a5fa; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <div class="technical-details" id="parecerTecnico">
+                    <h4>
                         <i class="fas fa-gavel"></i> PARECER TÉCNICO FORENSE DINÂMICO
                     </h4>
-                    <div style="background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 8px; border-left: 4px solid #dc2626;">
-                        <h5 style="color: #dc2626; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            PARECER TÉCNICO N.º VDC-PF/2026/001
-                        </h5>
+                    <div class="parecer-content">
+                        <h5>PARECER TÉCNICO N.º VDC-PF/2026/001</h5>
                         
-                        <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">I. ANÁLISE PERICIAL:</h6>
-                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                <span id="parecerAnalise">Discrepância grave detetada entre valores retidos pela Bolt e valores faturados.</span>
-                            </p>
+                        <div class="parecer-section">
+                            <h6>I. ANÁLISE PERICIAL:</h6>
+                            <p id="parecerAnalise">Discrepância grave detetada entre valores retidos pela Bolt e valores faturados.</p>
                         </div>
                         
-                        <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">II. FATOS CONSTATADOS:</h6>
-                            <ol style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; line-height: 1.5;">
-                                <li>Comissão Real Retida (Extrato): <span id="parecerComissaoReal" style="color: #10b981; font-weight: bold;">239,86€</span>.</li>
-                                <li>Valor Faturado (Fatura): <span id="parecerComissaoFaturada" style="color: #ef4444; font-weight: bold;">69,47€</span>.</li>
-                                <li>Diferença Omitida: <span id="parecerDivergencia" style="color: #dc2626; font-weight: bold;">170,39€</span> <span id="parecerPercentagem" style="color: #f59e0b;">(71.04% do valor retido)</span>.</li>
+                        <div class="parecer-section">
+                            <h6>II. FATOS CONSTATADOS:</h6>
+                            <ol>
+                                <li>Comissão Real Retida (Extrato): <span id="parecerComissaoReal">239,86€</span>.</li>
+                                <li>Valor Faturado (Fatura): <span id="parecerComissaoFaturada">69,47€</span>.</li>
+                                <li>Diferença Omitida: <span id="parecerDivergencia">170,39€</span> <span id="parecerPercentagem">(71.04% do valor retido)</span>.</li>
                             </ol>
                         </div>
                         
-                        <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">III. ENQUADRAMENTO LEGAL:</h6>
-                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                <span id="parecerLegal">Violação do Artigo 2.º, n.º 1, alínea i) do CIVA (Autoliquidação) e indícios de infração ao Artigo 108.º do CIVA.</span>
-                            </p>
+                        <div class="parecer-section">
+                            <h6>III. ENQUADRAMENTO LEGAL:</h6>
+                            <p id="parecerLegal">Violação do Artigo 2.º, n.º 1, alínea i) do CIVA (Autoliquidação) e indícios de infração ao Artigo 108.º do CIVA.</p>
                         </div>
                         
-                        <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">IV. IMPACTO FISCAL E PROJEÇÃO SISTÉMICA:</h6>
-                            <ul style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; line-height: 1.5;">
-                                <li>IVA em falta (23%): <span id="parecerIVA" style="color: #f59e0b; font-weight: bold;">39,19€</span> omitidos ao erário público.</li>
-                                <li>Impacto IRC/Derrama (22.5%): <span id="parecerImpactoIRC" style="color: #f59e0b; font-weight: bold;">38,34€</span> sobre divergência.</li>
-                                <li><span id="parecerFiscal">Impacto Mensal Global (extrapolação 38.000 motoristas): <span id="parecerImpactoMensalGlobal" style="color: #dc2626; font-weight: bold;">6.474.820,00€</span>.</span></li>
-                                <li>Impacto Anual Global (×12 meses): <span id="parecerImpactoAnualGlobal" style="color: #dc2626; font-weight: bold;">77.697.840,00€</span>.</li>
-                                <li><span id="parecerImpacto7Anos">Projeção a 7 anos (38.000 motoristas × 12 meses × 7 anos): <span id="parecerImpacto7AnosValor" style="color: #dc2626; font-weight: bold;">543.884.880,00€</span>.</span></li>
+                        <div class="parecer-section">
+                            <h6>IV. IMPACTO FISCAL E PROJEÇÃO SISTÉMICA:</h6>
+                            <ul>
+                                <li>IVA em falta (23%): <span id="parecerIVA">39,19€</span> omitidos ao erário público.</li>
+                                <li>Impacto IRC/Derrama (22.5%): <span id="parecerImpactoIRC">38,34€</span> sobre divergência.</li>
+                                <li>Impacto Mensal Global (extrapolação 38.000 motoristas): <span id="parecerImpactoMensalGlobal">6.474.820,00€</span>.</li>
+                                <li>Impacto Anual Global (×12 meses): <span id="parecerImpactoAnualGlobal">77.697.840,00€</span>.</li>
+                                <li>Projeção a 7 anos (38.000 motoristas × 12 meses × 7 anos): <span id="parecerImpacto7AnosValor">543.884.880,00€</span>.</li>
                             </ul>
                         </div>
                         
-                        <div style="margin-bottom: 15px;">
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">V. AUTENTICIDADE E VALIDAÇÃO SELETIVA:</h6>
-                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">
-                                <span id="parecerAutenticidade">Aguardando validação seletiva dos ficheiros carregados.</span>
-                            </p>
-                            <p style="color: #94a3b8; font-size: 0.8rem; font-family: 'Monaco', 'Courier New', monospace; margin-top: 5px; word-break: break-all;">
-                                <span id="parecerMasterHash">AGUARDANDO GERAÇÃO DE ASSINATURA DIGITAL...</span>
-                            </p>
+                        <div class="parecer-section">
+                            <h6>V. AUTENTICIDADE E VALIDAÇÃO SELETIVA:</h6>
+                            <p id="parecerAutenticidade">Aguardando validação seletiva dos ficheiros carregados.</p>
+                            <p class="master-hash-display" id="parecerMasterHash">AGUARDANDO GERAÇÃO DE ASSINATURA DIGITAL...</p>
                         </div>
                         
-                        <div>
-                            <h6 style="color: #93c5fd; margin-bottom: 8px;">VI. CONCLUSÃO ESTRATÉGICA:</h6>
-                            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; font-weight: bold;">
-                                A materialidade da omissão (71.04%) configura um risco sistémico. Este relatório serve de suporte técnico para procedimentos de regularização voluntária ou interpelação judicial por quebra de conformidade fiscal da entidade emissora.
-                            </p>
+                        <div class="parecer-section">
+                            <h6>VI. CONCLUSÃO ESTRATÉGICA:</h6>
+                            <p class="conclusao">A materialidade da omissão (71.04%) configura um risco sistémico. Este relatório serve de suporte técnico para procedimentos de regularização voluntária ou interpelação judicial por quebra de conformidade fiscal da entidade emissora.</p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Detalhes Técnicos -->
-                <div class="technical-details" style="margin-top: 30px; padding: 20px; background: rgba(15,23,42,0.8); border-radius: 10px;">
-                    <h4 style="color: #60a5fa; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <div class="technical-details">
+                    <h4>
                         <i class="fas fa-microscope"></i> DETALHES TÉCNICOS DA ANÁLISE
                     </h4>
-                    <div class="data-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="data-grid tech-grid">
                         <div class="data-item"><span>Ficheiro SAF-T:</span> <span id="detSaftFile">-</span></div>
                         <div class="data-item"><span>Ficheiro Fatura:</span> <span id="detInvoiceFile">-</span></div>
                         <div class="data-item"><span>Ficheiro Extrato:</span> <span id="detStatementFile">-</span></div>
-                        <div class="data-item"><span>Referência Fatura:</span> <span id="detInvoiceRef" style="color: #3b82f6;">-</span></div>
-                        <div class="data-item"><span>Regime Autoliquidação:</span> <span id="detAutoliquidação" style="color: #10b981;">-</span></div>
+                        <div class="data-item"><span>Referência Fatura:</span> <span id="detInvoiceRef">-</span></div>
+                        <div class="data-item"><span>Regime Autoliquidação:</span> <span id="detAutoliquidação">-</span></div>
                         <div class="data-item"><span>Timestamp Análise:</span> <span id="detTimestamp">-</span></div>
                     </div>
                 </div>
             </div>
 
             <!-- Botões de Ação -->
-            <div class="action-buttons" id="actionButtons" style="display: none; margin: 40px 0; text-align: center; gap: 20px; justify-content: center;">
-                <button id="generateReportBtn" class="action-btn report-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+            <div class="action-buttons" id="actionButtons">
+                <button id="generateReportBtn" class="action-btn report-btn" disabled>
                     <i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF
                 </button>
-                <button id="saveReportBtn" class="action-btn save-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                <button id="saveReportBtn" class="action-btn save-btn" disabled>
                     <i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA
                 </button>
             </div>
@@ -570,11 +548,11 @@
                 <div class="methodology-card">
                     <h4><i class="fas fa-shield-alt"></i> VALIDAÇÃO SELETIVA DE INTEGRIDADE</h4>
                     <p>Sistema de validação seletiva: a Master Hash é calculada apenas sobre os ficheiros carregados que obtiveram correspondência no controlo. Filtro de ruído ativo.</p>
-                    <div class="data-grid" style="margin-top: 15px;">
-                        <div class="data-item"><span>Algoritmo Hash:</span> <span style="color: #10b981;">SHA-256</span></div>
-                        <div class="data-item"><span>Validação:</span> <span style="color: #f59e0b;">Seletiva (por ficheiro)</span></div>
-                        <div class="data-item"><span>Filtro de Ruído:</span> <span style="color: #10b981;">Ativo</span></div>
-                        <div class="data-item"><span>Assinatura:</span> <span style="color: #f59e0b;">Digital da Sessão</span></div>
+                    <div class="data-grid methodology-grid">
+                        <div class="data-item"><span>Algoritmo Hash:</span> <span class="hash-algo">SHA-256</span></div>
+                        <div class="data-item"><span>Validação:</span> <span class="validation-type">Seletiva (por ficheiro)</span></div>
+                        <div class="data-item"><span>Filtro de Ruído:</span> <span class="noise-filter">Ativo</span></div>
+                        <div class="data-item"><span>Assinatura:</span> <span class="signature-type">Digital da Sessão</span></div>
                     </div>
                 </div>
             </div>
@@ -589,11 +567,11 @@
                 <p class="timestamp">
                     <i class="fas fa-hashtag"></i> ASSINATURA DIGITAL DA SESSÃO: 
                     <br>
-                    <span id="currentMasterHash" style="display: block; color: #93c5fd; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.75rem; word-break: break-all; margin-top: 3px; line-height: 1.2;">
+                    <span id="currentMasterHash" class="master-hash-footer">
                         AGUARDANDO FICHEIROS VÁLIDOS...
                     </span>
                 </p>
-                <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">
+                <p class="copyright">
                     © 2024-2026 VDC - VOZ DO CONDUTOR | PERITAGEM FISCAL COM VALIDAÇÃO SELETIVA
                 </p>
             </div>
