@@ -159,23 +159,10 @@ function desabilitarUploadsDocumentos() {
     });
 }
 
-// 3. PROCESSAR FICHEIRO DE CONTROLO DE AUTENTICIDADE (PRIORIDADE) - CSV E TXT
+// 3. PROCESSAR FICHEIRO DE CONTROLO DE AUTENTICIDADE (PRIORIDADE) - CSV
 function processarControloAutenticidade(ficheiro) {
     console.log('📁 Processando ficheiro de controlo de autenticidade:', ficheiro.name);
     
-    // Verificar a extensão do ficheiro
-    const extensao = ficheiro.name.toLowerCase().split('.').pop();
-    
-    if (extensao === 'txt') {
-        // Processar como TXT
-        processarControloTXT(ficheiro);
-    } else {
-        // Processar como CSV (código original)
-        processarControloCSV(ficheiro);
-    }
-}
-
-function processarControloCSV(ficheiro) {
     const statusEl = document.getElementById('controlStatus');
     if (statusEl) {
         statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO REGISTO DE AUTENTICIDADE (CSV)...`;
@@ -201,9 +188,15 @@ function processarControloCSV(ficheiro) {
                     const path = linha.Path || '';
                     
                     if (algorithm && hash && path) {
-                        // NORMALIZAÇÃO FORENSE APLICADA: trim + lowercase
+                        // CORREÇÃO APLICADA: .toLowerCase() em ambos os lados
                         const hashLimpo = normalizarHash(hash);
                         const pathLimpo = (path || '').replace(/"/g, '').toLowerCase();
+                        
+                        // CORREÇÃO: Ignorar ficheiros que contenham 'CONTROLO_AUTENTICIDADE' no nome
+                        if (pathLimpo.includes('controlo_autenticidade')) {
+                            console.log(`⏭️ Ignorando ficheiro de controlo de autenticidade: ${pathLimpo}`);
+                            return; // skip this entry
+                        }
                         
                         console.log(`🔍 Processando linha CSV: Algo=${algorithm}, Hash=${hashLimpo}, Path=${pathLimpo}`);
                         
@@ -298,133 +291,7 @@ function processarControloCSV(ficheiro) {
     });
 }
 
-function processarControloTXT(ficheiro) {
-    console.log('📁 Processando ficheiro de controlo TXT:', ficheiro.name);
-    
-    const statusEl = document.getElementById('controlStatus');
-    if (statusEl) {
-        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO REGISTO DE AUTENTICIDADE (TXT)...`;
-        statusEl.className = 'status-message processing';
-    }
-    
-    const leitor = new FileReader();
-    
-    leitor.onload = function(e) {
-        try {
-            const conteudo = e.target.result;
-            const linhas = conteudo.split('\n').filter(linha => linha.trim() !== '');
-            
-            // Limpar referências anteriores
-            window.vdcStore.referencia.hashes = { saft: '', fatura: '', extrato: '' };
-            window.vdcStore.hashesReferenciaCarregadas = false;
-            
-            // Processar cada linha do TXT - FORMATO: "Algorithm","Hash","Path"
-            linhas.forEach(linha => {
-                // Remover possíveis aspas e dividir por vírgula
-                const partes = linha.replace(/"/g, '').split(',');
-                if (partes.length >= 3) {
-                    const algorithm = partes[0].trim();
-                    const hash = partes[1].trim();
-                    const path = partes[2].trim();
-                    
-                    if (algorithm && hash && path) {
-                        const hashLimpo = normalizarHash(hash);
-                        const pathLimpo = path.toLowerCase();
-                        
-                        console.log(`🔍 Processando linha TXT: Algo=${algorithm}, Hash=${hashLimpo}, Path=${pathLimpo}`);
-                        
-                        // LÓGICA DE ATRIBUIÇÃO IDÊNTICA À DO CSV
-                        if (pathLimpo.includes('.csv') || pathLimpo.includes('131509') || pathLimpo.includes('saft')) {
-                            window.vdcStore.referencia.hashes.saft = hashLimpo;
-                            console.log(`✓ Hash atribuída ao SAF-T: ${hashLimpo}`);
-                            atualizarHashDashboard('saft', hashLimpo);
-                        } 
-                        else if (pathLimpo.includes('fatura') || pathLimpo.includes('pt1126') || pathLimpo.includes('invoice')) {
-                            window.vdcStore.referencia.hashes.fatura = hashLimpo;
-                            console.log(`✓ Hash atribuída à Fatura: ${hashLimpo}`);
-                            atualizarHashDashboard('fatura', hashLimpo);
-                        } 
-                        else if (pathLimpo.includes('ganhos') || pathLimpo.includes('extrato') || pathLimpo.includes('statement')) {
-                            window.vdcStore.referencia.hashes.extrato = hashLimpo;
-                            console.log(`✓ Hash atribuída ao Extrato: ${hashLimpo}`);
-                            atualizarHashDashboard('extrato', hashLimpo);
-                        }
-                        else {
-                            console.log(`⚠️ Path não reconhecido: ${pathLimpo}`);
-                        }
-                    }
-                }
-            });
-            
-            // Verificar se as 3 hashes foram carregadas (não vazias)
-            const todasHashesCarregadas = 
-                window.vdcStore.referencia.hashes.saft !== '' && 
-                window.vdcStore.referencia.hashes.fatura !== '' && 
-                window.vdcStore.referencia.hashes.extrato !== '';
-            
-            window.vdcStore.hashesReferenciaCarregadas = todasHashesCarregadas;
-            window.vdcStore.referencia.carregado = true;
-            window.vdcStore.referencia.timestamp = new Date().toISOString();
-            window.vdcStore.referencia.dadosCSV = linhas;
-            
-            // Gerar Master Hash imediatamente após carregar TXT
-            gerarMasterHashFinal();
-            
-            // Atualizar interface
-            if (statusEl) {
-                const count = Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length;
-                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO (TXT): ${count} HASHES`;
-                statusEl.className = 'status-message status-success';
-            }
-            
-            const hashStatusEl = document.getElementById('controlHashStatus');
-            if (hashStatusEl) {
-                hashStatusEl.style.display = 'block';
-                document.getElementById('controlHashCount').textContent = 
-                    Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length;
-            }
-            
-            // Mostrar dashboard de hashes
-            const dashboardEl = document.getElementById('controlHashDashboard');
-            if (dashboardEl) {
-                dashboardEl.style.display = 'block';
-            }
-            
-            // Habilitar uploads de documentos (DESBLOQUEIO)
-            habilitarUploadsDocumentos();
-            
-            // Mostrar mensagem
-            if (todasHashesCarregadas) {
-                mostrarMensagem('✅ Todas as 3 hashes de referência foram carregadas do ficheiro TXT!', 'success');
-            } else {
-                mostrarMensagem(`⚠️ Carregadas ${Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length}/3 hashes de referência do TXT`, 'warning');
-            }
-            
-            // Atualizar estado dos botões
-            atualizarEstadoBotoes();
-            
-        } catch (erro) {
-            console.error('Erro ao processar ficheiro TXT:', erro);
-            mostrarMensagem('❌ Erro no processamento do ficheiro TXT de controlo', 'error');
-            statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO NO PROCESSAMENTO TXT`;
-            statusEl.className = 'status-message status-error';
-        }
-    };
-    
-    leitor.onerror = function() {
-        console.error('Erro na leitura do ficheiro TXT');
-        mostrarMensagem('❌ Erro de leitura do ficheiro TXT', 'error');
-        const statusEl = document.getElementById('controlStatus');
-        if (statusEl) {
-            statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO DE LEITURA DO TXT`;
-            statusEl.className = 'status-message status-error';
-        }
-    };
-    
-    leitor.readAsText(ficheiro);
-}
-
-// FUNÇÃO DE NORMALIZAÇÃO FORENSE (DIRETRIZ 1)
+// FUNÇÃO DE NORMALIZAÇÃO FORENSE (DIRETRIZ 1) - CORRIGIDA COM .toLowerCase()
 function normalizarHash(hash) {
     // ANTI-LOCK: Se hash for undefined/null, retorna string vazia
     if (!hash) return '';
@@ -434,7 +301,7 @@ function normalizarHash(hash) {
                .replace(/"/g, '')          // Remove aspas
                .replace(/\s+/g, '')        // Remove espaços, tabs, newlines
                .trim()                     // Remove espaços no início/fim
-               .toLowerCase();             // Converte para minúsculas
+               .toLowerCase();             // CORREÇÃO: Converte para minúsculas
 }
 
 function atualizarHashDashboard(tipo, hash) {
@@ -971,7 +838,7 @@ function atualizarPreviewExtrato() {
     }
 }
 
-// 9. VALIDAÇÃO DE HASH CONTRA REFERÊNCIA (DIRETRIZ 1 - NORMALIZAÇÃO FORENSE)
+// 9. VALIDAÇÃO DE HASH CONTRA REFERÊNCIA (CORREÇÃO APLICADA: .toLowerCase() em ambos os lados)
 function validarHashContraReferencia(tipo) {
     // ANTI-LOCK: Garantir que as hashes não sejam undefined
     const hashLocal = window.vdcStore.hashesLocais[tipo] || '';
@@ -982,7 +849,7 @@ function validarHashContraReferencia(tipo) {
         return false;
     }
     
-    // NORMALIZAÇÃO FORENSE APLICADA (Diretriz 1)
+    // CORREÇÃO APLICADA: .toLowerCase() em ambos os lados da comparação
     const hashLocalNormalizada = normalizarHash(hashLocal);
     const hashReferenciaNormalizada = normalizarHash(hashReferencia);
     
@@ -1648,7 +1515,7 @@ async function gerarRelatorioPDFPericial() {
         doc.text('3. VALIDAÇÃO HIERÁRQUICA COM RESILIÊNCIA:', 20, yPos);
         yPos += 10;
         doc.setFont(undefined, 'normal');
-        doc.text('1. Carregamento do registo de autenticidade (.csv ou .txt)', 25, yPos);
+        doc.text('1. Carregamento do registo de autenticidade (.csv)', 25, yPos);
         yPos += 7;
         doc.text('2. Validação de hashes SHA-256 contra referências externas', 25, yPos);
         yPos += 7;
