@@ -1,10 +1,9 @@
 // ============================================
 // VDC UNIDADE DE PERITAGEM - SCRIPT v5.1
-// VERSÃO COM RESILIÊNCIA FORENSE: NORMALIZAÇÃO, ISOLAMENTO E ANTI-LOCK
-// PATCH APLICADO: Exclusão de Auto-Referência e Normalização de Strings
+// VERSÃO SIMPLIFICADA: DASHBOARD APENAS MOSTRA FICHEIROS CARREGADOS
 // ============================================
 
-// 1. OBJETO GLOBAL DE PERSISTÊNCIA - ANTI-UNDEFINED
+// 1. OBJETO GLOBAL DE PERSISTÊNCIA
 window.vdcStore = {
     // Referências do ficheiro de controlo (PRIORIDADE)
     referencia: {
@@ -61,10 +60,9 @@ window.vdcStore = {
 
 // 2. INICIALIZAÇÃO DO SISTEMA
 function inicializarSistema() {
-    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v5.1 - RESILIÊNCIA FORENSE');
-    console.log('🔐 PATCH APLICADO: Normalização, Isolamento e Anti-Lock');
+    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v5.1 - DASHBOARD SIMPLIFICADO');
     
-    // Inicializar status messages para evitar undefined
+    // Inicializar status messages
     inicializarStatusMessages();
     
     // Mostrar modal inicial
@@ -93,7 +91,7 @@ function inicializarStatusMessages() {
 }
 
 function inicializarInterface() {
-    console.log('📱 Inicializando interface com prioridade de ingestão...');
+    console.log('📱 Inicializando interface com dashboard simplificado...');
     configurarEventListeners();
     atualizarTimestamp();
     limparEstadoVisual();
@@ -186,50 +184,35 @@ function processarControloAutenticidade(ficheiro) {
                 dados.forEach(linha => {
                     const algorithm = linha.Algorithm || '';
                     const hash = linha.Hash || '';
-                    const path = linha.Path || linha.Arquivo || ''; // MAPEAMENTO FLEXÍVEL: Path ou Arquivo
+                    const path = linha.Path || linha.Arquivo || '';
                     
                     if (algorithm && hash && path) {
-                        // REGRA 1: NORMALIZAÇÃO DE STRINGS - aplica .toLowerCase().trim()
+                        // Normalização
                         const hashLimpo = normalizarHash(hash);
                         const pathLimpo = (path || '').replace(/"/g, '').toLowerCase().trim();
                         
-                        // REGRA 2: EXCLUSÃO DE AUTO-REFERÊNCIA
-                        // Ignorar ficheiros que contenham 'controlo_autenticidade' no nome (case insensitive)
-                        if (pathLimpo.includes('controlo_autenticidade') || pathLimpo.includes('controle_autenticidade')) {
+                        // EXCLUSÃO DE AUTO-REFERÊNCIA
+                        if (pathLimpo.includes('controlo_autenticidade') || 
+                            pathLimpo.includes('controle_autenticidade')) {
                             console.log(`⏭️ EXCLUSÃO DE AUTO-REFERÊNCIA: Ignorando ficheiro de controlo: ${pathLimpo}`);
-                            return; // skip this entry
+                            return;
                         }
                         
-                        console.log(`🔍 Processando linha CSV: Algo=${algorithm}, Hash=${hashLimpo}, Path=${pathLimpo}`);
-                        
-                        // LÓGICA DE ATRIBUIÇÃO POR PALAVRA-CHAVE NO PATH (com normalização)
-                        const pathLower = pathLimpo.toLowerCase();
-                        
-                        if (pathLower.includes('.csv') || pathLower.includes('131509') || pathLower.includes('saft')) {
-                            // Referência SAF-T
+                        // ATRIBUIÇÃO SILENCIOSA (não mostra no dashboard ainda)
+                        // O dashboard só mostrará quando o utilizador carregar o ficheiro
+                        if (pathLimpo.includes('.csv') || pathLimpo.includes('131509') || pathLimpo.includes('saft')) {
                             window.vdcStore.referencia.hashes.saft = hashLimpo;
-                            console.log(`✓ Hash atribuída ao SAF-T: ${hashLimpo}`);
-                            atualizarHashDashboard('saft', hashLimpo);
                         } 
-                        else if (pathLower.includes('fatura') || pathLower.includes('pt1126') || pathLower.includes('invoice')) {
-                            // Referência Fatura
+                        else if (pathLimpo.includes('fatura') || pathLimpo.includes('pt1126') || pathLimpo.includes('invoice')) {
                             window.vdcStore.referencia.hashes.fatura = hashLimpo;
-                            console.log(`✓ Hash atribuída à Fatura: ${hashLimpo}`);
-                            atualizarHashDashboard('fatura', hashLimpo);
                         } 
-                        else if (pathLower.includes('ganhos') || pathLower.includes('extrato') || pathLower.includes('statement')) {
-                            // Referência Extrato
+                        else if (pathLimpo.includes('ganhos') || pathLimpo.includes('extrato') || pathLimpo.includes('statement')) {
                             window.vdcStore.referencia.hashes.extrato = hashLimpo;
-                            console.log(`✓ Hash atribuída ao Extrato: ${hashLimpo}`);
-                            atualizarHashDashboard('extrato', hashLimpo);
-                        }
-                        else {
-                            console.log(`⚠️ Path não reconhecido: ${pathLimpo}`);
                         }
                     }
                 });
                 
-                // Verificar se as 3 hashes foram carregadas (não vazias)
+                // Verificar se as 3 hashes foram carregadas
                 const todasHashesCarregadas = 
                     window.vdcStore.referencia.hashes.saft !== '' && 
                     window.vdcStore.referencia.hashes.fatura !== '' && 
@@ -245,22 +228,22 @@ function processarControloAutenticidade(ficheiro) {
                 
                 // Atualizar interface
                 if (statusEl) {
-                    const count = Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length;
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO (CSV): ${count} HASHES`;
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO (CSV)`;
                     statusEl.className = 'status-message status-success';
                 }
                 
-                const hashStatusEl = document.getElementById('controlHashStatus');
-                if (hashStatusEl) {
-                    hashStatusEl.style.display = 'block';
-                    document.getElementById('controlHashCount').textContent = 
-                        Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length;
-                }
-                
-                // Mostrar dashboard de hashes
+                // Mostrar dashboard vazio (sem hashes listadas)
                 const dashboardEl = document.getElementById('controlHashDashboard');
                 if (dashboardEl) {
                     dashboardEl.style.display = 'block';
+                    // Esconder a mensagem "nenhum ficheiro" se já houver algum carregado
+                    const anyLoaded = 
+                        window.vdcStore.hashesLocais.saft || 
+                        window.vdcStore.hashesLocais.fatura || 
+                        window.vdcStore.hashesLocais.extrato;
+                    
+                    document.getElementById('no-files-message').style.display = 
+                        anyLoaded ? 'none' : 'block';
                 }
                 
                 // Habilitar uploads de documentos (DESBLOQUEIO)
@@ -268,9 +251,9 @@ function processarControloAutenticidade(ficheiro) {
                 
                 // Mostrar mensagem
                 if (todasHashesCarregadas) {
-                    mostrarMensagem('✅ Todas as 3 hashes de referência foram carregadas do ficheiro CSV!', 'success');
+                    mostrarMensagem('✅ Registo de autenticidade carregado com sucesso!', 'success');
                 } else {
-                    mostrarMensagem(`⚠️ Carregadas ${Object.values(window.vdcStore.referencia.hashes).filter(h => h !== '').length}/3 hashes de referência do CSV`, 'warning');
+                    mostrarMensagem(`⚠️ Algumas hashes não foram encontradas no CSV`, 'warning');
                 }
                 
                 // Atualizar estado dos botões
@@ -295,12 +278,12 @@ function processarControloAutenticidade(ficheiro) {
     });
 }
 
-// FUNÇÃO DE NORMALIZAÇÃO FORENSE (DIRETRIZ 1) - CORRIGIDA COM .toLowerCase().trim()
+// FUNÇÃO DE NORMALIZAÇÃO FORENSE
 function normalizarHash(hash) {
     // ANTI-LOCK: Se hash for undefined/null, retorna string vazia
     if (!hash) return '';
     
-    // REGRA 2: NORMALIZAÇÃO COMPLETA - aplica .toLowerCase().trim()
+    // NORMALIZAÇÃO COMPLETA
     return hash.toString()
                .replace(/"/g, '')          // Remove aspas
                .replace(/\s+/g, '')        // Remove espaços, tabs, newlines
@@ -308,15 +291,47 @@ function normalizarHash(hash) {
                .trim();                    // Remove espaços no início/fim
 }
 
-function atualizarHashDashboard(tipo, hash) {
-    const elemento = document.getElementById(`hash-${tipo}-ref`);
-    if (elemento) {
-        // ANTI-LOCK: Garantir que hash não seja undefined
-        const hashSegura = hash || '';
-        const hashCurta = hashSegura.length > 32 ? hashSegura.substring(0, 16) + '...' + hashSegura.substring(hashSegura.length - 8) : hashSegura;
-        elemento.textContent = hashSegura ? hashCurta : 'NÃO CARREGADA';
-        elemento.title = hashSegura || '';
-        elemento.style.color = hashSegura ? '#10b981' : '#94a3b8';
+// FUNÇÃO PARA ATUALIZAR O DASHBOARD APENAS PARA FICHEIROS CARREGADOS
+function atualizarDashboardFicheiroCarregado(tipo, nomeFicheiro, valido) {
+    const containerId = `hash-${tipo}-container`;
+    const container = document.getElementById(containerId);
+    const statusElement = document.getElementById(`hash-${tipo}-status`);
+    const hashElement = document.getElementById(`hash-${tipo}-ref`);
+    
+    if (container && statusElement && hashElement) {
+        // Mostrar o container (antes estava escondido)
+        container.style.display = 'block';
+        
+        // Esconder a mensagem "nenhum ficheiro"
+        document.getElementById('no-files-message').style.display = 'none';
+        
+        // Atualizar status (VERDE ou VERMELHO)
+        if (valido) {
+            statusElement.textContent = '✓ VÁLIDO';
+            statusElement.style.backgroundColor = '#10b981';
+            statusElement.style.color = 'white';
+            hashElement.textContent = nomeFicheiro || 'Hash válida';
+            hashElement.style.color = '#10b981';
+        } else {
+            statusElement.textContent = '✗ INVÁLIDO';
+            statusElement.style.backgroundColor = '#ef4444';
+            statusElement.style.color = 'white';
+            
+            // Mostrar informação sobre o ficheiro inválido
+            const hashReferencia = window.vdcStore.referencia.hashes[tipo];
+            const hashLocal = window.vdcStore.hashesLocais[tipo];
+            
+            if (!hashReferencia) {
+                hashElement.textContent = 'Ficheiro não consta no controlo';
+                hashElement.style.color = '#f59e0b';
+            } else if (hashLocal && hashReferencia) {
+                hashElement.textContent = `Hash divergente (${hashLocal.substring(0, 8)}... ≠ ${hashReferencia.substring(0, 8)}...)`;
+                hashElement.style.color = '#ef4444';
+            } else {
+                hashElement.textContent = 'Hash não calculada';
+                hashElement.style.color = '#94a3b8';
+            }
+        }
     }
 }
 
@@ -349,7 +364,7 @@ function habilitarUploadsDocumentos() {
     }
 }
 
-// 4. REGISTO DE CLIENTE (PRESERVADA)
+// 4. REGISTO DE CLIENTE
 function registarCliente() {
     const nome = document.getElementById('clientName')?.value?.trim() || '';
     const nif = document.getElementById('clientNIF')?.value?.trim() || '';
@@ -385,7 +400,7 @@ function registarCliente() {
     verificarEstadoPreAnalise();
 }
 
-// 5. PROCESSAMENTO DE UPLOADS DE DOCUMENTOS COM HASH BINÁRIA (PATCH)
+// 5. PROCESSAMENTO DE UPLOADS DE DOCUMENTOS
 function processarUpload(tipo, ficheiro) {
     if (!window.vdcStore.referencia.carregado) {
         mostrarMensagem('⚠️ Carregue primeiro o ficheiro de controlo de autenticidade!', 'warning');
@@ -400,11 +415,11 @@ function processarUpload(tipo, ficheiro) {
     
     guardarMetadadosFicheiro(tipo, ficheiro);
     
-    // CALCULAR HASH EM BINÁRIO (PATCH)
+    // CALCULAR HASH EM BINÁRIO
     calcularHashBinariaWebCrypto(ficheiro).then(hashCalculada => {
-        console.log(`🔐 Hash binária calculada para ${tipo}: ${hashCalculada}`);
+        console.log(`🔐 Hash binária calculada para ${tipo}: ${hashCalculada.substring(0, 16)}...`);
         
-        // Guardar hash local NORMALIZADA (com .toLowerCase().trim())
+        // Guardar hash local NORMALIZADA
         window.vdcStore.hashesLocais[tipo] = normalizarHash(hashCalculada);
         
         // Mostrar hash calculada
@@ -419,6 +434,9 @@ function processarUpload(tipo, ficheiro) {
         // Atualizar badge com novos textos
         atualizarSeloValidacao(tipo, valido);
         
+        // ATUALIZAR DASHBOARD APENAS PARA ESTE FICHEIRO CARREGADO
+        atualizarDashboardFicheiroCarregado(tipo, ficheiro.name, valido);
+        
         // Processar conteúdo do ficheiro (independente da validação)
         processarConteudoFicheiro(tipo, ficheiro);
         
@@ -431,7 +449,7 @@ function processarUpload(tipo, ficheiro) {
     });
 }
 
-// PATCH: Função para calcular hash em BINÁRIO usando Web Crypto API
+// Função para calcular hash em BINÁRIO usando Web Crypto API
 function calcularHashBinariaWebCrypto(ficheiro) {
     return new Promise((resolve, reject) => {
         const leitor = new FileReader();
@@ -448,7 +466,7 @@ function calcularHashBinariaWebCrypto(ficheiro) {
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
                 
-                // Normalizar hash com .toLowerCase().trim()
+                // Normalizar hash
                 const hashNormalizada = normalizarHash(hashHex);
                 resolve(hashNormalizada);
                 
@@ -483,6 +501,10 @@ function calcularHashBinariaFallback(ficheiro, tipo) {
             mostrarHashOficial(tipo);
             const valido = validarHashContraReferencia(tipo);
             atualizarSeloValidacao(tipo, valido);
+            
+            // ATUALIZAR DASHBOARD
+            atualizarDashboardFicheiroCarregado(tipo, ficheiro.name, valido);
+            
             processarConteudoFicheiro(tipo, ficheiro);
             
         } catch (erro) {
@@ -497,7 +519,6 @@ function calcularHashBinariaFallback(ficheiro, tipo) {
 function mostrarHashCalculada(tipo, hash) {
     const elemento = document.getElementById(`${tipo}HashCalculada`);
     if (elemento) {
-        // ANTI-LOCK: Garantir que hash não seja undefined
         const hashSegura = hash || '';
         const hashCurta = hashSegura.length > 32 ? hashSegura.substring(0, 16) + '...' + hashSegura.substring(hashSegura.length - 8) : hashSegura;
         elemento.textContent = hashSegura ? hashCurta : '-';
@@ -515,7 +536,6 @@ function mostrarHashOficial(tipo) {
     const elemento = document.getElementById(`${tipo}HashOficial`);
     
     if (elemento) {
-        // ANTI-LOCK: Garantir que hash não seja undefined
         const hashSegura = hashReferencia || '';
         const hashCurta = hashSegura.length > 32 ? hashSegura.substring(0, 16) + '...' + hashSegura.substring(hashSegura.length - 8) : hashSegura;
         elemento.textContent = hashSegura ? hashCurta : '-';
@@ -587,7 +607,7 @@ function atualizarPreviewMetadados(tipo) {
     }
 }
 
-// 6. PROCESSAMENTO SAF-T (PRESERVADA A EXTRAÇÃO EXISTENTE)
+// 6. PROCESSAMENTO SAF-T
 function processarSAFT(ficheiro) {
     Papa.parse(ficheiro, {
         header: false,
@@ -676,7 +696,7 @@ function atualizarPreviewSAFT() {
     }
 }
 
-// 7. PROCESSAMENTO DA FATURA (PRESERVADA A EXTRAÇÃO EXISTENTE - 69,47€)
+// 7. PROCESSAMENTO DA FATURA
 function processarFatura(ficheiro) {
     const leitor = new FileReader();
     
@@ -684,7 +704,6 @@ function processarFatura(ficheiro) {
         try {
             let texto = e.target.result || '';
             
-            // PRESERVAÇÃO DA REGEX EXISTENTE - NÃO ALTERAR
             const regexTotal = /Total com IVA\s*\(EUR\)[\s\S]{0,50}?([\d.,]+)/i;
             const matchTotal = texto.match(regexTotal);
             
@@ -764,7 +783,7 @@ function atualizarPreviewFatura() {
     }
 }
 
-// 8. PROCESSAMENTO EXTRATO (PRESERVADA A EXTRAÇÃO EXISTENTE)
+// 8. PROCESSAMENTO EXTRATO
 function processarExtrato(ficheiro) {
     const leitor = new FileReader();
     
@@ -772,7 +791,6 @@ function processarExtrato(ficheiro) {
         try {
             const texto = e.target.result || '';
             
-            // PRESERVAÇÃO DA REGEX EXISTENTE - NÃO ALTERAR
             const regexComissao = /Comissão[\s\S]{0,50}?([\d.,]+)\s*(?:EUR|€|-)/i;
             const matchComissao = texto.match(regexComissao);
             
@@ -842,7 +860,7 @@ function atualizarPreviewExtrato() {
     }
 }
 
-// 9. VALIDAÇÃO DE HASH CONTRA REFERÊNCIA (CORREÇÃO APLICADA: .toLowerCase().trim() em ambos os lados)
+// 9. VALIDAÇÃO DE HASH CONTRA REFERÊNCIA
 function validarHashContraReferencia(tipo) {
     // ANTI-LOCK: Garantir que as hashes não sejam undefined
     const hashLocal = window.vdcStore.hashesLocais[tipo] || '';
@@ -853,14 +871,14 @@ function validarHashContraReferencia(tipo) {
         return false;
     }
     
-    // REGRA 2: NORMALIZAÇÃO DE STRINGS - aplica .toLowerCase().trim() em ambos os lados
+    // NORMALIZAÇÃO DE STRINGS
     const hashLocalNormalizada = normalizarHash(hashLocal);
     const hashReferenciaNormalizada = normalizarHash(hashReferencia);
     
     console.log(`🔍 Validação ${tipo}:`);
-    console.log(`  Local (normalizada): ${hashLocalNormalizada}`);
-    console.log(`  Referência (normalizada): ${hashReferenciaNormalizada}`);
-    console.log(`  Match: ${hashLocalNormalizada === hashReferenciaNormalizada}`);
+    console.log(`  Local (normalizada): ${hashLocalNormalizada.substring(0, 16)}...`);
+    console.log(`  Referência (normalizada): ${hashReferenciaNormalizada.substring(0, 16)}...`);
+    console.log(`  Match: ${hashLocalNormalizada === hashReferenciaNormalizada ? '✅ SIM' : '❌ NÃO'}`);
     
     const valido = hashLocalNormalizada === hashReferenciaNormalizada;
     window.vdcStore.validado[tipo] = valido;
@@ -970,31 +988,28 @@ function executarAnaliseForense() {
     }, 200);
 }
 
-// 12. CÁLCULO DA DIVERGÊNCIA COM EXTRAPOLAÇÃO SISTÉMICA (38.000 MOTORISTAS)
+// 12. CÁLCULO DA DIVERGÊNCIA COM EXTRAPOLAÇÃO SISTÉMICA
 function calcularDivergenciaCompletaComExtrapolacao() {
     const fatura = window.vdcStore.fatura?.dados || {};
     const extrato = window.vdcStore.extrato?.dados || {};
     
-    const comissaoReal = extrato.comissaoReal || 239.86; // 239,86€
-    const comissaoFaturada = fatura.total || 69.47; // 69,47€
+    const comissaoReal = extrato.comissaoReal || 239.86;
+    const comissaoFaturada = fatura.total || 69.47;
     
-    const divergenciaBase = Math.abs(comissaoReal - comissaoFaturada); // 170,39€
-    const percentagemDivergencia = ((divergenciaBase / comissaoReal) * 100).toFixed(2); // 71,04%
+    const divergenciaBase = Math.abs(comissaoReal - comissaoFaturada);
+    const percentagemDivergencia = ((divergenciaBase / comissaoReal) * 100).toFixed(2);
     
-    const ivaEmFalta = divergenciaBase * 0.23; // 39,19€
+    const ivaEmFalta = divergenciaBase * 0.23;
+    const impactoIRC = divergenciaBase * 0.225;
     
-    // IMPACTO IRC + DERRAMA (21% + 1.5% = 22.5%)
-    const impactoIRC = divergenciaBase * 0.225; // 38,34€
-    
-    // EXTRAPOLAÇÃO SISTÉMICA - UNIVERSO DE 38.000 MOTORISTAS
+    // EXTRAPOLAÇÃO SISTÉMICA
     const MOTORISTAS_TOTAL = 38000;
     const MESES_ANO = 12;
     const ANOS_PROJECAO = 7;
     
-    // CÁLCULOS DINÂMICOS PARA PARECER
-    const impactoMensalGlobal = divergenciaBase * MOTORISTAS_TOTAL; // 6.474.820,00€
-    const impactoAnualGlobal = impactoMensalGlobal * MESES_ANO; // 77.697.840,00€
-    const impacto7Anos = impactoAnualGlobal * ANOS_PROJECAO; // 543.884.880,00€
+    const impactoMensalGlobal = divergenciaBase * MOTORISTAS_TOTAL;
+    const impactoAnualGlobal = impactoMensalGlobal * MESES_ANO;
+    const impacto7Anos = impactoAnualGlobal * ANOS_PROJECAO;
     
     window.vdcStore.analise = {
         cliente: window.vdcStore.config.cliente || '',
@@ -1007,7 +1022,6 @@ function calcularDivergenciaCompletaComExtrapolacao() {
         percentagemDivergencia: percentagemDivergencia,
         ivaEmFalta: ivaEmFalta,
         impactoIRC: impactoIRC,
-        // EXTRAPOLAÇÕES SISTÉMICAS
         motoristasTotal: MOTORISTAS_TOTAL,
         impactoMensalGlobal: impactoMensalGlobal,
         impactoAnualGlobal: impactoAnualGlobal,
@@ -1031,13 +1045,11 @@ function calcularDivergenciaCompletaComExtrapolacao() {
         },
         risco: percentagemDivergencia > 70 ? 'CRÍTICO' : 'MUITO ALTO',
         recomendacao: 'COMUNICAÇÃO IMEDIATA À AT - ART. 108.º CIVA',
-        enquadramentoLegal: 'Artigo 2.º, n.º 1, alínea i) do CIVA e Artigo 108.º CIVA',
-        notaCalculoIRC: 'Impacto calculado com taxa de 22.5% (IRC 21% + Derrama Municipal 1.5%)',
-        notaExtrapolacao: `Extrapolação baseada em universo de ${MOTORISTAS_TOTAL.toLocaleString('pt-PT')} motoristas`
+        enquadramentoLegal: 'Artigo 2.º, n.º 1, alínea i) do CIVA e Artigo 108.º CIVA'
     };
 }
 
-// 13. MASTER HASH FINAL (DIRETRIZ 2 - ISOLAMENTO DA MASTER HASH)
+// 13. MASTER HASH FINAL
 function gerarMasterHashFinal() {
     const { referencia } = window.vdcStore;
     
@@ -1046,23 +1058,17 @@ function gerarMasterHashFinal() {
         return;
     }
     
-    // DIRETRIZ 2: Master Hash = SHA256 exclusivamente das 3 hashes de referência
+    // Master Hash = SHA256 das 3 hashes de referência
     const hashSaft = normalizarHash(referencia.hashes.saft || 'SAFT_NULL');
     const hashFatura = normalizarHash(referencia.hashes.fatura || 'FATURA_NULL');
     const hashExtrato = normalizarHash(referencia.hashes.extrato || 'EXTRATO_NULL');
     
     const dadosMaster = hashSaft + hashFatura + hashExtrato;
     
-    console.log('🔐 Gerando Master Hash isolada:');
-    console.log(`  Hash SAF-T: ${hashSaft}`);
-    console.log(`  Hash Fatura: ${hashFatura}`);
-    console.log(`  Hash Extrato: ${hashExtrato}`);
-    console.log(`  Dados Master: ${dadosMaster}`);
-    
     window.vdcStore.masterHash = CryptoJS.SHA256(dadosMaster).toString();
     window.vdcStore.timestampSelagem = new Date().toISOString();
     
-    // Atualizar footer imediatamente
+    // Atualizar footer
     const masterHashEl = document.getElementById('currentMasterHash');
     if (masterHashEl) {
         masterHashEl.innerHTML = `
@@ -1074,10 +1080,10 @@ function gerarMasterHashFinal() {
         masterHashEl.title = window.vdcStore.masterHash;
     }
     
-    console.log('🔐 Master Hash isolada gerada (baseada apenas em hashes):', window.vdcStore.masterHash);
+    console.log('🔐 Master Hash gerada:', window.vdcStore.masterHash.substring(0, 32) + '...');
 }
 
-// 14. GERAR PARECER TÉCNICO PERICIAL COM EXTRAPOLAÇÃO SISTÉMICA
+// 14. GERAR PARECER TÉCNICO PERICIAL
 function gerarParecerTecnicoPericial() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -1100,7 +1106,6 @@ function gerarParecerTecnicoPericial() {
     document.getElementById('parecerIVA').textContent = `${a.ivaEmFalta.toFixed(2).replace('.', ',')}€`;
     document.getElementById('parecerImpactoIRC').textContent = `${a.impactoIRC.toFixed(2).replace('.', ',')}€`;
     
-    // Cálculos dinâmicos com extrapolação
     const impactoMensalFormatado = formatarNumeroGrande(a.impactoMensalGlobal);
     const impactoAnualFormatado = formatarNumeroGrande(a.impactoAnualGlobal);
     const impacto7AnosFormatado = formatarNumeroGrande(a.impacto7Anos);
@@ -1108,17 +1113,6 @@ function gerarParecerTecnicoPericial() {
     document.getElementById('parecerImpactoMensalGlobal').textContent = `${impactoMensalFormatado}€`;
     document.getElementById('parecerImpactoAnualGlobal').textContent = `${impactoAnualFormatado}€`;
     document.getElementById('parecerImpacto7AnosValor').textContent = `${impacto7AnosFormatado}€`;
-    
-    // Adicionar nota de extrapolação
-    const parecerFiscal = document.getElementById('parecerFiscal');
-    if (parecerFiscal) {
-        parecerFiscal.innerHTML = `Impacto Mensal Global (extrapolação ${a.motoristasTotal.toLocaleString('pt-PT')} motoristas): <span style="color: #dc2626; font-weight: bold;">${impactoMensalFormatado}€</span>`;
-    }
-    
-    const parecerImpacto7Anos = document.getElementById('parecerImpacto7Anos');
-    if (parecerImpacto7Anos) {
-        parecerImpacto7Anos.innerHTML = `Projeção a 7 anos (${a.motoristasTotal.toLocaleString('pt-PT')} motoristas × 12 meses × 7 anos): <span style="color: #dc2626; font-weight: bold;">${impacto7AnosFormatado}€</span>`;
-    }
     
     // V. AUTENTICIDADE
     const todasValidadas = window.vdcStore.validado.saft && window.vdcStore.validado.fatura && window.vdcStore.validado.extrato;
@@ -1147,7 +1141,7 @@ function formatarNumeroGrande(numero) {
     return numero.toFixed(2).replace('.', ',');
 }
 
-// 15. APRESENTAR RESULTADOS FORENSES (CORREÇÃO APLICADA)
+// 15. APRESENTAR RESULTADOS FORENSES
 function apresentarResultadosForenses() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -1162,15 +1156,13 @@ function apresentarResultadosForenses() {
         actionButtons.style.display = 'flex';
     }
     
-    // Tabela de análise - COM RESILIÊNCIA FORENSE
+    // Tabela de análise
     const tableBody = document.getElementById('analysisTableBody');
     if (tableBody) {
-        // VERIFICAÇÃO REAL DO STATUS BASEADO NAS VALIDAÇÕES DE HASH
         let statusPericial = 'AGUARDANDO DADOS';
         let statusClass = 'aguardando';
         
         if (window.vdcStore.referencia.carregado && a) {
-            // Verificar se todas as hashes foram validadas (com normalização)
             const todasValidadas = 
                 window.vdcStore.validado.saft && 
                 window.vdcStore.validado.fatura && 
@@ -1219,7 +1211,7 @@ function apresentarResultadosForenses() {
     if (hashValueEl && masterHash) {
         hashValueEl.innerHTML = `
             <div style="color: #10b981; font-size: 0.7rem; margin-bottom: 5px;">
-                <i class="fas fa-check-circle"></i> ANCORADO EM REGISTO EXTERNO (ISOLADO)
+                <i class="fas fa-check-circle"></i> ANCORADO EM REGISTO EXTERNO
             </div>
             <div style="font-size: 0.65rem; line-height: 1.1;">
                 ${masterHash.substring(0, 64) || ''}<br>
@@ -1297,7 +1289,7 @@ function atualizarEstadoBotoes() {
     }
 }
 
-// 17. GERAR RELATÓRIO PDF PERICIAL COM ANEXO METODOLÓGICO
+// 17. GERAR RELATÓRIO PDF PERICIAL
 async function gerarRelatorioPDFPericial() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -1314,7 +1306,7 @@ async function gerarRelatorioPDFPericial() {
         return;
     }
     
-    mostrarMensagem('📄 A gerar relatório pericial PDF com anexo metodológico...', 'info');
+    mostrarMensagem('📄 A gerar relatório pericial PDF...', 'info');
     
     try {
         const { jsPDF } = window.jspdf;
@@ -1325,8 +1317,6 @@ async function gerarRelatorioPDFPericial() {
         const MOTORISTAS_TOTAL = a.motoristasTotal || 38000;
         
         // === PÁGINA 1: RELATÓRIO PRINCIPAL ===
-        
-        // CABEÇALHO
         doc.setFontSize(20);
         doc.setTextColor(30, 64, 175);
         doc.text('RELATÓRIO PERICIAL DE AUDITORIA FISCAL', 105, 20, null, null, 'center');
@@ -1334,7 +1324,6 @@ async function gerarRelatorioPDFPericial() {
         doc.setFontSize(12);
         doc.setTextColor(100, 100, 100);
         doc.text('VDC - UNIDADE DE PERITAGEM FORENSE v5.1', 105, 28, null, null, 'center');
-        doc.text('VALIDAÇÃO HIERÁRQUICA COM RESILIÊNCIA FORENSE', 105, 34, null, null, 'center');
         
         let yPos = 50;
         
@@ -1389,7 +1378,7 @@ async function gerarRelatorioPDFPericial() {
         doc.text('e indícios de infração ao Artigo 108.º do CIVA.', 30, yPos);
         yPos += 10;
         
-        // III. IMPACTO FISCAL DINÂMICO COM EXTRAPOLAÇÃO
+        // III. IMPACTO FISCAL DINÂMICO
         doc.setTextColor(30, 64, 175);
         doc.setFont(undefined, 'bold');
         doc.text('III. IMPACTO FISCAL E PROJEÇÃO SISTÉMICA:', 25, yPos);
@@ -1397,12 +1386,11 @@ async function gerarRelatorioPDFPericial() {
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         
-        // Memória de cálculo da extrapolação
         doc.text(`• Divergência Unitária: ${a.divergenciaBase.toFixed(2).replace('.', ',')}€`, 30, yPos);
         yPos += 6;
         doc.text(`• Universo de Motoristas: ${MOTORISTAS_TOTAL.toLocaleString('pt-PT')}`, 30, yPos);
         yPos += 6;
-        doc.text(`• Impacto Mensal Global (${MOTORISTAS_TOTAL.toLocaleString('pt-PT')} × ${a.divergenciaBase.toFixed(2).replace('.', ',')}):`, 30, yPos);
+        doc.text(`• Impacto Mensal Global:`, 30, yPos);
         doc.text(`${formatarNumeroGrande(a.impactoMensalGlobal)}€`, 120, yPos);
         yPos += 6;
         doc.text(`• Impacto Anual Global (×12 meses):`, 30, yPos);
@@ -1418,10 +1406,10 @@ async function gerarRelatorioPDFPericial() {
         doc.text(`${a.impactoIRC.toFixed(2).replace('.', ',')}€`, 120, yPos);
         yPos += 10;
         
-        // IV. MASTER HASH DE INTEGRIDADE (ISOLADA)
+        // IV. MASTER HASH DE INTEGRIDADE
         doc.setTextColor(30, 64, 175);
         doc.setFont(undefined, 'bold');
-        doc.text('IV. MASTER HASH DE INTEGRIDADE (ISOLADA):', 25, yPos);
+        doc.text('IV. MASTER HASH DE INTEGRIDADE:', 25, yPos);
         yPos += 7;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
@@ -1459,7 +1447,7 @@ async function gerarRelatorioPDFPericial() {
         doc.setTextColor(100, 100, 100);
         const dataHora = new Date().toLocaleString('pt-PT');
         doc.text(`Documento selado digitalmente em: ${dataHora}`, 20, 280);
-        doc.text(`Sistema: VDC Peritagem Forense v5.1 - Resiliência Forense`, 20, 284);
+        doc.text(`Sistema: VDC Peritagem Forense v5.1`, 20, 284);
         
         // ASSINATURA
         doc.setFontSize(10);
@@ -1468,92 +1456,11 @@ async function gerarRelatorioPDFPericial() {
         doc.text('Perito Responsável', 20, 267);
         doc.text('VDC - Unidade de Peritagem Forense', 20, 274);
         
-        // === PÁGINA 2: ANEXO METODOLÓGICO ===
-        doc.addPage();
-        yPos = 20;
-        
-        // CABEÇALHO ANEXO
-        doc.setFontSize(16);
-        doc.setTextColor(30, 64, 175);
-        doc.text('ANEXO: NOTA METODOLÓGICA SOBRE INTEGRIDADE DIGITAL', 105, yPos, null, null, 'center');
-        yPos += 15;
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text('VDC PERITAGEM FORENSE v5.1 - PROCEDIMENTOS DE VALIDAÇÃO', 105, yPos, null, null, 'center');
-        yPos += 20;
-        
-        // CONTEÚDO DO ANEXO
-        doc.setTextColor(0, 0, 0);
-        doc.setFont(undefined, 'bold');
-        doc.text('1. PRINCÍPIOS DA CADEIA DE CUSTÓDIA DIGITAL:', 20, yPos);
-        yPos += 10;
-        doc.setFont(undefined, 'normal');
-        doc.text('A validade jurídica deste parecer assenta na imutabilidade da prova.', 25, yPos);
-        yPos += 7;
-        doc.text('Através do algoritmo SHA-256, cada ficheiro gera uma impressão', 25, yPos);
-        yPos += 7;
-        doc.text('digital única. O cruzamento entre o registo de autenticidade original', 25, yPos);
-        yPos += 7;
-        doc.text('e os documentos processados garante a integridade da Cadeia de', 25, yPos);
-        yPos += 7;
-        doc.text('Custódia Digital, em conformidade com as normas internacionais', 25, yPos);
-        yPos += 7;
-        doc.text('de auditoria forense.', 25, yPos);
-        yPos += 15;
-        
-        doc.setFont(undefined, 'bold');
-        doc.text('2. METODOLOGIA BTOR (BANK TRANSACTIONS OVER REALITY):', 20, yPos);
-        yPos += 10;
-        doc.setFont(undefined, 'normal');
-        doc.text('• Mapeamento posicional de dados SAF-T (índices 13-15)', 25, yPos);
-        yPos += 7;
-        doc.text('• Extração precisa de valores de extrato bancário', 25, yPos);
-        yPos += 7;
-        doc.text('• Cálculo de divergência automático baseado em valores reais', 25, yPos);
-        yPos += 7;
-        doc.text('• Geração de prova técnica auditável e replicável', 25, yPos);
-        yPos += 15;
-        
-        doc.setFont(undefined, 'bold');
-        doc.text('3. VALIDAÇÃO HIERÁRQUICA COM RESILIÊNCIA:', 20, yPos);
-        yPos += 10;
-        doc.setFont(undefined, 'normal');
-        doc.text('1. Carregamento do registo de autenticidade (.csv)', 25, yPos);
-        yPos += 7;
-        doc.text('2. Validação de hashes SHA-256 contra referências externas', 25, yPos);
-        yPos += 7;
-        doc.text('3. Normalização automática (trim + lowercase) para evitar', 25, yPos);
-        yPos += 7;
-        doc.text('   falsos positivos por espaços ou maiúsculas/minúsculas', 25, yPos);
-        yPos += 7;
-        doc.text('4. Geração de Master Hash isolada (apenas hashes de ficheiros)', 25, yPos);
-        yPos += 15;
-        
-        doc.setFont(undefined, 'bold');
-        doc.text('4. EXTRAPOLAÇÃO SISTÉMICA:', 20, yPos);
-        yPos += 10;
-        doc.setFont(undefined, 'normal');
-        doc.text(`• Base de cálculo: ${MOTORISTAS_TOTAL.toLocaleString('pt-PT')} motoristas`, 25, yPos);
-        yPos += 7;
-        doc.text('• Projeção temporal: 7 anos (período prescricional)', 25, yPos);
-        yPos += 7;
-        doc.text('• Taxas aplicadas: IVA 23% + IRC 21% + Derrama 1.5%', 25, yPos);
-        yPos += 7;
-        doc.text('• Metodologia: Valores unitários × universo × tempo', 25, yPos);
-        yPos += 15;
-        
-        // RODAPÉ ANEXO
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Documento técnico anexo ao Relatório VDC-PF/2026/001`, 20, 280);
-        doc.text(`Gerado automaticamente pelo Sistema de Peritagem Forense VDC v5.1`, 20, 284);
-        
         // Salvar PDF
         const nomeArquivo = `Peritagem_VDC_${cliente.replace(/\s+/g, '_')}_${a.dataAnalise.replace(/-/g, '')}.pdf`;
         doc.save(nomeArquivo);
         
-        mostrarMensagem('✅ Relatório pericial PDF gerado com anexo metodológico!', 'success');
+        mostrarMensagem('✅ Relatório pericial PDF gerado!', 'success');
         
     } catch (erro) {
         console.error('Erro ao gerar PDF:', erro);
@@ -1561,7 +1468,7 @@ async function gerarRelatorioPDFPericial() {
     }
 }
 
-// 18. GUARDAR ANÁLISE COMPLETA COM FILE SYSTEM ACCESS API
+// 18. GUARDAR ANÁLISE COMPLETA
 async function guardarAnaliseCompletaComDisco() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -1585,7 +1492,6 @@ async function guardarAnaliseCompletaComDisco() {
         
         const nomeBase = `Peritagem_VDC_${cliente}_${dataISO}_${masterHash}`;
         
-        // Objeto completo para guardar
         const dadosCompletos = {
             config: window.vdcStore.config,
             referencia: window.vdcStore.referencia,
@@ -1601,7 +1507,7 @@ async function guardarAnaliseCompletaComDisco() {
             validacao: window.vdcStore.validado,
             analise: window.vdcStore.analise,
             timestampSelagem: window.vdcStore.timestampSelagem,
-            versaoSistema: 'VDC Peritagem Forense v5.1 - Resiliência Forense',
+            versaoSistema: 'VDC Peritagem Forense v5.1',
             dataExportacao: new Date().toISOString()
         };
         
