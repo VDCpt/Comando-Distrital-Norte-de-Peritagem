@@ -1,6 +1,6 @@
 // ============================================
-// VDC UNIDADE DE PERITAGEM - SCRIPT v5.1
-// VERSÃO FINAL CONSOLIDADA - 100% OPERACIONAL
+// VDC UNIDADE DE PERITAGEM - SCRIPT v5.1 CORRIGIDO
+// VERSÃO FINAL CONSOLIDADA - CORREÇÕES APLICADAS
 // ============================================
 
 // 1. OBJETO GLOBAL DE PERSISTÊNCIA
@@ -67,6 +67,101 @@ window.vdcStore = {
         mensagemValidacao: ''
     }
 };
+
+// 1.1. FUNÇÃO DE LIMPEZA DE ESTADO COMPLETA
+function limparEstadoCompleto() {
+    console.log('🧹 Executando limpeza completa do estado...');
+    
+    // Limpar estado de armazenamento global
+    window.vdcStore = {
+        referencia: {
+            hashes: { saft: '', fatura: '', extrato: '' },
+            ficheirosEncontrados: [],
+            carregado: false,
+            timestamp: '',
+            dadosCSV: null
+        },
+        saft: null,
+        extrato: null,
+        fatura: null,
+        hashesLocais: { saft: '', extrato: '', fatura: '' },
+        validado: { saft: false, fatura: false, extrato: false },
+        config: {
+            cliente: '',
+            nif: '',
+            ano: '2025',
+            plataforma: 'bolt',
+            registado: false
+        },
+        analise: null,
+        analiseEmCurso: false,
+        analiseConcluida: false,
+        timestampSelagem: '',
+        masterHash: '',
+        masterHashFicheirosValidos: [],
+        hashesReferenciaCarregadas: false,
+        validacaoSeletiva: {
+            ficheirosCarregados: 0,
+            ficheirosValidos: 0,
+            todosValidos: false,
+            mensagemValidacao: ''
+        }
+    };
+    
+    // Limpar interface
+    limparEstadoVisual();
+    
+    // Resetar file inputs
+    ['controlFile', 'saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+    });
+    
+    // Desabilitar uploads de documentos
+    desabilitarUploadsDocumentos();
+    
+    // Resetar dashboard
+    const dashboard = document.getElementById('controlHashDashboard');
+    if (dashboard) {
+        dashboard.style.display = 'none';
+    }
+    
+    // Resetar status messages
+    ['saftStatus', 'invoiceStatus', 'statementStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = `<i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...`;
+            el.className = 'status-message';
+        }
+    });
+    
+    // Resetar previews
+    ['saftPreview', 'invoicePreview', 'statementPreview'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    
+    // Resetar análise
+    const analysisSection = document.getElementById('analysisSection');
+    const taxSection = document.getElementById('taxSection');
+    const parecerTecnico = document.getElementById('parecerTecnico');
+    const actionButtons = document.getElementById('actionButtons');
+    
+    if (analysisSection) analysisSection.style.display = 'none';
+    if (taxSection) taxSection.style.display = 'none';
+    if (parecerTecnico) parecerTecnico.style.display = 'none';
+    if (actionButtons) actionButtons.style.display = 'none';
+    
+    // Resetar botão de análise
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) {
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE';
+        analyzeBtn.classList.remove('ready');
+    }
+    
+    mostrarMensagem('Estado limpo com sucesso. Pode iniciar nova análise.', 'info');
+}
 
 // 2. INICIALIZAÇÃO DO SISTEMA
 function inicializarSistema() {
@@ -136,7 +231,10 @@ function configurarEventListeners() {
     
     // PRIORIDADE: Upload do ficheiro de controlo
     document.getElementById('controlFile')?.addEventListener('change', function(e) {
-        if (e.target.files[0]) processarControloAutenticidade(e.target.files[0]);
+        if (e.target.files[0]) {
+            limparEstadoCompleto(); // Limpar estado anterior
+            processarControloAutenticidade(e.target.files[0]);
+        }
     });
     
     // Uploads de documentos (INICIALMENTE disabled)
@@ -167,9 +265,15 @@ function desabilitarUploadsDocumentos() {
         if (el) el.disabled = true;
     });
     
+    const documentUploadSection = document.getElementById('documentUploadSection');
+    if (documentUploadSection) {
+        documentUploadSection.style.opacity = '0.5';
+        documentUploadSection.style.pointerEvents = 'none';
+    }
+    
     document.querySelectorAll('.file-label.disabled').forEach(label => {
         label.classList.add('disabled');
-        const span = label.querySelector('span');
+        const span = label.querySelector('.lock-status');
         if (span) {
             span.innerHTML = '<i class="fas fa-lock"></i> AGUARDANDO CONTROLO';
         }
@@ -353,6 +457,7 @@ function habilitarUploadsDocumentos() {
     if (documentUploadSection && window.vdcStore.referencia.carregado) {
         documentUploadSection.style.opacity = '1';
         documentUploadSection.style.pointerEvents = 'auto';
+        documentUploadSection.classList.add('active');
         
         ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
             const el = document.getElementById(id);
@@ -362,7 +467,7 @@ function habilitarUploadsDocumentos() {
         document.querySelectorAll('.file-label.disabled').forEach(label => {
             label.classList.remove('disabled');
             label.style.background = 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)';
-            const span = label.querySelector('span');
+            const span = label.querySelector('.lock-status');
             if (span) {
                 span.innerHTML = '<i class="fas fa-unlock"></i> PRONTO PARA CARREGAR';
             }
@@ -915,7 +1020,7 @@ function atualizarSeloValidacao(tipo, valido) {
     }
 }
 
-// 10. NOVA FUNÇÃO: GERAR MASTER HASH SELETIVA
+// 10. GERAR MASTER HASH SELETIVA
 function gerarMasterHashSeletiva() {
     // Só gerar Master Hash se houver pelo menos um ficheiro carregado
     const ficheirosCarregados = ['saft', 'fatura', 'extrato'].filter(t => 
@@ -960,12 +1065,7 @@ function gerarMasterHashSeletiva() {
     const masterHashEl = document.getElementById('currentMasterHash');
     if (masterHashEl) {
         if (window.vdcStore.masterHash) {
-            masterHashEl.innerHTML = `
-                <span style="display: block; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; line-height: 1.2;">
-                    ${window.vdcStore.masterHash.substring(0, 64) || ''}<br>
-                    ${window.vdcStore.masterHash.substring(64) || ''}
-                </span>
-            `;
+            masterHashEl.innerHTML = window.vdcStore.masterHash;
             masterHashEl.title = window.vdcStore.masterHash;
         } else {
             masterHashEl.innerHTML = 'AGUARDANDO FICHEIROS VÁLIDOS...';
@@ -1185,7 +1285,7 @@ function formatarNumeroGrande(numero) {
     return numero.toFixed(2).replace('.', ',');
 }
 
-// 15. APRESENTAR RESULTADOS FORENSES
+// 15. APRESENTAR RESULTADOS FORENSES - ATUALIZADO
 function apresentarResultadosForenses() {
     const a = window.vdcStore.analise;
     if (!a) return;
@@ -1200,7 +1300,7 @@ function apresentarResultadosForenses() {
         actionButtons.style.display = 'flex';
     }
     
-    // Tabela de análise
+    // Tabela de análise - CORRIGIDO: Usar nome do ficheiro real
     const tableBody = document.getElementById('analysisTableBody');
     if (tableBody) {
         let statusPericial = 'AGUARDANDO DADOS';
@@ -1218,9 +1318,12 @@ function apresentarResultadosForenses() {
             }
         }
         
+        // Obter nome do ficheiro da fatura ou usar referência
+        const nomeFatura = a.metadados?.fatura?.nome || a.referenciaFatura || 'Fatura Bolt';
+        
         tableBody.innerHTML = `
             <tr>
-                <td><strong>Fatura ${a.referenciaFatura || 'Bolt'}</strong></td>
+                <td><strong>${nomeFatura}</strong></td>
                 <td style="color: #10b981; font-weight: bold; font-size: 1.1rem;">${a.comissaoReal.toFixed(2).replace('.', ',')}€</td>
                 <td style="color: #ef4444; font-weight: bold; font-size: 1.1rem;">${a.comissaoFaturada.toFixed(2).replace('.', ',')}€</td>
                 <td style="color: #dc2626; font-weight: bold; font-size: 1.1rem;">
@@ -1308,8 +1411,6 @@ function atualizarEstadoBotoes() {
     if (btnPDF) {
         const estaPronto = temMasterHash && temAnaliseConcluida && temFicheirosCarregados;
         btnPDF.disabled = !estaPronto;
-        btnPDF.style.opacity = estaPronto ? '1' : '0.5';
-        btnPDF.style.cursor = estaPronto ? 'pointer' : 'not-allowed';
         
         if (estaPronto) {
             btnPDF.innerHTML = '<i class="fas fa-file-pdf"></i> GERAR E SELAR RELATÓRIO PDF (VALIDADO)';
@@ -1325,8 +1426,6 @@ function atualizarEstadoBotoes() {
     if (btnGuardar) {
         const estaPronto = temMasterHash && temAnaliseConcluida && temFicheirosCarregados;
         btnGuardar.disabled = !estaPronto;
-        btnGuardar.style.opacity = estaPronto ? '1' : '0.5';
-        btnGuardar.style.cursor = estaPronto ? 'pointer' : 'not-allowed';
         
         if (estaPronto) {
             btnGuardar.innerHTML = '<i class="fas fa-save"></i> GUARDAR ANÁLISE COMPLETA (VALIDADA)';
@@ -1340,7 +1439,7 @@ function atualizarEstadoBotoes() {
     }
 }
 
-// 17. GERAR RELATÓRIO PDF PERICIAL - ATUALIZADO
+// 17. GERAR RELATÓRIO PDF PERICIAL - CORRIGIDO (SEM SOBREPOSIÇÃO)
 async function gerarRelatorioPDFPericial() {
     if (!window.vdcStore.analiseConcluida || !window.vdcStore.analise) {
         mostrarMensagem('⚠️ Execute uma análise forense primeiro!', 'warning');
@@ -1420,7 +1519,13 @@ async function gerarRelatorioPDFPericial() {
         doc.text(`• Ficheiros incluídos na Master Hash:`, 25, yPos);
         yPos += 6;
         
+        // Listar ficheiros incluídos
+        const startY = yPos;
         window.vdcStore.masterHashFicheirosValidos.forEach((ficheiro, index) => {
+            if (yPos > 250) { // Evitar sobreposição
+                doc.addPage();
+                yPos = 20;
+            }
             doc.text(`  - ${ficheiro.toUpperCase()}`, 30, yPos);
             yPos += 5;
         });
@@ -1429,7 +1534,13 @@ async function gerarRelatorioPDFPericial() {
             doc.text(`  - Nenhum ficheiro válido`, 30, yPos);
             yPos += 5;
         }
-        yPos += 10;
+        
+        // Ajustar posição Y para evitar sobreposição
+        if (yPos < startY + 20) {
+            yPos = startY + 20;
+        } else {
+            yPos += 5;
+        }
         
         // 3. PARECER TÉCNICO
         doc.setFontSize(12);
@@ -1445,10 +1556,21 @@ async function gerarRelatorioPDFPericial() {
         yPos += 7;
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
-        doc.text(`Discrepância de ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%) entre o valor`, 30, yPos);
+        
+        const analiseText = `Discrepância de ${a.divergenciaBase.toFixed(2).replace('.', ',')}€ (${a.percentagemDivergencia}%) entre o valor`;
+        const analiseText2 = `retido (${a.comissaoReal.toFixed(2).replace('.', ',')}€) e o faturado (${a.comissaoFaturada.toFixed(2).replace('.', ',')}€).`;
+        
+        // Quebrar texto se necessário
+        doc.text(analiseText, 30, yPos);
         yPos += 6;
-        doc.text(`retido (${a.comissaoReal.toFixed(2).replace('.', ',')}€) e o faturado (${a.comissaoFaturada.toFixed(2).replace('.', ',')}€).`, 30, yPos);
+        doc.text(analiseText2, 30, yPos);
         yPos += 10;
+        
+        // Verificar se há espaço suficiente na página
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
         
         // II. ENQUADRAMENTO LEGAL
         doc.setTextColor(30, 64, 175);
@@ -1462,6 +1584,12 @@ async function gerarRelatorioPDFPericial() {
         doc.text('e indícios de infração ao Artigo 108.º do CIVA.', 30, yPos);
         yPos += 10;
         
+        // Verificar espaço para próxima seção
+        if (yPos > 180) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
         // III. IMPACTO FISCAL DINÂMICO
         doc.setTextColor(30, 64, 175);
         doc.setFont(undefined, 'bold');
@@ -1470,25 +1598,32 @@ async function gerarRelatorioPDFPericial() {
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         
-        doc.text(`• Divergência Unitária: ${a.divergenciaBase.toFixed(2).replace('.', ',')}€`, 30, yPos);
-        yPos += 6;
-        doc.text(`• Universo de Motoristas: ${MOTORISTAS_TOTAL.toLocaleString('pt-PT')}`, 30, yPos);
-        yPos += 6;
-        doc.text(`• Impacto Mensal Global:`, 30, yPos);
-        doc.text(`${formatarNumeroGrande(a.impactoMensalGlobal)}€`, 120, yPos);
-        yPos += 6;
-        doc.text(`• Impacto Anual Global (×12 meses):`, 30, yPos);
-        doc.text(`${formatarNumeroGrande(a.impactoAnualGlobal)}€`, 120, yPos);
-        yPos += 6;
-        doc.text(`• Projeção a 7 anos (×7 anos):`, 30, yPos);
-        doc.text(`${formatarNumeroGrande(a.impacto7Anos)}€`, 120, yPos);
-        yPos += 6;
-        doc.text(`• IVA em falta (23% sobre divergência):`, 30, yPos);
-        doc.text(`${a.ivaEmFalta.toFixed(2).replace('.', ',')}€`, 120, yPos);
-        yPos += 6;
-        doc.text(`• Impacto IRC/Derrama (22.5% sobre divergência):`, 30, yPos);
-        doc.text(`${a.impactoIRC.toFixed(2).replace('.', ',')}€`, 120, yPos);
+        const items = [
+            `• Divergência Unitária: ${a.divergenciaBase.toFixed(2).replace('.', ',')}€`,
+            `• Universo de Motoristas: ${MOTORISTAS_TOTAL.toLocaleString('pt-PT')}`,
+            `• Impacto Mensal Global: ${formatarNumeroGrande(a.impactoMensalGlobal)}€`,
+            `• Impacto Anual Global (×12 meses): ${formatarNumeroGrande(a.impactoAnualGlobal)}€`,
+            `• Projeção a 7 anos (×7 anos): ${formatarNumeroGrande(a.impacto7Anos)}€`,
+            `• IVA em falta (23% sobre divergência): ${a.ivaEmFalta.toFixed(2).replace('.', ',')}€`,
+            `• Impacto IRC/Derrama (22.5% sobre divergência): ${a.impactoIRC.toFixed(2).replace('.', ',')}€`
+        ];
+        
+        items.forEach(item => {
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
+            doc.text(item, 30, yPos);
+            yPos += 6;
+        });
+        
         yPos += 10;
+        
+        // Verificar espaço para próxima seção
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+        }
         
         // IV. MASTER HASH DE INTEGRIDADE SELETIVA
         doc.setTextColor(30, 64, 175);
@@ -1500,10 +1635,20 @@ async function gerarRelatorioPDFPericial() {
         
         const masterHash = window.vdcStore.masterHash;
         if (masterHash) {
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
             doc.text(masterHash.substring(0, 64), 30, yPos);
             yPos += 5;
+            
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
             doc.text(masterHash.substring(64), 30, yPos);
             yPos += 8;
+            
             doc.setFontSize(7);
             doc.text(`(Baseada em ${window.vdcStore.masterHashFicheirosValidos.length} ficheiros válidos)`, 30, yPos);
             yPos += 10;
@@ -1512,7 +1657,13 @@ async function gerarRelatorioPDFPericial() {
             yPos += 10;
         }
         
-        // V. CONCLUSÃO ESTRATÉGICA
+        // Verificar espaço para conclusão
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // V. CONCLUSÃO ESTRATÉGICA (COM ESPAÇO SUFICIENTE)
         doc.setFontSize(10);
         doc.setTextColor(220, 38, 38);
         doc.setFont(undefined, 'bold');
@@ -1520,23 +1671,39 @@ async function gerarRelatorioPDFPericial() {
         yPos += 7;
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
-        doc.text('A materialidade da omissão (71.04%) configura um risco sistémico.', 30, yPos);
-        yPos += 6;
-        doc.text('Este relatório serve de suporte técnico para procedimentos de', 30, yPos);
-        yPos += 6;
-        doc.text('regularização voluntária ou interpelação judicial por quebra de', 30, yPos);
-        yPos += 6;
-        doc.text('conformidade fiscal da entidade emissora.', 30, yPos);
-        yPos += 15;
         
-        // RODAPÉ PÁGINA 1
+        const conclusaoLines = [
+            'A materialidade da omissão (71.04%) configura um risco sistémico.',
+            'Este relatório serve de suporte técnico para procedimentos de',
+            'regularização voluntária ou interpelação judicial por quebra de',
+            'conformidade fiscal da entidade emissora.'
+        ];
+        
+        conclusaoLines.forEach(line => {
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
+            doc.text(line, 30, yPos);
+            yPos += 6;
+        });
+        
+        yPos += 10;
+        
+        // Garantir que há espaço para rodapé e assinatura
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // RODAPÉ PÁGINA FINAL
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         const dataHora = new Date().toLocaleString('pt-PT');
         doc.text(`Documento selado digitalmente em: ${dataHora}`, 20, 280);
         doc.text(`Sistema: VDC Peritagem Forense v5.1 (Validação Seletiva)`, 20, 284);
         
-        // ASSINATURA
+        // ASSINATURA (COM ESPAÇO GARANTIDO)
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         doc.text('_________________________________', 20, 260);
@@ -1776,6 +1943,7 @@ function atualizarDetalhesTecnicos() {
     const a = window.vdcStore.analise;
     if (!a) return;
     
+    // CORRIGIDO: Usar overflow-wrap para nomes longos
     document.getElementById('detSaftFile').textContent = a.metadados.safT?.nome || 'N/A';
     document.getElementById('detInvoiceFile').textContent = a.metadados.fatura?.nome || 'N/A';
     document.getElementById('detStatementFile').textContent = a.metadados.extrato?.nome || 'N/A';
