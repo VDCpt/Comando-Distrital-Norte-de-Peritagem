@@ -17,6 +17,9 @@ const VDCSystem = {
         extrato: null
     },
     
+    // Todos os hashes do control file (nova propriedade)
+    allReferenceHashes: null,
+    
     // Documentos carregados
     documents: {
         saft: { file: null, hash: null, valid: false, metadata: null, parsedData: null, format: null },
@@ -58,7 +61,7 @@ async function initializeSystem() {
         setupEventListeners();
         updateLoadingProgress(50);
         
-        // Inicializar IndexedDB
+        // Inicializar IndexedDB (VERSÃO ALTERADA: 1 → 3)
         await initializeDatabase();
         updateLoadingProgress(70);
         
@@ -288,6 +291,7 @@ async function processControlFile(file) {
         
         // RESET das referências
         VDCSystem.referenceHashes = { saft: null, fatura: null, extrato: null };
+        VDCSystem.allReferenceHashes = {}; // INICIALIZAR CORRETAMENTE
         let foundHashes = 0;
         
         // Processar hashes com MATCH DIRETO POR HASH
@@ -311,8 +315,6 @@ async function processControlFile(file) {
             }
             
             // LÓGICA FLEXÍVEL DE ATRIBUIÇÃO POR HASH
-            // Não forçar correspondência por nome - apenas registrar hash
-            // A atribuição ao tipo específico será feita durante o upload
             if (hash && algorithm) {
                 // Armazenar hash para match posterior
                 if (!VDCSystem.allReferenceHashes) {
@@ -887,10 +889,10 @@ async function generateMasterHash() {
     }
 }
 
-// 12. INDEXEDDB
+// 12. INDEXEDDB (VERSÃO ALTERADA: 1 → 3)
 async function initializeDatabase() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('VDC_Forensic_DB', 1);
+        const request = indexedDB.open('VDC_Forensic_DB', 3); // ALTERADO: versão 1 para 3
         
         request.onerror = (event) => {
             console.error('IndexedDB error:', event.target.error);
