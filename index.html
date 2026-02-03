@@ -2,62 +2,57 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Peritagem Forense v5.2</title>
+    <title>VDC Forense v5.2 - Estável</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <header class="header-forense">
-        <div class="brand">VDC <span>UNIT v5.2</span></div>
-        <div class="session-controls">
+    <div class="top-nav">
+        <div class="logo">VDC <span>PERITAGEM</span></div>
+        <div class="user-fields">
             <input type="text" id="clientName" placeholder="CLIENTE">
             <input type="text" id="clientNIF" placeholder="NIF">
-            <button onclick="iniciarSessao()" id="btnSessao">REGISTAR SESSÃO</button>
+            <button onclick="iniciarSessao()" id="btnSessao">REGISTAR</button>
         </div>
-    </header>
+    </div>
 
-    <main class="main-dashboard">
-        <section class="control-strip">
-            <label class="label-step">1. CONTROLO:</label>
-            <input type="file" id="controlFile" accept=".csv" hidden>
-            <label for="controlFile" class="btn-main">CARREGAR CSV DE AUTENTICIDADE</label>
-            <span id="controlStatus" class="status-msg">PENDENTE</span>
-        </section>
+    <div class="container">
+        <div class="control-bar">
+            <strong>1. CONTROLO (CSV):</strong>
+            <input type="file" id="controlFile" accept=".csv">
+            <span id="controlStatus">AGUARDANDO FICHEIRO...</span>
+        </div>
 
-        <section class="evidence-row">
-            <div class="card disabled" id="card-saft">
-                <h4>SAF-T (PT)</h4>
+        <div class="evidence-row">
+            <div class="ev-card" id="card-saft">
+                <h3>SAF-T (PT)</h3>
                 <input type="file" id="file-saft" disabled>
-                <div class="hash-view" id="hash-saft">---</div>
-                <div class="match-indicator" id="msg-saft">AGUARDANDO</div>
+                <div class="hash-box" id="hash-saft">---</div>
+                <div class="status" id="msg-saft">PENDENTE</div>
             </div>
 
-            <div class="card disabled" id="card-invoice">
-                <h4>FATURAÇÃO</h4>
+            <div class="ev-card" id="card-invoice">
+                <h3>FATURAÇÃO</h3>
                 <input type="file" id="file-invoice" disabled>
-                <div class="hash-view" id="hash-invoice">---</div>
-                <div class="match-indicator" id="msg-invoice">AGUARDANDO</div>
+                <div class="hash-box" id="hash-invoice">---</div>
+                <div class="status" id="msg-invoice">PENDENTE</div>
             </div>
 
-            <div class="card disabled" id="card-statement">
-                <h4>EXTRATO</h4>
+            <div class="ev-card" id="card-statement">
+                <h3>EXTRATO</h3>
                 <input type="file" id="file-statement" disabled>
-                <div class="hash-view" id="hash-statement">---</div>
-                <div class="match-indicator" id="msg-statement">AGUARDANDO</div>
+                <div class="hash-box" id="hash-statement">---</div>
+                <div class="status" id="msg-statement">PENDENTE</div>
             </div>
-        </section>
-    </main>
-
-    <footer class="footer-seal">
-        <div class="seal-box">
-            <span>MASTER HASH:</span>
-            <strong id="mHashValue">NÃO GERADA</strong>
         </div>
-        <button id="btnRelatorio" disabled onclick="gerarRelatorio()">GERAR PARECER TÉCNICO PDF</button>
-    </footer>
+    </div>
+
+    <div class="footer">
+        <div class="m-hash">MASTER HASH: <span id="mHashValue">---</span></div>
+        <button id="btnRelatorio" disabled onclick="gerarRelatorio()">GERAR PARECER PDF</button>
+    </div>
 
     <script src="script.js"></script>
 </body>
