@@ -265,7 +265,7 @@ async function processControlFile(file) {
             encoding: 'UTF-8'
         });
         
-        // Processar hashes
+        // Processar hashes - IGNORAR espaços vazios e auto-referências
         let foundHashes = 0;
         VDCSystem.referenceHashes = { saft: null, fatura: null, extrato: null };
         
@@ -274,12 +274,16 @@ async function processControlFile(file) {
             const hash = (row.Hash || '').toLowerCase().trim();
             const algorithm = row.Algorithm || '';
             
-            // Ignorar auto-referências
-            if (path.includes('controlo') || path.includes('autenticidade')) {
-                return;
+            // IGNORAR: auto-referências e espaços vazios
+            if (!path || !hash || !algorithm) {
+                return; // Ignorar linhas vazias
             }
             
-            // Identificar tipo de documento
+            if (path.includes('controlo') || path.includes('autenticidade')) {
+                return; // Ignorar auto-referências
+            }
+            
+            // Identificar tipo de documento (apenas SAF-T, Fatura, Extrato)
             let docType = null;
             if (path.includes('saft') || path.includes('.xml')) {
                 docType = 'saft';
@@ -289,6 +293,7 @@ async function processControlFile(file) {
                 docType = 'extrato';
             }
             
+            // Apenas processar os 3 documentos específicos
             if (docType && hash && algorithm) {
                 VDCSystem.referenceHashes[docType] = hash;
                 foundHashes++;
