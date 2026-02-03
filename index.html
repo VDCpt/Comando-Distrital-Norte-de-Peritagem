@@ -80,17 +80,18 @@
     </style>
 </head>
 <body>
-    <!-- Modal de Inicialização -->
+    <!-- Modal de Inicialização - TEXTO ATUALIZADO (Correção 3) -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
-            <h2><i class="fas fa-shield-alt"></i> SISTEMA DE PERITAGEM FORENSE VDC v5.1</h2>
-            <p><strong>VALIDAÇÃO SELETIVA DE INTEGRIDADE</strong></p>
-            <p>Este sistema implementa validação seletiva: a Master Hash é calculada apenas sobre os ficheiros carregados que obtiveram correspondência no controlo.</p>
+            <h2><i class="fas fa-shield-alt"></i> PROTOCOLO DE SEGURANÇA E CUSTÓDIA DIGITAL V5.1</h2>
+            <p><strong>SISTEMA DE PERITAGEM FORENSE VDC - TERMINAL OPERACIONAL</strong></p>
+            <p>Este terminal opera sob <strong>Validação Seletiva de Integridade</strong>. Processamento ancorado em funções criptográficas SHA-256 com isolamento de metadados (Filtro de Ruído).</p>
+            <p>A sessão gerará uma <strong>Assinatura Digital Única</strong> imutável, baseada exclusivamente em ficheiros validados contra registo externo de autenticidade.</p>
             <p style="color: #93c5fd; font-size: 1rem; margin-top: 25px; padding: 15px; background: rgba(30, 64, 175, 0.1); border-radius: 10px;">
-                <i class="fas fa-info-circle"></i> FILTRO DE RUÍDO: O ficheiro de controlo nunca é incluído em cálculos de hash.
+                <i class="fas fa-exclamation-triangle"></i> ATENÇÃO: Ficheiro de controlo excluído de cálculos de hash (FILTRO DE RUÍDO ATIVO).
             </p>
             <button class="modal-btn" id="closeModalBtn">
-                <i class="fas fa-check-circle"></i> INICIAR SISTEMA DE PERITAGEM
+                <i class="fas fa-key"></i> AUTORIZAR ACESSO E INICIAR PROTOCOLO
             </button>
         </div>
     </div>
@@ -112,8 +113,10 @@
                 <div class="config-group">
                     <h4><i class="fas fa-user-shield"></i> IDENTIFICAÇÃO DO CLIENTE</h4>
                     <div class="config-inputs">
-                        <input type="text" id="clientName" placeholder="Nome Completo do Cliente">
-                        <input type="text" id="clientNIF" placeholder="NIF (9 dígitos)">
+                        <input type="text" id="clientName" placeholder="Nome Completo do Cliente" 
+                               title="Digite para buscar clientes existentes">
+                        <input type="text" id="clientNIF" placeholder="NIF (9 dígitos)"
+                               title="Digite NIF para buscar cliente existente">
                         <button id="setClientBtn" class="config-btn">
                             <i class="fas fa-fingerprint"></i> REGISTAR CLIENTE
                         </button>
@@ -123,7 +126,7 @@
                 <!-- Ano -->
                 <div class="config-group">
                     <h4><i class="fas fa-calendar-alt"></i> PERÍODO DE ANÁLISE</h4>
-                    <select id="yearSelect" class="config-select">
+                    <select id="yearSelect" class="config-select" style="z-index: 10;">
                         <option value="2018">2018</option>
                         <option value="2019">2019</option>
                         <option value="2020">2020</option>
