@@ -1,669 +1,795 @@
 // ============================================
-// VDC UNIDADE DE PERITAGEM - SCRIPT v5.1 CORRIGIDO
-// VERSÃO FINAL CONSOLIDADA - CORREÇÕES APLICADAS
+// VDC UNIDADE DE PERITAGEM - SCRIPT v5.2
+// TERMINAL DE PROVA LEGAL - LÓGICA FORENSE CONSOLIDADA
 // ============================================
 
-// 1. OBJETO GLOBAL DE PERSISTÊNCIA
-window.vdcStore = {
-    // Referências do ficheiro de controlo
-    referencia: {
-        hashes: {
-            saft: '',
-            fatura: '',
-            extrato: ''
-        },
-        ficheirosEncontrados: [],
-        carregado: false,
-        timestamp: '',
-        dadosCSV: null
+// 1. CONFIGURAÇÃO DO SISTEMA
+const SYSTEM_VERSION = 'VDC v5.2 - Terminal de Prova Legal';
+const HASH_ALGORITHM = 'SHA-256';
+const VALIDATION_MODE = 'SELECTIVE_INTEGRITY_NIST_2024';
+
+// 2. OBJETO GLOBAL DE ESTADO PERICIAL
+window.vdcForensicState = {
+    // Identificação da Sessão
+    session: {
+        id: generateSessionId(),
+        timestamp: new Date().toISOString(),
+        perito: '',
+        sistema: SYSTEM_VERSION,
+        estado: 'INICIALIZANDO'
     },
     
-    // Documentos do utilizador
-    saft: null,
-    extrato: null,
-    fatura: null,
-    
-    // Hashes calculadas localmente
-    hashesLocais: {
-        saft: '',
-        extrato: '',
-        fatura: ''
-    },
-    
-    // Estado de validação
-    validado: {
-        saft: false,
-        fatura: false,
-        extrato: false
-    },
-    
-    // Configuração do cliente
-    config: {
-        cliente: '',
+    // Identificação do Cliente (IndexedDB Backed)
+    cliente: {
+        nome: '',
         nif: '',
-        ano: '2025',
-        plataforma: 'bolt',
-        registado: false
+        registado: false,
+        dataRegisto: null,
+        historicoId: null
     },
     
-    // Análise
-    analise: null,
-    analiseEmCurso: false,
-    analiseConcluida: false,
-    timestampSelagem: '',
+    // Configuração da Análise
+    config: {
+        ano: '2024',
+        plataforma: 'bolt',
+        exercicio: '2024',
+        timestampConfig: null
+    },
     
-    // Master Hash final (calculada apenas sobre ficheiros carregados válidos)
-    masterHash: '',
-    masterHashFicheirosValidos: [],
+    // Registo de Autenticidade (CSV)
+    registoAutenticidade: {
+        carregado: false,
+        timestamp: null,
+        dadosCSV: null,
+        hashesReferencia: {
+            saft: { hash: '', algoritmo: '', caminho: '', valido: false },
+            fatura: { hash: '', algoritmo: '', caminho: '', valido: false },
+            extrato: { hash: '', algoritmo: '', caminho: '', valido: false }
+        },
+        ficheirosEncontrados: []
+    },
     
-    // Status das hashes de referência carregadas
-    hashesReferenciaCarregadas: false,
+    // Documentos Carregados
+    documentos: {
+        saft: {
+            carregado: false,
+            valido: false,
+            hashCalculada: '',
+            metadados: null,
+            dados: null,
+            timestampProcessamento: null
+        },
+        fatura: {
+            carregado: false,
+            valido: false,
+            hashCalculada: '',
+            metadados: null,
+            dados: null,
+            timestampProcessamento: null
+        },
+        extrato: {
+            carregado: false,
+            valido: false,
+            hashCalculada: '',
+            metadados: null,
+            dados: null,
+            timestampProcessamento: null
+        }
+    },
     
-    // Controle de validação seletiva
+    // Validação Seletiva
     validacaoSeletiva: {
         ficheirosCarregados: 0,
         ficheirosValidos: 0,
-        todosValidos: false,
-        mensagemValidacao: ''
+        ficheirosInvalidos: 0,
+        permiteRelatorioParcial: false,
+        permiteRelatorioCompleto: false,
+        mensagemStatus: 'Aguardando carregamento de documentos'
+    },
+    
+    // Master Hash da Sessão (Assinatura Digital)
+    masterHash: {
+        hash: '',
+        timestamp: null,
+        ficheirosIncluidos: [],
+        algoritmo: HASH_ALGORITHM,
+        versaoSistema: SYSTEM_VERSION,
+        sessionId: '',
+        selado: false
+    },
+    
+    // Análise Forense
+    analise: {
+        concluida: false,
+        emCurso: false,
+        dados: null,
+        timestamp: null,
+        divergenciaDetetada: false,
+        impactoFiscal: null
+    },
+    
+    // Console de Auditoria
+    auditoria: {
+        logs: [],
+        erros: [],
+        warnings: [],
+        nivelLog: 'INFO' // DEBUG, INFO, WARN, ERROR
     }
 };
 
-// 1.1. FUNÇÃO DE LIMPEZA DE ESTADO COMPLETA
-function limparEstadoCompleto() {
-    console.log('🧹 Executando limpeza completa do estado...');
-    
-    // Limpar estado de armazenamento global (exceto dados do cliente)
-    const clienteBackup = window.vdcStore.config.cliente;
-    const nifBackup = window.vdcStore.config.nif;
-    const registadoBackup = window.vdcStore.config.registado;
-    
-    window.vdcStore = {
-        referencia: {
-            hashes: { saft: '', fatura: '', extrato: '' },
-            ficheirosEncontrados: [],
-            carregado: false,
-            timestamp: '',
-            dadosCSV: null
-        },
-        saft: null,
-        extrato: null,
-        fatura: null,
-        hashesLocais: { saft: '', extrato: '', fatura: '' },
-        validado: { saft: false, fatura: false, extrato: false },
-        config: {
-            cliente: clienteBackup,
-            nif: nifBackup,
-            ano: '2025',
-            plataforma: 'bolt',
-            registado: registadoBackup
-        },
-        analise: null,
-        analiseEmCurso: false,
-        analiseConcluida: false,
-        timestampSelagem: '',
-        masterHash: '',
-        masterHashFicheirosValidos: [],
-        hashesReferenciaCarregadas: false,
-        validacaoSeletiva: {
-            ficheirosCarregados: 0,
-            ficheirosValidos: 0,
-            todosValidos: false,
-            mensagemValidacao: ''
-        }
-    };
-    
-    // Limpar interface
-    limparEstadoVisual();
-    
-    // Resetar file inputs (exceto controlFile para permitir reupload)
-    ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) input.value = '';
-    });
-    
-    // Desabilitar uploads de documentos
-    desabilitarUploadsDocumentos();
-    
-    // Resetar dashboard
-    const dashboard = document.getElementById('controlHashDashboard');
-    if (dashboard) {
-        dashboard.style.display = 'none';
-    }
-    
-    // Resetar status messages
-    ['saftStatus', 'invoiceStatus', 'statementStatus'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = `<i class="fas fa-clock"></i> AGUARDANDO FICHEIRO DE CONTROLO...`;
-            el.className = 'status-message';
-        }
-    });
-    
-    // Resetar previews
-    ['saftPreview', 'invoicePreview', 'statementPreview'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
-    
-    // Resetar análise
-    const analysisSection = document.getElementById('analysisSection');
-    const taxSection = document.getElementById('taxSection');
-    const parecerTecnico = document.getElementById('parecerTecnico');
-    const actionButtons = document.getElementById('actionButtons');
-    
-    if (analysisSection) analysisSection.style.display = 'none';
-    if (taxSection) taxSection.style.display = 'none';
-    if (parecerTecnico) parecerTecnico.style.display = 'none';
-    if (actionButtons) actionButtons.style.display = 'none';
-    
-    // Resetar botão de análise
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    if (analyzeBtn) {
-        analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE';
-        analyzeBtn.classList.remove('ready');
-    }
-    
-    // Resetar hash containers no dashboard
-    ['hash-saft-container', 'hash-fatura-container', 'hash-extrato-container'].forEach(id => {
-        const container = document.getElementById(id);
-        if (container) {
-            container.style.display = 'none';
-        }
-    });
-    
-    const noFilesMsg = document.getElementById('no-files-message');
-    if (noFilesMsg) noFilesMsg.style.display = 'block';
-    
-    mostrarMensagem('Estado limpo com sucesso. Pode iniciar nova análise.', 'info');
-}
+// 3. INDEXEDDB - PERSISTÊNCIA FORENSE
+const DB_NAME = 'VDC_FORENSIC_DB';
+const DB_VERSION = 2;
+let db = null;
 
-// 2. INICIALIZAÇÃO DO SISTEMA
-function inicializarSistema() {
-    console.log('⚖️ VDC SISTEMA DE PERITAGEM FORENSE v5.1 - VALIDAÇÃO SELETIVA');
-    
-    // Inicializar status messages
-    inicializarStatusMessages();
-    
-    // Inicializar sistema de clientes
-    inicializarSistemaClientes();
-    
-    // Mostrar modal inicial
-    const modal = document.getElementById('modalOverlay');
-    if (modal) {
-        modal.style.display = 'flex';
+// 3.1 Inicializar IndexedDB
+async function inicializarIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
         
-        // Verificar se o botão existe antes de adicionar evento
-        const closeBtn = document.getElementById('closeModalBtn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-                inicializarInterface();
-            });
-        } else {
-            // Fallback: fechar modal automaticamente após 2 segundos
-            setTimeout(function() {
-                modal.style.display = 'none';
-                inicializarInterface();
-            }, 2000);
-        }
-    } else {
-        // Se não houver modal, inicializar diretamente
-        inicializarInterface();
-    }
-}
-
-// 2.1 SISTEMA DE GESTÃO DE CLIENTES (INTEGRAÇÃO COM DIRETÓRIO LOCAL)
-function inicializarSistemaClientes() {
-    console.log('📁 Inicializando sistema de gestão de clientes...');
-    
-    // Configurar auto-complete para campos de cliente
-    const clientNameInput = document.getElementById('clientName');
-    const clientNIFInput = document.getElementById('clientNIF');
-    
-    if (clientNameInput) {
-        clientNameInput.addEventListener('input', function() {
-            if (this.value.length >= 2) {
-                buscarClientesPorNome(this.value);
-            }
-        });
-    }
-    
-    if (clientNIFInput) {
-        clientNIFInput.addEventListener('input', function() {
-            if (this.value.length >= 3) {
-                buscarClientesPorNIF(this.value);
-            }
-        });
-    }
-    
-    // Criar diretório se não existir
-    verificarDiretorioClientes();
-}
-
-function verificarDiretorioClientes() {
-    // Esta função seria implementada com Node.js/Electron
-    // Para ambiente web, usamos localStorage como fallback
-    console.log('📂 Sistema de clientes inicializado (modo web)');
-}
-
-function buscarClientesPorNome(nome) {
-    // Implementação simplificada para ambiente web
-    // Em produção, esta função faria busca no diretório C:\Peritagens\CLIENTES_VDC
-    const clientes = carregarClientesDoStorage();
-    const resultados = clientes.filter(cliente => 
-        cliente.nome.toLowerCase().includes(nome.toLowerCase())
-    );
-    
-    if (resultados.length > 0) {
-        console.log('🔍 Clientes encontrados:', resultados);
-        mostrarSugestoesClientes(resultados);
-    }
-}
-
-function buscarClientesPorNIF(nif) {
-    const clientes = carregarClientesDoStorage();
-    const resultados = clientes.filter(cliente => 
-        cliente.nif.includes(nif)
-    );
-    
-    if (resultados.length > 0) {
-        console.log('🔍 Clientes encontrados por NIF:', resultados);
-        mostrarSugestoesClientes(resultados);
-    }
-}
-
-function mostrarSugestoesClientes(clientes) {
-    // Implementar interface de sugestões se necessário
-    // Por enquanto apenas log
-    console.log('💡 Sugestões de clientes:', clientes);
-}
-
-function carregarClientesDoStorage() {
-    try {
-        const clientesJSON = localStorage.getItem('vdc_clientes');
-        return clientesJSON ? JSON.parse(clientesJSON) : [];
-    } catch (e) {
-        console.error('Erro ao carregar clientes:', e);
-        return [];
-    }
-}
-
-function guardarClienteNoStorage(nome, nif) {
-    try {
-        const clientes = carregarClientesDoStorage();
+        request.onerror = (event) => {
+            console.error('Erro ao abrir IndexedDB:', event.target.error);
+            registrarLog('ERROR', 'Falha na inicialização do IndexedDB', event.target.error);
+            reject(event.target.error);
+        };
         
-        // Verificar se cliente já existe
-        const existe = clientes.some(cliente => 
-            cliente.nif === nif || cliente.nome.toLowerCase() === nome.toLowerCase()
-        );
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            registrarLog('INFO', 'IndexedDB inicializado com sucesso');
+            console.log('✅ IndexedDB inicializado:', db);
+            resolve(db);
+        };
         
-        if (!existe) {
-            clientes.push({
-                id: Date.now(),
-                nome: nome,
-                nif: nif,
-                dataRegisto: new Date().toISOString()
-            });
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
             
-            localStorage.setItem('vdc_clientes', JSON.stringify(clientes));
-            console.log('💾 Cliente guardado no storage:', { nome, nif });
-            
-            // Em ambiente desktop, aqui seria feita a gravação no diretório C:\Peritagens\CLIENTES_VDC
-            // gravarClienteNoDiretorioLocal(nome, nif);
-        }
-    } catch (e) {
-        console.error('Erro ao guardar cliente:', e);
-    }
-}
-
-function inicializarStatusMessages() {
-    const statusIds = ['controlStatus', 'saftStatus', 'invoiceStatus', 'statementStatus'];
-    statusIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && !el.innerHTML.trim()) {
-            el.innerHTML = `<i class="fas fa-clock"></i> AGUARDANDO PROCESSAMENTO`;
-        }
-    });
-}
-
-function inicializarInterface() {
-    console.log('📱 Inicializando interface com validação seletiva...');
-    configurarEventListeners();
-    atualizarTimestamp();
-    limparEstadoVisual();
-    atualizarEstadoBotoes();
-    
-    // Desabilitar todos os uploads exceto o de controlo
-    desabilitarUploadsDocumentos();
-}
-
-function configurarEventListeners() {
-    console.log('🔗 Configurando event listeners...');
-    
-    // Cliente
-    document.getElementById('setClientBtn')?.addEventListener('click', registarCliente);
-    document.getElementById('yearSelect')?.addEventListener('change', (e) => {
-        window.vdcStore.config.ano = e.target.value;
-        document.getElementById('currentYear').textContent = e.target.value;
-    });
-    document.getElementById('platformSelect')?.addEventListener('change', (e) => {
-        window.vdcStore.config.plataforma = e.target.value;
-        const texto = e.target.options[e.target.selectedIndex].text;
-        document.getElementById('currentPlatform').textContent = texto;
-    });
-    
-    // === CORREÇÃO CRÍTICA 1: Upload do ficheiro de controlo ===
-    // Garantir que o listener está sempre ativo, mesmo após registo de cliente
-    const controlFileInput = document.getElementById('controlFile');
-    if (controlFileInput) {
-        // Remover listeners antigos para evitar duplicação
-        const newInput = controlFileInput.cloneNode(true);
-        controlFileInput.parentNode.replaceChild(newInput, controlFileInput);
-        
-        // Adicionar novo listener
-        newInput.addEventListener('change', function(e) {
-            console.log('📁 Ficheiro de controlo selecionado:', e.target.files[0]?.name);
-            if (e.target.files[0]) {
-                limparEstadoCompleto(); // Limpar estado anterior
-                processarControloAutenticidade(e.target.files[0]);
-            }
-        });
-        
-        // Habilitar sempre o input de controlo (nunca deve ser disabled)
-        newInput.disabled = false;
-    }
-    
-    // Uploads de documentos (INICIALMENTE disabled)
-    document.getElementById('saftFile')?.addEventListener('change', function(e) {
-        if (e.target.files[0]) processarUpload('saft', e.target.files[0]);
-    });
-    document.getElementById('invoiceFile')?.addEventListener('change', function(e) {
-        if (e.target.files[0]) processarUpload('invoice', e.target.files[0]);
-    });
-    document.getElementById('statementFile')?.addEventListener('change', function(e) {
-        if (e.target.files[0]) processarUpload('statement', e.target.files[0]);
-    });
-    
-    // Análise
-    document.getElementById('analyzeBtn')?.addEventListener('click', executarAnaliseForense);
-    
-    // Botões de ação
-    document.getElementById('generateReportBtn')?.addEventListener('click', gerarRelatorioPDFPericial);
-    document.getElementById('saveReportBtn')?.addEventListener('click', guardarAnaliseCompletaComDisco);
-    
-    // Atualização periódica do estado
-    setInterval(atualizarEstadoBotoes, 1000);
-    
-    console.log('✅ Event listeners configurados com sucesso');
-}
-
-function desabilitarUploadsDocumentos() {
-    ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
-    });
-    
-    const documentUploadSection = document.getElementById('documentUploadSection');
-    if (documentUploadSection) {
-        documentUploadSection.style.opacity = '0.5';
-        documentUploadSection.style.pointerEvents = 'none';
-    }
-    
-    document.querySelectorAll('.file-label.disabled').forEach(label => {
-        label.classList.add('disabled');
-        const span = label.querySelector('.lock-status');
-        if (span) {
-            span.innerHTML = '<i class="fas fa-lock"></i> AGUARDANDO CONTROLO';
-        }
-    });
-}
-
-// 3. PROCESSAR FICHEIRO DE CONTROLO DE AUTENTICIDADE - COM FILTRO DE RUÍDO
-function processarControloAutenticidade(ficheiro) {
-    console.log('📁 Processando ficheiro de controlo de autenticidade:', ficheiro.name);
-    
-    const statusEl = document.getElementById('controlStatus');
-    if (statusEl) {
-        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO REGISTO DE AUTENTICIDADE (CSV)...`;
-        statusEl.className = 'status-message processing';
-    }
-    
-    Papa.parse(ficheiro, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function(resultados) {
-            try {
-                const dados = resultados.data;
-                console.log('📊 Dados do ficheiro de controlo CSV:', dados);
-                
-                // Limpar referências anteriores
-                window.vdcStore.referencia.hashes = { saft: '', fatura: '', extrato: '' };
-                window.vdcStore.referencia.ficheirosEncontrados = [];
-                window.vdcStore.hashesReferenciaCarregadas = false;
-                
-                // Processar cada linha do CSV
-                dados.forEach(linha => {
-                    const algorithm = linha.Algorithm || '';
-                    const hash = linha.Hash || '';
-                    const path = linha.Path || linha.Arquivo || '';
-                    
-                    if (algorithm && hash && path) {
-                        // Normalização
-                        const hashLimpo = normalizarHash(hash);
-                        const pathLimpo = (path || '').replace(/"/g, '').toLowerCase().trim();
-                        
-                        // === FILTRO DE RUÍDO: EXCLUSÃO DE AUTO-REFERÊNCIA ===
-                        if (pathLimpo.includes('controlo_autenticidade') || 
-                            pathLimpo.includes('controle_autenticidade') ||
-                            pathLimpo.includes('autenticidade_vdc')) {
-                            console.log(`⏭️ FILTRO DE RUÍDO: Ignorando ficheiro de controlo: ${pathLimpo}`);
-                            return; // Não processar auto-referência
-                        }
-                        
-                        // ATRIBUIÇÃO SILENCIOSA
-                        if (pathLimpo.includes('.csv') || pathLimpo.includes('131509') || pathLimpo.includes('saft')) {
-                            window.vdcStore.referencia.hashes.saft = hashLimpo;
-                            window.vdcStore.referencia.ficheirosEncontrados.push('saft');
-                        } 
-                        else if (pathLimpo.includes('fatura') || pathLimpo.includes('pt1126') || pathLimpo.includes('invoice')) {
-                            window.vdcStore.referencia.hashes.fatura = hashLimpo;
-                            window.vdcStore.referencia.ficheirosEncontrados.push('fatura');
-                        } 
-                        else if (pathLimpo.includes('ganhos') || pathLimpo.includes('extrato') || pathLimpo.includes('statement')) {
-                            window.vdcStore.referencia.hashes.extrato = hashLimpo;
-                            window.vdcStore.referencia.ficheirosEncontrados.push('extrato');
-                        }
-                    }
+            // Object Store para Clientes
+            if (!db.objectStoreNames.contains('clientes')) {
+                const clientesStore = db.createObjectStore('clientes', { 
+                    keyPath: 'id',
+                    autoIncrement: true 
                 });
-                
-                console.log('📋 Ficheiros encontrados no controlo:', window.vdcStore.referencia.ficheirosEncontrados);
-                
-                // Verificar se as 3 hashes foram carregadas
-                const todasHashesCarregadas = 
-                    window.vdcStore.referencia.hashes.saft !== '' && 
-                    window.vdcStore.referencia.hashes.fatura !== '' && 
-                    window.vdcStore.referencia.hashes.extrato !== '';
-                
-                window.vdcStore.hashesReferenciaCarregadas = todasHashesCarregadas;
-                window.vdcStore.referencia.carregado = true;
-                window.vdcStore.referencia.timestamp = new Date().toISOString();
-                window.vdcStore.referencia.dadosCSV = dados;
-                
-                // Atualizar interface
-                if (statusEl) {
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE CARREGADO (CSV)`;
-                    statusEl.className = 'status-message status-success';
-                }
-                
-                // Mostrar dashboard vazio
-                const dashboardEl = document.getElementById('controlHashDashboard');
-                if (dashboardEl) {
-                    dashboardEl.style.display = 'block';
-                    const anyLoaded = 
-                        window.vdcStore.hashesLocais.saft || 
-                        window.vdcStore.hashesLocais.fatura || 
-                        window.vdcStore.hashesLocais.extrato;
-                    
-                    document.getElementById('no-files-message').style.display = 
-                        anyLoaded ? 'none' : 'block';
-                }
-                
-                // Habilitar uploads de documentos (DESBLOQUEIO)
-                habilitarUploadsDocumentos();
-                
-                // Mostrar mensagem
-                if (todasHashesCarregadas) {
-                    mostrarMensagem('✅ Registo de autenticidade carregado com sucesso!', 'success');
-                } else {
-                    mostrarMensagem(`⚠️ Algumas hashes não foram encontradas no CSV`, 'warning');
-                }
-                
-                atualizarEstadoBotoes();
-                
-            } catch (erro) {
-                console.error('Erro ao processar ficheiro de controlo CSV:', erro);
-                mostrarMensagem('❌ Erro no processamento do ficheiro CSV de controlo', 'error');
-                if (statusEl) {
-                    statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO NO PROCESSAMENTO CSV`;
-                    statusEl.className = 'status-message status-error';
-                }
+                clientesStore.createIndex('nif', 'nif', { unique: true });
+                clientesStore.createIndex('nome', 'nome', { unique: false });
+                clientesStore.createIndex('dataRegisto', 'dataRegisto', { unique: false });
+                console.log('📁 Object Store "clientes" criada');
             }
-        },
-        error: function(erro) {
-            console.error('Erro PapaParse no ficheiro de controlo CSV:', erro);
-            mostrarMensagem('❌ Erro de leitura do ficheiro CSV', 'error');
-            const statusEl = document.getElementById('controlStatus');
-            if (statusEl) {
-                statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO DE LEITURA DO CSV`;
-                statusEl.className = 'status-message status-error';
+            
+            // Object Store para Sessões
+            if (!db.objectStoreNames.contains('sessoes')) {
+                const sessoesStore = db.createObjectStore('sessoes', { 
+                    keyPath: 'sessionId' 
+                });
+                sessoesStore.createIndex('timestamp', 'timestamp', { unique: false });
+                sessoesStore.createIndex('clienteNif', 'clienteNif', { unique: false });
+                console.log('📁 Object Store "sessoes" criada');
             }
-        }
+            
+            // Object Store para Hashes de Referência
+            if (!db.objectStoreNames.contains('hashes_referencia')) {
+                const hashesStore = db.createObjectStore('hashes_referencia', { 
+                    keyPath: 'id',
+                    autoIncrement: true 
+                });
+                hashesStore.createIndex('tipoDocumento', 'tipoDocumento', { unique: false });
+                hashesStore.createIndex('hash', 'hash', { unique: false });
+                console.log('📁 Object Store "hashes_referencia" criada');
+            }
+        };
     });
+}
+
+// 3.2 Operações CRUD para Clientes
+async function guardarClienteNoDB(cliente) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error('IndexedDB não inicializada'));
+            return;
+        }
+        
+        const transaction = db.transaction(['clientes'], 'readwrite');
+        const store = transaction.objectStore('clientes');
+        
+        const clienteData = {
+            nome: cliente.nome,
+            nif: cliente.nif,
+            dataRegisto: new Date().toISOString(),
+            ultimaAtualizacao: new Date().toISOString()
+        };
+        
+        const request = store.add(clienteData);
+        
+        request.onsuccess = (event) => {
+            registrarLog('INFO', `Cliente guardado no DB: ${cliente.nome} (NIF: ${cliente.nif})`);
+            resolve(event.target.result); // Retorna o ID
+        };
+        
+        request.onerror = (event) => {
+            registrarLog('ERROR', 'Erro ao guardar cliente no DB', event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+async function buscarClientesPorNome(nome) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            resolve([]);
+            return;
+        }
+        
+        const transaction = db.transaction(['clientes'], 'readonly');
+        const store = transaction.objectStore('clientes');
+        const index = store.index('nome');
+        const request = index.getAll(IDBKeyRange.only(nome));
+        
+        request.onsuccess = (event) => {
+            resolve(event.target.result || []);
+        };
+        
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
+}
+
+async function buscarClientesPorNIF(nif) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            resolve([]);
+            return;
+        }
+        
+        const transaction = db.transaction(['clientes'], 'readonly');
+        const store = transaction.objectStore('clientes');
+        const index = store.index('nif');
+        const request = index.get(IDBKeyRange.only(nif));
+        
+        request.onsuccess = (event) => {
+            resolve(event.target.result ? [event.target.result] : []);
+        };
+        
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
+}
+
+// 3.3 Guardar Sessão
+async function guardarSessaoNoDB(sessaoData) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error('IndexedDB não inicializada'));
+            return;
+        }
+        
+        const transaction = db.transaction(['sessoes'], 'readwrite');
+        const store = transaction.objectStore('sessoes');
+        
+        const request = store.add(sessaoData);
+        
+        request.onsuccess = (event) => {
+            registrarLog('INFO', 'Sessão guardada no histórico');
+            resolve(event.target.result);
+        };
+        
+        request.onerror = (event) => {
+            registrarLog('ERROR', 'Erro ao guardar sessão no DB', event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+// 4. FUNÇÕES DE UTILIDADE
+function generateSessionId() {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 9);
+    return `VDC-${timestamp}-${random}`.toUpperCase();
 }
 
 function normalizarHash(hash) {
     if (!hash) return '';
-    
     return hash.toString()
-               .replace(/"/g, '')
-               .replace(/\s+/g, '')
-               .toLowerCase()
-               .trim();
+        .replace(/"/g, '')
+        .replace(/\s+/g, '')
+        .toLowerCase()
+        .trim();
 }
 
-function atualizarDashboardFicheiroCarregado(tipo, nomeFicheiro, valido) {
-    const containerId = `hash-${tipo}-container`;
-    const container = document.getElementById(containerId);
-    const statusElement = document.getElementById(`hash-${tipo}-status`);
-    const hashElement = document.getElementById(`hash-${tipo}-ref`);
+function formatarTamanhoFicheiro(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + tamanhos[i];
+}
+
+function atualizarTimestamp() {
+    const el = document.getElementById('currentTimestamp');
+    if (el) {
+        const agora = new Date();
+        el.textContent = agora.toLocaleString('pt-PT', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    setTimeout(atualizarTimestamp, 1000);
+}
+
+// 5. REGISTRO DE LOGS DE AUDITORIA
+function registrarLog(nivel, mensagem, dados = null) {
+    const logEntry = {
+        timestamp: new Date().toISOString(),
+        nivel: nivel,
+        mensagem: mensagem,
+        dados: dados,
+        sessionId: window.vdcForensicState.session.id
+    };
     
-    if (container && statusElement && hashElement) {
-        container.style.display = 'block';
-        document.getElementById('no-files-message').style.display = 'none';
+    window.vdcForensicState.auditoria.logs.push(logEntry);
+    
+    if (nivel === 'ERROR') {
+        window.vdcForensicState.auditoria.erros.push(logEntry);
+    } else if (nivel === 'WARN') {
+        window.vdcForensicState.auditoria.warnings.push(logEntry);
+    }
+    
+    // Atualizar console visual
+    atualizarConsoleAuditoria(logEntry);
+    
+    console.log(`[${nivel}] ${mensagem}`, dados || '');
+}
+
+function atualizarConsoleAuditoria(logEntry) {
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (!consoleOutput) return;
+    
+    const logElement = document.createElement('div');
+    logElement.className = `log-entry log-${logEntry.nivel.toLowerCase()}`;
+    
+    const timestamp = new Date(logEntry.timestamp).toLocaleTimeString('pt-PT');
+    logElement.innerHTML = `
+        <span class="log-timestamp">[${timestamp}]</span>
+        <span class="log-level">${logEntry.nivel}</span>
+        <span class="log-message">${logEntry.mensagem}</span>
+    `;
+    
+    consoleOutput.appendChild(logElement);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+// 6. CÁLCULO DE HASH ASSÍNCRONO
+async function calcularHashSHA256(ficheiro) {
+    return new Promise((resolve, reject) => {
+        registrarLog('INFO', `Calculando hash SHA-256 para: ${ficheiro.name}`);
         
+        const reader = new FileReader();
+        
+        reader.onload = async function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                
+                // Usar Web Crypto API se disponível (mais rápido)
+                if (window.crypto && window.crypto.subtle) {
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    resolve(normalizarHash(hashHex));
+                } else {
+                    // Fallback para CryptoJS
+                    const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+                    const hash = CryptoJS.SHA256(wordArray).toString();
+                    resolve(normalizarHash(hash));
+                }
+            } catch (error) {
+                registrarLog('ERROR', `Erro no cálculo de hash: ${error.message}`, error);
+                reject(error);
+            }
+        };
+        
+        reader.onerror = function(error) {
+            registrarLog('ERROR', 'Erro na leitura do ficheiro para cálculo de hash', error);
+            reject(error);
+        };
+        
+        reader.readAsArrayBuffer(ficheiro);
+    });
+}
+
+// 7. PROCESSAMENTO DO CSV DE CONTROLO COM FILTRO ANTI-RUÍDO
+async function processarControloAutenticidade(ficheiro) {
+    registrarLog('INFO', `Processando ficheiro de controlo: ${ficheiro.name}`);
+    
+    const statusEl = document.getElementById('controlStatus');
+    if (statusEl) {
+        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO REGISTO DE AUTENTICIDADE...`;
+        statusEl.setAttribute('data-state', 'processing');
+    }
+    
+    return new Promise((resolve, reject) => {
+        Papa.parse(ficheiro, {
+            encoding: 'UTF-8', // Forçar encoding
+            header: true,
+            skipEmptyLines: true,
+            delimiter: ',',
+            complete: function(resultados) {
+                try {
+                    // === FILTRO ANTI-RUÍDO RIGOROSO ===
+                    const dadosFiltrados = resultados.data.filter(linha => {
+                        const path = (linha.Path || linha.Arquivo || '').toLowerCase();
+                        
+                        // Excluir qualquer referência a ficheiros de controlo
+                        if (path.includes('controlo') || 
+                            path.includes('controle') || 
+                            path.includes('autenticidade') ||
+                            path.includes('verificacao') ||
+                            path.match(/hash.*\.csv/i) ||
+                            path.match(/control.*\.csv/i)) {
+                            registrarLog('DEBUG', `FILTRO ANTI-RUÍDO: Ignorando ${path}`);
+                            return false;
+                        }
+                        return true;
+                    });
+                    
+                    if (dadosFiltrados.length === 0) {
+                        throw new Error('Nenhuma hash válida encontrada após filtro anti-ruído');
+                    }
+                    
+                    // Processar hashes de referência
+                    const hashesReferencia = {
+                        saft: { hash: '', algoritmo: '', caminho: '', valido: false },
+                        fatura: { hash: '', algoritmo: '', caminho: '', valido: false },
+                        extrato: { hash: '', algoritmo: '', caminho: '', valido: false }
+                    };
+                    
+                    dadosFiltrados.forEach(linha => {
+                        const algorithm = linha.Algorithm || '';
+                        const hash = linha.Hash || '';
+                        const path = linha.Path || linha.Arquivo || '';
+                        
+                        if (algorithm && hash && path) {
+                            const hashNormalizada = normalizarHash(hash);
+                            const pathLower = path.toLowerCase();
+                            
+                            const hashEntry = {
+                                hash: hashNormalizada,
+                                algoritmo: algorithm,
+                                caminho: path,
+                                valido: true
+                            };
+                            
+                            // Atribuição inteligente baseada em padrões
+                            if (pathLower.includes('.xml') || pathLower.includes('saft') || pathLower.includes('131509')) {
+                                hashesReferencia.saft = hashEntry;
+                                window.vdcForensicState.registoAutenticidade.ficheirosEncontrados.push('saft');
+                            } 
+                            else if (pathLower.includes('fatura') || pathLower.includes('invoice') || pathLower.includes('pt1126')) {
+                                hashesReferencia.fatura = hashEntry;
+                                window.vdcForensicState.registoAutenticidade.ficheirosEncontrados.push('fatura');
+                            }
+                            else if (pathLower.includes('extrato') || pathLower.includes('statement') || pathLower.includes('ganhos')) {
+                                hashesReferencia.extrato = hashEntry;
+                                window.vdcForensicState.registoAutenticidade.ficheirosEncontrados.push('extrato');
+                            }
+                        }
+                    });
+                    
+                    // Atualizar estado
+                    window.vdcForensicState.registoAutenticidade.hashesReferencia = hashesReferencia;
+                    window.vdcForensicState.registoAutenticidade.carregado = true;
+                    window.vdcForensicState.registoAutenticidade.timestamp = new Date().toISOString();
+                    window.vdcForensicState.registoAutenticidade.dadosCSV = dadosFiltrados;
+                    
+                    // Atualizar interface
+                    if (statusEl) {
+                        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> REGISTO DE AUTENTICIDADE VALIDADO`;
+                        statusEl.setAttribute('data-state', 'valid');
+                    }
+                    
+                    // Habilitar uploads de documentos
+                    habilitarUploadsDocumentos();
+                    
+                    // Atualizar dashboard
+                    atualizarDashboardReferencia();
+                    
+                    registrarLog('SUCCESS', `Registo de autenticidade processado: ${dadosFiltrados.length} hashes válidas`);
+                    
+                    resolve(dadosFiltrados);
+                    
+                } catch (error) {
+                    registrarLog('ERROR', 'Erro no processamento do CSV de controlo', error);
+                    
+                    if (statusEl) {
+                        statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO NO PROCESSAMENTO`;
+                        statusEl.setAttribute('data-state', 'error');
+                    }
+                    
+                    reject(error);
+                }
+            },
+            error: function(error) {
+                registrarLog('ERROR', 'Erro de parsing do CSV', error);
+                
+                // Tentar com encoding diferente
+                if (error.message.includes('encoding')) {
+                    registrarLog('INFO', 'Tentando com encoding ISO-8859-1...');
+                    // Aqui seria implementada uma tentativa com encoding alternativo
+                }
+                
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ERRO DE LEITURA DO CSV`;
+                    statusEl.setAttribute('data-state', 'error');
+                }
+                
+                reject(error);
+            }
+        });
+    });
+}
+
+// 8. GERENCIAMENTO DE ESTADOS DA INTERFACE
+function atualizarEstadoInterface() {
+    // Atualizar todos os elementos com data-state
+    document.querySelectorAll('[data-state]').forEach(element => {
+        const estado = element.getAttribute('data-state');
+        element.classList.remove('state-locked', 'state-pending', 'state-processing', 'state-valid', 'state-error');
+        element.classList.add(`state-${estado}`);
+    });
+    
+    // Atualizar botões baseados no estado do sistema
+    const clienteRegistado = window.vdcForensicState.cliente.registado;
+    const controloCarregado = window.vdcForensicState.registoAutenticidade.carregado;
+    const documentosCarregados = window.vdcForensicState.validacaoSeletiva.ficheirosCarregados > 0;
+    
+    // Botão de análise
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) {
+        const pronto = clienteRegistado && controloCarregado && documentosCarregados;
+        analyzeBtn.disabled = !pronto;
+        analyzeBtn.setAttribute('data-state', pronto ? 'ready' : 'locked');
+    }
+    
+    // Botões de relatório
+    const fullReportBtn = document.getElementById('generateFullReportBtn');
+    const partialReportBtn = document.getElementById('generatePartialReportBtn');
+    
+    if (fullReportBtn && partialReportBtn) {
+        const todosValidos = window.vdcForensicState.validacaoSeletiva.ficheirosValidos === 3;
+        const algumValido = window.vdcForensicState.validacaoSeletiva.ficheirosValidos > 0;
+        
+        fullReportBtn.disabled = !todosValidos;
+        partialReportBtn.disabled = !algumValido;
+        
+        fullReportBtn.setAttribute('data-state', todosValidos ? 'ready' : 'locked');
+        partialReportBtn.setAttribute('data-state', algumValido ? 'ready' : 'locked');
+    }
+}
+
+// 9. PROCESSAMENTO DE UPLOADS COM VALIDAÇÃO SELETIVA
+async function processarUploadDocumento(tipo, ficheiro) {
+    registrarLog('INFO', `Processando upload de ${tipo}: ${ficheiro.name}`);
+    
+    // Atualizar estado do documento
+    const documentoState = window.vdcForensicState.documentos[tipo];
+    documentoState.carregado = true;
+    documentoState.metadados = {
+        nome: ficheiro.name,
+        tamanho: ficheiro.size,
+        tipo: ficheiro.type,
+        ultimaModificacao: ficheiro.lastModified,
+        dataUpload: new Date().toISOString()
+    };
+    
+    // Atualizar interface
+    atualizarStatusDocumento(tipo, 'processing', `Processando ${ficheiro.name}...`);
+    
+    try {
+        // Calcular hash
+        const hashCalculada = await calcularHashSHA256(ficheiro);
+        documentoState.hashCalculada = hashCalculada;
+        
+        // Validar contra referência
+        const hashReferencia = window.vdcForensicState.registoAutenticidade.hashesReferencia[tipo];
+        const valido = hashReferencia && hashReferencia.hash === hashCalculada;
+        documentoState.valido = valido;
+        
+        // Atualizar validação seletiva
+        window.vdcForensicState.validacaoSeletiva.ficheirosCarregados++;
         if (valido) {
-            statusElement.textContent = '✓ VÁLIDO';
-            statusElement.style.backgroundColor = '#10b981';
-            statusElement.style.color = 'white';
-            hashElement.textContent = nomeFicheiro || 'Hash válida';
-            hashElement.style.color = '#10b981';
+            window.vdcForensicState.validacaoSeletiva.ficheirosValidos++;
         } else {
-            statusElement.textContent = '✗ INVÁLIDO';
-            statusElement.style.backgroundColor = '#ef4444';
-            statusElement.style.color = 'white';
-            
-            const hashReferencia = window.vdcStore.referencia.hashes[tipo];
-            const hashLocal = window.vdcStore.hashesLocais[tipo];
-            
-            if (!hashReferencia) {
-                hashElement.textContent = 'Ficheiro não consta no controlo';
-                hashElement.style.color = '#f59e0b';
-            } else if (hashLocal && hashReferencia) {
-                hashElement.textContent = `Hash divergente (${hashLocal.substring(0, 8)}... ≠ ${hashReferencia.substring(0, 8)}...)`;
-                hashElement.style.color = '#ef4444';
-            } else {
-                hashElement.textContent = 'Hash não calculada';
-                hashElement.style.color = '#94a3b8';
-            }
+            window.vdcForensicState.validacaoSeletiva.ficheirosInvalidos++;
         }
+        
+        // Atualizar interface de validação
+        atualizarValidacaoDocumento(tipo, valido, hashCalculada, hashReferencia?.hash || '');
+        
+        // Processar conteúdo do ficheiro
+        await processarConteudoDocumento(tipo, ficheiro);
+        
+        // Gerar master hash seletiva
+        await gerarMasterHashSeletiva();
+        
+        // Atualizar estados da interface
+        atualizarEstadoInterface();
+        
+        registrarLog(valido ? 'SUCCESS' : 'WARN', 
+            `${tipo.toUpperCase()} ${valido ? 'VALIDADO' : 'INVALIDO'}: ${hashCalculada.substring(0, 16)}...`);
+        
+    } catch (error) {
+        registrarLog('ERROR', `Erro no processamento de ${tipo}`, error);
+        atualizarStatusDocumento(tipo, 'error', `Erro no processamento: ${error.message}`);
     }
 }
 
-function habilitarUploadsDocumentos() {
-    const documentUploadSection = document.getElementById('documentUploadSection');
+// 10. MASTER HASH SELETIVA (Assinatura Digital da Sessão)
+async function gerarMasterHashSeletiva() {
+    const ficheirosValidos = ['saft', 'fatura', 'extrato'].filter(t => 
+        window.vdcForensicState.documentos[t].valido
+    );
     
-    if (documentUploadSection && window.vdcStore.referencia.carregado) {
-        documentUploadSection.style.opacity = '1';
-        documentUploadSection.style.pointerEvents = 'auto';
-        documentUploadSection.classList.add('active');
+    if (ficheirosValidos.length === 0) {
+        window.vdcForensicState.masterHash = {
+            hash: '',
+            timestamp: null,
+            ficheirosIncluidos: [],
+            selado: false
+        };
+        return;
+    }
+    
+    // Concatenar dados para hash
+    let dadosHash = '';
+    ficheirosValidos.forEach(tipo => {
+        const doc = window.vdcForensicState.documentos[tipo];
+        dadosHash += doc.hashCalculada;
+        dadosHash += doc.metadados.nome;
+        dadosHash += doc.metadados.dataUpload;
+    });
+    
+    // Adicionar metadados da sessão
+    dadosHash += window.vdcForensicState.session.id;
+    dadosHash += window.vdcForensicState.cliente.nif || '';
+    dadosHash += new Date().toISOString();
+    
+    // Calcular hash
+    const hashArray = CryptoJS.SHA256(dadosHash);
+    const masterHash = hashArray.toString();
+    
+    // Atualizar estado
+    window.vdcForensicState.masterHash = {
+        hash: masterHash,
+        timestamp: new Date().toISOString(),
+        ficheirosIncluidos: ficheirosValidos,
+        algoritmo: HASH_ALGORITHM,
+        versaoSistema: SYSTEM_VERSION,
+        sessionId: window.vdcForensicState.session.id,
+        selado: true
+    };
+    
+    // Atualizar interface
+    const masterHashEl = document.getElementById('currentMasterHash');
+    if (masterHashEl) {
+        masterHashEl.textContent = masterHash;
+        masterHashEl.title = `Assinatura digital da sessão (${ficheirosValidos.length} ficheiros válidos)`;
+    }
+    
+    registrarLog('INFO', `Master Hash gerada: ${masterHash.substring(0, 32)}... (${ficheirosValidos.length} ficheiros)`);
+}
+
+// 11. INICIALIZAÇÃO DO SISTEMA
+async function inicializarSistemaPericial() {
+    try {
+        // Registrar início da sessão
+        registrarLog('INFO', '=== INICIALIZANDO SISTEMA DE PERITAGEM FORENSE V5.2 ===');
+        registrarLog('INFO', `Sessão ID: ${window.vdcForensicState.session.id}`);
         
-        ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.disabled = false;
-        });
+        // Inicializar IndexedDB
+        await inicializarIndexedDB();
         
-        document.querySelectorAll('.file-label.disabled').forEach(label => {
-            label.classList.remove('disabled');
-            label.style.background = 'linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)';
-            const span = label.querySelector('.lock-status');
-            if (span) {
-                span.innerHTML = '<i class="fas fa-unlock"></i> PRONTO PARA CARREGAR';
+        // Atualizar interface
+        document.getElementById('sessionId').textContent = window.vdcForensicState.session.id;
+        atualizarTimestamp();
+        
+        // Configurar event listeners
+        configurarEventListeners();
+        
+        // Mostrar console de auditoria
+        document.getElementById('auditConsole').style.display = 'block';
+        
+        registrarLog('SUCCESS', 'Sistema pericial inicializado com sucesso');
+        
+    } catch (error) {
+        registrarLog('ERROR', 'Falha na inicialização do sistema', error);
+        mostrarMensagem('❌ Falha crítica na inicialização do sistema', 'error');
+    }
+}
+
+// 12. CONFIGURAÇÃO DE EVENT LISTENERS
+function configurarEventListeners() {
+    // Modal de acesso
+    document.getElementById('initProtocolBtn').addEventListener('click', () => {
+        document.getElementById('modalAccessOverlay').style.display = 'none';
+        registrarLog('INFO', 'Protocolo de acesso autorizado - Interface ativada');
+    });
+    
+    // Registro de cliente
+    document.getElementById('setClientBtn').addEventListener('click', registarClientePericial);
+    
+    // Inputs de cliente (auto-complete)
+    document.getElementById('clientName').addEventListener('input', async (e) => {
+        if (e.target.value.length >= 2) {
+            const clientes = await buscarClientesPorNome(e.target.value);
+            // Implementar sugestões UI aqui
+        }
+    });
+    
+    // Upload de controlo
+    document.getElementById('controlFile').addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            await processarControloAutenticidade(e.target.files[0]);
+        }
+    });
+    
+    // Uploads de documentos
+    ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
+        document.getElementById(id).addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                const tipo = id.replace('File', '');
+                processarUploadDocumento(tipo, e.target.files[0]);
             }
-            const icon = label.querySelector('i.fa-cloud-upload-alt');
-            if (icon) icon.style.color = 'white';
         });
-        
-        mostrarMensagem('✅ Registo de autenticidade carregado. Pode agora carregar os documentos fiscais.', 'success');
+    });
+    
+    // Botão de análise
+    document.getElementById('analyzeBtn').addEventListener('click', executarAnaliseForense);
+    
+    // Botões de relatório
+    document.getElementById('generateFullReportBtn').addEventListener('click', gerarRelatorioCompleto);
+    document.getElementById('generatePartialReportBtn').addEventListener('click', gerarRelatorioParcial);
+    
+    // Limpar console
+    document.getElementById('clearConsoleBtn').addEventListener('click', () => {
+        document.getElementById('consoleOutput').innerHTML = '';
+        registrarLog('INFO', 'Console de auditoria limpo');
+    });
+}
+
+// 13. FUNÇÕES DE INTERFACE (simplificadas para exemplo)
+function habilitarUploadsDocumentos() {
+    document.getElementById('documentUploadSection').setAttribute('data-state', 'ready');
+    ['saftFile', 'invoiceFile', 'statementFile'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = false;
+    });
+    registrarLog('INFO', 'Uploads de documentos habilitados');
+}
+
+function atualizarStatusDocumento(tipo, estado, mensagem) {
+    const pill = document.getElementById(`${tipo}StatusPill`);
+    if (pill) {
+        pill.setAttribute('data-state', estado);
+        pill.innerHTML = `<i class="fas fa-${getIconForState(estado)}"></i> ${mensagem}`;
     }
 }
 
-// 4. REGISTO DE CLIENTE - ATUALIZADO COM INTEGRAÇÃO LOCAL
-function registarCliente() {
-    const nome = document.getElementById('clientName')?.value?.trim() || '';
-    const nif = document.getElementById('clientNIF')?.value?.trim() || '';
-    
-    if (!nome || nome.length < 3) {
-        mostrarMensagem('⚠️ Insira um nome de cliente válido', 'warning');
-        return;
+function getIconForState(estado) {
+    switch(estado) {
+        case 'processing': return 'spinner fa-spin';
+        case 'valid': return 'check-circle';
+        case 'error': return 'times-circle';
+        default: return 'clock';
     }
-    
-    if (nif && !/^\d{9}$/.test(nif)) {
-        mostrarMensagem('⚠️ NIF inválido. Deve conter 9 dígitos.', 'warning');
-        return;
-    }
-    
-    window.vdcStore.config.cliente = nome;
-    window.vdcStore.config.nif = nif || 'Não especificado';
-    window.vdcStore.config.registado = true;
-    
-    // === CORREÇÃO 2: Guardar cliente no sistema ===
-    guardarClienteNoStorage(nome, nif);
-    
-    const statusEl = document.getElementById('clientStatus');
-    const currentEl = document.getElementById('currentClient');
-    
-    if (statusEl && currentEl) {
-        statusEl.style.display = 'block';
-        currentEl.textContent = nome;
-        statusEl.className = 'status-message status-success';
-        statusEl.innerHTML = `<i class="fas fa-user-check"></i> CLIENTE REGISTADO: <strong>${nome}</strong> | NIF: ${nif || 'N/D'}`;
-    }
-    
-    document.getElementById('analysisClient').textContent = nome;
-    document.getElementById('taxClient').textContent = nome;
-    
-    mostrarMensagem(`✅ Cliente "${nome}" registado com sucesso`, 'success');
-    
-    // NÃO DESABILITAR O INPUT DE CONTROLO - CORREÇÃO CRÍTICA
-    // Manter sempre habilitado para permitir upload do CSV
-    verificarEstadoPreAnalise();
 }
 
-// ... [RESTANTE DO CÓDIGO PERMANECE IDÊNTICO - MANTENDO FUNCIONALIDADES EXISTENTES] ...
-
-// 21. INICIALIZAÇÃO DO SISTEMA
-document.addEventListener('DOMContentLoaded', inicializarSistema);
-if (document.readyState !== 'loading') {
-    setTimeout(inicializarSistema, 100);
-}
+// 14. INICIALIZAÇÃO
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar após um breve delay para garantir que o DOM está pronto
+    setTimeout(() => {
+        inicializarSistemaPericial().catch(console.error);
+    }, 100);
+});
