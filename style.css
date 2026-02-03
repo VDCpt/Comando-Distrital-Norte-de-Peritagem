@@ -31,6 +31,8 @@ header {
     border-radius: 15px;
     margin-bottom: 30px;
     border: 2px solid #334155;
+    position: relative;
+    z-index: 1;
 }
 
 .header-top {
@@ -63,13 +65,14 @@ h1 {
     font-size: 1.2rem;
 }
 
-/* CONFIGURAÇÃO - LAYOUT CORRIGIDO */
+/* CONFIGURAÇÃO - LAYOUT CORRIGIDO (Z-INDEX FIXED) */
 .config-section {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
     gap: 20px;
     margin-top: 20px;
     align-items: start;
+    position: relative;
 }
 
 @media (max-width: 1024px) {
@@ -81,6 +84,7 @@ h1 {
 .config-group {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .config-group h4 {
@@ -128,6 +132,8 @@ h1 {
     font-size: 0.9rem;
     white-space: nowrap;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 5;
 }
 
 .config-btn:hover {
@@ -135,6 +141,7 @@ h1 {
     transform: translateY(-2px);
 }
 
+/* CORREÇÃO 4: Z-INDEX DO SELECTBOX */
 .config-select {
     padding: 10px;
     border-radius: 8px;
@@ -143,6 +150,8 @@ h1 {
     color: #e2e8f0;
     width: 100%;
     min-width: 150px;
+    position: relative;
+    z-index: 3; /* Nível inferior ao botão */
 }
 
 /* STATUS MESSAGES */
@@ -709,6 +718,7 @@ canvas {
     padding: 20px;
     border-radius: 8px;
     border-left: 4px solid #dc2626;
+    position: relative;
 }
 
 .parecer-content h5 {
@@ -720,6 +730,7 @@ canvas {
 
 .parecer-section {
     margin-bottom: 15px;
+    page-break-inside: avoid; /* Para PDF */
 }
 
 .parecer-section h6 {
@@ -755,6 +766,14 @@ canvas {
 
 .conclusao {
     font-weight: bold !important;
+    margin-top: 20px !important;
+    padding-top: 15px !important;
+    border-top: 1px solid rgba(220, 38, 38, 0.3) !important;
+}
+
+/* CORREÇÃO 4: Garantir espaço para assinatura no PDF */
+.parecer-section:last-of-type {
+    margin-bottom: 40px; /* Espaço extra para assinatura */
 }
 
 /* ACTION BUTTONS */
