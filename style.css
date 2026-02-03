@@ -55,7 +55,7 @@ body {
     color: var(--text-primary);
     line-height: 1.5;
     min-height: 100vh;
-    overflow: hidden; /* REMOVIDO scroll global */
+    overflow: auto; /* VOLTADO: scroll global */
 }
 
 /* 2. LAYOUT PRINCIPAL - AJUSTADO PARA FULL-VIEW */
@@ -66,8 +66,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md); /* Reduzido para melhor uso do espaço */
-    height: calc(100vh - 40px); /* Altura total menos padding */
-    overflow: hidden; /* Sem scroll no contêiner principal */
+    min-height: 100vh; /* Altura mínima total */
 }
 
 /* 3. CABEÇALHO */
@@ -596,8 +595,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* OCUPA TODO O ESPAÇO DISPONÍVEL */
-    min-height: 200px; /* Altura mínima */
+    min-height: 300px; /* Altura mínima */
 }
 
 .audit-header {
@@ -647,11 +645,9 @@ body {
     background: rgba(15, 23, 42, 0.9);
     font-family: var(--font-mono);
     font-size: 0.8rem;
-    flex-grow: 1; /* EXPANDE PARA PREENCHER ESPAÇO */
+    flex-grow: 1;
     overflow-y: auto; /* SCROLL APENAS NO OUTPUT */
-    display: flex;
-    flex-direction: column;
-    min-height: 0; /* IMPORTANTE para flex-grow funcionar corretamente */
+    min-height: 150px;
 }
 
 .log-entry {
@@ -660,14 +656,12 @@ body {
     display: flex;
     gap: 1rem;
     align-items: flex-start;
-    flex-shrink: 0; /* Não comprimir entradas */
 }
 
 .log-time {
     color: var(--text-tertiary);
     min-width: 80px;
     font-size: 0.75rem;
-    flex-shrink: 0;
 }
 
 .log-level {
@@ -676,7 +670,6 @@ body {
     padding: 0.125rem 0.5rem;
     border-radius: 3px;
     text-transform: uppercase;
-    flex-shrink: 0;
 }
 
 .log-level.info {
@@ -703,7 +696,6 @@ body {
     color: var(--text-secondary);
     flex: 1;
     word-break: break-word;
-    min-width: 0; /* IMPORTANTE para text-overflow funcionar */
 }
 
 /* 9. RODAPÉ */
@@ -786,7 +778,6 @@ body {
 @media (max-width: 640px) {
     .main-container {
         padding: var(--spacing-sm);
-        height: calc(100vh - 20px); /* Ajuste para mobile */
     }
     
     .header-content {
@@ -813,7 +804,7 @@ body {
     }
     
     .audit-section {
-        min-height: 150px; /* Menor altura em mobile */
+        min-height: 200px;
     }
     
     .log-entry {
@@ -842,5 +833,23 @@ body {
 }
 
 .audit-output::-webkit-scrollbar-thumb:hover {
+    background: var(--color-tertiary);
+}
+
+/* SCROLLBAR GLOBAL */
+body::-webkit-scrollbar {
+    width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+    background: var(--color-primary);
+}
+
+body::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
     background: var(--color-tertiary);
 }
