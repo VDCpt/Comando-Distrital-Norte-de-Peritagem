@@ -1,6 +1,7 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v5.2
-// SCRIPT PRINCIPAL - VERSÃO FUNCIONAL
+// SCRIPT PRINCIPAL - RETIFICADO
+// LÓGICA DE VALIDAÇÃO CORRIGIDA
 // ============================================
 
 // 1. ESTADO DO SISTEMA
@@ -41,7 +42,7 @@ const VDCSystem = {
 // 2. INICIALIZAÇÃO DO SISTEMA
 async function initializeSystem() {
     try {
-        console.log('🔧 Inicializando sistema VDC v5.2...');
+        console.log('🔧 Inicializando sistema VDC v5.2 (RETIFICADO)...');
         
         // Atualizar progresso de carregamento
         updateLoadingProgress(10);
@@ -70,7 +71,7 @@ async function initializeSystem() {
         setTimeout(() => {
             updateLoadingProgress(100);
             showMainInterface();
-            logMessage('Sistema inicializado com sucesso', 'success');
+            logMessage('Sistema retificado inicializado com sucesso', 'success');
         }, 500);
         
     } catch (error) {
@@ -249,7 +250,7 @@ function setupDocumentUpload(type) {
     }
 }
 
-// 5. PROCESSAMENTO DE FICHEIROS
+// 5. PROCESSAMENTO DE FICHEIROS (RETIFICADO)
 async function processControlFile(file) {
     try {
         logMessage(`Processando ficheiro de controlo: ${file.name}`, 'info');
@@ -265,54 +266,79 @@ async function processControlFile(file) {
             encoding: 'UTF-8'
         });
         
-        // Processar hashes - IGNORAR espaços vazios e auto-referências
-        let foundHashes = 0;
+        // RESET das referências
         VDCSystem.referenceHashes = { saft: null, fatura: null, extrato: null };
+        let foundHashes = 0;
         
-        results.data.forEach(row => {
-            const path = (row.Path || row.Arquivo || '').toLowerCase();
-            const hash = (row.Hash || '').toLowerCase().trim();
-            const algorithm = row.Algorithm || '';
+        // Processar hashes com FILTRAGEM CORRIGIDA
+        results.data.forEach((row, index) => {
+            const path = (row.Path || row.path || '').toLowerCase();
+            const hash = (row.Hash || row.hash || '').toLowerCase().trim();
+            const algorithm = row.Algorithm || row.algorithm || '';
             
-            // IGNORAR: auto-referências e espaços vazios
-            if (!path || !hash || !algorithm) {
-                return; // Ignorar linhas vazias
+            // REGRA DE EXCLUSÃO CRÍTICA 1: Ignorar CONTROLO_AUTENTICIDADE
+            if (path.includes('controlo_autenticidade') || 
+                path.includes('autenticidade') ||
+                path.includes('controlo')) {
+                logMessage(`[LINHA ${index + 1}] Ignorado: Ficheiro de controlo (autorreferência)`, 'warn');
+                return;
             }
             
-            if (path.includes('controlo') || path.includes('autenticidade')) {
-                return; // Ignorar auto-referências
+            // REGRA DE EXCLUSÃO CRÍTICA 2: Ignorar campos vazios/nulos
+            if (!hash || hash === '' || hash === 'null' || hash === 'undefined') {
+                logMessage(`[LINHA ${index + 1}] Ignorado: Campo Hash vazio ou nulo`, 'warn');
+                return;
             }
             
-            // Identificar tipo de documento (apenas SAF-T, Fatura, Extrato)
+            if (!path || !algorithm) {
+                logMessage(`[LINHA ${index + 1}] Ignorado: Campos Path ou Algorithm incompletos`, 'warn');
+                return;
+            }
+            
+            // LÓGICA DE FILTRAGEM TARGET SPECIFIC
             let docType = null;
-            if (path.includes('saft') || path.includes('.xml')) {
+            
+            // Identificar exclusivamente os 3 documentos alvo
+            if (path.includes('saft') || path.includes('saf-t') || path.includes('.xml')) {
                 docType = 'saft';
             } else if (path.includes('fatura') || path.includes('invoice')) {
                 docType = 'fatura';
-            } else if (path.includes('extrato') || path.includes('statement')) {
+            } else if (path.includes('extrato') || path.includes('statement') || path.includes('bank')) {
                 docType = 'extrato';
             }
             
-            // Apenas processar os 3 documentos específicos
+            // Apenas processar os documentos específicos
             if (docType && hash && algorithm) {
                 VDCSystem.referenceHashes[docType] = hash;
                 foundHashes++;
-                logMessage(`Hash de referência encontrada para ${docType}: ${hash.substring(0, 16)}...`, 'info');
+                logMessage(`[LINHA ${index + 1}] Referência encontrada para ${docType.toUpperCase()}: ${hash.substring(0, 16)}...`, 'info');
+            } else {
+                logMessage(`[LINHA ${index + 1}] Ignorado: Não é SAF-T, Fatura ou Extrato`, 'warn');
             }
         });
         
+        // Verificação de integridade das referências
+        const missingRefs = [];
+        if (!VDCSystem.referenceHashes.saft) missingRefs.push('SAF-T');
+        if (!VDCSystem.referenceHashes.fatura) missingRefs.push('Fatura');
+        if (!VDCSystem.referenceHashes.extrato) missingRefs.push('Extrato');
+        
+        if (missingRefs.length > 0) {
+            logMessage(`AVISO: Referências em falta: ${missingRefs.join(', ')}`, 'warn');
+        }
+        
         if (foundHashes === 0) {
-            throw new Error('Nenhuma hash válida encontrada no ficheiro de controlo');
+            throw new Error('Nenhuma hash válida encontrada para SAF-T, Fatura ou Extrato');
         }
         
         // Atualizar estado
         VDCSystem.validation.controlLoaded = true;
         
         // Atualizar UI
-        updateControlStatus('valid', 'Controlo carregado com sucesso');
+        updateControlStatus('valid', `Controlo carregado: ${foundHashes}/3 referências`);
         enableDocumentUploads();
         
-        logMessage(`Ficheiro de controlo processado: ${foundHashes} hashes encontradas`, 'success');
+        logMessage(`Ficheiro de controlo processado com sucesso: ${foundHashes} referências válidas`, 'success');
         
     } catch (error) {
         console.error('Erro no processamento do controlo:', error);
@@ -323,7 +349,12 @@ async function processControlFile(file) {
 
 async function processDocumentUpload(type, file) {
     try {
-        logMessage(`Processando ${type}: ${file.name}`, 'info');
+        logMessage(`Processando ${type.toUpperCase()}: ${file.name}`, 'info');
+        
+        // Verificar se há referência disponível
+        if (!VDCSystem.referenceHashes[type]) {
+            throw new Error(`Não existe referência de hash para ${type.toUpperCase()} no ficheiro de controlo`);
+        }
         
         // Atualizar status
         updateDocumentStatus(type, 'processing', 'Calculando hash...');
@@ -350,10 +381,10 @@ async function processDocumentUpload(type, file) {
         
         // Atualizar UI
         if (isValid) {
-            updateDocumentStatus(type, 'valid', 'Hash validada');
+            updateDocumentStatus(type, 'valid', 'Hash validada ✓');
             updateHashDisplay(type, hash, true);
         } else {
-            updateDocumentStatus(type, 'error', 'Hash divergente');
+            updateDocumentStatus(type, 'error', 'Hash divergente ✗');
             updateHashDisplay(type, hash, false);
         }
         
@@ -365,7 +396,7 @@ async function processDocumentUpload(type, file) {
             await generateMasterHash();
         }
         
-        logMessage(`${type.toUpperCase()} ${isValid ? 'VALIDADO' : 'INVALIDO'}: ${hash.substring(0, 16)}...`, isValid ? 'success' : 'error');
+        logMessage(`${type.toUpperCase()} ${isValid ? 'VALIDADO ✓' : 'INVALIDO ✗'}: ${hash.substring(0, 16)}...`, isValid ? 'success' : 'error');
         
     } catch (error) {
         console.error(`Erro no processamento de ${type}:`, error);
@@ -556,7 +587,7 @@ async function performAnalysis() {
         // Mostrar progresso
         showProgress();
         
-        // Simular análise (em produção, isto seria substituído por cálculos reais)
+        // Simular análise
         let progress = 0;
         const interval = setInterval(() => {
             progress += 10;
@@ -606,7 +637,6 @@ function hideProgress() {
 
 function generateAnalysisResults() {
     // Esta função seria expandida para gerar resultados reais
-    // Por enquanto, apenas gera uma master hash
     generateMasterHash();
     
     logMessage('Resultados da análise gerados', 'success');
