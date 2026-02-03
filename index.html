@@ -10,55 +10,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <header class="top-bar">
-        <div class="logo">VDC <span>Unidade de Peritagem v5.2</span></div>
-        <div class="client-auth">
+    <header class="header-forense">
+        <div class="brand">VDC <span>UNIT v5.2</span></div>
+        <div class="session-controls">
             <input type="text" id="clientName" placeholder="CLIENTE">
             <input type="text" id="clientNIF" placeholder="NIF">
             <button onclick="iniciarSessao()" id="btnSessao">REGISTAR SESSÃO</button>
         </div>
     </header>
 
-    <main class="dashboard">
-        <section class="control-row">
-            <div class="control-label">1. FICHEIRO DE CONTROLO (CSV):</div>
+    <main class="main-dashboard">
+        <section class="control-strip">
+            <label class="label-step">1. CONTROLO:</label>
             <input type="file" id="controlFile" accept=".csv" hidden>
-            <label for="controlFile" class="btn-upload">CARREGAR REGISTO DE AUTENTICIDADE</label>
-            <div id="controlStatus" class="status-indicator">AGUARDANDO...</div>
+            <label for="controlFile" class="btn-main">CARREGAR CSV DE AUTENTICIDADE</label>
+            <span id="controlStatus" class="status-msg">PENDENTE</span>
         </section>
 
-        <section class="evidence-grid">
+        <section class="evidence-row">
             <div class="card disabled" id="card-saft">
-                <div class="card-title">FICHEIRO SAF-T (PT)</div>
+                <h4>SAF-T (PT)</h4>
                 <input type="file" id="file-saft" disabled>
-                <div class="hash-box" id="hash-saft">HASH: PENDENTE</div>
-                <div class="match-msg" id="msg-saft">---</div>
+                <div class="hash-view" id="hash-saft">---</div>
+                <div class="match-indicator" id="msg-saft">AGUARDANDO</div>
             </div>
 
             <div class="card disabled" id="card-invoice">
-                <div class="card-title">FATURAÇÃO / DOCS</div>
+                <h4>FATURAÇÃO</h4>
                 <input type="file" id="file-invoice" disabled>
-                <div class="hash-box" id="hash-invoice">HASH: PENDENTE</div>
-                <div class="match-msg" id="msg-invoice">---</div>
+                <div class="hash-view" id="hash-invoice">---</div>
+                <div class="match-indicator" id="msg-invoice">AGUARDANDO</div>
             </div>
 
             <div class="card disabled" id="card-statement">
-                <div class="card-title">EXTRATO BANCÁRIO</div>
+                <h4>EXTRATO</h4>
                 <input type="file" id="file-statement" disabled>
-                <div class="hash-box" id="hash-statement">HASH: PENDENTE</div>
-                <div class="match-msg" id="msg-statement">---</div>
+                <div class="hash-view" id="hash-statement">---</div>
+                <div class="match-indicator" id="msg-statement">AGUARDANDO</div>
             </div>
         </section>
     </main>
 
-    <footer class="action-bar">
-        <div class="master-info">
-            <span id="mHashLabel">MASTER HASH:</span>
-            <span id="mHashValue">SESSÃO NÃO SELADA</span>
+    <footer class="footer-seal">
+        <div class="seal-box">
+            <span>MASTER HASH:</span>
+            <strong id="mHashValue">NÃO GERADA</strong>
         </div>
-        <div class="btns-final">
-            <button id="btnRelatorio" disabled onclick="gerarRelatorio()">GERAR PARECER TÉCNICO</button>
-        </div>
+        <button id="btnRelatorio" disabled onclick="gerarRelatorio()">GERAR PARECER TÉCNICO PDF</button>
     </footer>
 
     <script src="script.js"></script>
