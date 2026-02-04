@@ -154,10 +154,10 @@ body {
     }
 }
 
-/* 5. SIDEBAR */
+/* 5. SIDEBAR - Estética Dark Gold aplicada */
 .sidebar {
-    background: var(--bg-sidebar);
-    border-right: 1px solid var(--border-color);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-right: 1px solid #444;
     padding: var(--spacing-md);
     overflow-y: auto;
     display: flex;
@@ -166,10 +166,10 @@ body {
 }
 
 .client-identification {
-    background: var(--bg-secondary);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .client-identification h3 {
@@ -195,31 +195,33 @@ body {
 
 .form-group label {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: #d4af37;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-weight: 600;
 }
 
 .form-group input {
     padding: 0.75rem;
     border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
-    background: var(--bg-tertiary);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    background: rgba(26, 26, 46, 0.8);
     color: var(--text-primary);
     font-family: var(--font-main);
     font-size: 0.95rem;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: var(--accent-primary);
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
 }
 
 .btn-primary {
-    background: linear-gradient(90deg, var(--accent-primary) 0%, #00b8c9 100%);
-    color: var(--bg-primary);
+    background: linear-gradient(90deg, #d4af37 0%, #b8941f 100%);
+    color: #1a1a2e;
     border: none;
     padding: 0.75rem;
     border-radius: var(--border-radius-sm);
@@ -235,7 +237,7 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 .client-status {
@@ -253,7 +255,7 @@ body {
 
 /* 6. CONTROLES DO SISTEMA */
 .system-controls {
-    background: var(--bg-secondary);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
@@ -294,7 +296,7 @@ body {
 
 /* 7. UPLOAD DE FICHEIROS */
 .upload-section {
-    background: var(--bg-secondary);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
@@ -393,7 +395,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
-    background: var(--bg-secondary);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
@@ -506,7 +508,108 @@ body {
     display: block;
 }
 
-/* 12. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
+/* 12. NOVA SEÇÃO: Dashboard KPI Bolt */
+.kpi-section {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.kpi-section h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--accent-primary);
+    transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+}
+
+.kpi-card.highlight {
+    border-left-color: var(--success-primary);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+.kpi-card.danger {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+.kpi-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kpi-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+}
+
+.kpi-card small {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    display: block;
+}
+
+.secondary-stats {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    border: 1px dashed var(--border-color);
+}
+
+.secondary-stats span {
+    margin: 0 0.5rem;
+}
+
+.secondary-stats b {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+/* 13. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
 .chart-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -550,7 +653,7 @@ body {
     font-size: 0.85rem;
 }
 
-/* 13. RESULTADOS DA ANÁLISE */
+/* 14. RESULTADOS DA ANÁLISE */
 .analysis-results {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -619,7 +722,7 @@ body {
     transition: width 1s ease;
 }
 
-/* 14. ALERTA DE OMISSÃO */
+/* 15. ALERTA DE OMISSÃO */
 .omission-alert {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, rgba(255, 62, 62, 0.05) 100%);
     border: 1px solid var(--warn-primary);
@@ -655,7 +758,7 @@ body {
     font-family: var(--font-mono);
 }
 
-/* 15. CONSOLE DE AUDITORIA */
+/* 16. CONSOLE DE AUDITORIA */
 .console-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -740,7 +843,7 @@ body {
 .log-warn { color: var(--warn-secondary); }
 .log-error { color: var(--warn-primary); }
 
-/* 16. BARRA DE AÇÕES INFERIOR */
+/* 17. BARRA DE AÇÕES INFERIOR */
 .action-footer {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
@@ -810,7 +913,7 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 17. INFORMAÇÃO DO SISTEMA */
+/* 18. INFORMAÇÃO DO SISTEMA */
 .system-info {
     text-align: center;
     margin-top: var(--spacing-lg);
@@ -841,7 +944,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 18. OVERLAY DE CARREGAMENTO */
+/* 19. OVERLAY DE CARREGAMENTO */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -882,7 +985,7 @@ body {
     transition: width 0.3s ease;
 }
 
-/* 19. RESPONSIVIDADE */
+/* 20. RESPONSIVIDADE */
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
