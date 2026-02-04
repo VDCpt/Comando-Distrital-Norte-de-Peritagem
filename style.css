@@ -18,6 +18,7 @@
     --warn-secondary: #f59e0b;
     --success-primary: #10b981;
     --info-primary: #8b5cf6;
+    --imt-color: #8b5cf6;
     
     /* Texto */
     --text-primary: #f1f5f9;
@@ -132,6 +133,14 @@ body {
     font-size: 0.9rem;
 }
 
+#currentDate {
+    background: rgba(59, 130, 246, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 600;
+}
+
 .session-id {
     background: rgba(0, 242, 255, 0.1);
     padding: 0.5rem 1rem;
@@ -162,7 +171,7 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
 .client-identification {
@@ -253,7 +262,48 @@ body {
     font-size: 0.9rem;
 }
 
-/* 6. CONTROLES DO SISTEMA */
+/* 6. MÓDULO DAC7 (NOVO) */
+.dac7-module {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.dac7-module h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#calcDAC7Btn {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+#calcDAC7Btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.dac7-result {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warn-secondary);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem;
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--warn-secondary);
+    font-size: 0.9rem;
+}
+
+/* 7. CONTROLES DO SISTEMA */
 .system-controls {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
@@ -294,7 +344,7 @@ body {
     border-color: var(--accent-primary);
 }
 
-/* 7. UPLOAD DE FICHEIROS */
+/* 8. UPLOAD DE FICHEIROS */
 .upload-section {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
@@ -341,7 +391,7 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 8. LISTA DE FICHEIROS (FEEDBACK VISUAL) */
+/* 9. LISTA DE FICHEIROS (FEEDBACK VISUAL) */
 .file-list {
     background: rgba(30, 41, 59, 0.5);
     border-radius: var(--border-radius-sm);
@@ -390,7 +440,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 9. CONTADORES */
+/* 10. CONTADORES */
 .counters {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -423,16 +473,16 @@ body {
     font-family: var(--font-mono);
 }
 
-/* 10. ÁREA DE ANÁLISE PRINCIPAL */
+/* 11. ÁREA DE ANÁLISE PRINCIPAL */
 .analysis-area {
     padding: var(--spacing-md);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
-/* 11. DASHBOARD FIXO */
+/* 12. DASHBOARD FIXO */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -508,13 +558,81 @@ body {
     display: block;
 }
 
-/* 12. NOVA SEÇÃO: Dashboard KPI Bolt */
+/* 13. SEÇÃO IMT (NOVA) */
+.imt-section {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.imt-section h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.imt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .imt-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.imt-card {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--imt-color);
+    transition: transform 0.2s ease;
+}
+
+.imt-card:hover {
+    transform: translateY(-2px);
+}
+
+.imt-card.highlight {
+    border-left-color: var(--success-primary);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-tertiary) 100%);
+}
+
+.imt-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.imt-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+}
+
+.imt-card small {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    display: block;
+}
+
+/* 14. SEÇÃO KPI BOLT */
 .kpi-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
-    margin-bottom: var(--spacing-md);
 }
 
 .kpi-section h3 {
@@ -712,7 +830,7 @@ body {
     }
 }
 
-/* 13. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
+/* 15. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
 .chart-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -763,7 +881,7 @@ body {
     border-radius: 4px;
 }
 
-/* 14. RESULTADOS DA ANÁLISE */
+/* 16. RESULTADOS DA ANÁLISE */
 .analysis-results {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -833,7 +951,7 @@ body {
     transition: width 1s ease;
 }
 
-/* 15. ALERTA DE OMISSÃO */
+/* 17. ALERTA DE OMISSÃO */
 .omission-alert {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, rgba(255, 62, 62, 0.05) 100%);
     border: 1px solid var(--warn-primary);
@@ -884,7 +1002,7 @@ body {
     color: var(--warn-secondary) !important;
 }
 
-/* 16. CONSOLE DE AUDITORIA */
+/* 18. CONSOLE DE AUDITORIA */
 .console-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -970,7 +1088,7 @@ body {
 .log-warn { color: var(--warn-secondary); }
 .log-error { color: var(--warn-primary); }
 
-/* 17. BARRA DE AÇÕES INFERIOR */
+/* 19. BARRA DE AÇÕES INFERIOR */
 .action-footer {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
@@ -1040,7 +1158,7 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 18. INFORMAÇÃO DO SISTEMA */
+/* 20. INFORMAÇÃO DO SISTEMA */
 .system-info {
     text-align: center;
     margin-top: var(--spacing-lg);
@@ -1071,7 +1189,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 19. OVERLAY DE CARREGAMENTO */
+/* 21. OVERLAY DE CARREGAMENTO */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -1112,7 +1230,7 @@ body {
     transition: width 0.3s ease;
 }
 
-/* 20. RESPONSIVIDADE */
+/* 22. RESPONSIVIDADE */
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
@@ -1165,27 +1283,8 @@ body {
     .kpi-grid {
         grid-template-columns: 1fr;
     }
-}
-
-/* 21. AJUSTE DE RODAPÉ E MARGENS - CORREÇÃO SOLICITADA */
-/* Previne sobreposição no preview visual do rodapé */
-.report-footer {
-    display: flex;
-    justify-content: space-between; /* Separa os dizeres do contador de páginas */
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-}
-
-.page-counter {
-    font-size: 0.8rem;
-    color: #666;
-}
-
-/* 22. ESTILO ADICIONAL PARA GARANTIR ESTABILIDADE DO CABEÇALHO NO PREVIEW */
-.report-header-info {
-    position: absolute;
-    top: 15px; /* Ajuste para descer o texto */
-    right: 15px;
-    text-align: right;
-    line-height: 1.4;
+    
+    .imt-grid {
+        grid-template-columns: 1fr;
+    }
 }
