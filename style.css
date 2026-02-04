@@ -1167,11 +1167,24 @@ body {
     }
 }
 
-/* 21. ESTILO ADICIONAL PARA GARANTIR ESTABILIDADE DO CABEÇALHO NO PREVIEW */
-/* (APENAS PARA GARANTIR QUE O PREVIEW VISUAL NÃO ENGANE) */
+/* 21. AJUSTE DE RODAPÉ E MARGENS - CORREÇÃO SOLICITADA */
+/* Previne sobreposição no preview visual do rodapé */
+.report-footer {
+    display: flex;
+    justify-content: space-between; /* Separa os dizeres do contador de páginas */
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.page-counter {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* 22. ESTILO ADICIONAL PARA GARANTIR ESTABILIDADE DO CABEÇALHO NO PREVIEW */
 .report-header-info {
     position: absolute;
-    top: 15px; /* Ajuste para descer o texto - correção solicitada */
+    top: 15px; /* Ajuste para descer o texto */
     right: 15px;
     text-align: right;
     line-height: 1.4;
