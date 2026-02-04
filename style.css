@@ -497,7 +497,57 @@ body {
     line-height: 1.4;
 }
 
-/* 7. CONTROLES DE ANÁLISE */
+/* 7. NOVO: Grid de Estatísticas de Análise Big Data */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-accent);
+}
+
+.stat-card h4 {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card p {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--success);
+    margin: 5px 0 0 0;
+    font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 8. CONTROLES DE ANÁLISE */
 .analysis-controls {
     background: var(--color-secondary);
     border-radius: var(--border-radius);
@@ -541,9 +591,19 @@ body {
     background: var(--color-tertiary);
 }
 
+/* NOVO: Barra de ações */
+.action-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .secondary-controls {
     display: flex;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .secondary-btn {
@@ -587,7 +647,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 8. CONSOLE DE AUDITORIA - FULL-VIEW */
+/* 9. CONSOLE DE AUDITORIA - FULL-VIEW */
 .audit-section {
     background: var(--color-secondary);
     border-radius: var(--border-radius);
@@ -698,7 +758,7 @@ body {
     word-break: break-word;
 }
 
-/* 9. RODAPÉ */
+/* 10. RODAPÉ */
 .main-footer {
     background: var(--color-secondary);
     border-radius: var(--border-radius);
@@ -741,7 +801,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 10. ANIMAÇÕES E UTILITÁRIOS */
+/* 11. ANIMAÇÕES E UTILITÁRIOS */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -756,7 +816,7 @@ body {
     to { opacity: 1; }
 }
 
-/* 11. ESTADOS DO SISTEMA */
+/* 12. ESTADOS DO SISTEMA */
 .system-ready .documents-grid {
     opacity: 1;
     pointer-events: auto;
@@ -774,7 +834,7 @@ body {
     border-color: var(--color-warning) !important;
 }
 
-/* 12. RESPONSIVIDADE ADICIONAL */
+/* 13. RESPONSIVIDADE ADICIONAL */
 @media (max-width: 640px) {
     .main-container {
         padding: var(--spacing-sm);
