@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v7.0</title>
+    <title>VDC | Sistema de Peritagem Forense v8.1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -19,7 +19,7 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE v7.0</h2>
+            <h2>VDC SISTEMA DE PERITAGEM FORENSE v8.1</h2>
             <p>Big Data Forense | Análise de Evasão Fiscal | Protocolo de Prova Legal</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
@@ -36,8 +36,8 @@
                 <div class="logo-section">
                     <i class="fas fa-balance-scale"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v7.0</span></h1>
-                        <p class="subtitle">Protocolo de Prova Legal | Big Data Forense</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v8.1</span></h1>
+                        <p class="subtitle">Protocolo de Prova Legal | Big Data Forense | Algoritmo de Diferencial</p>
                     </div>
                 </div>
                 <div class="session-info">
@@ -182,35 +182,36 @@
                     </div>
                 </section>
 
-                <!-- NOVA SEÇÃO: Dashboard KPI Bolt -->
+                <!-- NOVA SEÇÃO: Dashboard KPI Bolt - VALORES REAIS -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-line"></i> KPIs BOLT - EXTRATO OFICIAL</h3>
+                    <h3><i class="fas fa-chart-line"></i> KPIs BOLT - EXTRATO OFICIAL (VALORES REAIS)</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <h4><i class="fas fa-euro-sign"></i> GANHOS TOTAIS</h4>
-                            <p id="kpiGanhos">0,00€</p>
-                            <small>Bruto faturado</small>
+                            <h4><i class="fas fa-euro-sign"></i> GANHOS BRUTOS</h4>
+                            <p id="kpiGanhos">3.202,54€</p>
+                            <small>Valor real do extrato</small>
                         </div>
                         <div class="kpi-card">
                             <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
-                            <p id="kpiComm">0,00€</p>
-                            <small>Taxa da plataforma</small>
+                            <p id="kpiComm">-792,59€</p>
+                            <small>Taxa retida pela plataforma</small>
                         </div>
                         <div class="kpi-card highlight">
                             <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
-                            <p id="kpiNet">0,00€</p>
-                            <small>Transferência bancária</small>
+                            <p id="kpiNet">2.409,95€</p>
+                            <small>Transferência bancária real</small>
                         </div>
                         <div class="kpi-card danger">
                             <h4><i class="fas fa-file-invoice"></i> FATURA PLATAFORMA</h4>
-                            <p id="kpiInvoice">0,00€</p>
-                            <small>Serviços da Bolt</small>
+                            <p id="kpiInvoice">239,00€</p>
+                            <small>Valor faturado (documento PDF)</small>
                         </div>
+                        <!-- CARD DE DIFERENCIAL DE CUSTO - SERÁ ADICIONADO DINAMICAMENTE -->
                     </div>
                     <div class="secondary-stats">
-                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
-                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
-                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span>
+                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">20,00€</b></span> | 
+                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">9,00€</b></span> | 
+                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">15,60€</b></span>
                     </div>
                 </section>
 
@@ -262,7 +263,7 @@
                         </div>
                     </div>
 
-                    <!-- Alerta de Omissão -->
+                    <!-- Alerta de Omissão Original -->
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
@@ -270,6 +271,8 @@
                             <p>Detetada discrepância significativa entre faturação e recebimento. Valor omitido: <span id="omissionValue">0.00€</span></p>
                         </div>
                     </div>
+
+                    <!-- Alerta de Diferencial de Custo (será adicionado dinamicamente) -->
                 </section>
 
                 <!-- Console de Auditoria -->
@@ -317,7 +320,7 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v7.0 | Protocolo de Prova Legal | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v8.1 | Protocolo de Prova Legal com Algoritmo de Diferencial | © 2024
                 </div>
             </div>
         </footer>
