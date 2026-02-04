@@ -755,10 +755,10 @@ async function exportJSON() {
     }
 }
 
-// EXPORTAR PDF - COMPLETO E FUNCIONAL
+// EXPORTAR PDF - RETIFICADO COM CORREÇÕES DE LAYOUT
 async function exportPDF() {
     try {
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL (2 PÁGINAS)...', 'info');
+        logAudit('📄 GERANDO RELATÓRIO PERICIAL (2-3 PÁGINAS)...', 'info');
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -771,7 +771,7 @@ async function exportPDF() {
         doc.setLineWidth(0.5);
         doc.rect(12, 12, 186, 24);
         
-        // CABEÇALHO COM BALANÇA
+        // CABEÇALHO COM BALANÇA - CORREÇÃO DE COORDENADAS Y
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text("VDC FORENSIC SYSTEM", 20, 22);
@@ -782,10 +782,10 @@ async function exportPDF() {
         doc.setFont("helvetica", "normal");
         doc.text("Protocolo de Prova Legal | Big Data Forense", 20, 29);
         
-        // INFORMAÇÃO DA SESSÃO
+        // INFORMAÇÃO DA SESSÃO - CORREÇÃO: MOVIDO 5px PARA BAIXO
         doc.setFontSize(9);
-        doc.text(`Sessão: ${VDCSystem.sessionId}`, 150, 38);
-        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, 150, 43);
+        doc.text(`Sessão: ${VDCSystem.sessionId}`, 195, 33, { align: "right" }); // Y ajustado de 38 para 33
+        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, 195, 38, { align: "right" }); // Y ajustado de 43 para 38
         
         let posY = 55;
         
@@ -823,7 +823,7 @@ async function exportPDF() {
             ["Ganhos Brutos:", formatter.format(3202.54)],
             ["Comissão App:", formatter.format(-792.59)],
             ["Ganhos Líquidos:", formatter.format(2409.95)],
-            ["Fatura Plataforma:", formatter.format(239.00)],
+            ["Fatura Plataforma:", formatter.format(239.00)], // VALOR-CHAVE 239.00
             ["IVA 6%:", formatter.format(3202.54 * 0.06)],
             ["IVA 23% Devido:", formatter.format(792.59 * 0.23)]
         ];
@@ -836,19 +836,19 @@ async function exportPDF() {
         
         posY += 5;
         
-        // 3. DIFERENCIAL DE CUSTO
+        // 3. DIFERENCIAL DE CUSTO - COM DADOS CONSOLIDADOS
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("3. CÁLCULO DE INCONGRUÊNCIA FORENSE", 15, posY);
         posY += 10;
         
-        const diferencial = Math.abs(792.59) - 239.00;
-        const prejuizo = diferencial * 0.21;
-        const ivaDevido = diferencial * 0.23;
+        const diferencial = Math.abs(792.59) - 239.00; // 553.59
+        const prejuizo = diferencial * 0.21; // 116.25
+        const ivaDevido = diferencial * 0.23; // 127.33
         
         const calculos = [
             ["Fórmula:", "|Comissão Retida| - Fatura Emitida"],
-            ["Diferencial:", formatter.format(diferencial)],
+            ["Diferencial Oculto:", formatter.format(diferencial)], // 553.59€ DESTACADO
             ["Prejuízo Fiscal (21%):", formatter.format(prejuizo)],
             ["IVA Não Autoliquidado (23%):", formatter.format(ivaDevido)],
             ["Impacto Total:", formatter.format(prejuizo + ivaDevido)]
@@ -872,10 +872,10 @@ async function exportPDF() {
         // TÍTULO PÁGINA 2
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("ANEXO II: PARECER JURÍDICO - CRIMES DE COLARINHO BRANCO", 15, posY);
+        doc.text("ANEXO II: PARECER TÉCNICO PERICIAL", 15, posY);
         posY += 15;
         
-        // PARECER TÉCNICO
+        // PARECER TÉCNICO - COM QUEBRA DE LINHA AUTOMÁTICA
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.text("PARECER TÉCNICO-PERICIAL", 15, posY);
@@ -884,37 +884,42 @@ async function exportPDF() {
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         
-        const parecer = `O diferencial de ${diferencial.toFixed(2).replace('.', ',')}€ constitui uma saída de caixa não documentada, lesando o cliente em ${prejuizo.toFixed(2).replace('.', ',')}€ de IRS/IRC indevido e o Estado em ${ivaDevido.toFixed(2).replace('.', ',')}€ de IVA de autoliquidação.
+        // PARECER COMPLETO COM QUEBRA DE TEXTO
+        const parecerTexto = `O diferencial de 553,59€ constitui uma saída de caixa não documentada, lesando o cliente em 116,25€ de IRS/IRC indevido e o Estado em 127,33€ de IVA de autoliquidação.
 
-Esta discrepância entre o valor retido pela plataforma (${Math.abs(792.59).toFixed(2).replace('.', ',')}€) e o valor faturado (${239.00.toFixed(2).replace('.', ',')}€) caracteriza uma prática de Colarinho Branco, na qual a ausência de documentação fiscal completa permite a ocultação de fluxos financeiros e a evasão de obrigações tributárias.
+Esta discrepância entre o valor retido pela plataforma (792,59€) e o valor faturado (239,00€) caracteriza uma prática de Colarinho Branco, na qual a ausência de documentação fiscal completa permite a ocultação de fluxos financeiros e a evasão de obrigações tributárias.
 
-O cliente está a ser tributado sobre um lucro que não existe na prática, configurando enriquecimento sem causa da plataforma em detrimento do contribuinte e do erário público.`;
+O cliente está a ser tributado sobre um lucro que não existe na prática, configurando enriquecimento sem causa da plataforma em detrimento do contribuinte e do erário público.
+
+FUNDAMENTAÇÃO LEGAL APLICÁVEL:
+1. Código do IRC, Art. 87º: Obrigação de contabilização integral de custos e proveitos
+2. CIVA, Art. 29º: Falta de emissão de fatura-recibo pelo valor total
+3. RGIT, Art. 103º: Crime de Fraude Fiscal por omissão de autoliquidação
+4. Código Penal, Art. 217º: Abuso de Confiança na gestão financeira
+5. Doutrina Jurisprudencial: Crimes de Colarinho Branco Digital`;
         
-        const linhasParecer = doc.splitTextToSize(parecer, 180);
-        doc.text(linhasParecer, 15, posY, { align: "justify" });
-        posY += linhasParecer.length * 6 + 10;
+        // QUEBRA DE TEXTO AUTOMÁTICA - LIMITADO A 180mm DE LARGURA
+        const splitParecer = doc.splitTextToSize(parecerTexto, 180);
         
-        // FUNDAMENTAÇÃO LEGAL
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("FUNDAMENTAÇÃO LEGAL APLICÁVEL", 15, posY);
-        posY += 10;
+        // RENDERIZAR PARECER COM PAGINAÇÃO DINÂMICA
+        const margin = 15;
+        const pageHeight = 280;
+        const lineHeight = 7;
         
-        const leis = [
-            "1. Código do IRC, Art. 87º: Obrigação de contabilização integral de custos e proveitos",
-            "2. CIVA, Art. 29º: Falta de emissão de fatura-recibo pelo valor total",
-            "3. RGIT, Art. 103º: Crime de Fraude Fiscal por omissão de autoliquidação",
-            "4. Código Penal, Art. 217º: Abuso de Confiança na gestão financeira",
-            "5. Doutrina Jurisprudencial: Crimes de Colarinho Branco Digital"
-        ];
-        
-        leis.forEach((lei, idx) => {
-            doc.text(lei, 15, posY, { align: "left" });
-            posY += 7;
+        splitParecer.forEach(line => {
+            // VERIFICAR SE PRECISA DE NOVA PÁGINA
+            if (posY + lineHeight > pageHeight) {
+                doc.addPage();
+                posY = 20;
+            }
+            
+            doc.text(line, margin, posY);
+            posY += lineHeight;
         });
         
-        // QUADRO DE EVIDÊNCIAS
         posY += 10;
+        
+        // QUADRO DE EVIDÊNCIAS
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("QUADRO DE CONFORMIDADE E EVIDÊNCIAS", 15, posY);
@@ -924,10 +929,21 @@ O cliente está a ser tributado sobre um lucro que não existe na prática, conf
             ["Evidência", "Valor", "Status"],
             ["Ganhos Plataforma", formatter.format(3202.54), "Validado"],
             ["Comissão Retida", formatter.format(792.59), "Confirmado"],
-            ["Diferencial", formatter.format(diferencial), "ALERTA"],
+            ["Fatura Emitida", formatter.format(239.00), "Documentada"], // FATURA 239.00
+            ["Diferencial Oculto", formatter.format(diferencial), "ALERTA"], // 553.59
             ["Prejuízo Fiscal", formatter.format(prejuizo), "Não Conforme"],
             ["IVA em Défice", formatter.format(ivaDevido), "Crime Fiscal"]
         ];
+        
+        // VERIFICAR SE CABE NA PÁGINA ATUAL
+        if (posY + (evidencias.length * 7) > pageHeight) {
+            doc.addPage();
+            posY = 20;
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("CONTINUAÇÃO: QUADRO DE EVIDÊNCIAS", 15, posY);
+            posY += 10;
+        }
         
         evidencias.forEach((linha, idx) => {
             if (idx === 0) doc.setFont("helvetica", "bold");
@@ -939,17 +955,28 @@ O cliente está a ser tributado sobre um lucro que não existe na prática, conf
             posY += 7;
         });
         
-        // RODAPÉ PÁGINA 2
+        // CALCULAR NÚMERO TOTAL DE PÁGINAS
+        const totalPages = doc.internal.getNumberOfPages();
+        
+        // RODAPÉ PÁGINA FINAL
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
-        doc.text("Documento pericial gerado automaticamente - VDC Forensic System v10.0", 10, 280);
-        doc.text("© 2024 - Sistema de Peritagem Forense em Big Data | Protocolo ISO 27037", 10, 285);
+        doc.text(`Documento pericial gerado automaticamente - VDC Forensic System v10.0`, 10, 280);
+        doc.text(`© 2024 - Sistema de Peritagem Forense em Big Data | Protocolo ISO 27037 | Página ${totalPages} de ${totalPages}`, 10, 285);
+        
+        // ATUALIZAR NÚMERO DE PÁGINAS EM TODAS AS PÁGINAS
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`VDC Forensic System v10.0 | Protocolo ISO 27037 | Página ${i} de ${totalPages}`, 10, 280);
+        }
         
         // SALVAR PDF
         const nomeFicheiro = `RELATORIO_PERICIAL_VDC_${VDCSystem.sessionId}.pdf`;
         doc.save(nomeFicheiro);
         
-        logAudit('✅ Relatório pericial exportado (PDF - 2 páginas completas)', 'success');
+        logAudit(`✅ Relatório pericial exportado (PDF - ${totalPages} páginas completas)`, 'success');
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
