@@ -44,6 +44,7 @@
                     <div class="timestamp">
                         <i class="fas fa-clock"></i>
                         <span id="currentTime">00:00:00</span>
+                        <span id="currentDate">DD/MM/AAAA</span>
                         <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
                     </div>
                 </div>
@@ -60,7 +61,7 @@
                     <div class="client-form">
                         <div class="form-group">
                             <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
-                            <input type="text" id="clientName" placeholder="Ex: VDC Forense, Lda">
+                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda">
                         </div>
                         <div class="form-group">
                             <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
@@ -73,6 +74,22 @@
                     <div id="clientStatus" class="client-status" style="display: none;">
                         <i class="fas fa-check-circle"></i>
                         <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
+                    </div>
+                </div>
+
+                <!-- Módulo DAC7 (NOVO) -->
+                <div class="dac7-module">
+                    <h3><i class="fas fa-file-contract"></i> MÓDULO DAC7</h3>
+                    <div class="form-group">
+                        <label for="dac7Value"><i class="fas fa-euro-sign"></i> Valor Anual DAC7</label>
+                        <input type="number" id="dac7Value" placeholder="Ex: 50000" step="0.01" min="0">
+                    </div>
+                    <button id="calcDAC7Btn" class="btn-secondary" onclick="calcularDiscrepanciaDAC7()">
+                        <i class="fas fa-calculator"></i> CALCULAR DISCREPÂNCIA
+                    </button>
+                    <div id="dac7Result" class="dac7-result" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Discrepância: <strong id="dac7Discrepancy">0,00€</strong></span>
                     </div>
                 </div>
 
@@ -179,6 +196,28 @@
                         <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
+                    </div>
+                </section>
+
+                <!-- Taxa IMT (NOVA) -->
+                <section class="imt-section">
+                    <h3><i class="fas fa-landmark"></i> CONTRIBUIÇÃO DE REGULAÇÃO (IMT)</h3>
+                    <div class="imt-grid">
+                        <div class="imt-card">
+                            <h4><i class="fas fa-calculator"></i> COMISSÕES SUJEITAS A IMT</h4>
+                            <p id="imtBase">0,00€</p>
+                            <small>Base de cálculo</small>
+                        </div>
+                        <div class="imt-card">
+                            <h4><i class="fas fa-percentage"></i> TAXA IMT (5%)</h4>
+                            <p id="imtTax">0,00€</p>
+                            <small>Contribuição regulatória</small>
+                        </div>
+                        <div class="imt-card highlight">
+                            <h4><i class="fas fa-file-invoice-dollar"></i> CUSTO TOTAL PLATAFORMA</h4>
+                            <p id="imtTotal">0,00€</p>
+                            <small>Comissão + IMT</small>
+                        </div>
                     </div>
                 </section>
 
