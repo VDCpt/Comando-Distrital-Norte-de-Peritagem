@@ -212,12 +212,28 @@
             </div>
         </section>
 
+        <!-- NOVO: Resultados da Análise Big Data -->
+        <section class="analysis-results" id="analysisResults" style="display:none; margin-bottom: 15px;">
+            <div class="stats-grid">
+                <div class="stat-card"><h4>TOTAL FATURADO</h4><p id="totalFaturado">0.00€</p></div>
+                <div class="stat-card"><h4>Nº VIAGENS</h4><p id="totalViagens">0</p></div>
+                <div class="stat-card"><h4>ESTIMATIVA MERCADO (38k)</h4><p id="marketEst">0€</p></div>
+                <div class="stat-card"><h4>CONGRUÊNCIA HASH</h4><p id="hashMatch">0%</p></div>
+            </div>
+        </section>
+
         <!-- Controles de Análise -->
         <section class="analysis-controls">
             <div class="controls-container">
                 <button id="analyzeBtn" class="analyze-btn" disabled>
                     <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
                 </button>
+                
+                <!-- NOVO: Barra de Ações Expandida -->
+                <div class="action-bar" style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+                    <button id="exportPdfBtn" class="secondary-btn"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button id="exportJsonBtn" class="secondary-btn"><i class="fas fa-code"></i> JSON</button>
+                </div>
                 
                 <div class="secondary-controls">
                     <button id="clearSessionBtn" class="secondary-btn">
