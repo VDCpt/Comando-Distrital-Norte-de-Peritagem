@@ -1,21 +1,22 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v5.5
-   CSS OTIMIZADO PARA BIG DATA FORENSE
+   VDC SISTEMA DE PERITAGEM FORENSE v6.0
+   CSS OTIMIZADO - ESTABILIDADE VISUAL
    ============================================ */
 
 /* 1. VARIÁVEIS E RESET */
 :root {
-    /* Cores principais - Big Data Forense */
+    /* Cores principais */
     --bg-primary: #0a0f1d;
     --bg-secondary: #161e31;
     --bg-tertiary: #1e293b;
     
-    /* Cores de acento e alerta */
+    /* Cores de acento */
     --accent-primary: #00f2ff;
     --accent-secondary: #3b82f6;
     --warn-primary: #ff3e3e;
     --warn-secondary: #f59e0b;
     --success-primary: #10b981;
+    --info-primary: #8b5cf6;
     
     /* Texto */
     --text-primary: #f1f5f9;
@@ -31,7 +32,6 @@
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
-    --spacing-xl: 3rem;
     
     /* Fontes */
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
@@ -40,7 +40,6 @@
     /* Sombras */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -55,7 +54,7 @@ body {
     color: var(--text-primary);
     line-height: 1.5;
     min-height: 100vh;
-    overflow: auto;
+    overflow-x: hidden;
 }
 
 /* 2. LAYOUT PRINCIPAL */
@@ -76,7 +75,6 @@ body {
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-md);
-    flex-shrink: 0;
 }
 
 .header-content {
@@ -101,6 +99,12 @@ body {
     gap: var(--spacing-xs);
 }
 
+.subtitle {
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
 .version-badge {
     background: var(--accent-primary);
     color: var(--bg-primary);
@@ -114,11 +118,12 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    align-items: flex-end;
 }
 
 .system-controls {
     display: flex;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
 .control-group {
@@ -142,7 +147,8 @@ body {
     background: var(--bg-tertiary);
     color: var(--text-primary);
     font-family: var(--font-main);
-    min-width: 150px;
+    min-width: 200px;
+    font-size: 0.9rem;
 }
 
 .year-select:focus, .platform-select:focus {
@@ -153,13 +159,19 @@ body {
 .timestamp {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
     color: var(--text-tertiary);
     font-size: 0.9rem;
-    justify-content: flex-end;
 }
 
-/* 4. DASHBOARD DE ESTATÍSTICAS */
+.session-id {
+    background: rgba(0, 242, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 242, 255, 0.3);
+}
+
+/* 4. DASHBOARD */
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -172,17 +184,16 @@ body {
     padding: 15px;
     border-radius: var(--border-radius);
     border-bottom: 3px solid var(--accent-primary);
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .stat-box:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 .stat-box.alert {
     border-bottom-color: var(--warn-primary);
-    background: rgba(255, 62, 62, 0.05);
+    background: linear-gradient(135deg, rgba(255, 62, 62, 0.05) 0%, var(--bg-secondary) 100%);
 }
 
 .stat-box h4 {
@@ -199,23 +210,29 @@ body {
     font-weight: bold;
     color: var(--text-primary);
     font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
 }
 
 .alert-text {
     color: var(--warn-primary) !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
 }
 
 .stat-box small {
     color: var(--text-tertiary);
     font-size: 0.75rem;
     display: block;
-    margin-top: 0.25rem;
 }
 
 /* 5. GRID PRINCIPAL */
 .main-grid {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 320px 1fr;
     gap: 20px;
     flex-grow: 1;
     min-height: 500px;
@@ -231,25 +248,24 @@ body {
 .upload-zone {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 15px;
 }
 
 .upload-card {
     background: var(--bg-secondary);
     border: 2px dashed var(--border-color);
     border-radius: var(--border-radius);
-    padding: var(--spacing-md);
+    padding: 15px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 12px;
 }
 
 .upload-card:hover {
     border-color: var(--accent-primary);
     background: rgba(0, 242, 255, 0.05);
-    transform: translateY(-2px);
 }
 
 .upload-card.multi-upload {
@@ -258,7 +274,7 @@ body {
 }
 
 .upload-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--text-tertiary);
 }
 
@@ -268,23 +284,72 @@ body {
 
 .upload-info h4 {
     color: var(--text-primary);
+    font-size: 0.95rem;
     margin-bottom: 0.25rem;
 }
 
 .upload-info p {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin-bottom: 0.25rem;
 }
 
 .upload-info small {
     color: var(--text-tertiary);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
-/* 7. CAIXA LEGAL */
+/* 7. LISTA DE FICHEIROS (FEEDBACK VISUAL) */
+.file-list {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: -5px;
+    margin-bottom: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+}
+
+.file-list.visible {
+    display: block;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item i.fa-check-circle {
+    color: var(--success-primary);
+    font-size: 0.9rem;
+}
+
+.file-name {
+    color: var(--text-secondary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+}
+
+/* 8. CAIXA LEGAL */
 .legal-box {
-    background: rgba(255, 62, 62, 0.1);
+    background: linear-gradient(135deg, rgba(255, 62, 62, 0.05) 0%, rgba(30, 41, 59, 0.5) 100%);
     border: 1px solid var(--warn-primary);
     border-radius: var(--border-radius);
     padding: 15px;
@@ -293,43 +358,74 @@ body {
 
 .legal-box h4 {
     color: var(--warn-primary);
-    margin-bottom: 10px;
+    font-size: 1rem;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.legal-box p {
+.legal-citations p {
     color: var(--text-secondary);
     font-size: 0.85rem;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     line-height: 1.4;
 }
 
-.legal-box .warn-text {
-    color: var(--warn-primary);
-    font-weight: bold;
-    margin-top: 10px;
+.legal-citations strong {
+    color: var(--text-primary);
 }
 
-/* 8. NÚCLEO DE ANÁLISE */
+.warn-text {
+    color: var(--warn-primary) !important;
+    font-weight: bold;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 62, 62, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* 9. NÚCLEO DE ANÁLISE */
 .analysis-core {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
 }
 
-.chart-container {
+/* 10. GRÁFICO (ESTABILIDADE FIXA) */
+.chart-wrapper {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
 }
 
+.chart-wrapper h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-container {
+    height: 250px;
+    width: 100%;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 .chart-legend {
     display: flex;
     gap: var(--spacing-md);
-    margin-top: var(--spacing-sm);
+    margin-top: 15px;
     justify-content: center;
     flex-wrap: wrap;
 }
@@ -342,56 +438,105 @@ body {
     font-size: 0.85rem;
 }
 
-/* 9. RESULTADOS DA ANÁLISE */
-.results-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-top: var(--spacing-md);
-}
-
-@media (max-width: 1200px) {
-    .results-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .results-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.result-card {
+/* 11. TRIANGULAÇÃO FORENSE */
+.triangulation-results {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
-    padding: 15px;
-    border-left: 4px solid var(--accent-primary);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
 }
 
-.result-card h4 {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
+.triangulation-results h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.result-card p {
+.triangulation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .triangulation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.triang-card {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid var(--accent-primary);
+}
+
+.triang-card h5 {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.formula {
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.result .value {
     font-size: 1.2rem;
     font-weight: bold;
     color: var(--text-primary);
     font-family: var(--font-mono);
-    margin-bottom: 0.25rem;
 }
 
-.result-card small {
+.result .status {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.status.pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warn-secondary);
+}
+
+.status.valid {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success-primary);
+}
+
+.status.alert {
+    background: rgba(255, 62, 62, 0.2);
+    color: var(--warn-primary);
+}
+
+.status.info {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-secondary);
+}
+
+.triang-card small {
     color: var(--text-tertiary);
     font-size: 0.75rem;
+    display: block;
 }
 
-/* 10. CONSOLE DE AUDITORIA */
+/* 12. CONSOLE DE AUDITORIA (ALTURA FIXA) */
 .console-wrapper {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -400,28 +545,40 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
-.console-title {
+.console-header {
     background: var(--bg-tertiary);
-    padding: 10px 15px;
-    color: var(--text-primary);
+    padding: 12px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.console-header h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.console-controls {
+    display: flex;
+    gap: 0.5rem;
 }
 
 .console-mini {
-    height: 120px;
+    height: 100px;
     background: #000;
     font-family: var(--font-mono);
     font-size: 11px;
     padding: 10px;
     overflow-y: auto;
-    border-top: 1px solid var(--border-color);
+    overflow-x: hidden;
 }
 
 .console-mini::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .console-mini::-webkit-scrollbar-track {
@@ -430,14 +587,27 @@ body {
 
 .console-mini::-webkit-scrollbar-thumb {
     background: var(--border-color);
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
-/* 11. BARRA DE AÇÕES */
+.log-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-info { color: var(--accent-secondary); }
+.log-success { color: var(--success-primary); }
+.log-warn { color: var(--warn-secondary); }
+.log-error { color: var(--warn-primary); }
+
+/* 13. BARRA DE AÇÕES */
 .action-bar {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 12px;
     align-items: center;
 }
 
@@ -470,7 +640,7 @@ body {
 
 .secondary-actions {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -513,7 +683,7 @@ body {
     color: var(--text-primary);
 }
 
-/* 12. INFORMAÇÃO DO SISTEMA */
+/* 14. INFORMAÇÃO DO SISTEMA */
 .system-info {
     text-align: center;
     margin-top: var(--spacing-md);
@@ -543,84 +713,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 13. LOGS E MENSAGENS */
-.log-entry {
-    padding: 2px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.log-info {
-    color: var(--accent-secondary);
-}
-
-.log-success {
-    color: var(--success-primary);
-}
-
-.log-warn {
-    color: var(--warn-secondary);
-}
-
-.log-error {
-    color: var(--warn-primary);
-}
-
-/* 14. ANIMAÇÕES */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.fade-in {
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.pulse {
-    animation: pulse 1.5s infinite;
-}
-
-/* 15. RESPONSIVIDADE */
-@media (max-width: 1024px) {
-    .dashboard-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .system-controls {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-    
-    .dashboard-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .btn-main {
-        min-width: 100%;
-    }
-    
-    .secondary-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .btn-sub {
-        justify-content: center;
-    }
-}
-
-/* 16. OVERLAY DE CARREGAMENTO */
+/* 15. OVERLAY DE CARREGAMENTO */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -661,29 +754,47 @@ body {
     transition: width 0.3s ease;
 }
 
-/* 17. MENSAGEM DE ERRO */
-.error-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(239, 68, 68, 0.9);
-    border-radius: 6px;
-    padding: 15px;
-    z-index: 1001;
-    max-width: 400px;
+/* 16. RESPONSIVIDADE */
+@media (max-width: 1024px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .system-controls {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
 }
 
-.error-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    color: white;
-}
-
-.error-close {
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    margin-left: auto;
+@media (max-width: 768px) {
+    .main-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        align-items: stretch;
+    }
+    
+    .session-info {
+        align-items: stretch;
+    }
+    
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-main {
+        min-width: 100%;
+    }
+    
+    .secondary-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-sub {
+        justify-content: center;
+    }
 }
