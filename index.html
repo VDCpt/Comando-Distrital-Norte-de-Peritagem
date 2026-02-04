@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v5.5</title>
+    <title>VDC | Sistema de Peritagem Forense v6.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -19,22 +19,11 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE v5.5</h2>
-            <p>Versão 5.5 | Inicializando Terminal de Análise Big Data...</p>
+            <h2>VDC SISTEMA DE PERITAGEM FORENSE v6.0</h2>
+            <p>Big Data Forense | Análise Fiscal Automatizada</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
-        </div>
-    </div>
-
-    <!-- Mensagem de Erro -->
-    <div id="errorMessage" class="error-message" style="display: none;">
-        <div class="error-content">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span id="errorText">Erro no sistema</span>
-            <button class="error-close" onclick="document.getElementById('errorMessage').style.display='none'">
-                <i class="fas fa-times"></i>
-            </button>
         </div>
     </div>
 
@@ -46,7 +35,10 @@
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-balance-scale"></i>
-                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v5.5</span></h1>
+                    <div>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v6.0</span></h1>
+                        <p class="subtitle">Big Data Forense | Análise de Evasão Fiscal</p>
+                    </div>
                 </div>
                 <div class="session-info">
                     <div class="system-controls">
@@ -59,8 +51,8 @@
                         <div class="control-group">
                             <label for="selPlatform"><i class="fas fa-globe-europe"></i> Plataforma</label>
                             <select id="selPlatform" class="platform-select">
-                                <option value="bolt">Bolt (Estónia)</option>
-                                <option value="uber">Uber (Holanda)</option>
+                                <option value="bolt">Bolt (Estónia) - IVA Autoliquidação</option>
+                                <option value="uber">Uber (Holanda) - IVA Autoliquidação</option>
                                 <option value="other">Outra Plataforma</option>
                             </select>
                         </div>
@@ -68,149 +60,190 @@
                     <div class="timestamp">
                         <i class="fas fa-clock"></i>
                         <span id="currentTime">00:00:00</span>
+                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Dashboard de Estatísticas Big Data -->
+        <!-- Dashboard de Estatísticas -->
         <section class="dashboard-stats">
             <div class="stat-box">
-                <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
-                <p id="netVal">0.00€</p>
-                <small>Base tributável SAF-T</small>
+                <h4><i class="fas fa-file-invoice"></i> BRUTO SAF-T</h4>
+                <p id="grossVal">0.00€</p>
+                <small>Faturação total declarada</small>
             </div>
             <div class="stat-box">
-                <h4><i class="fas fa-percentage"></i> IVA (6%)</h4>
+                <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
                 <p id="iva6Val">0.00€</p>
                 <small>Taxa reduzida Portugal</small>
             </div>
             <div class="stat-box">
-                <h4><i class="fas fa-chart-line"></i> TOTAL BRUTO SAF-T</h4>
-                <p id="grossVal">0.00€</p>
-                <small>Consolidação múltiplos ficheiros</small>
+                <h4><i class="fas fa-hand-holding-usd"></i> TRANSFERÊNCIA</h4>
+                <p id="transferVal">0.00€</p>
+                <small>Valor recebido no banco</small>
             </div>
             <div class="stat-box alert">
-                <h4><i class="fas fa-exclamation-triangle"></i> IVA 23% (PLATAFORMA)</h4>
+                <h4><i class="fas fa-gavel"></i> IVA 23% DEVOLVER</h4>
                 <p id="iva23Val" class="alert-text">0.00€</p>
-                <small>Autoliquidação devida (Art. 2º CIVA)</small>
+                <small>Dívida ao Estado Português</small>
             </div>
         </section>
 
         <!-- Grid Principal -->
         <div class="main-grid">
-            <!-- Zona de Upload Multi-Ficheiro -->
+            <!-- Zona de Upload -->
             <aside class="upload-zone">
-                <div class="upload-card" id="controlUploadCard" onclick="document.getElementById('controlFile').click()">
+                <!-- Control File -->
+                <div class="upload-card" onclick="document.getElementById('controlFile').click()">
                     <div class="upload-icon">
                         <i class="fas fa-file-csv"></i>
                     </div>
                     <div class="upload-info">
                         <h4>FICHEIRO DE CONTROLO</h4>
                         <p>CSV com hashes de referência</p>
-                        <small>Clique ou arraste ficheiro único</small>
+                        <small>Clique para selecionar</small>
                     </div>
                     <input type="file" id="controlFile" class="file-input" accept=".csv" hidden>
                 </div>
+                <div id="controlFileList" class="file-list"></div>
 
-                <div class="upload-card multi-upload" id="saftUploadCard" onclick="document.getElementById('saftFile').click()">
+                <!-- SAF-T Files -->
+                <div class="upload-card multi-upload" onclick="document.getElementById('saftFile').click()">
                     <div class="upload-icon">
                         <i class="fas fa-file-code"></i>
                     </div>
                     <div class="upload-info">
                         <h4>SAF-T / XML (MÚLTIPLOS)</h4>
-                        <p>Ficheiros SAF-T do ano selecionado</p>
+                        <p>Ficheiros SAF-T do ano fiscal</p>
                         <small>Ctrl+Click para seleção múltipla</small>
                     </div>
                     <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
                 </div>
+                <div id="saftFileList" class="file-list"></div>
 
-                <div class="upload-card multi-upload" id="invoiceUploadCard" onclick="document.getElementById('invoiceFile').click()">
+                <!-- Platform Invoices -->
+                <div class="upload-card multi-upload" onclick="document.getElementById('invoiceFile').click()">
                     <div class="upload-icon">
                         <i class="fas fa-receipt"></i>
                     </div>
                     <div class="upload-info">
-                        <h4>FATURAS PLATAFORMA</h4>
-                        <p>Faturas da Bolt/Uber (PDF/CSV)</p>
-                        <small>Processamento em lote</small>
+                        <h4>FATURAS DA PLATAFORMA</h4>
+                        <p>Faturas Uber/Bolt (PDF/CSV)</p>
+                        <small>Base para autoliquidação IVA</small>
                     </div>
                     <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden>
                 </div>
+                <div id="invoiceFileList" class="file-list"></div>
 
-                <div class="upload-card multi-upload" id="statementUploadCard" onclick="document.getElementById('statementFile').click()">
+                <!-- Bank Statements -->
+                <div class="upload-card multi-upload" onclick="document.getElementById('statementFile').click()">
                     <div class="upload-icon">
                         <i class="fas fa-university"></i>
                     </div>
                     <div class="upload-info">
                         <h4>EXTRATOS BANCÁRIOS</h4>
-                        <p>Extratos de conta (PDF/CSV/TXT)</p>
-                        <small>Análise de fluxos financeiros</small>
+                        <p>Extratos de conta (PDF/CSV)</p>
+                        <small>Valor real transferido</small>
                     </div>
                     <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden>
                 </div>
+                <div id="statementFileList" class="file-list"></div>
 
+                <!-- Legal Framework -->
                 <div class="legal-box">
-                    <h4><i class="fas fa-gavel"></i> ENQUADRAMENTO LEGAL</h4>
-                    <p><strong>CIVA Art. 2º nº 1 i)</strong> - Inversão do sujeito passivo (Autoliquidação)</p>
-                    <p><strong>Art. 6º nº 6</strong> - Serviços prestados por não residentes</p>
-                    <p class="warn-text">Evasão Fiscal: Discrepância entre Faturação e Recebimento</p>
+                    <h4><i class="fas fa-scale-balanced"></i> ENQUADRAMENTO LEGAL</h4>
+                    <div class="legal-citations">
+                        <p><strong>CIVA Art. 2º nº 1 i)</strong> - Inversão do sujeito passivo</p>
+                        <p><strong>Código Penal Art. 376º</strong> - Fraude fiscal qualificada</p>
+                        <p><strong>Estatuto Benefícios Fiscais</strong> - Omissão de autoliquidação</p>
+                        <p class="warn-text"><i class="fas fa-exclamation-triangle"></i> Dívida ao Estado: IVA 23% sobre serviços intracomunitários</p>
+                    </div>
                 </div>
             </aside>
 
-            <!-- Núcleo de Análise Forense -->
+            <!-- Núcleo de Análise -->
             <section class="analysis-core">
-                <!-- Gráfico de Cruzamento Forense -->
-                <div class="chart-container">
-                    <canvas id="forensicChart"></canvas>
+                <!-- Gráfico Forense -->
+                <div class="chart-wrapper">
+                    <h4><i class="fas fa-chart-bar"></i> CRUZAMENTO FORENSE</h4>
+                    <div class="chart-container">
+                        <canvas id="forensicChart"></canvas>
+                    </div>
                     <div class="chart-legend">
                         <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Bruto SAF-T</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #10b981;"></i> Transferência Real</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
                     </div>
                 </div>
 
-                <!-- Resultados da Análise -->
-                <div class="analysis-results" id="analysisResults" style="display:none;">
-                    <div class="results-grid">
-                        <div class="result-card">
-                            <h4><i class="fas fa-calculator"></i> CRUZAMENTO 1</h4>
-                            <p id="cross1Result">Aguardando análise...</p>
-                            <small>Bruto SAF-T - Comissão vs Transferência</small>
+                <!-- Resultados de Triangulação -->
+                <div class="triangulation-results">
+                    <h4><i class="fas fa-search"></i> TRIANGULAÇÃO FORENSE</h4>
+                    <div class="triangulation-grid">
+                        <div class="triang-card">
+                            <h5>CRUZAMENTO A (ΔA)</h5>
+                            <p class="formula">Bruto SAF-T - Comissão ⟺ Transferência</p>
+                            <div class="result" id="deltaAResult">
+                                <span class="value">0.00€</span>
+                                <span class="status pending">Pendente</span>
+                            </div>
+                            <small>Discrepância: <span id="deltaADiff">0.00€</span></small>
                         </div>
-                        <div class="result-card">
-                            <h4><i class="fas fa-search-dollar"></i> CRUZAMENTO 2</h4>
-                            <p id="cross2Result">Aguardando análise...</p>
-                            <small>Faturação (6% IVA) vs Recebimento Líquido</small>
+                        <div class="triang-card">
+                            <h5>CRUZAMENTO B (ΔB)</h5>
+                            <p class="formula">Fatura Plataforma ⟺ Comissão Extrato</p>
+                            <div class="result" id="deltaBResult">
+                                <span class="value">0.00€</span>
+                                <span class="status pending">Pendente</span>
+                            </div>
+                            <small>Discrepância: <span id="deltaBDiff">0.00€</span></small>
                         </div>
-                        <div class="result-card">
-                            <h4><i class="fas fa-users"></i> PROJEÇÃO MERCADO</h4>
-                            <p id="marketProjection">0.00M€</p>
-                            <small>Base: 38.000 operadores ativos</small>
+                        <div class="triang-card">
+                            <h5>AUTOLIQUIDAÇÃO</h5>
+                            <p class="formula">IVA 23% sobre Comissão</p>
+                            <div class="result" id="autoliquidationResult">
+                                <span class="value">0.00€</span>
+                                <span class="status pending">Não calculado</span>
+                            </div>
+                            <small>Dívida fiscal ao Estado</small>
                         </div>
-                        <div class="result-card">
-                            <h4><i class="fas fa-file-contract"></i> EVIDÊNCIAS</h4>
-                            <p id="evidenceCount">0 documentos</p>
-                            <small>Processados/Validados</small>
+                        <div class="triang-card">
+                            <h5>PROJEÇÃO MERCADO</h5>
+                            <p class="formula">Média × 38.000 motoristas</p>
+                            <div class="result" id="marketProjectionResult">
+                                <span class="value">0.00M€</span>
+                                <span class="status info">Base: esta amostra</span>
+                            </div>
+                            <small>Impacto económico potencial</small>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
 
-        <!-- Console de Auditoria e Controles -->
+        <!-- Console e Controles -->
         <footer class="main-footer">
+            <!-- Console de Auditoria -->
             <div class="console-wrapper">
-                <div class="console-title">
-                    <i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA
-                    <button class="icon-btn" onclick="clearConsole()" title="Limpar console">
-                        <i class="fas fa-broom"></i>
-                    </button>
+                <div class="console-header">
+                    <h4><i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA</h4>
+                    <div class="console-controls">
+                        <button class="icon-btn" onclick="clearConsole()" title="Limpar console">
+                            <i class="fas fa-broom"></i>
+                        </button>
+                        <button class="icon-btn" onclick="toggleConsole()" title="Alternar tamanho">
+                            <i class="fas fa-expand-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="auditOutput" class="console-mini">
                     <!-- Logs serão inseridos aqui -->
                 </div>
             </div>
 
+            <!-- Barra de Ações -->
             <div class="action-bar">
                 <button id="analyzeBtn" class="btn-main" onclick="performForensicAnalysis()" disabled>
                     <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
@@ -228,13 +261,14 @@
                 </div>
             </div>
 
+            <!-- Informação do Sistema -->
             <div class="system-info">
                 <div class="master-hash">
                     <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO:</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v5.5 | Big Data Forense | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v6.0 | Big Data Forense | Conformidade CIVA Art. 2º | © 2024
                 </div>
             </div>
         </footer>
