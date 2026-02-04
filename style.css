@@ -1166,3 +1166,13 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* 21. ESTILO ADICIONAL PARA GARANTIR ESTABILIDADE DO CABEÇALHO NO PREVIEW */
+/* (APENAS PARA GARANTIR QUE O PREVIEW VISUAL NÃO ENGANE) */
+.report-header-info {
+    position: absolute;
+    top: 15px; /* Ajuste para descer o texto - correção solicitada */
+    right: 15px;
+    text-align: right;
+    line-height: 1.4;
+}
