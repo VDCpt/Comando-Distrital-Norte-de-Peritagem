@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v5.2</title>
+    <title>VDC | Sistema de Peritagem Forense v5.5</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,8 +19,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE</h2>
-            <p>Versão 5.2 | Inicializando Terminal de Prova Legal...</p>
+            <h2>VDC SISTEMA DE PERITAGEM FORENSE v5.5</h2>
+            <p>Versão 5.5 | Inicializando Terminal de Análise Big Data...</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -45,12 +46,24 @@
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-balance-scale"></i>
-                    <h1>VDC | <span class="version-badge">v5.2</span></h1>
+                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v5.5</span></h1>
                 </div>
                 <div class="session-info">
-                    <div class="session-id">
-                        <i class="fas fa-id-card"></i>
-                        <span>Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
+                    <div class="system-controls">
+                        <div class="control-group">
+                            <label for="selYear"><i class="fas fa-calendar-alt"></i> Ano Fiscal</label>
+                            <select id="selYear" class="year-select">
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="selPlatform"><i class="fas fa-globe-europe"></i> Plataforma</label>
+                            <select id="selPlatform" class="platform-select">
+                                <option value="bolt">Bolt (Estónia)</option>
+                                <option value="uber">Uber (Holanda)</option>
+                                <option value="other">Outra Plataforma</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="timestamp">
                         <i class="fas fa-clock"></i>
@@ -60,229 +73,168 @@
             </div>
         </header>
 
-        <!-- Identificação do Cliente -->
-        <section class="identification-section">
-            <div class="identification-card">
-                <div class="card-header">
-                    <i class="fas fa-user-tie"></i>
-                    <h3>IDENTIFICAÇÃO DO CLIENTE</h3>
-                </div>
-                <div class="identification-form">
-                    <div class="form-group">
-                        <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
-                        <input type="text" id="clientName" placeholder="Ex: Empresa XYZ, Lda">
-                    </div>
-                    <div class="form-group">
-                        <label for="clientNIF"><i class="fas fa-id-card"></i> NIF</label>
-                        <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
-                    </div>
-                    <button id="registerClientBtn" class="primary-btn">
-                        <i class="fas fa-save"></i> REGISTAR CLIENTE
-                    </button>
-                </div>
-                <div id="clientStatus" class="client-status" style="display: none;">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
-                </div>
+        <!-- Dashboard de Estatísticas Big Data -->
+        <section class="dashboard-stats">
+            <div class="stat-box">
+                <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
+                <p id="netVal">0.00€</p>
+                <small>Base tributável SAF-T</small>
+            </div>
+            <div class="stat-box">
+                <h4><i class="fas fa-percentage"></i> IVA (6%)</h4>
+                <p id="iva6Val">0.00€</p>
+                <small>Taxa reduzida Portugal</small>
+            </div>
+            <div class="stat-box">
+                <h4><i class="fas fa-chart-line"></i> TOTAL BRUTO SAF-T</h4>
+                <p id="grossVal">0.00€</p>
+                <small>Consolidação múltiplos ficheiros</small>
+            </div>
+            <div class="stat-box alert">
+                <h4><i class="fas fa-exclamation-triangle"></i> IVA 23% (PLATAFORMA)</h4>
+                <p id="iva23Val" class="alert-text">0.00€</p>
+                <small>Autoliquidação devida (Art. 2º CIVA)</small>
             </div>
         </section>
 
-        <!-- PASSO 1: Control File -->
-        <section class="step-section step-1">
-            <div class="step-header">
-                <div class="step-number">1</div>
-                <div class="step-title">
-                    <h3>CARREGAR FICHEIRO DE CONTROLO</h3>
-                    <small>Arraste ou clique para carregar o ficheiro CSV com hashes de referência</small>
-                </div>
-            </div>
-            <div class="step-content">
-                <div id="controlUploadArea" class="file-upload-area">
+        <!-- Grid Principal -->
+        <div class="main-grid">
+            <!-- Zona de Upload Multi-Ficheiro -->
+            <aside class="upload-zone">
+                <div class="upload-card" id="controlUploadCard" onclick="document.getElementById('controlFile').click()">
                     <div class="upload-icon">
                         <i class="fas fa-file-csv"></i>
                     </div>
-                    <div class="upload-text">
-                        <strong>Clique ou arraste o ficheiro CSV</strong>
-                        <p>Formato aceite: .csv | Tamanho máximo: 10MB</p>
+                    <div class="upload-info">
+                        <h4>FICHEIRO DE CONTROLO</h4>
+                        <p>CSV com hashes de referência</p>
+                        <small>Clique ou arraste ficheiro único</small>
                     </div>
+                    <input type="file" id="controlFile" class="file-input" accept=".csv" hidden>
                 </div>
-                <input type="file" id="controlFile" class="file-input" accept=".csv">
-                
-                <div id="controlStatus" class="status-display status-pending">
-                    <div class="status-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="status-text">
-                        Aguardando ficheiro de controlo
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- PASSO 2: Documentos -->
-        <section class="step-section">
-            <div class="step-header">
-                <div class="step-number">2</div>
-                <div class="step-title">
-                    <h3>CARREGAR DOCUMENTOS PARA VALIDAÇÃO</h3>
-                    <small>Carregue os documentos correspondentes às hashes do ficheiro de controlo</small>
+                <div class="upload-card multi-upload" id="saftUploadCard" onclick="document.getElementById('saftFile').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-code"></i>
+                    </div>
+                    <div class="upload-info">
+                        <h4>SAF-T / XML (MÚLTIPLOS)</h4>
+                        <p>Ficheiros SAF-T do ano selecionado</p>
+                        <small>Ctrl+Click para seleção múltipla</small>
+                    </div>
+                    <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
                 </div>
-            </div>
-            
-            <div id="documentsGrid" class="documents-grid" style="opacity: 0.5; pointer-events: none;">
-                
-                <!-- SAF-T -->
-                <div class="document-card" data-type="saft">
-                    <div class="card-header">
-                        <div class="card-step">2.1</div>
-                        <h4><i class="fas fa-file-invoice"></i> SAF-T / XML</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="upload-container">
-                            <div id="saftUploadArea" class="upload-area">
-                                <i class="fas fa-file-upload"></i>
-                                <p>Clique para carregar SAF-T</p>
-                                <small>Formatos: .xml, .csv</small>
-                            </div>
-                            <input type="file" id="saftFile" class="file-input" accept=".xml,.csv" disabled>
-                        </div>
-                        <div class="validation-status">
-                            <div class="status-indicator status-pending"></div>
-                            <span id="saftStatus">Aguardando validação</span>
-                        </div>
-                        <div id="saftHashDisplay" class="hash-display" style="display: none;">
-                            <div class="hash-label">HASH CALCULADA:</div>
-                            <div id="saftHashValue" class="hash-value"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Fatura -->
-                <div class="document-card" data-type="fatura">
-                    <div class="card-header">
-                        <div class="card-step">2.2</div>
-                        <h4><i class="fas fa-file-invoice-dollar"></i> Fatura</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="upload-container">
-                            <div id="faturaUploadArea" class="upload-area">
-                                <i class="fas fa-file-upload"></i>
-                                <p>Clique para carregar Fatura</p>
-                                <small>Formatos: .pdf, .xml, .csv</small>
-                            </div>
-                            <input type="file" id="faturaFile" class="file-input" accept=".pdf,.xml,.csv" disabled>
-                        </div>
-                        <div class="validation-status">
-                            <div class="status-indicator status-pending"></div>
-                            <span id="faturaStatus">Aguardando validação</span>
-                        </div>
-                        <div id="faturaHashDisplay" class="hash-display" style="display: none;">
-                            <div class="hash-label">HASH CALCULADA:</div>
-                            <div id="faturaHashValue" class="hash-value"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Extrato Bancário -->
-                <div class="document-card" data-type="extrato">
-                    <div class="card-header">
-                        <div class="card-step">2.3</div>
-                        <h4><i class="fas fa-university"></i> Extrato Bancário</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="upload-container">
-                            <div id="extratoUploadArea" class="upload-area">
-                                <i class="fas fa-file-upload"></i>
-                                <p>Clique para carregar Extrato</p>
-                                <small>Formatos: .pdf, .csv, .txt</small>
-                            </div>
-                            <input type="file" id="extratoFile" class="file-input" accept=".pdf,.csv,.txt" disabled>
-                        </div>
-                        <div class="validation-status">
-                            <div class="status-indicator status-pending"></div>
-                            <span id="extratoStatus">Aguardando validação</span>
-                        </div>
-                        <div id="extratoHashDisplay" class="hash-display" style="display: none;">
-                            <div class="hash-label">HASH CALCULADA:</div>
-                            <div id="extratoHashValue" class="hash-value"></div>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-        </section>
 
-        <!-- NOVO: Resultados da Análise Big Data -->
-        <section class="analysis-results" id="analysisResults" style="display:none; margin-bottom: 15px;">
-            <div class="stats-grid">
-                <div class="stat-card"><h4>TOTAL FATURADO</h4><p id="totalFaturado">0.00€</p></div>
-                <div class="stat-card"><h4>Nº VIAGENS</h4><p id="totalViagens">0</p></div>
-                <div class="stat-card"><h4>ESTIMATIVA MERCADO (38k)</h4><p id="marketEst">0€</p></div>
-                <div class="stat-card"><h4>CONGRUÊNCIA HASH</h4><p id="hashMatch">0%</p></div>
-            </div>
-        </section>
+                <div class="upload-card multi-upload" id="invoiceUploadCard" onclick="document.getElementById('invoiceFile').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="upload-info">
+                        <h4>FATURAS PLATAFORMA</h4>
+                        <p>Faturas da Bolt/Uber (PDF/CSV)</p>
+                        <small>Processamento em lote</small>
+                    </div>
+                    <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden>
+                </div>
 
-        <!-- Controles de Análise -->
-        <section class="analysis-controls">
-            <div class="controls-container">
-                <button id="analyzeBtn" class="analyze-btn" disabled>
+                <div class="upload-card multi-upload" id="statementUploadCard" onclick="document.getElementById('statementFile').click()">
+                    <div class="upload-icon">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div class="upload-info">
+                        <h4>EXTRATOS BANCÁRIOS</h4>
+                        <p>Extratos de conta (PDF/CSV/TXT)</p>
+                        <small>Análise de fluxos financeiros</small>
+                    </div>
+                    <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden>
+                </div>
+
+                <div class="legal-box">
+                    <h4><i class="fas fa-gavel"></i> ENQUADRAMENTO LEGAL</h4>
+                    <p><strong>CIVA Art. 2º nº 1 i)</strong> - Inversão do sujeito passivo (Autoliquidação)</p>
+                    <p><strong>Art. 6º nº 6</strong> - Serviços prestados por não residentes</p>
+                    <p class="warn-text">Evasão Fiscal: Discrepância entre Faturação e Recebimento</p>
+                </div>
+            </aside>
+
+            <!-- Núcleo de Análise Forense -->
+            <section class="analysis-core">
+                <!-- Gráfico de Cruzamento Forense -->
+                <div class="chart-container">
+                    <canvas id="forensicChart"></canvas>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Bruto SAF-T</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #10b981;"></i> Transferência Real</span>
+                    </div>
+                </div>
+
+                <!-- Resultados da Análise -->
+                <div class="analysis-results" id="analysisResults" style="display:none;">
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <h4><i class="fas fa-calculator"></i> CRUZAMENTO 1</h4>
+                            <p id="cross1Result">Aguardando análise...</p>
+                            <small>Bruto SAF-T - Comissão vs Transferência</small>
+                        </div>
+                        <div class="result-card">
+                            <h4><i class="fas fa-search-dollar"></i> CRUZAMENTO 2</h4>
+                            <p id="cross2Result">Aguardando análise...</p>
+                            <small>Faturação (6% IVA) vs Recebimento Líquido</small>
+                        </div>
+                        <div class="result-card">
+                            <h4><i class="fas fa-users"></i> PROJEÇÃO MERCADO</h4>
+                            <p id="marketProjection">0.00M€</p>
+                            <small>Base: 38.000 operadores ativos</small>
+                        </div>
+                        <div class="result-card">
+                            <h4><i class="fas fa-file-contract"></i> EVIDÊNCIAS</h4>
+                            <p id="evidenceCount">0 documentos</p>
+                            <small>Processados/Validados</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Console de Auditoria e Controles -->
+        <footer class="main-footer">
+            <div class="console-wrapper">
+                <div class="console-title">
+                    <i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA
+                    <button class="icon-btn" onclick="clearConsole()" title="Limpar console">
+                        <i class="fas fa-broom"></i>
+                    </button>
+                </div>
+                <div id="auditOutput" class="console-mini">
+                    <!-- Logs serão inseridos aqui -->
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button id="analyzeBtn" class="btn-main" onclick="performForensicAnalysis()" disabled>
                     <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
                 </button>
-                
-                <!-- NOVO: Barra de Ações Expandida -->
-                <div class="action-bar" style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-                    <button id="exportPdfBtn" class="secondary-btn"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button id="exportJsonBtn" class="secondary-btn"><i class="fas fa-code"></i> JSON</button>
-                </div>
-                
-                <div class="secondary-controls">
-                    <button id="clearSessionBtn" class="secondary-btn">
+                <div class="secondary-actions">
+                    <button class="btn-sub" onclick="exportJSON()">
+                        <i class="fas fa-code"></i> PROVA DIGITAL (JSON)
+                    </button>
+                    <button class="btn-sub" onclick="exportPDF()">
+                        <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
+                    </button>
+                    <button class="btn-sub" onclick="clearSession()">
                         <i class="fas fa-redo"></i> NOVA SESSÃO
                     </button>
-                    <button id="exportLogsBtn" class="secondary-btn">
-                        <i class="fas fa-download"></i> EXPORTAR LOGS
-                    </button>
-                    <button id="clearConsoleBtn" class="secondary-btn">
-                        <i class="fas fa-broom"></i> LIMPAR CONSOLE
-                    </button>
-                </div>
-                
-                <div id="progressContainer" class="progress-container" style="display: none;">
-                    <div id="progressBar" class="progress-bar"></div>
-                    <div id="progressText" class="progress-text">0%</div>
                 </div>
             </div>
-        </section>
 
-        <!-- Console de Auditoria -->
-        <section class="audit-section">
-            <div class="audit-header">
-                <h4><i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA</h4>
-                <div class="audit-controls">
-                    <button class="icon-btn" title="Copiar logs" onclick="copyConsole()">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="icon-btn" title="Expandir" onclick="toggleConsole()">
-                        <i class="fas fa-expand"></i>
-                    </button>
+            <div class="system-info">
+                <div class="master-hash">
+                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO:</strong>
+                    <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
-            </div>
-            <div id="auditOutput" class="audit-output">
-                <!-- Logs serão inseridos aqui -->
-            </div>
-        </section>
-
-        <!-- Rodapé -->
-        <footer class="main-footer">
-            <div class="footer-content">
-                <div class="system-info">
-                    <div class="master-hash">
-                        <strong>MASTER HASH DA SESSÃO:</strong>
-                        <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
-                    </div>
-                    <div class="copyright">
-                        <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v5.2 | © 2024 Todos os direitos reservados
-                    </div>
+                <div class="copyright">
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v5.5 | Big Data Forense | © 2024
                 </div>
             </div>
         </footer>
