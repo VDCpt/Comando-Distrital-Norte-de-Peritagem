@@ -1,5 +1,5 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v8.1
+   VDC SISTEMA DE PERITAGEM FORENSE v10.0
    CSS OTIMIZADO - PROTOCOLO DE PROVA LEGAL
    ============================================ */
 
@@ -533,15 +533,29 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
-@media (max-width: 1200px) {
+@media (min-width: 1400px) {
     .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1399px) and (min-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    #diferencialCard {
+        grid-column: span 3;
+    }
+}
+
+@media (max-width: 767px) {
     .kpi-grid {
         grid-template-columns: 1fr;
+    }
+    
+    #diferencialCard {
+        grid-column: span 1;
     }
 }
 
@@ -569,7 +583,7 @@ body {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, var(--bg-tertiary) 100%);
 }
 
-/* NOVO: Card de Alerta para Diferencial */
+/* Card de Alerta para Diferencial */
 .kpi-card.alert {
     border-left-color: var(--warn-secondary);
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-tertiary) 100%);
@@ -583,6 +597,30 @@ body {
     50% { 
         box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
     }
+}
+
+#diferencialCard {
+    border-left: 4px solid var(--warn-secondary);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-tertiary) 100%);
+    animation: pulse-alert 2s infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+#diferencialCard::before {
+    content: '⚠️';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2rem;
+    opacity: 0.3;
+}
+
+#diferencialVal {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0.5rem 0;
+    color: var(--warn-secondary);
 }
 
 .kpi-card h4 {
@@ -613,36 +651,6 @@ body {
     color: var(--text-tertiary);
     font-size: 0.75rem;
     display: block;
-}
-
-/* Estilo específico para o card de diferencial */
-#diferencialCard {
-    position: relative;
-    overflow: hidden;
-}
-
-#diferencialCard::before {
-    content: '⚠️';
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.2rem;
-    opacity: 0.3;
-}
-
-#diferencialVal {
-    font-size: 1.8rem;
-    font-weight: 800;
-    margin: 0.5rem 0;
-    color: var(--warn-secondary);
-}
-
-/* Dashboard KPI Update - Correção de overflow */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
 }
 
 /* Estatísticas Secundárias Melhoradas */
@@ -725,11 +733,15 @@ body {
     height: 250px;
     width: 100%;
     position: relative;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: 10px;
 }
 
 .chart-container canvas {
     width: 100% !important;
     height: 100% !important;
+    display: block;
 }
 
 .chart-legend {
@@ -746,6 +758,9 @@ body {
     gap: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 4px;
 }
 
 /* 14. RESULTADOS DA ANÁLISE */
@@ -808,6 +823,7 @@ body {
     background: var(--border-color);
     border-radius: 3px;
     overflow: hidden;
+    margin-top: 0.5rem;
 }
 
 .bar-fill {
@@ -853,7 +869,7 @@ body {
     font-family: var(--font-mono);
 }
 
-/* NOVO: Alerta de Diferencial Específico */
+/* Alerta de Diferencial Específico */
 .diferencial-alert {
     border-color: var(--warn-secondary) !important;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%) !important;
@@ -925,6 +941,7 @@ body {
     padding: var(--spacing-md);
     overflow-y: auto;
     overflow-x: hidden;
+    line-height: 1.4;
 }
 
 .console-output::-webkit-scrollbar {
