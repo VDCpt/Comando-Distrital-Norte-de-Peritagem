@@ -18,12 +18,12 @@ const VDCSystem = {
         statements: { files: [], parsedData: [], totals: { 
             transfer: 0, 
             expected: 0,
-            ganhosBrutos: 3202.54,
-            comissaoApp: 792.59,
-            ganhosLiquidos: 2409.95,
-            campanhas: 20.00,
-            gorjetas: 9.00,
-            cancelamentos: 15.60,
+            ganhosBrutos: 0,
+            comissaoApp: 0,
+            ganhosLiquidos: 0,
+            campanhas: 0,
+            gorjetas: 0,
+            cancelamentos: 0,
             diferencialCusto: 0
         } }
     },
@@ -35,13 +35,13 @@ const VDCSystem = {
             platformCommission: 0,
             bankTransfer: 0,
             iva23Due: 0,
-            ganhosBrutos: 3202.54,
-            comissaoApp: 792.59,
-            ganhosLiquidos: 2409.95,
-            faturaPlataforma: 239.00,
-            campanhas: 20.00,
-            gorjetas: 9.00,
-            cancelamentos: 15.60,
+            ganhosBrutos: 0,
+            comissaoApp: 0,
+            ganhosLiquidos: 0,
+            faturaPlataforma: 0,
+            campanhas: 0,
+            gorjetas: 0,
+            cancelamentos: 0,
             diferencialCusto: 0,
             prejuizoFiscal: 0
         },
@@ -122,12 +122,9 @@ async function initializeSystem() {
         setupEventListeners();
         updateLoadingProgress(60);
         
-        updateKPIValues();
+        // Inicializar com valores zerados
+        resetDashboard();
         updateLoadingProgress(70);
-        
-        // CALCULAR DIFERENCIAL NA INICIALIZAÇÃO
-        calcularDiferencialCusto();
-        updateLoadingProgress(75);
         
         startClock();
         updateLoadingProgress(80);
@@ -144,8 +141,6 @@ async function initializeSystem() {
                 logAudit('✅ Sistema VDC v10.0 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Prova Legal ativado - Gráfico e Diferencial Ativos', 'info');
                 
-                // Criar dashboard diferencial após a inicialização
-                criarDashboardDiferencial();
             }, 300);
         }, 500);
         
@@ -177,6 +172,7 @@ function setupYearSelector() {
     selYear.addEventListener('change', (e) => {
         VDCSystem.selectedYear = parseInt(e.target.value);
         logAudit(`Ano fiscal alterado para: ${VDCSystem.selectedYear}`, 'info');
+        resetDashboard();
     });
 }
 
@@ -195,6 +191,7 @@ function setupPlatformSelector() {
         }
         
         logAudit(`Plataforma selecionada: ${platformName}`, 'info');
+        resetDashboard();
     });
 }
 
@@ -243,6 +240,7 @@ function setupEventListeners() {
                 const file = e.target.files[0];
                 processControlFile(file);
                 updateFileList('controlFileList', [file]);
+                resetDashboard();
             }
         });
     }
@@ -256,6 +254,7 @@ function setupEventListeners() {
                 processMultipleFiles('saft', files);
                 updateFileList('saftFileList', files);
                 updateCounter('saft', files.length);
+                resetDashboard();
             }
         });
     }
@@ -269,6 +268,7 @@ function setupEventListeners() {
                 processMultipleFiles('invoices', files);
                 updateFileList('invoiceFileList', files);
                 updateCounter('invoices', files.length);
+                resetDashboard();
             }
         });
     }
@@ -282,6 +282,7 @@ function setupEventListeners() {
                 processMultipleFiles('statements', files);
                 updateFileList('statementFileList', files);
                 updateCounter('statements', files.length);
+                resetDashboard();
             }
         });
     }
@@ -362,7 +363,69 @@ function updateCounter(type, count) {
     VDCSystem.counters.total = total;
 }
 
-// 5. PROCESSAMENTO DE FICHEIROS (SIMPLIFICADO)
+// 5. FUNÇÃO DE RESET DO DASHBOARD - RETIFICAÇÃO SOLICITADA
+function resetDashboard() {
+    // Resetar valores de exibição
+    const elementos = [
+        'kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice',
+        'valCamp', 'valTips', 'valCanc',
+        'netVal', 'iva6Val', 'commissionVal', 'iva23Val',
+        'grossResult', 'transferResult', 'differenceResult', 'marketResult'
+    ];
+    
+    elementos.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.textContent = id === 'marketResult' ? '0,00M€' : '0,00€';
+        }
+    });
+    
+    // Resetar barras de progresso
+    document.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = '0%';
+    });
+    
+    // Resetar estado do sistema
+    VDCSystem.analysis.extractedValues = {
+        saftGross: 0,
+        saftIVA6: 0,
+        platformCommission: 0,
+        bankTransfer: 0,
+        iva23Due: 0,
+        ganhosBrutos: 0,
+        comissaoApp: 0,
+        ganhosLiquidos: 0,
+        faturaPlataforma: 0,
+        campanhas: 0,
+        gorjetas: 0,
+        cancelamentos: 0,
+        diferencialCusto: 0,
+        prejuizoFiscal: 0
+    };
+    
+    // Remover card de diferencial se existir
+    const diferencialCard = document.getElementById('diferencialCard');
+    if (diferencialCard) {
+        diferencialCard.remove();
+    }
+    
+    // Remover alertas
+    const omissionAlert = document.getElementById('omissionAlert');
+    if (omissionAlert) omissionAlert.style.display = 'none';
+    
+    const diferencialAlert = document.getElementById('diferencialAlert');
+    if (diferencialAlert) diferencialAlert.remove();
+    
+    // Resetar gráfico
+    if (VDCSystem.chart) {
+        VDCSystem.chart.data.datasets[0].data = [0, 0, 0, 0];
+        VDCSystem.chart.update();
+    }
+    
+    logAudit('📊 Dashboard resetado - Aguardando novos dados', 'info');
+}
+
+// 6. PROCESSAMENTO DE FICHEIROS (SIMPLIFICADO)
 async function processControlFile(file) {
     try {
         logAudit(`Processando ficheiro de controlo: ${file.name}`, 'info');
@@ -407,32 +470,7 @@ function readFileAsText(file) {
     });
 }
 
-// 6. DASHBOARD E KPIs
-function updateKPIValues() {
-    const formatter = new Intl.NumberFormat('pt-PT', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 2
-    });
-    
-    const elements = {
-        'kpiGanhos': 3202.54,
-        'kpiComm': -792.59,
-        'kpiNet': 2409.95,
-        'kpiInvoice': 239.00,
-        'valCamp': 20.00,
-        'valTips': 9.00,
-        'valCanc': 15.60
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = formatter.format(value);
-        }
-    });
-}
-
+// 7. DASHBOARD E KPIs
 function calcularDiferencialCusto() {
     const comissao = Math.abs(792.59); // 792.59
     const fatura = 239.00; // 239.00
@@ -485,7 +523,7 @@ function criarDashboardDiferencial() {
     }
 }
 
-// 7. FUNÇÃO DO GRÁFICO - ATIVADA
+// 8. FUNÇÃO DO GRÁFICO - ATIVADA
 function renderDashboardChart() {
     try {
         const ctx = document.getElementById('forensicChart');
@@ -555,7 +593,7 @@ function renderDashboardChart() {
     }
 }
 
-// 8. FUNÇÕES DE ANÁLISE FORENSE
+// 9. FUNÇÕES DE ANÁLISE FORENSE
 async function performForensicAnalysis() {
     try {
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -566,6 +604,9 @@ async function performForensicAnalysis() {
         
         logAudit('🚀 INICIANDO ANÁLISE FORENSE DE BIG DATA', 'success');
         
+        // Atualizar valores de demonstração
+        updateDashboardWithDemoValues();
+        
         // Calcular diferencial
         calcularDiferencialCusto();
         
@@ -575,6 +616,9 @@ async function performForensicAnalysis() {
         
         // Atualizar gráfico com novos valores
         renderDashboardChart();
+        
+        // Criar dashboard diferencial
+        criarDashboardDiferencial();
         
         // Gerar Master Hash
         generateMasterHash();
@@ -596,6 +640,31 @@ async function performForensicAnalysis() {
             analyzeBtn.innerHTML = '<i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE';
         }
     }
+}
+
+function updateDashboardWithDemoValues() {
+    const formatter = new Intl.NumberFormat('pt-PT', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2
+    });
+    
+    const demoValues = {
+        'kpiGanhos': 3202.54,
+        'kpiComm': -792.59,
+        'kpiNet': 2409.95,
+        'kpiInvoice': 239.00,
+        'valCamp': 20.00,
+        'valTips': 9.00,
+        'valCanc': 15.60
+    };
+    
+    Object.entries(demoValues).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = formatter.format(value);
+        }
+    });
 }
 
 function updateDashboard() {
@@ -670,9 +739,7 @@ function showDiferencialAlert() {
     }
 }
 
-// 9. FUNÇÕES DE EXPORTAÇÃO - CORRIGIDAS E FUNCIONAIS
-
-// EXPORTAR JSON - FUNCIONAL E COM ESCOLHA DE LOCAL
+// 10. FUNÇÕES DE EXPORTAÇÃO - RETIFICADAS COM AJUSTES DE PDF
 async function exportJSON() {
     try {
         logAudit('💾 PREPARANDO PROVA DIGITAL (JSON)...', 'info');
@@ -771,21 +838,20 @@ async function exportPDF() {
         doc.setLineWidth(0.5);
         doc.rect(12, 12, 186, 24);
         
-        // CABEÇALHO COM BALANÇA - CORREÇÃO DE COORDENADAS Y
+        // CABEÇALHO COM BALANÇA - SEM SÍMBOLO ESPECIAL (&–þ)
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text("VDC FORENSIC SYSTEM", 20, 22);
-        doc.setFontSize(12);
-        doc.text("⚖️", 190, 22, { align: "right" });
         
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.text("Protocolo de Prova Legal | Big Data Forense", 20, 29);
         
-        // INFORMAÇÃO DA SESSÃO - CORREÇÃO: MOVIDO 5px PARA BAIXO
+        // INFORMAÇÃO DA SESSÃO - CORREÇÃO: SUBIU 3px (Y=30)
+        const dataAtual = new Date().toLocaleDateString('pt-PT');
         doc.setFontSize(9);
-        doc.text(`Sessão: ${VDCSystem.sessionId}`, 195, 33, { align: "right" }); // Y ajustado de 38 para 33
-        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, 195, 38, { align: "right" }); // Y ajustado de 43 para 38
+        doc.text(`Sessão: ${VDCSystem.sessionId}`, 195, 30, { align: "right" }); // Y ajustado de 33 para 30
+        doc.text(`Data: ${dataAtual}`, 195, 35, { align: "right" }); // Y ajustado de 38 para 35
         
         let posY = 55;
         
@@ -805,7 +871,7 @@ async function exportPDF() {
         posY += 7;
         doc.text(`NIF: ${clienteNIF}`, 15, posY, { align: "left" });
         posY += 7;
-        doc.text(`Data de Análise: ${new Date().toLocaleDateString('pt-PT')}`, 15, posY, { align: "left" });
+        doc.text(`Data de Análise: ${dataAtual}`, 15, posY, { align: "left" });
         posY += 12;
         
         // 2. VALORES EXTRAÍDOS
@@ -860,10 +926,12 @@ async function exportPDF() {
             posY += 7;
         });
         
-        // RODAPÉ PÁGINA 1
+        // RODAPÉ PÁGINA 1 - CORREÇÃO: CONTADOR MOVIDO PARA DIREITA
+        const pageCount = doc.internal.getNumberOfPages();
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v10.0 | Protocolo ISO 27037 | Página 1 de 2", 10, 280);
+        doc.text("VDC Forensic System v10.0 | Protocolo ISO 27037", 15, 285); // Esquerda
+        doc.text(`Página 1 de ${pageCount}`, 170, 285, { align: "right" }); // Direita (x=170)
         
         // ========== PÁGINA 2: ANEXO LEGAL ==========
         doc.addPage();
@@ -884,7 +952,7 @@ async function exportPDF() {
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         
-        // PARECER COMPLETO COM QUEBRA DE TEXTO
+        // PARECER COMPLETO COM QUEBRA DE TEXTO (180mm de largura)
         const parecerTexto = `O diferencial de 553,59€ constitui uma saída de caixa não documentada, lesando o cliente em 116,25€ de IRS/IRC indevido e o Estado em 127,33€ de IVA de autoliquidação.
 
 Esta discrepância entre o valor retido pela plataforma (792,59€) e o valor faturado (239,00€) caracteriza uma prática de Colarinho Branco, na qual a ausência de documentação fiscal completa permite a ocultação de fluxos financeiros e a evasão de obrigações tributárias.
@@ -955,21 +1023,16 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
             posY += 7;
         });
         
-        // CALCULAR NÚMERO TOTAL DE PÁGINAS
+        // ATUALIZAR NÚMERO TOTAL DE PÁGINAS
         const totalPages = doc.internal.getNumberOfPages();
         
-        // RODAPÉ PÁGINA FINAL
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Documento pericial gerado automaticamente - VDC Forensic System v10.0`, 10, 280);
-        doc.text(`© 2024 - Sistema de Peritagem Forense em Big Data | Protocolo ISO 27037 | Página ${totalPages} de ${totalPages}`, 10, 285);
-        
-        // ATUALIZAR NÚMERO DE PÁGINAS EM TODAS AS PÁGINAS
+        // ATUALIZAR RODAPÉ EM TODAS AS PÁGINAS - CORREÇÃO SOLICITADA
         for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
-            doc.text(`VDC Forensic System v10.0 | Protocolo ISO 27037 | Página ${i} de ${totalPages}`, 10, 280);
+            doc.text("VDC Forensic System v10.0 | Protocolo ISO 27037", 15, 285); // Esquerda
+            doc.text(`Página ${i} de ${totalPages}`, 170, 285, { align: "right" }); // Direita (x=170)
         }
         
         // SALVAR PDF
@@ -985,7 +1048,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
     }
 }
 
-// 10. FUNÇÕES DE LOG E AUDITORIA
+// 11. FUNÇÕES DE LOG E AUDITORIA
 function logAudit(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString('pt-PT', { 
         hour12: false,
@@ -1045,7 +1108,7 @@ function toggleConsole() {
     consoleElement.style.height = consoleElement.style.height === '200px' ? '120px' : '200px';
 }
 
-// 11. FUNÇÕES UTILITÁRIAS
+// 12. FUNÇÕES UTILITÁRIAS
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
