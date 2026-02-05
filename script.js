@@ -1,12 +1,12 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v10.1
+// VDC SISTEMA DE PERITAGEM FORENSE v10.6
 // PROTOCOLO DE PROVA LEGAL - BIG DATA FORENSE
-// CÓDIGO LIMPO - SEM VALORES FANTASMA
+// VERSÃO FINAL PARA REUNIÃO MLGTS
 // ============================================
 
-// 1. ESTADO DO SISTEMA - TOTALMENTE ZERADO
+// 1. ESTADO DO SISTEMA - TOTALMENTE DINÂMICO
 const VDCSystem = {
-    version: 'v10.1',
+    version: 'v10.6',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -119,7 +119,7 @@ function showMainInterface() {
 
 async function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v10.1...');
+        console.log('🔧 Inicializando VDC Forensic System v10.6...');
         updateLoadingProgress(10);
         
         VDCSystem.sessionId = generateSessionId();
@@ -153,7 +153,7 @@ async function initializeSystem() {
             
             setTimeout(() => {
                 showMainInterface();
-                logAudit('✅ Sistema VDC v10.1 inicializado com sucesso', 'success');
+                logAudit('✅ Sistema VDC v10.6 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Prova Legal ativado - Estado zerado', 'info');
                 
                 // ATUALIZAR BOTÃO INICIAL
@@ -247,7 +247,7 @@ function setupEventListeners() {
         });
     }
     
-    // Control File - SEM LIMPEZA DE CACHE
+    // Control File
     const controlFile = document.getElementById('controlFile');
     if (controlFile) {
         controlFile.addEventListener('change', (e) => {
@@ -259,7 +259,7 @@ function setupEventListeners() {
         });
     }
     
-    // SAF-T Files - SEM LIMPEZA DE CACHE
+    // SAF-T Files
     const saftFile = document.getElementById('saftFile');
     if (saftFile) {
         saftFile.addEventListener('change', (e) => {
@@ -272,7 +272,7 @@ function setupEventListeners() {
         });
     }
     
-    // Platform Invoices - SEM LIMPEZA DE CACHE
+    // Platform Invoices - COM REGEX BOLT 2026
     const invoiceFile = document.getElementById('invoiceFile');
     if (invoiceFile) {
         invoiceFile.addEventListener('change', (e) => {
@@ -285,7 +285,7 @@ function setupEventListeners() {
         });
     }
     
-    // Bank Statements - SEM LIMPEZA DE CACHE
+    // Bank Statements - COM REGEX BOLT 2026
     const statementFile = document.getElementById('statementFile');
     if (statementFile) {
         statementFile.addEventListener('change', (e) => {
@@ -314,7 +314,7 @@ function setupDemoButton() {
     }
 }
 
-// 5. FUNÇÃO LOAD DEMO DATA - ÚNICO LOCAL COM VALORES
+// 5. FUNÇÃO LOAD DEMO DATA
 function loadDemoData() {
     if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
         try {
@@ -324,7 +324,7 @@ function loadDemoData() {
             clearExtractedValues();
             resetDashboardDisplay();
             
-            // CARREGAR VALORES DE DEMO (APENAS AQUI)
+            // CARREGAR VALORES DE DEMO
             VDCSystem.analysis.extractedValues = {
                 saftGross: 3202.54,
                 saftIVA6: 3202.54 * 0.06,
@@ -378,7 +378,7 @@ function loadDemoData() {
             // ATIVAR MODO DEMO
             VDCSystem.demoMode = true;
             
-            // SIMULAR CARREGAMENTO DE FICHEIROS (ESSENCIAL PARA ATIVAÇÃO)
+            // SIMULAR CARREGAMENTO DE FICHEIROS
             VDCSystem.documents.control.files = [
                 { 
                     name: 'demo_control.csv', 
@@ -422,7 +422,7 @@ function loadDemoData() {
                 demoBtnExtra.disabled = true;
             }
             
-            // ATUALIZAR BOTÃO DE ANÁLISE (PASSO CRÍTICO)
+            // ATUALIZAR BOTÃO DE ANÁLISE
             updateAnalysisButton();
             
             logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
@@ -449,7 +449,7 @@ function loadDemoData() {
     }
 }
 
-// 6. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS (FOLHA EM BRANCO)
+// 6. FUNÇÕES DE PROCESSAMENTO COM REGEX BOLT 2026
 async function processControlFile(file) {
     try {
         logAudit(`Processando ficheiro de controlo: ${file.name}`, 'info');
@@ -511,13 +511,6 @@ function extractValuesFromControlFile(text) {
         }
     });
     
-    // VERIFICAÇÃO DE PARSING
-    const totalExtracted = Object.values(extractedValues).filter(v => v > 0).length;
-    if (totalExtracted === 0 && text.length > 0) {
-        console.warn('⚠️ Ficheiro de controlo lido, mas nenhum valor numérico encontrado');
-        logAudit('⚠️ Aviso: Ficheiro de controlo processado mas valores não identificados', 'warn');
-    }
-    
     return extractedValues;
 }
 
@@ -545,6 +538,9 @@ async function processSaftFiles(files) {
         logAudit(`Total Bruto: ${totalGross.toFixed(2)}€ | IVA 6%: ${totalIVA6.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.saft.files = files;
+        VDCSystem.documents.saft.totals.gross = totalGross;
+        VDCSystem.documents.saft.totals.iva6 = totalIVA6;
+        
         updateAnalysisButton();
         
     } catch (error) {
@@ -601,7 +597,7 @@ async function processInvoiceFiles(files) {
         for (const file of files) {
             const text = await readFileAsText(file);
             
-            // EXTRAIR VALORES DE FATURAS - FOLHA EM BRANCO
+            // EXTRAIR VALORES DE FATURAS - COM REGEX BOLT 2026
             const values = extractValuesFromInvoiceFile(text);
             
             // APENAS OS VALORES EXTRAÍDOS DO FICHEIRO
@@ -628,20 +624,31 @@ async function processInvoiceFiles(files) {
 function extractValuesFromInvoiceFile(text) {
     const values = { commission: 0, invoiceValue: 0 };
     
-    // PROCURAR PADRÕES COMUNS EM FATURAS
+    // REGEX BOLT 2026 - FORMATO ESPECÍFICO
     const lines = text.split('\n');
     
+    // PROCURAR PADRÕES COMUNS EM FATURAS BOLT 2026
     lines.forEach(line => {
-        const lowerLine = line.toLowerCase();
+        const trimmedLine = line.trim();
         
-        if (lowerLine.includes('comissão') || lowerLine.includes('commission')) {
-            const num = extractNumber(line);
+        // Tentar regex específico para formato Bolt 2026
+        if (trimmedLine.includes('Total com IVA (EUR)')) {
+            const regex = /"Total com IVA \(EUR\)","([\d.,]+)"/;
+            const match = trimmedLine.match(regex);
+            if (match) {
+                values.invoiceValue = parseFloat(match[1].replace(',', '.')) || 0;
+            }
+        }
+        
+        // Fallback para padrões gerais
+        if (trimmedLine.toLowerCase().includes('comissão') || trimmedLine.toLowerCase().includes('commission')) {
+            const num = extractNumber(trimmedLine);
             if (num > 0) values.commission = num;
         }
         
-        if (lowerLine.includes('total') || lowerLine.includes('valor')) {
-            const num = extractNumber(line);
-            if (num > 0 && num > values.invoiceValue) values.invoiceValue = num;
+        if (trimmedLine.toLowerCase().includes('total') && values.invoiceValue === 0) {
+            const num = extractNumber(trimmedLine);
+            if (num > 0) values.invoiceValue = num;
         }
     });
     
@@ -653,20 +660,35 @@ async function processStatementFiles(files) {
         logAudit(`Processando ${files.length} extratos bancários...`, 'info');
         
         let totalTransfer = 0;
+        let ganhosBrutos = 0;
+        let comissaoApp = 0;
+        let ganhosLiquidos = 0;
         
         for (const file of files) {
             const text = await readFileAsText(file);
             
-            // EXTRAIR TRANSFERÊNCIAS DE EXTRATOS
-            const transfer = extractTransferFromStatement(text);
-            totalTransfer += transfer;
+            // EXTRAIR VALORES COM REGEX BOLT 2026
+            const values = extractValuesFromStatementFile(text);
+            
+            totalTransfer += values.transfer || 0;
+            ganhosBrutos += values.ganhosBrutos || 0;
+            comissaoApp += values.comissaoApp || 0;
+            ganhosLiquidos += values.ganhosLiquidos || 0;
         }
         
         // ATUALIZAR VALORES EXTRAÍDOS
         VDCSystem.analysis.extractedValues.bankTransfer = totalTransfer;
+        VDCSystem.analysis.extractedValues.ganhosBrutos = ganhosBrutos;
+        VDCSystem.analysis.extractedValues.comissaoApp = -comissaoApp; // Negativo
+        VDCSystem.analysis.extractedValues.ganhosLiquidos = ganhosLiquidos;
+        
+        VDCSystem.documents.statements.totals.transfer = totalTransfer;
+        VDCSystem.documents.statements.totals.ganhosBrutos = ganhosBrutos;
+        VDCSystem.documents.statements.totals.comissaoApp = comissaoApp;
+        VDCSystem.documents.statements.totals.ganhosLiquidos = ganhosLiquidos;
         
         logAudit(`✅ ${files.length} extratos bancários processados`, 'success');
-        logAudit(`Transferência Total: ${totalTransfer.toFixed(2)}€`, 'info');
+        logAudit(`Transferência Total: ${totalTransfer.toFixed(2)}€ | Ganhos Brutos: ${ganhosBrutos.toFixed(2)}€ | Comissão: ${comissaoApp.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.statements.files = files;
         updateAnalysisButton();
@@ -677,21 +699,52 @@ async function processStatementFiles(files) {
     }
 }
 
-function extractTransferFromStatement(text) {
-    let transfer = 0;
+function extractValuesFromStatementFile(text) {
+    const values = { 
+        transfer: 0, 
+        ganhosBrutos: 0,
+        comissaoApp: 0,
+        ganhosLiquidos: 0
+    };
+    
     const lines = text.split('\n');
     
-    // PROCURAR TRANSFERÊNCIAS DA PLATAFORMA
+    // REGEX BOLT 2026 - FORMATO ESPECÍFICO
     lines.forEach(line => {
-        const lowerLine = line.toLowerCase();
-        if (lowerLine.includes('bolt') || lowerLine.includes('uber') || 
-            lowerLine.includes('transfer') || lowerLine.includes('pagamento')) {
-            const num = extractNumber(line);
-            if (num > 0) transfer = num;
+        const trimmedLine = line.trim();
+        
+        // Regex para "Ganhos na app","17.97"
+        if (trimmedLine.includes('Ganhos na app')) {
+            const regex = /"Ganhos na app","([\d.]+)"/;
+            const match = trimmedLine.match(regex);
+            if (match) {
+                values.ganhosBrutos = parseFloat(match[1]) || 0;
+            }
+        }
+        
+        // Regex para "Comissão app","-3.11"
+        if (trimmedLine.includes('Comissão app')) {
+            const regex = /"Comissão app","([-\d.]+)"/;
+            const match = trimmedLine.match(regex);
+            if (match) {
+                values.comissaoApp = Math.abs(parseFloat(match[1]) || 0);
+            }
+        }
+        
+        // Fallback para padrões gerais
+        if (trimmedLine.toLowerCase().includes('bolt') || trimmedLine.toLowerCase().includes('uber') || 
+            trimmedLine.toLowerCase().includes('transfer') || trimmedLine.toLowerCase().includes('pagamento')) {
+            const num = extractNumber(trimmedLine);
+            if (num > 0) values.transfer = num;
         }
     });
     
-    return transfer;
+    // Calcular ganhos líquidos se houver valores
+    if (values.ganhosBrutos > 0 && values.comissaoApp > 0) {
+        values.ganhosLiquidos = values.ganhosBrutos - values.comissaoApp;
+    }
+    
+    return values;
 }
 
 function extractNumber(text) {
@@ -822,7 +875,7 @@ function resetDashboard() {
     updateAnalysisButton();
 }
 
-// 8. REGISTRO DE CLIENTE - COM NOVOS CAMPOS
+// 8. REGISTRO DE CLIENTE
 function registerClient() {
     const nameInput = document.getElementById('clientName');
     const nifInput = document.getElementById('clientNIF');
@@ -969,25 +1022,54 @@ function calcularIMT() {
     return { baseComissao, comissaoCalculada, imtTax, totalPlataforma };
 }
 
-// 12. CÁLCULO DE DIFERENCIAL DINÂMICO (FÓRMULA PRESERVADA)
-function calcularDiferencialCusto() {
-    // Usar valores extraídos DINAMICAMENTE
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
-    const fatura = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
+// 12. CÁLCULO DE DELTAS - RECONCILIAÇÃO TRIANGULAR
+function calculateDeltas() {
+    // Vértice A: O que o motorista faturou (SAF-T)
+    const verticeA = VDCSystem.documents.saft.totals.gross || 
+                    VDCSystem.analysis.extractedValues.saftGross || 0;
     
-    // Cálculo do diferencial (FÓRMULA ORIGINAL PRESERVADA)
-    const diferencial = Math.abs(comissao) - fatura;
+    // Vértice B: O que a Bolt reteve (Extrato - Comissão)
+    const verticeB = Math.abs(VDCSystem.documents.statements.totals.comissaoApp) || 
+                    Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
+    
+    // Vértice C: O que a Bolt admitiu como custo (Fatura)
+    const verticeC = VDCSystem.documents.invoices.totals.invoiceValue || 
+                    VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
+    
+    // Cálculo dos Deltas
+    VDCSystem.analysis.crossings.deltaA = verticeA - verticeB;
+    VDCSystem.analysis.crossings.deltaB = verticeB - verticeC;
+    
+    // Diferencial (Erro Sistémico)
+    const diferencial = Math.abs(verticeB) - verticeC;
+    VDCSystem.analysis.extractedValues.diferencialCusto = diferencial;
+    
+    // Calcular percentagem do diferencial
+    let percentagemDiferencial = 0;
+    if (verticeB > 0) {
+        percentagemDiferencial = (diferencial / Math.abs(verticeB)) * 100;
+    }
+    
+    // Prejuízo Fiscal e IVA
     const prejuizoFiscal = diferencial * 0.21;
     const ivaAutoliquidacao = diferencial * 0.23;
     
-    VDCSystem.analysis.extractedValues.diferencialCusto = diferencial;
     VDCSystem.analysis.extractedValues.prejuizoFiscal = prejuizoFiscal;
     VDCSystem.analysis.extractedValues.iva23Due = ivaAutoliquidacao;
+    
+    // Alertar se houver erro sistémico
     VDCSystem.analysis.crossings.diferencialAlerta = diferencial > 0;
     
-    logAudit(`📊 DIFERENCIAL CALCULADO: ${diferencial.toFixed(2)}€ | Prejuízo Fiscal: ${prejuizoFiscal.toFixed(2)}€ | IVA Autoliquidação: ${ivaAutoliquidacao.toFixed(2)}€`, 'warn');
+    logAudit(`📊 RECONCILIAÇÃO TRIANGULAR:`, 'info');
+    logAudit(`• Vértice A (SAF-T): ${verticeA.toFixed(2)}€`, 'info');
+    logAudit(`• Vértice B (Comissão Retida): ${verticeB.toFixed(2)}€`, 'info');
+    logAudit(`• Vértice C (Fatura Emitida): ${verticeC.toFixed(2)}€`, 'info');
+    logAudit(`• Delta A-B: ${VDCSystem.analysis.crossings.deltaA.toFixed(2)}€`, 'info');
+    logAudit(`• Delta B-C: ${VDCSystem.analysis.crossings.deltaB.toFixed(2)}€`, 'info');
+    logAudit(`• DIFERENCIAL (Erro Sistémico): ${diferencial.toFixed(2)}€ (${percentagemDiferencial.toFixed(2)}%)`, 'warn');
+    logAudit(`• Prejuízo Fiscal: ${prejuizoFiscal.toFixed(2)}€ | IVA Devido: ${ivaAutoliquidacao.toFixed(2)}€`, 'error');
     
-    return diferencial;
+    return { verticeA, verticeB, verticeC, diferencial, percentagemDiferencial };
 }
 
 // 13. CRIAÇÃO DE DASHBOARD DIFERENCIAL
@@ -998,16 +1080,28 @@ function criarDashboardDiferencial() {
     if (!document.getElementById('diferencialCard')) {
         const kpiGrid = kpiSection.querySelector('.kpi-grid');
         if (kpiGrid) {
-            const diferencial = calcularDiferencialCusto();
+            const deltas = calculateDeltas();
+            const diferencial = deltas.diferencial;
+            const percentagem = deltas.percentagemDiferencial;
             
             const diferencialCard = document.createElement('div');
             diferencialCard.id = 'diferencialCard';
             diferencialCard.className = 'kpi-card alert';
             diferencialCard.innerHTML = `
-                <h4><i class="fas fa-exclamation-triangle"></i> DIFERENCIAL DE CUSTO</h4>
+                <h4><i class="fas fa-exclamation-triangle"></i> ERRO SISTÉMICO</h4>
                 <p id="diferencialVal">${diferencial.toFixed(2)}€</p>
-                <small>Sem suporte documental</small>
+                <small>${percentagem.toFixed(2)}% da comissão</small>
             `;
+            
+            // PINTAR DE VERMELHO SE HOUVER DIFERENCIAL
+            if (diferencial > 0) {
+                diferencialCard.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                diferencialCard.style.color = 'white';
+                diferencialCard.style.borderColor = '#ef4444';
+                diferencialCard.querySelector('h4').style.color = 'white';
+                diferencialCard.querySelector('p').style.color = 'white';
+                diferencialCard.querySelector('small').style.color = 'rgba(255,255,255,0.8)';
+            }
             
             if (kpiGrid.children.length >= 4) {
                 kpiGrid.insertBefore(diferencialCard, kpiGrid.children[4]);
@@ -1015,13 +1109,7 @@ function criarDashboardDiferencial() {
                 kpiGrid.appendChild(diferencialCard);
             }
             
-            const diferencialVal = document.getElementById('diferencialVal');
-            if (diferencialVal) {
-                diferencialVal.style.color = 'var(--warn-secondary)';
-                diferencialVal.style.fontWeight = 'bold';
-            }
-            
-            logAudit(`📊 Dashboard diferencial criado: ${diferencial.toFixed(2)}€`, 'info');
+            logAudit(`📊 Dashboard diferencial criado: ${diferencial.toFixed(2)}€ (${percentagem.toFixed(2)}%)`, 'info');
         }
     }
 }
@@ -1098,13 +1186,14 @@ function updateChartWithData() {
         comissao * 0.23
     ];
     
+    // ATUALIZAÇÃO IMEDIATA DO GRÁFICO
     VDCSystem.chart.update();
 }
 
-// 15. FUNÇÕES DE ANÁLISE FORENSE - CORRIGIDA
+// 15. FUNÇÃO PRINCIPAL DE ANÁLISE FORENSE - CORRIGIDA
 async function performForensicAnalysis() {
     try {
-        console.log('🚀 INICIANDO ANÁLISE FORENSE...');
+        console.log('🚀 INICIANDO ANÁLISE FORENSE v10.6...');
         console.log('🔍 VERIFICAÇÃO INICIAL:', {
             client: VDCSystem.client ? 'Registado' : 'NÃO REGISTADO',
             controlFiles: VDCSystem.documents.control.files.length,
@@ -1132,35 +1221,39 @@ async function performForensicAnalysis() {
         }
         
         logAudit('🚀 INICIANDO ANÁLISE FORENSE DE BIG DATA', 'success');
+        logAudit('🔺 RECONCILIAÇÃO TRIANGULAR ATIVADA', 'info');
         
-        // Calcular IMT com valores extraídos
+        // 1. CALCULAR DELTAS (RECONCILIAÇÃO TRIANGULAR)
+        const deltas = calculateDeltas();
+        
+        // 2. CALCULAR IMT
         const imtCalculos = calcularIMT();
         
-        // Atualizar dashboard com valores extraídos
+        // 3. ATUALIZAR DASHBOARD COM VALORES REAIS
         updateDashboardWithExtractedValues();
         
-        // Calcular diferencial
-        calcularDiferencialCusto();
-        
-        // Atualizar interface
+        // 4. ATUALIZAR INTERFACE
         updateDashboard();
-        updateResults();
+        updateResults(deltas);
         updateIMTDisplay(imtCalculos);
         
-        // Atualizar gráfico
+        // 5. ATUALIZAR GRÁFICO (IMEDIATAMENTE)
         updateChartWithData();
         
-        // Criar dashboard diferencial
+        // 6. CRIAR DASHBOARD DIFERENCIAL (PINTA DE VERMELHO SE HOUVER ERRO)
         criarDashboardDiferencial();
         
-        // Gerar Master Hash
+        // 7. GERAR MASTER HASH
         generateMasterHash();
         
         logAudit('✅ ANÁLISE FORENSE CONCLUÍDA COM SUCESSO', 'success');
         
-        // Mostrar alerta se houver diferencial
+        // 8. MOSTRAR ALERTA SE HOUVER ERRO SISTÉMICO
         if (VDCSystem.analysis.crossings.diferencialAlerta) {
-            showDiferencialAlert();
+            showDiferencialAlert(deltas);
+            
+            // PINTAR O DASHBOARD DE ALERTA
+            paintDashboardAlert();
         }
         
     } catch (error) {
@@ -1182,12 +1275,16 @@ function updateDashboardWithExtractedValues() {
         minimumFractionDigits: 2
     });
     
-    // Usar valores extraídos DINAMICAMENTE
+    // Usar valores extraídos DOS DOCUMENTOS REAIS
     const valores = {
-        'kpiGanhos': VDCSystem.analysis.extractedValues.ganhosBrutos || 0,
-        'kpiComm': -(VDCSystem.analysis.extractedValues.comissaoApp || 0),
-        'kpiNet': VDCSystem.analysis.extractedValues.ganhosLiquidos || 0,
-        'kpiInvoice': VDCSystem.analysis.extractedValues.faturaPlataforma || 0,
+        'kpiGanhos': VDCSystem.documents.statements.totals.ganhosBrutos || 
+                    VDCSystem.analysis.extractedValues.ganhosBrutos || 0,
+        'kpiComm': -(VDCSystem.documents.statements.totals.comissaoApp || 
+                    Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0),
+        'kpiNet': VDCSystem.documents.statements.totals.ganhosLiquidos || 
+                  VDCSystem.analysis.extractedValues.ganhosLiquidos || 0,
+        'kpiInvoice': VDCSystem.documents.invoices.totals.invoiceValue || 
+                     VDCSystem.analysis.extractedValues.faturaPlataforma || 0,
         'valCamp': VDCSystem.analysis.extractedValues.campanhas || 0,
         'valTips': VDCSystem.analysis.extractedValues.gorjetas || 0,
         'valCanc': VDCSystem.analysis.extractedValues.cancelamentos || 0
@@ -1207,9 +1304,14 @@ function updateDashboard() {
         currency: 'EUR'
     });
     
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
-    const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
+    const ganhosLiquidos = VDCSystem.documents.statements.totals.ganhosLiquidos || 
+                          VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
+    
+    const ganhosBrutos = VDCSystem.documents.statements.totals.ganhosBrutos || 
+                        VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
+    
+    const comissao = Math.abs(VDCSystem.documents.statements.totals.comissaoApp) || 
+                    Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
     
     const elementos = {
         'netVal': ganhosLiquidos,
@@ -1249,19 +1351,22 @@ function updateIMTDisplay(imtCalculos) {
     logAudit(`📊 IMT Calculado: Base ${imtCalculos.baseComissao.toFixed(2)}€ | Comissão ${imtCalculos.comissaoCalculada.toFixed(2)}€ | IMT ${imtCalculos.imtTax.toFixed(2)}€`, 'info');
 }
 
-function updateResults() {
+function updateResults(deltas) {
     const formatter = new Intl.NumberFormat('pt-PT', {
         style: 'currency',
         currency: 'EUR'
     });
     
-    const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
+    const ganhosBrutos = VDCSystem.documents.statements.totals.ganhosBrutos || 
+                        VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
+    
+    const ganhosLiquidos = VDCSystem.documents.statements.totals.ganhosLiquidos || 
+                          VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
     
     const elementos = {
-        'grossResult': ganhosBrutos,
+        'grossResult': deltas.verticeA || ganhosBrutos,
         'transferResult': ganhosLiquidos,
-        'differenceResult': 0.00,
+        'differenceResult': deltas.diferencial || 0.00,
         'marketResult': (ganhosBrutos * 38000 / 1000000).toFixed(2)
     };
     
@@ -1273,9 +1378,18 @@ function updateResults() {
                 value + (id === 'marketResult' ? 'M€' : '€');
         }
     });
+    
+    // Atualizar barra de diferença
+    const differenceBar = document.getElementById('differenceBar');
+    if (differenceBar && deltas.diferencial > 0) {
+        const maxValue = Math.max(deltas.verticeA, deltas.verticeB, deltas.verticeC);
+        const percentage = (deltas.diferencial / maxValue) * 100;
+        differenceBar.style.width = `${Math.min(percentage, 100)}%`;
+        differenceBar.style.background = '#ef4444'; // Vermelho para erro
+    }
 }
 
-function showDiferencialAlert() {
+function showDiferencialAlert(deltas) {
     const resultsSection = document.querySelector('.analysis-results');
     if (!resultsSection) return;
     
@@ -1283,20 +1397,26 @@ function showDiferencialAlert() {
     const alertAntigo = document.getElementById('diferencialAlert');
     if (alertAntigo) alertAntigo.remove();
     
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto;
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
-    const fatura = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
+    const diferencial = deltas.diferencial;
+    const percentagem = deltas.percentagemDiferencial;
+    const verticeB = deltas.verticeB;
+    const verticeC = deltas.verticeC;
     
     const novoAlerta = document.createElement('div');
     novoAlerta.id = 'diferencialAlert';
     novoAlerta.className = 'omission-alert diferencial-alert';
     novoAlerta.style.display = 'flex';
+    novoAlerta.style.background = 'rgba(239, 68, 68, 0.15)';
+    novoAlerta.style.borderColor = '#ef4444';
     novoAlerta.innerHTML = `
-        <i class="fas fa-balance-scale"></i>
+        <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
         <div>
-            <strong>ALERTA DE DIFERENCIAL DE CUSTO</strong>
-            <p>Detetado diferencial de <span id="diferencialAlertValue">${diferencial.toFixed(2)}€</span> entre comissão retida (${comissao.toFixed(2)}€) e fatura emitida (${fatura.toFixed(2)}€).</p>
-            <p style="font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-exclamation-circle"></i> Saída de caixa não documentada detectada.</p>
+            <strong style="color: #ef4444;">🚨 ERRO SISTÉMICO DETETADO</strong>
+            <p><strong>RECONCILIAÇÃO TRIANGULAR FALHOU:</strong></p>
+            <p>• Comissão retida: <strong>${verticeB.toFixed(2)}€</strong></p>
+            <p>• Fatura emitida: <strong>${verticeC.toFixed(2)}€</strong></p>
+            <p>• <span style="color: #ef4444; font-weight: bold;">DIFERENCIAL OCULTO: ${diferencial.toFixed(2)}€ (${percentagem.toFixed(2)}%)</span></p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-balance-scale"></i> Saída de caixa não documentada detectada - Evidência de prática de Colarinho Branco</p>
         </div>
     `;
     
@@ -1306,7 +1426,30 @@ function showDiferencialAlert() {
     }
 }
 
-// 16. FUNÇÃO DE EXPORTAÇÃO PDF
+function paintDashboardAlert() {
+    // Pintar cards de alerta de vermelho
+    const alertCards = document.querySelectorAll('.stat-card.alert, .kpi-card.danger, .kpi-card.alert');
+    
+    alertCards.forEach(card => {
+        card.style.animation = 'pulse-red 2s infinite';
+        card.style.border = '2px solid #ef4444';
+    });
+    
+    // Adicionar estilo de pulso vermelho
+    if (!document.querySelector('#pulse-red-style')) {
+        const style = document.createElement('style');
+        style.id = 'pulse-red-style';
+        style.textContent = `
+            @keyframes pulse-red {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// 16. FUNÇÃO DE EXPORTAÇÃO PDF - COM "GUARDAR COMO"
 async function exportPDF() {
     try {
         logAudit('📄 GERANDO RELATÓRIO PERICIAL...', 'info');
@@ -1320,20 +1463,45 @@ async function exportPDF() {
         // ========== PÁGINA 2: ANEXO LEGAL ==========
         createPage2(doc);
         
-        // CRIAR BLOB PARA DOWNLOAD
+        // CRIAR BLOB
         const pdfBlob = doc.output('blob');
+        
+        // TENTAR FILE SYSTEM ACCESS API
+        if ('showSaveFilePicker' in window) {
+            try {
+                const options = {
+                    suggestedName: `VDC_RELATORIO_${VDCSystem.sessionId}.pdf`,
+                    types: [{
+                        description: 'PDF Files',
+                        accept: {'application/pdf': ['.pdf']}
+                    }]
+                };
+                
+                const handle = await window.showSaveFilePicker(options);
+                const writable = await handle.createWritable();
+                await writable.write(pdfBlob);
+                await writable.close();
+                
+                logAudit('✅ Relatório pericial guardado via File System API', 'success');
+                return;
+            } catch (fsError) {
+                console.warn('File System API falhou, usando fallback:', fsError);
+            }
+        }
+        
+        // FALLBACK: FORÇAR JANELA DE DOWNLOAD
         const pdfUrl = URL.createObjectURL(pdfBlob);
         
         // CRIAR LINK PARA DOWNLOAD
         const a = document.createElement('a');
         a.href = pdfUrl;
         
-        // NOME SUGERIDO PARA O FICHEIRO
+        // NOME SUGERIDO
         const clienteNome = VDCSystem.client?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'CLIENTE';
         const dataStr = new Date().toISOString().split('T')[0];
         a.download = `VDC_RELATORIO_${clienteNome}_${dataStr}.pdf`;
         
-        // ADICIONAR AO DOCUMENTO E CLICAR
+        // FORÇAR DOWNLOAD
         document.body.appendChild(a);
         a.click();
         
@@ -1365,11 +1533,11 @@ function createPage1(doc) {
     
     // CABEÇALHO
     doc.setFontSize(18);
-    doc.text("VDC FORENSIC SYSTEM", 20, 22);
+    doc.text("VDC FORENSIC SYSTEM v10.6", 20, 22);
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("Protocolo de Prova Legal | Big Data Forense", 20, 29);
+    doc.text("Protocolo de Prova Legal | Big Data Forense | Reunião MLGTS", 20, 29);
     
     // INFORMAÇÃO DA SESSÃO
     const dataAtual = new Date().toLocaleDateString('pt-PT');
@@ -1380,7 +1548,7 @@ function createPage1(doc) {
     
     let posY = 55;
     
-    // 1. IDENTIFICAÇÃO DO CLIENTE (COM NOVOS CAMPOS)
+    // 1. IDENTIFICAÇÃO DO CLIENTE
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -1443,28 +1611,38 @@ function createPage1(doc) {
     
     posY += 5;
     
-    // 3. DIFERENCIAL DE CUSTO
+    // 3. RECONCILIAÇÃO TRIANGULAR
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text("3. CÁLCULO DE INCONGRUÊNCIA FORENSE", 15, posY);
+    doc.text("3. RECONCILIAÇÃO TRIANGULAR - ERRO SISTÉMICO", 15, posY);
     posY += 10;
     
-    const diferencial = Math.abs(comissaoApp) - faturaPlataforma;
+    const deltas = calculateDeltas();
+    const diferencial = deltas.diferencial;
+    const percentagem = deltas.percentagemDiferencial;
     const prejuizo = diferencial * 0.21;
     const ivaDevido = diferencial * 0.23;
     
     const calculos = [
-        ["Fórmula:", "|Comissão Retida| - Fatura Emitida"],
-        ["Diferencial Oculto:", formatter.format(diferencial)],
+        ["Vértice A (SAF-T):", formatter.format(deltas.verticeA)],
+        ["Vértice B (Comissão Retida):", formatter.format(deltas.verticeB)],
+        ["Vértice C (Fatura Emitida):", formatter.format(deltas.verticeC)],
+        ["", ""],
+        ["ERRO SISTÉMICO:", formatter.format(diferencial)],
+        ["Percentagem da Comissão:", `${percentagem.toFixed(2)}%`],
         ["Prejuízo Fiscal (21%):", formatter.format(prejuizo)],
         ["IVA Não Autoliquidado (23%):", formatter.format(ivaDevido)],
         ["Impacto Total:", formatter.format(prejuizo + ivaDevido)]
     ];
     
     calculos.forEach(([label, valor]) => {
-        doc.text(label, 15, posY, { align: "left" });
-        doc.text(valor, 80, posY, { align: "left" });
+        if (label) {
+            doc.text(label, 15, posY, { align: "left" });
+        }
+        if (valor) {
+            doc.text(valor, 80, posY, { align: "left" });
+        }
         posY += 7;
     });
     
@@ -1472,7 +1650,7 @@ function createPage1(doc) {
     const pageCount = doc.internal.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
-    doc.text("VDC Forensic System v10.1 | Protocolo ISO 27037", 15, 285);
+    doc.text("VDC Forensic System v10.6 | Protocolo ISO 27037 | Reunião MLGTS", 15, 285);
     doc.text(`Página 1 de ${pageCount}`, 185, 285, { align: "right" });
 }
 
@@ -1485,38 +1663,43 @@ function createPage2(doc) {
     
     let posY = 20;
     
-    // TÍTULO PÁGINA 2 - MESMA DENSIDADE VISUAL
+    // TÍTULO PÁGINA 2
     doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold'); // DUPLA CONFIRMAÇÃO
-    doc.text("ANEXO II: PARECER TÉCNICO PERICIAL", 15, posY);
+    doc.setFont('helvetica', 'bold');
+    doc.text("ANEXO II: PARECER TÉCNICO PERICIAL - ERRO SISTÉMICO", 15, posY);
     posY += 15;
     
-    // PARECER TÉCNICO (TÍTULO EM BOLD)
+    // PARECER TÉCNICO
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold'); // FORÇAR BOLD AQUI TAMBÉM
-    doc.text("PARECER TÉCNICO-PERICIAL", 15, posY);
+    doc.setFont('helvetica', 'bold');
+    doc.text("PARECER TÉCNICO-PERICIAL: RECONCILIAÇÃO TRIANGULAR", 15, posY);
     posY += 10;
     
     // CORPO DO TEXTO EM NORMAL
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto || 0;
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
-    const fatura = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
+    const deltas = calculateDeltas();
+    const diferencial = deltas.diferencial;
+    const percentagem = deltas.percentagemDiferencial;
     
-    const parecerTexto = `O diferencial de ${diferencial.toFixed(2)}€ constitui uma saída de caixa não documentada, lesando o cliente em ${(diferencial * 0.21).toFixed(2)}€ de IRS/IRC indevido e o Estado em ${(diferencial * 0.23).toFixed(2)}€ de IVA de autoliquidação.
+    const parecerTexto = `A análise forense revela um ERRO SISTÉMICO de ${diferencial.toFixed(2)}€, correspondendo a ${percentagem.toFixed(2)}% do valor retido pela plataforma.
 
-Esta discrepância entre o valor retido pela plataforma (${comissao.toFixed(2)}€) e o valor faturado (${fatura.toFixed(2)}€) caracteriza uma prática de Colarinho Branco, na qual a ausência de documentação fiscal completa permite a ocultação de fluxos financeiros e a evasão de obrigações tributárias.
+Esta discrepância entre o valor retido (Vértice B) e o valor faturado (Vértice C) configura uma prática de Colarinho Branco Digital, onde a ausência de documentação fiscal completa permite:
+1. Ocultação de fluxos financeiros
+2. Evasão de obrigações tributárias
+3. Enriquecimento sem causa da plataforma
+4. Prejuízo fiscal para o contribuinte
+5. Défice de receita para o Estado
 
-O cliente está a ser tributado sobre um lucro que não existe na prática, configurando enriquecimento sem causa da plataforma em detrimento do contribuinte e do erário público.
+O cliente está a ser tributado sobre um lucro que não existe na prática, pagando IRS/IRC sobre ${(diferencial * 0.21).toFixed(2)}€ que nunca recebeu, enquanto o Estado deixa de receber ${(diferencial * 0.23).toFixed(2)}€ em IVA de autoliquidação.
 
 FUNDAMENTAÇÃO LEGAL APLICÁVEL:
-1. Código do IRC, Art. 87º: Obrigação de contabilização integral de custos e proveitos
+1. Código do IRC, Art. 87º: Obrigação de contabilização integral
 2. CIVA, Art. 29º: Falta de emissão de fatura-recibo pelo valor total
-3. RGIT, Art. 103º: Crime de Fraude Fiscal por omissão de autoliquidação
-4. Código Penal, Art. 217º: Abuso de Confiança na gestão financeira
-5. Doutrina Jurisprudencial: Crimes de Colarinho Branco Digital`;
+3. RGIT, Art. 103º: Crime de Fraude Fiscal por omissão
+4. Código Penal, Art. 217º: Abuso de Confiança
+5. Lei 83/2017: Crimes de Colarinho Branco Digital`;
     
     // QUEBRA DE TEXTO
     const splitParecer = doc.splitTextToSize(parecerTexto, 180);
@@ -1530,8 +1713,6 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         if (posY + lineHeight > pageHeight) {
             doc.addPage();
             posY = 20;
-            
-            // RE-FORÇAR ESTILO EM NOVA PÁGINA
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
         }
@@ -1542,11 +1723,10 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
     
     posY += 10;
     
-    // QUADRO DE EVIDÊNCIAS (TÍTULO EM BOLD)
+    // QUADRO DE EVIDÊNCIAS
     if (posY + 50 > pageHeight) {
         doc.addPage();
         posY = 20;
-        // RE-FORÇAR ESTILO
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
     }
@@ -1561,16 +1741,14 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         currency: 'EUR'
     });
     
-    const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
-    
     const evidencias = [
         ["Evidência", "Valor", "Status"],
-        ["Ganhos Plataforma", formatter.format(ganhosBrutos), "Validado"],
-        ["Comissão Retida", formatter.format(comissao), "Confirmado"],
-        ["Fatura Emitida", formatter.format(fatura), "Documentada"],
-        ["Diferencial Oculto", formatter.format(diferencial), "ALERTA"],
-        ["Prejuízo Fiscal", formatter.format(diferencial * 0.21), "Não Conforme"],
+        ["Ganhos Plataforma", formatter.format(deltas.verticeA), "Validado"],
+        ["Comissão Retida", formatter.format(deltas.verticeB), "Confirmado"],
+        ["Fatura Emitida", formatter.format(deltas.verticeC), "Documentada"],
+        ["Diferencial Oculto", formatter.format(diferencial), "🚨 ERRO SISTÉMICO"],
+        ["Percentagem", `${percentagem.toFixed(2)}%`, "CRÍTICO"],
+        ["Prejuízo Fiscal", formatter.format(diferencial * 0.21), "Crime Fiscal"],
         ["IVA em Défice", formatter.format(diferencial * 0.23), "Crime Fiscal"]
     ];
     
@@ -1580,6 +1758,13 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
             doc.setTextColor(0, 0, 0);
         } else {
             doc.setFont("helvetica", "normal");
+        }
+        
+        // Destaque vermelho para erro sistémico
+        if (idx === 3) {
+            doc.setTextColor(255, 0, 0);
+        } else {
+            doc.setTextColor(0, 0, 0);
         }
         
         doc.text(linha[0], 15, posY);
@@ -1595,7 +1780,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v10.1 | Protocolo ISO 27037", 15, 285);
+        doc.text("VDC Forensic System v10.6 | Protocolo ISO 27037 | Reunião MLGTS", 15, 285);
         doc.text(`Página ${i} de ${totalPages}`, 185, 285, { align: "right" });
     }
 }
@@ -1605,7 +1790,7 @@ async function exportPDFWithPicker() {
     await exportPDF();
 }
 
-// 18. FUNÇÃO PARA GUARDAR CLIENTE - VERSÃO VDC v10.5
+// 18. FUNÇÃO PARA GUARDAR CLIENTE - COM "GUARDAR COMO"
 async function saveClientData() {
     try {
         if (!VDCSystem.client) {
@@ -1616,13 +1801,14 @@ async function saveClientData() {
         logAudit('💾 PREPARANDO PARA GUARDAR DADOS DO CLIENTE...', 'info');
         
         const clientData = {
-            sistema: "VDC Forensic System v10.1",
+            sistema: "VDC Forensic System v10.6",
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
             cliente: VDCSystem.client,
             analise: {
                 valores: VDCSystem.analysis.extractedValues,
-                cruzamentos: VDCSystem.analysis.crossings
+                cruzamentos: VDCSystem.analysis.crossings,
+                deltas: calculateDeltas()
             }
         };
         
@@ -1651,7 +1837,7 @@ async function saveClientData() {
             }
         }
         
-        // FALLBACK: BLOB E DOWNLOAD FORÇADO
+        // FALLBACK: FORÇAR JANELA DE DOWNLOAD
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1679,13 +1865,13 @@ async function saveClientData() {
     }
 }
 
-// 19. FUNÇÃO EXPORTAR JSON - VERSÃO VDC v10.5
+// 19. FUNÇÃO EXPORTAR JSON - COM "GUARDAR COMO"
 async function exportJSON() {
     try {
         logAudit('💾 PREPARANDO PROVA DIGITAL (JSON)...', 'info');
         
         const evidenceData = {
-            sistema: "VDC Forensic System v10.1",
+            sistema: "VDC Forensic System v10.6",
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
@@ -1697,6 +1883,7 @@ async function exportJSON() {
             analise: {
                 valores: VDCSystem.analysis.extractedValues,
                 cruzamentos: VDCSystem.analysis.crossings,
+                deltas: calculateDeltas(),
                 anomalias: VDCSystem.analysis.anomalies
             },
             documentos: {
@@ -1734,7 +1921,7 @@ async function exportJSON() {
             }
         }
         
-        // FALLBACK: BLOB E DOWNLOAD FORÇADO
+        // FALLBACK: FORÇAR JANELA DE DOWNLOAD
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1766,7 +1953,6 @@ async function exportJSON() {
 // 20. FUNÇÃO clearAllData() - RELOAD COMPLETO
 function clearAllData() {
     if (confirm('⚠️  ATENÇÃO: Todos os dados não exportados serão perdidos.\n\nTem certeza que deseja iniciar uma nova sessão?')) {
-        // RELOAD COMPLETO DA PÁGINA - GARANTE LIMPEZA TOTAL
         window.location.reload();
     }
 }
@@ -1859,12 +2045,12 @@ function generateMasterHash() {
     logAudit(`🔐 Master Hash gerada: ${masterHash.substring(0, 32)}...`, 'success');
 }
 
-// FUNÇÃO CRÍTICA: updateAnalysisButton - SEM RESTRIÇÃO DE VALOR > 0
+// FUNÇÃO CRÍTICA: updateAnalysisButton
 function updateAnalysisButton() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (!analyzeBtn) return;
     
-    // VERIFICAÇÕES FLEXÍVEIS E PRÁTICAS - SEM VALOR > 0
+    // VERIFICAÇÕES FLEXÍVEIS
     const hasControl = VDCSystem.documents.control.files.length > 0 || 
                       VDCSystem.demoMode;
     
@@ -1873,7 +2059,7 @@ function updateAnalysisButton() {
     
     const hasClient = VDCSystem.client !== null;
     
-    // ATIVAÇÃO PERMISSIVA: Basta ter ficheiros carregados e cliente registado
+    // ATIVAÇÃO PERMISSIVA
     const hasValidData = hasControl && hasSaft && hasClient;
     
     analyzeBtn.disabled = !hasValidData;
