@@ -67,9 +67,14 @@
                             <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
                             <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
                         </div>
-                        <button id="registerClientBtn" class="btn-primary">
-                            <i class="fas fa-save"></i> REGISTAR CLIENTE
-                        </button>
+                        <div class="client-buttons">
+                            <button id="registerClientBtn" class="btn-primary">
+                                <i class="fas fa-save"></i> REGISTAR CLIENTE
+                            </button>
+                            <button id="saveClientBtn" class="btn-secondary" onclick="saveClientData()" disabled>
+                                <i class="fas fa-download"></i> GUARDAR CLIENTE
+                            </button>
+                        </div>
                     </div>
                     <div id="clientStatus" class="client-status" style="display: none;">
                         <i class="fas fa-check-circle"></i>
@@ -77,7 +82,7 @@
                     </div>
                 </div>
 
-                <!-- Módulo DAC7 (NOVO) -->
+                <!-- Módulo DAC7 -->
                 <div class="dac7-module">
                     <h3><i class="fas fa-file-contract"></i> MÓDULO DAC7</h3>
                     <div class="form-group">
@@ -199,7 +204,7 @@
                     </div>
                 </section>
 
-                <!-- Taxa IMT (NOVA) -->
+                <!-- Taxa IMT -->
                 <section class="imt-section">
                     <h3><i class="fas fa-landmark"></i> CONTRIBUIÇÃO DE REGULAÇÃO (IMT)</h3>
                     <div class="imt-grid">
@@ -342,10 +347,10 @@
                     <button class="btn-secondary" onclick="exportJSON()">
                         <i class="fas fa-code"></i> PROVA DIGITAL (JSON)
                     </button>
-                    <button class="btn-secondary" onclick="exportPDF()">
+                    <button class="btn-secondary" onclick="exportPDFWithPicker()">
                         <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
                     </button>
-                    <button class="btn-secondary" onclick="clearSession()">
+                    <button class="btn-secondary" onclick="clearAllData()">
                         <i class="fas fa-redo"></i> NOVA SESSÃO
                     </button>
                 </div>
