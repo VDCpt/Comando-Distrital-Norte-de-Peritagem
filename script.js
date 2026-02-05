@@ -1,10 +1,10 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v10.1
 // PROTOCOLO DE PROVA LEGAL - BIG DATA FORENSE
-// CORREÇÃO COMPLETA DA ATIVAÇÃO DA ANÁLISE
+// CÓDIGO LIMPO - SEM VALORES FANTASMA
 // ============================================
 
-// 1. ESTADO DO SISTEMA - SEM VALORES FIXOS
+// 1. ESTADO DO SISTEMA - TOTALMENTE ZERADO
 const VDCSystem = {
     version: 'v10.1',
     sessionId: null,
@@ -190,7 +190,7 @@ function setupYearSelector() {
     selYear.addEventListener('change', (e) => {
         VDCSystem.selectedYear = parseInt(e.target.value);
         logAudit(`Ano fiscal alterado para: ${VDCSystem.selectedYear}`, 'info');
-        resetDashboard();
+        updateAnalysisButton();
     });
 }
 
@@ -209,7 +209,7 @@ function setupPlatformSelector() {
         }
         
         logAudit(`Plataforma selecionada: ${platformName}`, 'info');
-        resetDashboard();
+        updateAnalysisButton();
     });
 }
 
@@ -247,13 +247,11 @@ function setupEventListeners() {
         });
     }
     
-    // Control File - COM LIMPEZA DE CACHE
+    // Control File - SEM LIMPEZA DE CACHE
     const controlFile = document.getElementById('controlFile');
     if (controlFile) {
         controlFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                // LIMPAR CACHE ANTES DE PROCESSAR
-                resetDashboard();
                 const file = e.target.files[0];
                 processControlFile(file);
                 updateFileList('controlFileList', [file]);
@@ -261,13 +259,11 @@ function setupEventListeners() {
         });
     }
     
-    // SAF-T Files - COM LIMPEZA DE CACHE
+    // SAF-T Files - SEM LIMPEZA DE CACHE
     const saftFile = document.getElementById('saftFile');
     if (saftFile) {
         saftFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                // LIMPAR CACHE ANTES DE PROCESSAR
-                resetDashboard();
                 const files = Array.from(e.target.files);
                 processSaftFiles(files);
                 updateFileList('saftFileList', files);
@@ -276,13 +272,11 @@ function setupEventListeners() {
         });
     }
     
-    // Platform Invoices - COM LIMPEZA DE CACHE
+    // Platform Invoices - SEM LIMPEZA DE CACHE
     const invoiceFile = document.getElementById('invoiceFile');
     if (invoiceFile) {
         invoiceFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                // LIMPAR CACHE ANTES DE PROCESSAR
-                resetDashboard();
                 const files = Array.from(e.target.files);
                 processInvoiceFiles(files);
                 updateFileList('invoiceFileList', files);
@@ -291,13 +285,11 @@ function setupEventListeners() {
         });
     }
     
-    // Bank Statements - COM LIMPEZA DE CACHE
+    // Bank Statements - SEM LIMPEZA DE CACHE
     const statementFile = document.getElementById('statementFile');
     if (statementFile) {
         statementFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                // LIMPAR CACHE ANTES DE PROCESSAR
-                resetDashboard();
                 const files = Array.from(e.target.files);
                 processStatementFiles(files);
                 updateFileList('statementFileList', files);
@@ -322,7 +314,7 @@ function setupDemoButton() {
     }
 }
 
-// 5. FUNÇÃO LOAD DEMO DATA - CORRIGIDA PARA ATIVAR ANÁLISE
+// 5. FUNÇÃO LOAD DEMO DATA - ÚNICO LOCAL COM VALORES
 function loadDemoData() {
     if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
         try {
@@ -330,7 +322,7 @@ function loadDemoData() {
             
             // LIMPAR ESTADO PRIMEIRO
             clearExtractedValues();
-            resetDashboard();
+            resetDashboardDisplay();
             
             // CARREGAR VALORES DE DEMO (APENAS AQUI)
             VDCSystem.analysis.extractedValues = {
@@ -457,7 +449,7 @@ function loadDemoData() {
     }
 }
 
-// 6. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS (CAPTURAS DINÂMICAS)
+// 6. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS (FOLHA EM BRANCO)
 async function processControlFile(file) {
     try {
         logAudit(`Processando ficheiro de controlo: ${file.name}`, 'info');
@@ -519,7 +511,7 @@ function extractValuesFromControlFile(text) {
         }
     });
     
-    // VERIFICAÇÃO DE PARSING - CORREÇÃO ADICIONADA
+    // VERIFICAÇÃO DE PARSING
     const totalExtracted = Object.values(extractedValues).filter(v => v > 0).length;
     if (totalExtracted === 0 && text.length > 0) {
         console.warn('⚠️ Ficheiro de controlo lido, mas nenhum valor numérico encontrado');
@@ -553,12 +545,7 @@ async function processSaftFiles(files) {
         logAudit(`Total Bruto: ${totalGross.toFixed(2)}€ | IVA 6%: ${totalIVA6.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.saft.files = files;
-        
-        // SINCRONIZAÇÃO DE DASHBOARD - CORREÇÃO ADICIONADA
-        setTimeout(() => {
-            updateDashboard();
-            updateAnalysisButton();
-        }, 100);
+        updateAnalysisButton();
         
     } catch (error) {
         console.error('Erro no processamento SAF-T:', error);
@@ -594,11 +581,6 @@ function extractValuesFromSaftFile(text) {
         });
     }
     
-    // VERIFICAÇÃO DE PARSING - CORREÇÃO ADICIONADA
-    if (values.gross === 0 && text.length > 100) {
-        console.warn('⚠️ Ficheiro SAF-T lido, mas valor bruto não encontrado');
-    }
-    
     return values;
 }
 
@@ -606,86 +588,41 @@ async function processInvoiceFiles(files) {
     try {
         logAudit(`Processando ${files.length} faturas...`, 'info');
         
-        let totalCommission = 0;
-        let totalInvoiceValue = 0;
-        let pdfsToProcess = 0;
+        // LIMPAR ACUMULADOR ANTES DE PROCESSAR
+        VDCSystem.documents.invoices.totals = { 
+            commission: 0, 
+            iva23: 0, 
+            invoiceValue: 0 
+        };
+        
+        VDCSystem.analysis.extractedValues.platformCommission = 0;
+        VDCSystem.analysis.extractedValues.faturaPlataforma = 0;
         
         for (const file of files) {
-            if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-                pdfsToProcess++;
-                // Processamento PDF especial
-                try {
-                    const values = await extractValuesFromPDF(file);
-                    totalCommission += values.commission || 0;
-                    totalInvoiceValue += values.invoiceValue || 0;
-                    
-                    if (values.commission === 0 && values.invoiceValue === 0) {
-                        console.warn('⚠️ PDF processado mas nenhum valor encontrado:', file.name);
-                    }
-                } catch (pdfError) {
-                    console.warn('⚠️ Erro ao processar PDF:', file.name, pdfError);
-                    // Tentar extração de texto simples
-                    const text = await readFileAsText(file);
-                    const values = extractValuesFromInvoiceFile(text);
-                    totalCommission += values.commission || 0;
-                    totalInvoiceValue += values.invoiceValue || 0;
-                }
-            } else {
-                const text = await readFileAsText(file);
-                const values = extractValuesFromInvoiceFile(text);
-                totalCommission += values.commission || 0;
-                totalInvoiceValue += values.invoiceValue || 0;
-            }
+            const text = await readFileAsText(file);
+            
+            // EXTRAIR VALORES DE FATURAS - FOLHA EM BRANCO
+            const values = extractValuesFromInvoiceFile(text);
+            
+            // APENAS OS VALORES EXTRAÍDOS DO FICHEIRO
+            VDCSystem.documents.invoices.totals.commission += values.commission || 0;
+            VDCSystem.documents.invoices.totals.invoiceValue += values.invoiceValue || 0;
+            
+            VDCSystem.analysis.extractedValues.platformCommission += values.commission || 0;
+            VDCSystem.analysis.extractedValues.faturaPlataforma += values.invoiceValue || 0;
         }
         
-        // ATUALIZAR VALORES EXTRAÍDOS
-        VDCSystem.analysis.extractedValues.platformCommission = totalCommission;
-        VDCSystem.analysis.extractedValues.faturaPlataforma = totalInvoiceValue;
-        
-        logAudit(`✅ ${files.length} faturas processadas (${pdfsToProcess} PDFs)`, 'success');
-        logAudit(`Comissão Total: ${totalCommission.toFixed(2)}€ | Valor Fatura: ${totalInvoiceValue.toFixed(2)}€`, 'info');
+        // SEM VALORES FICTÍCIOS - SE NÃO HOUVER FICHEIRO, VALOR É 0
+        logAudit(`✅ ${files.length} faturas processadas`, 'success');
+        logAudit(`Comissão Total: ${VDCSystem.documents.invoices.totals.commission.toFixed(2)}€ | Valor Fatura: ${VDCSystem.documents.invoices.totals.invoiceValue.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.invoices.files = files;
-        
-        // SINCRONIZAÇÃO DE DASHBOARD - CORREÇÃO ADICIONADA
-        setTimeout(() => {
-            updateDashboard();
-            updateAnalysisButton();
-        }, 100);
+        updateAnalysisButton();
         
     } catch (error) {
         console.error('Erro no processamento de faturas:', error);
         logAudit(`❌ Erro no processamento de faturas: ${error.message}`, 'error');
     }
-}
-
-async function extractValuesFromPDF(file) {
-    // Simulação de extração de PDF - em produção usar biblioteca como pdf.js
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            // Simulação: para PDFs, retornar valores baseados no nome ou tamanho
-            const values = { commission: 0, invoiceValue: 0 };
-            
-            // Tentar extrair do nome do arquivo
-            const fileName = file.name.toLowerCase();
-            if (fileName.includes('comissao') || fileName.includes('commission')) {
-                values.commission = Math.random() * 1000;
-            }
-            if (fileName.includes('fatura') || fileName.includes('invoice')) {
-                values.invoiceValue = Math.random() * 1500;
-            }
-            
-            // Se não encontrou no nome, usar valores padrão
-            if (values.commission === 0 && values.invoiceValue === 0) {
-                values.commission = 500;
-                values.invoiceValue = 1200;
-            }
-            
-            resolve(values);
-        };
-        reader.readAsArrayBuffer(file);
-    });
 }
 
 function extractValuesFromInvoiceFile(text) {
@@ -732,12 +669,7 @@ async function processStatementFiles(files) {
         logAudit(`Transferência Total: ${totalTransfer.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.statements.files = files;
-        
-        // SINCRONIZAÇÃO DE DASHBOARD - CORREÇÃO ADICIONADA
-        setTimeout(() => {
-            updateDashboard();
-            updateAnalysisButton();
-        }, 100);
+        updateAnalysisButton();
         
     } catch (error) {
         console.error('Erro no processamento de extratos:', error);
@@ -799,7 +731,7 @@ function clearExtractedValues() {
         imtBase: 0,
         imtTax: 0,
         imtTotal: 0,
-        dac7Value: VDCSystem.analysis.extractedValues.dac7Value || 0,
+        dac7Value: 0,
         dac7Discrepancy: 0,
         valorIliquido: 0,
         iva6Percent: 0,
@@ -808,8 +740,8 @@ function clearExtractedValues() {
     };
 }
 
-function resetDashboard() {
-    // Resetar valores de exibição
+function resetDashboardDisplay() {
+    // Resetar apenas valores de exibição
     const elementos = [
         'kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice',
         'valCamp', 'valTips', 'valCanc',
@@ -824,13 +756,6 @@ function resetDashboard() {
             elemento.textContent = id === 'marketResult' ? '0,00M€' : '0,00€';
         }
     });
-    
-    // LIMPAR CAMPOS DO FORMULÁRIO (INCLUINDO OS NOVOS)
-    document.getElementById('clientName').value = '';
-    document.getElementById('clientNIF').value = '';
-    document.getElementById('clientPhone').value = '';
-    document.getElementById('clientEmail').value = '';
-    document.getElementById('clientAddress').value = '';
     
     // Resetar barras de progresso
     document.querySelectorAll('.bar-fill').forEach(bar => {
@@ -854,16 +779,27 @@ function resetDashboard() {
     const dac7Result = document.getElementById('dac7Result');
     if (dac7Result) dac7Result.style.display = 'none';
     
-    // Resetar cliente
-    const clientStatus = document.getElementById('clientStatus');
-    if (clientStatus) clientStatus.style.display = 'none';
-    VDCSystem.client = null;
-    
     // Resetar gráfico
     if (VDCSystem.chart) {
         VDCSystem.chart.data.datasets[0].data = [0, 0, 0, 0];
         VDCSystem.chart.update();
     }
+}
+
+function resetDashboard() {
+    resetDashboardDisplay();
+    
+    // LIMPAR CAMPOS DO FORMULÁRIO
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientNIF').value = '';
+    document.getElementById('clientPhone').value = '';
+    document.getElementById('clientEmail').value = '';
+    document.getElementById('clientAddress').value = '';
+    
+    // Resetar cliente
+    const clientStatus = document.getElementById('clientStatus');
+    if (clientStatus) clientStatus.style.display = 'none';
+    VDCSystem.client = null;
     
     // DESATIVAR MODO DEMO
     VDCSystem.demoMode = false;
@@ -1165,7 +1101,7 @@ function updateChartWithData() {
     VDCSystem.chart.update();
 }
 
-// 15. FUNÇÕES DE ANÁLISE FORENSE - CORRIGIDA COM VERIFICAÇÕES
+// 15. FUNÇÕES DE ANÁLISE FORENSE - CORRIGIDA
 async function performForensicAnalysis() {
     try {
         console.log('🚀 INICIANDO ANÁLISE FORENSE...');
@@ -1173,9 +1109,7 @@ async function performForensicAnalysis() {
             client: VDCSystem.client ? 'Registado' : 'NÃO REGISTADO',
             controlFiles: VDCSystem.documents.control.files.length,
             saftFiles: VDCSystem.documents.saft.files.length,
-            demoMode: VDCSystem.demoMode,
-            ganhosBrutos: VDCSystem.analysis.extractedValues.ganhosBrutos,
-            saftGross: VDCSystem.analysis.extractedValues.saftGross
+            demoMode: VDCSystem.demoMode
         });
         
         // VERIFICAÇÃO DE SEGURANÇA
@@ -1372,7 +1306,7 @@ function showDiferencialAlert() {
     }
 }
 
-// 16. FUNÇÃO DE EXPORTAÇÃO PDF (COM CORREÇÃO DE CONTRASTE)
+// 16. FUNÇÃO DE EXPORTAÇÃO PDF
 async function exportPDF() {
     try {
         logAudit('📄 GERANDO RELATÓRIO PERICIAL...', 'info');
@@ -1386,48 +1320,30 @@ async function exportPDF() {
         // ========== PÁGINA 2: ANEXO LEGAL ==========
         createPage2(doc);
         
-        // ABRIR EM NOVA JANELA PARA ESCOLHA DE DESTINO
-        const pdfDataUri = doc.output('datauristring');
-        const newWindow = window.open();
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Relatório Pericial VDC - ${VDCSystem.sessionId}</title>
-                <style>
-                    body { margin: 0; padding: 20px; background: #f5f5f5; }
-                    iframe { width: 100%; height: calc(100vh - 40px); border: 2px solid #333; border-radius: 8px; }
-                    .controls { 
-                        margin-bottom: 15px; 
-                        display: flex; 
-                        gap: 10px; 
-                        justify-content: center;
-                    }
-                    button { 
-                        padding: 10px 20px; 
-                        background: #3b82f6; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 4px; 
-                        cursor: pointer;
-                        font-family: Arial, sans-serif;
-                        font-size: 14px;
-                    }
-                    button:hover { background: #2563eb; }
-                </style>
-            </head>
-            <body>
-                <div class="controls">
-                    <button onclick="window.print()">🖨️ IMPRIMIR / GUARDAR PDF</button>
-                    <button onclick="window.close()">❌ FECHAR</button>
-                </div>
-                <iframe src="${pdfDataUri}"></iframe>
-            </body>
-            </html>
-        `);
+        // CRIAR BLOB PARA DOWNLOAD
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
         
-        logAudit('✅ Relatório pericial gerado - Abrindo em nova janela', 'success');
-        logAudit('Utilize a opção "Imprimir" do navegador para guardar como PDF', 'info');
+        // CRIAR LINK PARA DOWNLOAD
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        
+        // NOME SUGERIDO PARA O FICHEIRO
+        const clienteNome = VDCSystem.client?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'CLIENTE';
+        const dataStr = new Date().toISOString().split('T')[0];
+        a.download = `VDC_RELATORIO_${clienteNome}_${dataStr}.pdf`;
+        
+        // ADICIONAR AO DOCUMENTO E CLICAR
+        document.body.appendChild(a);
+        a.click();
+        
+        // LIMPAR
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(pdfUrl);
+        }, 100);
+        
+        logAudit('✅ Relatório pericial gerado - Download iniciado', 'success');
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
@@ -1689,7 +1605,7 @@ async function exportPDFWithPicker() {
     await exportPDF();
 }
 
-// 18. FUNÇÃO PARA GUARDAR CLIENTE - CORRIGIDA COM SALVAMENTO EM FICHEIRO
+// 18. FUNÇÃO PARA GUARDAR CLIENTE - VERSÃO VDC v10.5
 async function saveClientData() {
     try {
         if (!VDCSystem.client) {
@@ -1712,17 +1628,39 @@ async function saveClientData() {
         
         const jsonStr = JSON.stringify(clientData, null, 2);
         
-        // CRIAR BLOB E DOWNLOAD
+        // TENTAR FILE SYSTEM ACCESS API
+        if ('showSaveFilePicker' in window) {
+            try {
+                const options = {
+                    suggestedName: `VDC_CLIENTE_${VDCSystem.client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${VDCSystem.client.nif}.json`,
+                    types: [{
+                        description: 'JSON Files',
+                        accept: {'application/json': ['.json']}
+                    }]
+                };
+                
+                const handle = await window.showSaveFilePicker(options);
+                const writable = await handle.createWritable();
+                await writable.write(jsonStr);
+                await writable.close();
+                
+                logAudit(`✅ Dados do cliente guardados via File System API: ${VDCSystem.client.name}`, 'success');
+                return;
+            } catch (fsError) {
+                console.warn('File System API falhou, usando fallback:', fsError);
+            }
+        }
+        
+        // FALLBACK: BLOB E DOWNLOAD FORÇADO
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         
-        // NOME DO FICHEIRO COM DATA E NOME DO CLIENTE
-        const nomeCliente = VDCSystem.client.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const dataStr = new Date().toISOString().split('T')[0];
-        a.download = `VDC_CLIENTE_${nomeCliente}_${dataStr}.json`;
+        // NOME SUGERIDO
+        a.download = `VDC_CLIENTE_${VDCSystem.client.name.replace(/[^a-zA-Z0-9]/g, '_')}_${VDCSystem.client.nif}.json`;
         
+        // FORÇAR DOWNLOAD
         document.body.appendChild(a);
         a.click();
         
@@ -1731,72 +1669,6 @@ async function saveClientData() {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }, 100);
-        
-        // TAMBÉM CRIAR VERSÃO PARA IMPRESSÃO
-        const newWindow = window.open();
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Dados do Cliente - ${VDCSystem.client.name}</title>
-                <style>
-                    body { 
-                        margin: 0; 
-                        padding: 30px; 
-                        background: #1e293b; 
-                        color: #f1f5f9; 
-                        font-family: 'JetBrains Mono', monospace;
-                    }
-                    pre { 
-                        background: #0f172a; 
-                        padding: 20px; 
-                        border-radius: 8px; 
-                        border: 1px solid #334155;
-                        overflow-x: auto;
-                        font-size: 12px;
-                        line-height: 1.5;
-                    }
-                    .controls { 
-                        margin-bottom: 20px; 
-                        display: flex; 
-                        gap: 10px; 
-                        justify-content: center;
-                    }
-                    button { 
-                        padding: 10px 20px; 
-                        background: #3b82f6; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 4px; 
-                        cursor: pointer;
-                        font-family: 'Inter', sans-serif;
-                        font-size: 14px;
-                    }
-                    button:hover { background: #2563eb; }
-                    button.print { background: #10b981; }
-                    button.print:hover { background: #059669; }
-                    .saved-info {
-                        background: #059669;
-                        color: white;
-                        padding: 10px;
-                        border-radius: 4px;
-                        margin-bottom: 15px;
-                        text-align: center;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="saved-info">
-                    <i class="fas fa-check-circle"></i> Ficheiro guardado como: ${a.download}
-                </div>
-                <div class="controls">
-                    <button class="print" onclick="window.print()">🖨️ IMPRIMIR / GUARDAR COMO PDF</button>
-                    <button onclick="window.close()">❌ FECHAR</button>
-                </div>
-                <pre>${jsonStr}</pre>
-            </body>
-            </html>
-        `);
         
         logAudit(`✅ Dados do cliente guardados como ficheiro: ${a.download}`, 'success');
         
@@ -1807,7 +1679,7 @@ async function saveClientData() {
     }
 }
 
-// 19. FUNÇÃO EXPORTAR JSON
+// 19. FUNÇÃO EXPORTAR JSON - VERSÃO VDC v10.5
 async function exportJSON() {
     try {
         logAudit('💾 PREPARANDO PROVA DIGITAL (JSON)...', 'info');
@@ -1839,16 +1711,40 @@ async function exportJSON() {
         
         const jsonStr = JSON.stringify(evidenceData, null, 2);
         
-        // CRIAR BLOB E DOWNLOAD
+        // TENTAR FILE SYSTEM ACCESS API
+        if ('showSaveFilePicker' in window) {
+            try {
+                const options = {
+                    suggestedName: `VDC_PROVA_${VDCSystem.sessionId}.json`,
+                    types: [{
+                        description: 'JSON Files',
+                        accept: {'application/json': ['.json']}
+                    }]
+                };
+                
+                const handle = await window.showSaveFilePicker(options);
+                const writable = await handle.createWritable();
+                await writable.write(jsonStr);
+                await writable.close();
+                
+                logAudit('✅ Prova digital guardada via File System API', 'success');
+                return;
+            } catch (fsError) {
+                console.warn('File System API falhou, usando fallback:', fsError);
+            }
+        }
+        
+        // FALLBACK: BLOB E DOWNLOAD FORÇADO
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         
-        // NOME DO FICHEIRO
+        // NOME SUGERIDO
         const dataStr = new Date().toISOString().split('T')[0];
-        a.download = `VDC_PROVA_DIGITAL_${VDCSystem.sessionId}_${dataStr}.json`;
+        a.download = `VDC_PROVA_${VDCSystem.sessionId}_${dataStr}.json`;
         
+        // FORÇAR DOWNLOAD
         document.body.appendChild(a);
         a.click();
         
@@ -1857,72 +1753,6 @@ async function exportJSON() {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }, 100);
-        
-        // TAMBÉM CRIAR VERSÃO PARA IMPRESSÃO
-        const newWindow = window.open();
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Prova Digital - ${VDCSystem.sessionId}</title>
-                <style>
-                    body { 
-                        margin: 0; 
-                        padding: 30px; 
-                        background: #1e293b; 
-                        color: #f1f5f9; 
-                        font-family: 'JetBrains Mono', monospace;
-                    }
-                    pre { 
-                        background: #0f172a; 
-                        padding: 20px; 
-                        border-radius: 8px; 
-                        border: 1px solid #334155;
-                        overflow-x: auto;
-                        font-size: 12px;
-                        line-height: 1.5;
-                    }
-                    .controls { 
-                        margin-bottom: 20px; 
-                        display: flex; 
-                        gap: 10px; 
-                        justify-content: center;
-                    }
-                    button { 
-                        padding: 10px 20px; 
-                        background: #8b5cf6; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 4px; 
-                        cursor: pointer;
-                        font-family: 'Inter', sans-serif;
-                        font-size: 14px;
-                    }
-                    button:hover { background: #7c3aed; }
-                    button.print { background: #10b981; }
-                    button.print:hover { background: #059669; }
-                    .saved-info {
-                        background: #8b5cf6;
-                        color: white;
-                        padding: 10px;
-                        border-radius: 4px;
-                        margin-bottom: 15px;
-                        text-align: center;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="saved-info">
-                    <i class="fas fa-check-circle"></i> Ficheiro guardado como: ${a.download}
-                </div>
-                <div class="controls">
-                    <button class="print" onclick="window.print()">🖨️ IMPRIMIR / GUARDAR COMO PDF</button>
-                    <button onclick="window.close()">❌ FECHAR</button>
-                </div>
-                <pre>${jsonStr}</pre>
-            </body>
-            </html>
-        `);
         
         logAudit('✅ Prova digital guardada como ficheiro', 'success');
         
@@ -2001,7 +1831,7 @@ function toggleConsole() {
     consoleElement.style.height = consoleElement.style.height === '200px' ? '120px' : '200px';
 }
 
-// 22. FUNÇÕES UTILITÁRIAS - FUNÇÃO updateAnalysisButton CORRIGIDA
+// 22. FUNÇÕES UTILITÁRIAS
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -2029,12 +1859,12 @@ function generateMasterHash() {
     logAudit(`🔐 Master Hash gerada: ${masterHash.substring(0, 32)}...`, 'success');
 }
 
-// FUNÇÃO CRÍTICA CORRIGIDA: updateAnalysisButton
+// FUNÇÃO CRÍTICA: updateAnalysisButton - SEM RESTRIÇÃO DE VALOR > 0
 function updateAnalysisButton() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (!analyzeBtn) return;
     
-    // VERIFICAÇÕES FLEXÍVEIS E PRÁTICAS - CORREÇÃO APLICADA
+    // VERIFICAÇÕES FLEXÍVEIS E PRÁTICAS - SEM VALOR > 0
     const hasControl = VDCSystem.documents.control.files.length > 0 || 
                       VDCSystem.demoMode;
     
@@ -2043,8 +1873,7 @@ function updateAnalysisButton() {
     
     const hasClient = VDCSystem.client !== null;
     
-    // ATIVAÇÃO PERMISSIVA: Aceita análise mesmo com valores zero
-    // Basta ter ficheiros carregados e cliente registado
+    // ATIVAÇÃO PERMISSIVA: Basta ter ficheiros carregados e cliente registado
     const hasValidData = hasControl && hasSaft && hasClient;
     
     analyzeBtn.disabled = !hasValidData;
@@ -2053,7 +1882,6 @@ function updateAnalysisButton() {
         analyzeBtn.style.opacity = '1';
         analyzeBtn.style.cursor = 'pointer';
         analyzeBtn.style.boxShadow = '0 0 10px rgba(0, 242, 255, 0.5)';
-        logAudit('✅ BOTÃO DE ANÁLISE ATIVADO - Ficheiros carregados e cliente registado', 'success');
     } else {
         analyzeBtn.style.opacity = '0.7';
         analyzeBtn.style.cursor = 'not-allowed';
