@@ -1,7 +1,7 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v10.1
 // PROTOCOLO DE PROVA LEGAL - BIG DATA FORENSE
-// LAYOUT CORRIGIDO E VARIÁVEIS FIXADAS
+// CORREÇÃO COMPLETA DA ATIVAÇÃO DA ANÁLISE
 // ============================================
 
 // 1. ESTADO DO SISTEMA - SEM VALORES FIXOS
@@ -155,6 +155,9 @@ async function initializeSystem() {
                 showMainInterface();
                 logAudit('✅ Sistema VDC v10.1 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Prova Legal ativado - Estado zerado', 'info');
+                
+                // ATUALIZAR BOTÃO INICIAL
+                updateAnalysisButton();
                 
             }, 300);
         }, 500);
@@ -319,7 +322,7 @@ function setupDemoButton() {
     }
 }
 
-// 5. FUNÇÃO LOAD DEMO DATA (COM VALORES FIXOS APENAS AQUI)
+// 5. FUNÇÃO LOAD DEMO DATA - CORRIGIDA PARA ATIVAR ANÁLISE
 function loadDemoData() {
     if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
         try {
@@ -373,6 +376,7 @@ function loadDemoData() {
                 registrationDate: new Date().toISOString()
             };
             
+            // ATUALIZAR VISUAL DO CLIENTE
             const status = document.getElementById('clientStatus');
             const nameDisplay = document.getElementById('clientNameDisplay');
             
@@ -382,14 +386,33 @@ function loadDemoData() {
             // ATIVAR MODO DEMO
             VDCSystem.demoMode = true;
             
-            // SIMULAR CARREGAMENTO DE FICHEIROS
-            VDCSystem.documents.control.files = [{name: 'demo_control.csv'}];
-            VDCSystem.documents.saft.files = [{name: 'demo_saft.xml'}];
-            VDCSystem.counters = { saft: 1, invoices: 0, statements: 0, total: 1 };
+            // SIMULAR CARREGAMENTO DE FICHEIROS (ESSENCIAL PARA ATIVAÇÃO)
+            VDCSystem.documents.control.files = [
+                { 
+                    name: 'demo_control.csv', 
+                    size: 1024,
+                    lastModified: Date.now(),
+                    type: 'text/csv'
+                }
+            ];
+            
+            VDCSystem.documents.saft.files = [
+                { 
+                    name: 'demo_saft.xml', 
+                    size: 2048,
+                    lastModified: Date.now(),
+                    type: 'application/xml'
+                }
+            ];
             
             // ATUALIZAR CONTADORES
+            VDCSystem.counters = { saft: 1, invoices: 0, statements: 0, total: 2 };
             document.getElementById('saftCount').textContent = '1';
-            document.getElementById('totalCount').textContent = '1';
+            document.getElementById('totalCount').textContent = '2';
+            
+            // ATUALIZAR LISTAS DE FICHEIROS VISUAIS
+            updateFileList('controlFileList', VDCSystem.documents.control.files);
+            updateFileList('saftFileList', VDCSystem.documents.saft.files);
             
             // ATUALIZAR VISUALMENTE OS BOTÕES
             const demoBtn = document.getElementById('btnDemo');
@@ -407,10 +430,13 @@ function loadDemoData() {
                 demoBtnExtra.disabled = true;
             }
             
-            // ATUALIZAR BOTÃO DE ANÁLISE
+            // ATUALIZAR BOTÃO DE ANÁLISE (PASSO CRÍTICO)
             updateAnalysisButton();
             
-            // Reativar após 3 segundos
+            logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
+            logAudit('Clique em "EXECUTAR ANÁLISE FORENSE" para ver os resultados', 'info');
+            
+            // Reativar botões demo após 3 segundos
             setTimeout(() => {
                 if (demoBtn) {
                     demoBtn.classList.remove('btn-demo-loaded');
@@ -423,9 +449,6 @@ function loadDemoData() {
                     demoBtnExtra.disabled = false;
                 }
             }, 3000);
-            
-            logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
-            logAudit('Executar "Análise Forense" para ver os resultados', 'info');
             
         } catch (error) {
             console.error('Erro ao carregar demo:', error);
@@ -455,6 +478,8 @@ async function processControlFile(file) {
         
         VDCSystem.documents.control.files = [file];
         VDCSystem.documents.control.parsedData = extractedValues;
+        
+        // ATUALIZAR BOTÃO DE ANÁLISE
         updateAnalysisButton();
         
     } catch (error) {
@@ -521,6 +546,8 @@ async function processSaftFiles(files) {
         logAudit(`Total Bruto: ${totalGross.toFixed(2)}€ | IVA 6%: ${totalIVA6.toFixed(2)}€`, 'info');
         
         VDCSystem.documents.saft.files = files;
+        
+        // ATUALIZAR BOTÃO DE ANÁLISE
         updateAnalysisButton();
         
     } catch (error) {
@@ -767,7 +794,22 @@ function resetDashboard() {
     // DESATIVAR MODO DEMO
     VDCSystem.demoMode = false;
     
+    // NÃO LIMPAR FICHEIROS - APENAS VISUAIS
+    document.getElementById('controlFileList').innerHTML = '';
+    document.getElementById('saftFileList').innerHTML = '';
+    document.getElementById('invoiceFileList').innerHTML = '';
+    document.getElementById('statementFileList').innerHTML = '';
+    
+    // Resetar contadores visuais
+    document.getElementById('saftCount').textContent = '0';
+    document.getElementById('invoiceCount').textContent = '0';
+    document.getElementById('statementCount').textContent = '0';
+    document.getElementById('totalCount').textContent = '0';
+    
     logAudit('📊 Dashboard resetado - Aguardando novos dados', 'info');
+    
+    // ATUALIZAR BOTÃO DE ANÁLISE
+    updateAnalysisButton();
 }
 
 // 8. REGISTRO DE CLIENTE - COM NOVOS CAMPOS
@@ -812,6 +854,8 @@ function registerClient() {
     if (nameDisplay) nameDisplay.textContent = name;
     
     logAudit(`✅ Cliente registado: ${name} (NIF: ${nif})`, 'success');
+    
+    // ATUALIZAR BOTÃO DE ANÁLISE
     updateAnalysisButton();
 }
 
@@ -1047,9 +1091,39 @@ function updateChartWithData() {
     VDCSystem.chart.update();
 }
 
-// 15. FUNÇÕES DE ANÁLISE FORENSE
+// 15. FUNÇÕES DE ANÁLISE FORENSE - CORRIGIDA COM VERIFICAÇÕES
 async function performForensicAnalysis() {
     try {
+        console.log('🚀 INICIANDO ANÁLISE FORENSE...');
+        console.log('🔍 VERIFICAÇÃO INICIAL:', {
+            client: VDCSystem.client ? 'Registado' : 'NÃO REGISTADO',
+            controlFiles: VDCSystem.documents.control.files.length,
+            saftFiles: VDCSystem.documents.saft.files.length,
+            demoMode: VDCSystem.demoMode,
+            ganhosBrutos: VDCSystem.analysis.extractedValues.ganhosBrutos,
+            saftGross: VDCSystem.analysis.extractedValues.saftGross
+        });
+        
+        // VERIFICAÇÃO DE SEGURANÇA
+        if (!VDCSystem.client) {
+            showError('❌ Por favor, registe um cliente primeiro');
+            return;
+        }
+        
+        if (VDCSystem.documents.control.files.length === 0 && 
+            VDCSystem.analysis.extractedValues.ganhosBrutos === 0 &&
+            !VDCSystem.demoMode) {
+            showError('❌ Por favor, carregue ficheiros de controlo ou use dados demo');
+            return;
+        }
+        
+        if (VDCSystem.documents.saft.files.length === 0 && 
+            VDCSystem.analysis.extractedValues.saftGross === 0 &&
+            !VDCSystem.demoMode) {
+            showError('❌ Por favor, carregue ficheiros SAF-T ou use dados demo');
+            return;
+        }
+        
         const analyzeBtn = document.getElementById('analyzeBtn');
         if (analyzeBtn) {
             analyzeBtn.disabled = true;
@@ -1795,7 +1869,7 @@ function toggleConsole() {
     consoleElement.style.height = consoleElement.style.height === '200px' ? '120px' : '200px';
 }
 
-// 22. FUNÇÕES UTILITÁRIAS
+// 22. FUNÇÕES UTILITÁRIAS - FUNÇÃO updateAnalysisButton CORRIGIDA
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -1823,15 +1897,37 @@ function generateMasterHash() {
     logAudit(`🔐 Master Hash gerada: ${masterHash.substring(0, 32)}...`, 'success');
 }
 
+// FUNÇÃO CRÍTICA CORRIGIDA: updateAnalysisButton
 function updateAnalysisButton() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (!analyzeBtn) return;
     
-    const hasControl = VDCSystem.documents.control.files.length > 0 || VDCSystem.demoMode;
-    const hasSaft = VDCSystem.documents.saft.files.length > 0 || VDCSystem.demoMode;
+    // VERIFICAÇÕES FLEXÍVEIS E PRÁTICAS
+    const hasControl = VDCSystem.documents.control.files.length > 0 || 
+                      VDCSystem.demoMode || 
+                      (VDCSystem.analysis.extractedValues.ganhosBrutos > 0 && 
+                       VDCSystem.analysis.extractedValues.ganhosLiquidos > 0);
+    
+    const hasSaft = VDCSystem.documents.saft.files.length > 0 || 
+                   VDCSystem.demoMode || 
+                   VDCSystem.analysis.extractedValues.saftGross > 0;
+    
     const hasClient = VDCSystem.client !== null;
     
-    analyzeBtn.disabled = !(hasControl && hasSaft && hasClient);
+    const hasValidData = hasControl && hasSaft && hasClient;
+    
+    analyzeBtn.disabled = !hasValidData;
+    
+    if (hasValidData) {
+        analyzeBtn.style.opacity = '1';
+        analyzeBtn.style.cursor = 'pointer';
+        analyzeBtn.style.boxShadow = '0 0 10px rgba(0, 242, 255, 0.5)';
+        logAudit('✅ BOTÃO DE ANÁLISE ATIVADO - Todos os requisitos preenchidos', 'success');
+    } else {
+        analyzeBtn.style.opacity = '0.7';
+        analyzeBtn.style.cursor = 'not-allowed';
+        analyzeBtn.style.boxShadow = 'none';
+    }
 }
 
 function showError(message) {
