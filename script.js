@@ -1,7 +1,7 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v10.0
 // PROTOCOLO DE PROVA LEGAL - BIG DATA FORENSE
-// RETIFICAÇÃO CRÍTICA: MEMÓRIA, ESTILO E PDF
+// REPARAÇÃO DE FLUXO E LIGAÇÃO DE COMPONENTES
 // ============================================
 
 // 1. ESTADO DO SISTEMA - SEM VALORES FIXOS
@@ -31,7 +31,6 @@ const VDCSystem = {
     },
     
     analysis: {
-        // VALORES INICIALIZADOS A NULL/0 - NADA FIXO
         extractedValues: {
             saftGross: 0,
             saftIVA6: 0,
@@ -52,7 +51,6 @@ const VDCSystem = {
             imtTotal: 0,
             dac7Value: 0,
             dac7Discrepancy: 0,
-            // NOVOS VALORES DINÂMICOS
             valorIliquido: 0,
             iva6Percent: 0,
             iva23Autoliquidacao: 0,
@@ -135,16 +133,20 @@ async function initializeSystem() {
         setupEventListeners();
         updateLoadingProgress(60);
         
-        // INICIALIZAR COM VALORES ZERADOS
-        resetDashboard();
+        // ATIVAR BOTÃO DEMO
+        setupDemoButton();
         updateLoadingProgress(70);
         
-        startClockAndDate();
+        // INICIALIZAR COM VALORES ZERADOS
+        resetDashboard();
         updateLoadingProgress(80);
+        
+        startClockAndDate();
+        updateLoadingProgress(90);
         
         // RENDERIZAR GRÁFICO VAZIO
         renderEmptyChart();
-        updateLoadingProgress(90);
+        updateLoadingProgress(95);
         
         setTimeout(() => {
             updateLoadingProgress(100);
@@ -153,9 +155,6 @@ async function initializeSystem() {
                 showMainInterface();
                 logAudit('✅ Sistema VDC v10.0 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Prova Legal ativado - Estado zerado', 'info');
-                
-                // ADICIONAR BOTÃO DEMO (apenas para desenvolvimento)
-                addDemoButton();
                 
             }, 300);
         }, 500);
@@ -166,7 +165,7 @@ async function initializeSystem() {
     }
 }
 
-// 3. CONFIGURAÇÃO DE CONTROLES
+// 3. CONFIGURAÇÃO DE CONTROLES E EVENT LISTENERS
 function setupYearSelector() {
     const selYear = document.getElementById('selYear');
     if (!selYear) return;
@@ -211,34 +210,6 @@ function setupPlatformSelector() {
     });
 }
 
-// 4. RELÓGIO COM DATA
-function startClockAndDate() {
-    function updateDateTime() {
-        const now = new Date();
-        
-        const timeString = now.toLocaleTimeString('pt-PT', { 
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const dateString = `${day}/${month}/${year}`;
-        
-        const timeElement = document.getElementById('currentTime');
-        const dateElement = document.getElementById('currentDate');
-        
-        if (timeElement) timeElement.textContent = timeString;
-        if (dateElement) dateElement.textContent = dateString;
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-}
-
-// 5. CONFIGURAÇÃO DE EVENTOS
 function setupEventListeners() {
     // Registro de cliente
     const registerBtn = document.getElementById('registerClientBtn');
@@ -267,11 +238,12 @@ function setupEventListeners() {
         });
     }
     
-    // Control File
+    // Control File - COM LIMPEZA DE CACHE
     const controlFile = document.getElementById('controlFile');
     if (controlFile) {
         controlFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
+                // LIMPAR CACHE ANTES DE PROCESSAR
                 resetDashboard();
                 const file = e.target.files[0];
                 processControlFile(file);
@@ -280,42 +252,45 @@ function setupEventListeners() {
         });
     }
     
-    // SAF-T Files
+    // SAF-T Files - COM LIMPEZA DE CACHE
     const saftFile = document.getElementById('saftFile');
     if (saftFile) {
         saftFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
+                // LIMPAR CACHE ANTES DE PROCESSAR
                 resetDashboard();
                 const files = Array.from(e.target.files);
-                processMultipleFiles('saft', files);
+                processSaftFiles(files);
                 updateFileList('saftFileList', files);
                 updateCounter('saft', files.length);
             }
         });
     }
     
-    // Platform Invoices
+    // Platform Invoices - COM LIMPEZA DE CACHE
     const invoiceFile = document.getElementById('invoiceFile');
     if (invoiceFile) {
         invoiceFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
+                // LIMPAR CACHE ANTES DE PROCESSAR
                 resetDashboard();
                 const files = Array.from(e.target.files);
-                processMultipleFiles('invoices', files);
+                processInvoiceFiles(files);
                 updateFileList('invoiceFileList', files);
                 updateCounter('invoices', files.length);
             }
         });
     }
     
-    // Bank Statements
+    // Bank Statements - COM LIMPEZA DE CACHE
     const statementFile = document.getElementById('statementFile');
     if (statementFile) {
         statementFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
+                // LIMPAR CACHE ANTES DE PROCESSAR
                 resetDashboard();
                 const files = Array.from(e.target.files);
-                processMultipleFiles('statements', files);
+                processStatementFiles(files);
                 updateFileList('statementFileList', files);
                 updateCounter('statements', files.length);
             }
@@ -329,54 +304,107 @@ function setupEventListeners() {
     }
 }
 
-// 6. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS
+// 4. ATIVAÇÃO DO BOTÃO DEMO
+function setupDemoButton() {
+    const demoBtn = document.getElementById('btnDemo');
+    if (demoBtn) {
+        demoBtn.addEventListener('click', loadDemoData);
+        demoBtn.classList.add('btn-demo-active');
+    }
+}
+
+// 5. FUNÇÃO LOAD DEMO DATA (COM VALORES FIXOS APENAS AQUI)
+function loadDemoData() {
+    if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
+        try {
+            logAudit('🧪 CARREGANDO DADOS DE DEMONSTRAÇÃO...', 'info');
+            
+            // LIMPAR ESTADO PRIMEIRO
+            clearExtractedValues();
+            resetDashboard();
+            
+            // CARREGAR VALORES DE DEMO (APENAS AQUI)
+            VDCSystem.analysis.extractedValues = {
+                saftGross: 3202.54,
+                saftIVA6: 3202.54 * 0.06,
+                platformCommission: 792.59,
+                bankTransfer: 2409.95,
+                iva23Due: 792.59 * 0.23,
+                ganhosBrutos: 3202.54,
+                comissaoApp: -792.59,
+                ganhosLiquidos: 2409.95,
+                faturaPlataforma: 239.00,
+                campanhas: 20.00,
+                gorjetas: 9.00,
+                cancelamentos: 15.60,
+                diferencialCusto: 553.59,
+                prejuizoFiscal: 116.25,
+                imtBase: 786.36,
+                imtTax: 39.32,
+                imtTotal: 825.68,
+                dac7Value: 0,
+                dac7Discrepancy: 0,
+                valorIliquido: 2409.95,
+                iva6Percent: 192.15,
+                iva23Autoliquidacao: 182.30,
+                comissaoCalculada: 792.59
+            };
+            
+            // ATIVAR MODO DEMO
+            VDCSystem.demoMode = true;
+            
+            // SIMULAR CARREGAMENTO DE FICHEIROS
+            VDCSystem.documents.control.files = [{name: 'demo_control.csv'}];
+            VDCSystem.documents.saft.files = [{name: 'demo_saft.xml'}];
+            VDCSystem.counters = { saft: 1, invoices: 0, statements: 0, total: 1 };
+            
+            // ATUALIZAR CONTADORES
+            document.getElementById('saftCount').textContent = '1';
+            document.getElementById('totalCount').textContent = '1';
+            
+            // ATUALIZAR VISUALMENTE O BOTÃO
+            const demoBtn = document.getElementById('btnDemo');
+            if (demoBtn) {
+                demoBtn.classList.add('btn-demo-loaded');
+                demoBtn.innerHTML = '<i class="fas fa-check"></i> DADOS DEMO CARREGADOS';
+                demoBtn.disabled = true;
+                
+                // Reativar após 3 segundos
+                setTimeout(() => {
+                    demoBtn.classList.remove('btn-demo-loaded');
+                    demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO';
+                    demoBtn.disabled = false;
+                }, 3000);
+            }
+            
+            // ATUALIZAR BOTÃO DE ANÁLISE
+            updateAnalysisButton();
+            
+            logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
+            logAudit('Executar "Análise Forense" para ver os resultados', 'info');
+            
+        } catch (error) {
+            console.error('Erro ao carregar demo:', error);
+            logAudit(`❌ Erro ao carregar dados demo: ${error.message}`, 'error');
+        }
+    }
+}
+
+// 6. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS (CAPTURAS DINÂMICAS)
 async function processControlFile(file) {
     try {
         logAudit(`Processando ficheiro de controlo: ${file.name}`, 'info');
         
         const text = await readFileAsText(file);
         
-        // EXEMPLO: Extração de valores de ficheiro CSV
-        const lines = text.split('\n');
-        let extractedValues = {
-            ganhosBrutos: 0,
-            comissaoApp: 0,
-            ganhosLiquidos: 0,
-            faturaPlataforma: 0,
-            campanhas: 0,
-            gorjetas: 0,
-            cancelamentos: 0
-        };
-        
-        lines.forEach(line => {
-            if (line.includes('Ganhos Brutos:')) {
-                extractedValues.ganhosBrutos = extractNumber(line);
-            } else if (line.includes('Comissão App:')) {
-                extractedValues.comissaoApp = extractNumber(line);
-            } else if (line.includes('Ganhos Líquidos:')) {
-                extractedValues.ganhosLiquidos = extractNumber(line);
-            } else if (line.includes('Fatura Plataforma:')) {
-                extractedValues.faturaPlataforma = extractNumber(line);
-            } else if (line.includes('Campanhas:')) {
-                extractedValues.campanhas = extractNumber(line);
-            } else if (line.includes('Gorjetas:')) {
-                extractedValues.gorjetas = extractNumber(line);
-            } else if (line.includes('Cancelamentos:')) {
-                extractedValues.cancelamentos = extractNumber(line);
-            }
-        });
+        // EXTRAIR VALORES DINÂMICOS DO FICHEIRO
+        const extractedValues = extractValuesFromControlFile(text);
         
         // LIMPAR ESTADO ANTES DE INJETAR NOVOS VALORES
         clearExtractedValues();
         
-        // INJETAR VALORES EXTRAÍDOS
-        VDCSystem.analysis.extractedValues.ganhosBrutos = extractedValues.ganhosBrutos;
-        VDCSystem.analysis.extractedValues.comissaoApp = extractedValues.comissaoApp;
-        VDCSystem.analysis.extractedValues.ganhosLiquidos = extractedValues.ganhosLiquidos;
-        VDCSystem.analysis.extractedValues.faturaPlataforma = extractedValues.faturaPlataforma;
-        VDCSystem.analysis.extractedValues.campanhas = extractedValues.campanhas;
-        VDCSystem.analysis.extractedValues.gorjetas = extractedValues.gorjetas;
-        VDCSystem.analysis.extractedValues.cancelamentos = extractedValues.cancelamentos;
+        // INJETAR VALORES EXTRAÍDOS DINAMICAMENTE
+        Object.assign(VDCSystem.analysis.extractedValues, extractedValues);
         
         logAudit(`✅ Controlo carregado: ${file.name}`, 'success');
         logAudit(`Valores extraídos: ${JSON.stringify(extractedValues)}`, 'info');
@@ -391,16 +419,223 @@ async function processControlFile(file) {
     }
 }
 
+function extractValuesFromControlFile(text) {
+    const lines = text.split('\n');
+    const extractedValues = {
+        ganhosBrutos: 0,
+        comissaoApp: 0,
+        ganhosLiquidos: 0,
+        faturaPlataforma: 0,
+        campanhas: 0,
+        gorjetas: 0,
+        cancelamentos: 0
+    };
+    
+    // EXEMPLO DE PARSING DE CSV
+    lines.forEach(line => {
+        if (line.includes('Ganhos Brutos:')) {
+            extractedValues.ganhosBrutos = extractNumber(line);
+        } else if (line.includes('Comissão App:')) {
+            extractedValues.comissaoApp = -extractNumber(line); // Negativo
+        } else if (line.includes('Ganhos Líquidos:')) {
+            extractedValues.ganhosLiquidos = extractNumber(line);
+        } else if (line.includes('Fatura Plataforma:')) {
+            extractedValues.faturaPlataforma = extractNumber(line);
+        } else if (line.includes('Campanhas:')) {
+            extractedValues.campanhas = extractNumber(line);
+        } else if (line.includes('Gorjetas:')) {
+            extractedValues.gorjetas = extractNumber(line);
+        } else if (line.includes('Cancelamentos:')) {
+            extractedValues.cancelamentos = extractNumber(line);
+        }
+    });
+    
+    return extractedValues;
+}
+
+async function processSaftFiles(files) {
+    try {
+        logAudit(`Processando ${files.length} ficheiros SAF-T...`, 'info');
+        
+        let totalGross = 0;
+        let totalIVA6 = 0;
+        
+        for (const file of files) {
+            const text = await readFileAsText(file);
+            
+            // EXTRAIR VALORES DO SAF-T XML OU CSV
+            const values = extractValuesFromSaftFile(text);
+            totalGross += values.gross || 0;
+            totalIVA6 += values.iva6 || 0;
+        }
+        
+        // ATUALIZAR VALORES EXTRAÍDOS
+        VDCSystem.analysis.extractedValues.saftGross = totalGross;
+        VDCSystem.analysis.extractedValues.saftIVA6 = totalIVA6;
+        
+        logAudit(`✅ ${files.length} ficheiros SAF-T processados`, 'success');
+        logAudit(`Total Bruto: ${totalGross.toFixed(2)}€ | IVA 6%: ${totalIVA6.toFixed(2)}€`, 'info');
+        
+        VDCSystem.documents.saft.files = files;
+        updateAnalysisButton();
+        
+    } catch (error) {
+        console.error('Erro no processamento SAF-T:', error);
+        logAudit(`❌ Erro no processamento SAF-T: ${error.message}`, 'error');
+    }
+}
+
+function extractValuesFromSaftFile(text) {
+    const values = { gross: 0, iva6: 0 };
+    
+    // TENTAR PARSE XML
+    if (text.includes('<GrossTotal>')) {
+        const grossMatch = text.match(/<GrossTotal>([\d,]+\.?\d*)<\/GrossTotal>/);
+        if (grossMatch) {
+            values.gross = parseFloat(grossMatch[1].replace(',', ''));
+        }
+        
+        const iva6Match = text.match(/<Tax>6%<\/Tax>.*?<TaxAmount>([\d,]+\.?\d*)<\/TaxAmount>/s);
+        if (iva6Match) {
+            values.iva6 = parseFloat(iva6Match[1].replace(',', ''));
+        }
+    }
+    // TENTAR PARSE CSV
+    else if (text.includes(';')) {
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            if (line.includes('TotalGeral')) {
+                const parts = line.split(';');
+                if (parts.length > 1) {
+                    values.gross = parseFloat(parts[1].replace(',', '.')) || 0;
+                }
+            }
+        });
+    }
+    
+    return values;
+}
+
+async function processInvoiceFiles(files) {
+    try {
+        logAudit(`Processando ${files.length} faturas...`, 'info');
+        
+        let totalCommission = 0;
+        let totalInvoiceValue = 0;
+        
+        for (const file of files) {
+            const text = await readFileAsText(file);
+            
+            // EXTRAIR VALORES DE FATURAS
+            const values = extractValuesFromInvoiceFile(text);
+            totalCommission += values.commission || 0;
+            totalInvoiceValue += values.invoiceValue || 0;
+        }
+        
+        // ATUALIZAR VALORES EXTRAÍDOS
+        VDCSystem.analysis.extractedValues.platformCommission = totalCommission;
+        VDCSystem.analysis.extractedValues.faturaPlataforma = totalInvoiceValue;
+        
+        logAudit(`✅ ${files.length} faturas processadas`, 'success');
+        logAudit(`Comissão Total: ${totalCommission.toFixed(2)}€ | Valor Fatura: ${totalInvoiceValue.toFixed(2)}€`, 'info');
+        
+        VDCSystem.documents.invoices.files = files;
+        updateAnalysisButton();
+        
+    } catch (error) {
+        console.error('Erro no processamento de faturas:', error);
+        logAudit(`❌ Erro no processamento de faturas: ${error.message}`, 'error');
+    }
+}
+
+function extractValuesFromInvoiceFile(text) {
+    const values = { commission: 0, invoiceValue: 0 };
+    
+    // PROCURAR PADRÕES COMUNS EM FATURAS
+    const lines = text.split('\n');
+    
+    lines.forEach(line => {
+        const lowerLine = line.toLowerCase();
+        
+        if (lowerLine.includes('comissão') || lowerLine.includes('commission')) {
+            const num = extractNumber(line);
+            if (num > 0) values.commission = num;
+        }
+        
+        if (lowerLine.includes('total') || lowerLine.includes('valor')) {
+            const num = extractNumber(line);
+            if (num > 0 && num > values.invoiceValue) values.invoiceValue = num;
+        }
+    });
+    
+    return values;
+}
+
+async function processStatementFiles(files) {
+    try {
+        logAudit(`Processando ${files.length} extratos bancários...`, 'info');
+        
+        let totalTransfer = 0;
+        
+        for (const file of files) {
+            const text = await readFileAsText(file);
+            
+            // EXTRAIR TRANSFERÊNCIAS DE EXTRATOS
+            const transfer = extractTransferFromStatement(text);
+            totalTransfer += transfer;
+        }
+        
+        // ATUALIZAR VALORES EXTRAÍDOS
+        VDCSystem.analysis.extractedValues.bankTransfer = totalTransfer;
+        
+        logAudit(`✅ ${files.length} extratos bancários processados`, 'success');
+        logAudit(`Transferência Total: ${totalTransfer.toFixed(2)}€`, 'info');
+        
+        VDCSystem.documents.statements.files = files;
+        updateAnalysisButton();
+        
+    } catch (error) {
+        console.error('Erro no processamento de extratos:', error);
+        logAudit(`❌ Erro no processamento de extratos: ${error.message}`, 'error');
+    }
+}
+
+function extractTransferFromStatement(text) {
+    let transfer = 0;
+    const lines = text.split('\n');
+    
+    // PROCURAR TRANSFERÊNCIAS DA PLATAFORMA
+    lines.forEach(line => {
+        const lowerLine = line.toLowerCase();
+        if (lowerLine.includes('bolt') || lowerLine.includes('uber') || 
+            lowerLine.includes('transfer') || lowerLine.includes('pagamento')) {
+            const num = extractNumber(line);
+            if (num > 0) transfer = num;
+        }
+    });
+    
+    return transfer;
+}
+
 function extractNumber(text) {
     const match = text.match(/[\d,]+\.?\d*/);
     if (match) {
-        return parseFloat(match[0].replace(',', ''));
+        return parseFloat(match[0].replace(',', '.'));
     }
     return 0;
 }
 
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+
+// 7. FUNÇÃO DE RESET E LIMPEZA
 function clearExtractedValues() {
-    // LIMPAR TODOS OS VALORES EXTRAÍDOS
     VDCSystem.analysis.extractedValues = {
         saftGross: 0,
         saftIVA6: 0,
@@ -428,54 +663,6 @@ function clearExtractedValues() {
     };
 }
 
-async function processMultipleFiles(type, files) {
-    try {
-        logAudit(`Processando ${files.length} ficheiros ${type.toUpperCase()}...`, 'info');
-        
-        if (!VDCSystem.documents[type]) {
-            VDCSystem.documents[type] = { files: [], parsedData: [], totals: {} };
-        }
-        
-        VDCSystem.documents[type].files = files;
-        
-        // EXEMPLO: Processar ficheiros SAF-T XML
-        for (const file of files) {
-            const text = await readFileAsText(file);
-            
-            if (type === 'saft') {
-                // Extrair valores do SAF-T
-                const grossMatch = text.match(/<GrossTotal>([\d,]+\.?\d*)<\/GrossTotal>/);
-                const iva6Match = text.match(/<Tax>6%<\/Tax>.*?<TaxAmount>([\d,]+\.?\d*)<\/TaxAmount>/s);
-                
-                if (grossMatch) {
-                    VDCSystem.analysis.extractedValues.saftGross = parseFloat(grossMatch[1].replace(',', ''));
-                }
-                
-                if (iva6Match) {
-                    VDCSystem.analysis.extractedValues.saftIVA6 = parseFloat(iva6Match[1].replace(',', ''));
-                }
-            }
-        }
-        
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados`, 'success');
-        updateAnalysisButton();
-        
-    } catch (error) {
-        console.error(`Erro no processamento de ${type}:`, error);
-        logAudit(`❌ Erro no processamento de ${type}: ${error.message}`, 'error');
-    }
-}
-
-function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsText(file, 'UTF-8');
-    });
-}
-
-// 7. FUNÇÃO DE RESET DO DASHBOARD
 function resetDashboard() {
     // Resetar valores de exibição
     const elementos = [
@@ -664,10 +851,9 @@ function calcularIMT() {
 
 // 12. CÁLCULO DE DIFERENCIAL DINÂMICO
 function calcularDiferencialCusto() {
-    // Usar valores extraídos
+    // Usar valores extraídos DINAMICAMENTE
     const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
     const fatura = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
-    const ganhos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
     
     // Cálculo do diferencial
     const diferencial = Math.abs(comissao) - fatura;
@@ -780,7 +966,7 @@ function renderEmptyChart() {
 function updateChartWithData() {
     if (!VDCSystem.chart) return;
     
-    // Atualizar com valores extraídos
+    // Atualizar com valores extraídos DINAMICAMENTE
     const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
     const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
     const valorIliquido = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
@@ -855,7 +1041,7 @@ function updateDashboardWithExtractedValues() {
         minimumFractionDigits: 2
     });
     
-    // Usar valores extraídos
+    // Usar valores extraídos DINAMICAMENTE
     const valores = {
         'kpiGanhos': VDCSystem.analysis.extractedValues.ganhosBrutos || 0,
         'kpiComm': -(VDCSystem.analysis.extractedValues.comissaoApp || 0),
@@ -979,82 +1165,7 @@ function showDiferencialAlert() {
     }
 }
 
-// 16. FUNÇÃO DE DEMO (ISOLADA)
-function addDemoButton() {
-    const actionButtons = document.querySelector('.action-buttons');
-    if (!actionButtons) return;
-    
-    const demoBtn = document.createElement('button');
-    demoBtn.className = 'btn-secondary';
-    demoBtn.style.marginTop = '10px';
-    demoBtn.style.background = 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)';
-    demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO';
-    demoBtn.onclick = loadDemoData;
-    
-    actionButtons.appendChild(demoBtn);
-}
-
-function loadDemoData() {
-    if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
-        try {
-            logAudit('🧪 CARREGANDO DADOS DE DEMONSTRAÇÃO...', 'info');
-            
-            // LIMPAR ESTADO PRIMEIRO
-            clearExtractedValues();
-            
-            // CARREGAR VALORES DE DEMO
-            VDCSystem.analysis.extractedValues = {
-                saftGross: 3202.54,
-                saftIVA6: 3202.54 * 0.06,
-                platformCommission: 792.59,
-                bankTransfer: 2409.95,
-                iva23Due: 792.59 * 0.23,
-                ganhosBrutos: 3202.54,
-                comissaoApp: -792.59,
-                ganhosLiquidos: 2409.95,
-                faturaPlataforma: 239.00,
-                campanhas: 20.00,
-                gorjetas: 9.00,
-                cancelamentos: 15.60,
-                diferencialCusto: 553.59,
-                prejuizoFiscal: 116.25,
-                imtBase: 786.36,
-                imtTax: 39.32,
-                imtTotal: 825.68,
-                dac7Value: 0,
-                dac7Discrepancy: 0,
-                valorIliquido: 2409.95,
-                iva6Percent: 192.15,
-                iva23Autoliquidacao: 182.30,
-                comissaoCalculada: 792.59
-            };
-            
-            // ATIVAR MODO DEMO
-            VDCSystem.demoMode = true;
-            
-            // SIMULAR CARREGAMENTO DE FICHEIROS
-            VDCSystem.documents.control.files = [{name: 'demo_control.csv'}];
-            VDCSystem.documents.saft.files = [{name: 'demo_saft.xml'}];
-            VDCSystem.counters = { saft: 1, invoices: 0, statements: 0, total: 1 };
-            
-            // ATUALIZAR CONTADORES
-            document.getElementById('saftCount').textContent = '1';
-            document.getElementById('totalCount').textContent = '1';
-            
-            // ATUALIZAR BOTÃO DE ANÁLISE
-            updateAnalysisButton();
-            
-            logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
-            logAudit('Executar "Análise Forense" para ver os resultados', 'info');
-            
-        } catch (error) {
-            console.error('Erro ao carregar demo:', error);
-            logAudit(`❌ Erro ao carregar dados demo: ${error.message}`, 'error');
-        }
-    }
-}
-
-// 17. FUNÇÃO DE EXPORTAÇÃO PDF RETIFICADA (UNIFORMIDADE DE ESTILO)
+// 16. FUNÇÃO DE EXPORTAÇÃO PDF (COM CORREÇÃO DE CONTRASTE)
 async function exportPDF() {
     try {
         logAudit('📄 GERANDO RELATÓRIO PERICIAL...', 'info');
@@ -1071,7 +1182,42 @@ async function exportPDF() {
         // ABRIR EM NOVA JANELA PARA ESCOLHA DE DESTINO
         const pdfDataUri = doc.output('datauristring');
         const newWindow = window.open();
-        newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Relatório Pericial VDC - ${VDCSystem.sessionId}</title>
+                <style>
+                    body { margin: 0; padding: 20px; background: #f5f5f5; }
+                    iframe { width: 100%; height: calc(100vh - 40px); border: 2px solid #333; border-radius: 8px; }
+                    .controls { 
+                        margin-bottom: 15px; 
+                        display: flex; 
+                        gap: 10px; 
+                        justify-content: center;
+                    }
+                    button { 
+                        padding: 10px 20px; 
+                        background: #3b82f6; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 4px; 
+                        cursor: pointer;
+                        font-family: Arial, sans-serif;
+                        font-size: 14px;
+                    }
+                    button:hover { background: #2563eb; }
+                </style>
+            </head>
+            <body>
+                <div class="controls">
+                    <button onclick="window.print()">🖨️ IMPRIMIR / GUARDAR PDF</button>
+                    <button onclick="window.close()">❌ FECHAR</button>
+                </div>
+                <iframe src="${pdfDataUri}"></iframe>
+            </body>
+            </html>
+        `);
         
         logAudit('✅ Relatório pericial gerado - Abrindo em nova janela', 'success');
         logAudit('Utilize a opção "Imprimir" do navegador para guardar como PDF', 'info');
@@ -1084,16 +1230,18 @@ async function exportPDF() {
 }
 
 function createPage1(doc) {
-    // MOLDURA FORENSE - ESTILO UNIFORME
+    // RE-FORÇAR ESTILO EXPLICITAMENTE
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    
+    // MOLDURA FORENSE
     doc.setLineWidth(1);
     doc.rect(10, 10, 190, 28);
     doc.setLineWidth(0.5);
     doc.rect(12, 12, 186, 24);
     
-    // CABEÇALHO - FORÇAR ESTILO
+    // CABEÇALHO
     doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0); // PRETO PURO
     doc.text("VDC FORENSIC SYSTEM", 20, 22);
     
     doc.setFontSize(10);
@@ -1109,7 +1257,7 @@ function createPage1(doc) {
     
     let posY = 55;
     
-    // 1. IDENTIFICAÇÃO DO CLIENTE - RE-FORÇAR ESTILO
+    // 1. IDENTIFICAÇÃO DO CLIENTE
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -1129,7 +1277,7 @@ function createPage1(doc) {
     doc.text(`Data de Análise: ${dataAtual}`, 15, posY, { align: "left" });
     posY += 12;
     
-    // 2. VALORES EXTRAÍDOS - RE-FORÇAR ESTILO
+    // 2. VALORES EXTRAÍDOS
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -1163,7 +1311,7 @@ function createPage1(doc) {
     
     posY += 5;
     
-    // 3. DIFERENCIAL DE CUSTO - RE-FORÇAR ESTILO
+    // 3. DIFERENCIAL DE CUSTO
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
@@ -1199,8 +1347,8 @@ function createPage1(doc) {
 function createPage2(doc) {
     doc.addPage();
     
-    // RE-INICIALIZAR ESTILO PARA PÁGINA 2
-    doc.setFont("helvetica", "bold");
+    // RE-FORÇAR ESTILO EXPLICITAMENTE APÓS addPage()
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
     
     let posY = 20;
@@ -1210,7 +1358,7 @@ function createPage2(doc) {
     doc.text("ANEXO II: PARECER TÉCNICO PERICIAL", 15, posY);
     posY += 15;
     
-    // PARECER TÉCNICO - FORÇAR ESTILO IDÊNTICO
+    // PARECER TÉCNICO
     doc.setFontSize(11);
     doc.text("PARECER TÉCNICO-PERICIAL", 15, posY);
     posY += 10;
@@ -1249,7 +1397,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
             posY = 20;
             
             // RE-FORÇAR ESTILO EM NOVA PÁGINA
-            doc.setFont("helvetica", "normal");
+            doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
         }
         
@@ -1263,6 +1411,9 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
     if (posY + 50 > pageHeight) {
         doc.addPage();
         posY = 20;
+        // RE-FORÇAR ESTILO
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
     }
     
     doc.setFontSize(12);
@@ -1314,7 +1465,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
     }
 }
 
-// NOVA FUNÇÃO PARA ABRIR PDF EM NOVA JANELA
+// 17. FUNÇÃO PARA ABRIR PDF
 async function exportPDFWithPicker() {
     await exportPDF();
 }
@@ -1340,48 +1491,62 @@ async function saveClientData() {
             }
         };
         
-        if (window.showSaveFilePicker) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: `CLIENTE_${VDCSystem.client.nif}_${VDCSystem.sessionId}.json`,
-                    types: [{
-                        description: 'Ficheiro JSON de Dados do Cliente',
-                        accept: { 'application/json': ['.json'] }
-                    }]
-                });
-                
-                const writable = await handle.createWritable();
-                await writable.write(JSON.stringify(clientData, null, 2));
-                await writable.close();
-                
-                logAudit(`✅ Dados do cliente guardados: ${VDCSystem.client.name} (${VDCSystem.client.nif})`, 'success');
-                
-            } catch (fsError) {
-                if (fsError.name !== 'AbortError') {
-                    throw fsError;
-                }
-                logAudit('📝 Guardar cliente cancelado pelo utilizador', 'info');
-            }
-        } else {
-            // Fallback para impressão/visualização
-            const jsonStr = JSON.stringify(clientData, null, 2);
-            const newWindow = window.open();
-            newWindow.document.write(`
-                <html>
-                <head><title>Dados do Cliente - ${VDCSystem.client.name}</title></head>
-                <body>
-                <pre style="font-family: monospace; padding: 20px;">${jsonStr}</pre>
-                <script>
-                    window.onload = function() {
-                        window.print();
+        const jsonStr = JSON.stringify(clientData, null, 2);
+        const newWindow = window.open();
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Dados do Cliente - ${VDCSystem.client.name}</title>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 30px; 
+                        background: #1e293b; 
+                        color: #f1f5f9; 
+                        font-family: 'JetBrains Mono', monospace;
                     }
-                </script>
-                </body>
-                </html>
-            `);
-            
-            logAudit(`✅ Dados do cliente abertos para impressão: ${VDCSystem.client.name}`, 'success');
-        }
+                    pre { 
+                        background: #0f172a; 
+                        padding: 20px; 
+                        border-radius: 8px; 
+                        border: 1px solid #334155;
+                        overflow-x: auto;
+                        font-size: 12px;
+                        line-height: 1.5;
+                    }
+                    .controls { 
+                        margin-bottom: 20px; 
+                        display: flex; 
+                        gap: 10px; 
+                        justify-content: center;
+                    }
+                    button { 
+                        padding: 10px 20px; 
+                        background: #3b82f6; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 4px; 
+                        cursor: pointer;
+                        font-family: 'Inter', sans-serif;
+                        font-size: 14px;
+                    }
+                    button:hover { background: #2563eb; }
+                    button.print { background: #10b981; }
+                    button.print:hover { background: #059669; }
+                </style>
+            </head>
+            <body>
+                <div class="controls">
+                    <button class="print" onclick="window.print()">🖨️ IMPRIMIR / GUARDAR</button>
+                    <button onclick="window.close()">❌ FECHAR</button>
+                </div>
+                <pre>${jsonStr}</pre>
+            </body>
+            </html>
+        `);
+        
+        logAudit(`✅ Dados do cliente abertos para impressão: ${VDCSystem.client.name}`, 'success');
         
     } catch (error) {
         console.error('Erro ao guardar cliente:', error);
@@ -1420,48 +1585,62 @@ async function exportJSON() {
             masterHash: document.getElementById('masterHashValue')?.textContent || "NÃO GERADA"
         };
         
-        if (window.showSaveFilePicker) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: `PROVA_DIGITAL_VDC_${VDCSystem.sessionId}.json`,
-                    types: [{
-                        description: 'Ficheiro JSON de Prova Digital',
-                        accept: { 'application/json': ['.json'] }
-                    }]
-                });
-                
-                const writable = await handle.createWritable();
-                await writable.write(JSON.stringify(evidenceData, null, 2));
-                await writable.close();
-                
-                logAudit('✅ Prova digital exportada (JSON) - Guardado com File System Access API', 'success');
-                
-            } catch (fsError) {
-                if (fsError.name !== 'AbortError') {
-                    throw fsError;
-                }
-                logAudit('📝 Exportação cancelada pelo utilizador', 'info');
-            }
-        } else {
-            // Abrir em nova janela para impressão
-            const jsonStr = JSON.stringify(evidenceData, null, 2);
-            const newWindow = window.open();
-            newWindow.document.write(`
-                <html>
-                <head><title>Prova Digital - ${VDCSystem.sessionId}</title></head>
-                <body>
-                <pre style="font-family: monospace; padding: 20px;">${jsonStr}</pre>
-                <script>
-                    window.onload = function() {
-                        window.print();
+        const jsonStr = JSON.stringify(evidenceData, null, 2);
+        const newWindow = window.open();
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Prova Digital - ${VDCSystem.sessionId}</title>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 30px; 
+                        background: #1e293b; 
+                        color: #f1f5f9; 
+                        font-family: 'JetBrains Mono', monospace;
                     }
-                </script>
-                </body>
-                </html>
-            `);
-            
-            logAudit('✅ Prova digital aberta para impressão', 'success');
-        }
+                    pre { 
+                        background: #0f172a; 
+                        padding: 20px; 
+                        border-radius: 8px; 
+                        border: 1px solid #334155;
+                        overflow-x: auto;
+                        font-size: 12px;
+                        line-height: 1.5;
+                    }
+                    .controls { 
+                        margin-bottom: 20px; 
+                        display: flex; 
+                        gap: 10px; 
+                        justify-content: center;
+                    }
+                    button { 
+                        padding: 10px 20px; 
+                        background: #8b5cf6; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 4px; 
+                        cursor: pointer;
+                        font-family: 'Inter', sans-serif;
+                        font-size: 14px;
+                    }
+                    button:hover { background: #7c3aed; }
+                    button.print { background: #10b981; }
+                    button.print:hover { background: #059669; }
+                </style>
+            </head>
+            <body>
+                <div class="controls">
+                    <button class="print" onclick="window.print()">🖨️ IMPRIMIR / GUARDAR</button>
+                    <button onclick="window.close()">❌ FECHAR</button>
+                </div>
+                <pre>${jsonStr}</pre>
+            </body>
+            </html>
+        `);
+        
+        logAudit('✅ Prova digital aberta para impressão', 'success');
         
     } catch (error) {
         console.error('Erro ao exportar JSON:', error);
@@ -1580,4 +1759,31 @@ function updateAnalysisButton() {
 function showError(message) {
     logAudit(`ERRO: ${message}`, 'error');
     alert(`ERRO DO SISTEMA: ${message}\n\nVerifique o console para mais detalhes.`);
+}
+
+// 23. RELÓGIO COM DATA
+function startClockAndDate() {
+    function updateDateTime() {
+        const now = new Date();
+        
+        const timeString = now.toLocaleTimeString('pt-PT', { 
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const dateString = `${day}/${month}/${year}`;
+        
+        const timeElement = document.getElementById('currentTime');
+        const dateElement = document.getElementById('currentDate');
+        
+        if (timeElement) timeElement.textContent = timeString;
+        if (dateElement) dateElement.textContent = dateString;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
 }
