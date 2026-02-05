@@ -197,7 +197,7 @@ body {
     color: var(--accent-primary);
 }
 
-/* 4. GRID PRINCIPAL */
+/* 4. GRID PRINCIPAL - CENTRALIZADO */
 .main-grid {
     display: grid;
     grid-template-columns: 400px 1fr;
@@ -207,6 +207,7 @@ body {
     margin: 0 auto;
     width: 100%;
     flex: 1;
+    justify-content: center; /* Adicionado para centralização */
 }
 
 /* 5. SIDEBAR */
@@ -584,18 +585,23 @@ body {
     color: var(--accent-primary);
 }
 
-/* 6. ÁREA DE ANÁLISE */
+/* 6. ÁREA DE ANÁLISE - CENTRALIZADA */
 .analysis-area {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
+    align-items: center; /* Centraliza os elementos filhos */
+    width: 100%;
 }
 
-/* Dashboard Fixo */
+/* Dashboard Fixo - CENTRALIZADO */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .stat-card {
@@ -641,12 +647,15 @@ body {
     color: var(--warn-secondary);
 }
 
-/* Taxa IMT */
+/* Taxa IMT - CENTRALIZADO */
 .imt-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .imt-section h3 {
@@ -662,6 +671,7 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-md);
+    justify-content: center; /* Centralizar cards */
 }
 
 .imt-card {
@@ -704,12 +714,15 @@ body {
     color: white;
 }
 
-/* Dashboard KPI */
+/* Dashboard KPI - CENTRALIZADO */
 .kpi-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .kpi-section h3 {
@@ -726,6 +739,7 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    justify-content: center; /* Centralizar cards */
 }
 
 .kpi-card {
@@ -808,12 +822,15 @@ body {
     color: var(--text-primary);
 }
 
-/* Gráfico */
+/* Gráfico - CENTRALIZADO */
 .chart-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .chart-section h3 {
@@ -828,6 +845,8 @@ body {
 .chart-container {
     height: 300px;
     position: relative;
+    margin: 0 auto; /* Centralizar o canvas */
+    max-width: 800px; /* Limitar largura do gráfico */
 }
 
 .chart-legend {
@@ -846,12 +865,15 @@ body {
     color: var(--text-secondary);
 }
 
-/* Resultados da Análise */
+/* Resultados da Análise - CENTRALIZADO */
 .analysis-results {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .analysis-results h3 {
@@ -868,6 +890,7 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    justify-content: center; /* Centralizar cards */
 }
 
 .result-item {
@@ -942,12 +965,15 @@ body {
     color: var(--warn-primary);
 }
 
-/* Console de Auditoria */
+/* Console de Auditoria - CENTRALIZADO */
 .console-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     overflow: hidden;
+    width: 100%;
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar horizontalmente */
 }
 
 .console-header {
