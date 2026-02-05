@@ -40,7 +40,6 @@
     /* Fontes */
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-    --font-serif: 'Georgia', 'Times New Roman', serif;
     
     /* Sombras */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -163,7 +162,7 @@ body {
     }
 }
 
-/* 5. SIDEBAR - Estética Dark Gold aplicada */
+/* 5. SIDEBAR */
 .sidebar {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-right: 1px solid #444;
@@ -249,6 +248,34 @@ body {
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+    border-color: var(--accent-secondary);
+}
+
+.client-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 .client-status {
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid var(--success-primary);
@@ -262,7 +289,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 6. MÓDULO DAC7 (NOVO) */
+/* 6. MÓDULO DAC7 */
 .dac7-module {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
@@ -391,7 +418,6 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 9. LISTA DE FICHEIROS (FEEDBACK VISUAL) */
 .file-list {
     background: rgba(30, 41, 59, 0.5);
     border-radius: var(--border-radius-sm);
@@ -440,7 +466,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 10. CONTADORES */
+/* 9. CONTADORES */
 .counters {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -473,7 +499,7 @@ body {
     font-family: var(--font-mono);
 }
 
-/* 11. ÁREA DE ANÁLISE PRINCIPAL */
+/* 10. ÁREA DE ANÁLISE PRINCIPAL */
 .analysis-area {
     padding: var(--spacing-md);
     overflow-y: auto;
@@ -482,7 +508,7 @@ body {
     gap: var(--spacing-md);
 }
 
-/* 12. DASHBOARD FIXO */
+/* 11. DASHBOARD FIXO */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -558,7 +584,7 @@ body {
     display: block;
 }
 
-/* 13. SEÇÃO IMT (NOVA) */
+/* 12. SEÇÃO IMT */
 .imt-section {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--bg-secondary) 100%);
     border-radius: var(--border-radius);
@@ -627,7 +653,7 @@ body {
     display: block;
 }
 
-/* 14. SEÇÃO KPI BOLT */
+/* 13. SEÇÃO KPI BOLT */
 .kpi-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -701,7 +727,6 @@ body {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, var(--bg-tertiary) 100%);
 }
 
-/* Card de Alerta para Diferencial */
 .kpi-card.alert {
     border-left-color: var(--warn-secondary);
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-tertiary) 100%);
@@ -758,20 +783,12 @@ body {
     margin-bottom: 0.25rem;
 }
 
-/* Estilo para valores de alerta */
-.alert-value {
-    color: var(--warn-primary) !important;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
-}
-
 .kpi-card small {
     color: var(--text-tertiary);
     font-size: 0.75rem;
     display: block;
 }
 
-/* Estatísticas Secundárias Melhoradas */
 .secondary-stats {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
     border-radius: var(--border-radius-sm);
@@ -798,26 +815,7 @@ body {
     margin-left: 0.25rem;
 }
 
-/* Melhoria na responsividade dos KPIs */
-@media (max-width: 1200px) {
-    .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    #diferencialCard {
-        grid-column: span 2;
-    }
-}
-
 @media (max-width: 768px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    #diferencialCard {
-        grid-column: span 1;
-    }
-    
     .secondary-stats {
         display: flex;
         flex-direction: column;
@@ -830,7 +828,7 @@ body {
     }
 }
 
-/* 15. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
+/* 14. GRÁFICO DOUGHNUT */
 .chart-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -881,7 +879,7 @@ body {
     border-radius: 4px;
 }
 
-/* 16. RESULTADOS DA ANÁLISE */
+/* 15. RESULTADOS DA ANÁLISE */
 .analysis-results {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -951,7 +949,7 @@ body {
     transition: width 1s ease;
 }
 
-/* 17. ALERTA DE OMISSÃO */
+/* 16. ALERTAS */
 .omission-alert {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, rgba(255, 62, 62, 0.05) 100%);
     border: 1px solid var(--warn-primary);
@@ -987,7 +985,6 @@ body {
     font-family: var(--font-mono);
 }
 
-/* Alerta de Diferencial Específico */
 .diferencial-alert {
     border-color: var(--warn-secondary) !important;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%) !important;
@@ -1002,7 +999,7 @@ body {
     color: var(--warn-secondary) !important;
 }
 
-/* 18. CONSOLE DE AUDITORIA */
+/* 17. CONSOLE DE AUDITORIA */
 .console-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -1088,7 +1085,7 @@ body {
 .log-warn { color: var(--warn-secondary); }
 .log-error { color: var(--warn-primary); }
 
-/* 19. BARRA DE AÇÕES INFERIOR */
+/* 18. BARRA DE AÇÕES INFERIOR */
 .action-footer {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
@@ -1158,7 +1155,7 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 20. INFORMAÇÃO DO SISTEMA */
+/* 19. INFORMAÇÃO DO SISTEMA */
 .system-info {
     text-align: center;
     margin-top: var(--spacing-lg);
@@ -1189,7 +1186,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 21. OVERLAY DE CARREGAMENTO */
+/* 20. OVERLAY DE CARREGAMENTO */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -1230,7 +1227,7 @@ body {
     transition: width 0.3s ease;
 }
 
-/* 22. RESPONSIVIDADE */
+/* 21. RESPONSIVIDADE */
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
