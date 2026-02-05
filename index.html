@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.1</title>
+    <title>VDC | Sistema de Peritagem Forense v10.6</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -19,8 +19,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE v10.1</h2>
-            <p>Big Data Forense | Análise de Evasão Fiscal | Protocolo de Prova Legal</p>
+            <h2>VDC SISTEMA DE PERITAGEM FORENSE v10.6</h2>
+            <p>Big Data Forense | Análise de Evasão Fiscal | Protocolo de Prova Legal | Reunião MLGTS</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -36,8 +36,8 @@
                 <div class="logo-section">
                     <i class="fas fa-balance-scale"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.1</span></h1>
-                        <p class="subtitle">Protocolo de Prova Legal | Big Data Forense | Gráfico Ativo</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.6</span></h1>
+                        <p class="subtitle">Protocolo de Prova Legal | Reconciliação Triangular | Gráfico Ativo | MLGTS</p>
                     </div>
                 </div>
                 <div class="session-info">
@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                <!-- NOVA SEÇÃO: DADOS DE CONTACTO E DEMO -->
+                <!-- DADOS DE CONTACTO E DEMO -->
                 <div class="sidebar-extra">
                     <!-- Dados de Contacto -->
                     <div class="contact-group">
@@ -100,13 +100,13 @@
                         <input type="text" id="clientAddress" placeholder="Ex: Rua Principal, 123, Lisboa">
                     </div>
                     
-                    <!-- Botão Dados Demo (Adicional) -->
+                    <!-- Botão Dados Demo -->
                     <div class="demo-controls">
                         <button id="btnDemoExtra" class="btn-demo-extra" onclick="loadDemoData()">
                             <i class="fas fa-vial"></i> CARREGAR DADOS DE DEMONSTRAÇÃO
                         </button>
                         <small style="text-align: center; color: var(--text-tertiary); font-size: 0.8rem;">
-                            Dados de exemplo para teste do sistema
+                            Dados de exemplo para demonstração
                         </small>
                     </div>
                 </div>
@@ -230,7 +230,7 @@
                         </div>
                         <div class="stat-card alert">
                             <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
-                            <p id="iva23Val" class="alert-text">0,00€</p>
+                            <p id="iva23Val">0,00€</p>
                             <small>Dívida ao Estado Português</small>
                         </div>
                     </section>
@@ -259,27 +259,27 @@
 
                     <!-- Dashboard KPI Bolt -->
                     <section class="kpi-section">
-                        <h3><i class="fas fa-chart-line"></i> KPIs BOLT - EXTRATO OFICIAL</h3>
+                        <h3><i class="fas fa-chart-line"></i> KPIs BOLT - RECONCILIAÇÃO TRIANGULAR</h3>
                         <div class="kpi-grid">
                             <div class="kpi-card">
                                 <h4><i class="fas fa-euro-sign"></i> GANHOS BRUTOS</h4>
                                 <p id="kpiGanhos">0,00€</p>
-                                <small>Valor real do extrato</small>
+                                <small>Vértice A - SAF-T</small>
                             </div>
                             <div class="kpi-card">
                                 <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
                                 <p id="kpiComm">0,00€</p>
-                                <small>Taxa retida pela plataforma</small>
+                                <small>Vértice B - Retido</small>
                             </div>
                             <div class="kpi-card highlight">
                                 <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
                                 <p id="kpiNet">0,00€</p>
-                                <small>Transferência bancária real</small>
+                                <small>Transferência real</small>
                             </div>
                             <div class="kpi-card danger">
                                 <h4><i class="fas fa-file-invoice"></i> FATURA PLATAFORMA</h4>
                                 <p id="kpiInvoice">0,00€</p>
-                                <small>Valor faturado (documento PDF)</small>
+                                <small>Vértice C - Emitido</small>
                             </div>
                             <!-- Card de Diferencial será adicionado dinamicamente -->
                         </div>
@@ -290,7 +290,7 @@
                         </div>
                     </section>
 
-                    <!-- Gráfico Doughnut (ATIVADO) -->
+                    <!-- Gráfico Doughnut -->
                     <section class="chart-section">
                         <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA</h3>
                         <div class="chart-container">
@@ -323,7 +323,7 @@
                                 </div>
                             </div>
                             <div class="result-item">
-                                <h5>DIFERENÇA (CRUZAMENTO)</h5>
+                                <h5>ERRO SISTÉMICO</h5>
                                 <p id="differenceResult" class="result-value">0,00€</p>
                                 <div class="result-bar">
                                     <div class="bar-fill" id="differenceBar" style="width: 0%"></div>
@@ -338,14 +338,7 @@
                             </div>
                         </div>
 
-                        <!-- Alerta de Omissão -->
-                        <div id="omissionAlert" class="omission-alert" style="display: none;">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <div>
-                                <strong>ALERTA DE OMISSÃO DE RECEITA</strong>
-                                <p>Detetada discrepância significativa entre faturação e recebimento. Valor omitido: <span id="omissionValue">0,00€</span></p>
-                            </div>
-                        </div>
+                        <!-- Alerta será adicionado dinamicamente -->
                     </section>
                 </div>
 
@@ -397,7 +390,7 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.1 | Protocolo de Prova Legal com Gráfico Ativo | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.6 | Reconciliação Triangular | Reunião MLGTS | © 2024
                 </div>
             </div>
         </footer>
