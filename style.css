@@ -1,5 +1,5 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.6
+   VDC SISTEMA DE PERITAGEM FORENSE v10.7
    CSS OTIMIZADO - PROTOCOLO DE PROVA LEGAL
    RECONCILIAÇÃO TRIANGULAR - REUNIÃO MLGTS
    ============================================ */
@@ -890,45 +890,6 @@ body {
     transition: width 0.5s ease;
 }
 
-.omission-alert {
-    padding: var(--spacing-md);
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: var(--border-radius);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.omission-alert i {
-    color: var(--warn-secondary);
-    font-size: 1.5rem;
-}
-
-.omission-alert strong {
-    color: var(--warn-secondary);
-    display: block;
-    margin-bottom: 0.25rem;
-}
-
-.omission-alert p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-}
-
-.omission-alert.diferencial-alert {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.3);
-}
-
-.omission-alert.diferencial-alert i {
-    color: var(--warn-primary);
-}
-
-.omission-alert.diferencial-alert strong {
-    color: var(--warn-primary);
-}
-
 /* Console de Auditoria */
 .console-section {
     background: var(--bg-secondary);
@@ -1266,4 +1227,22 @@ body {
     .counters {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Estilos específicos para PDF */
+.pdf-center {
+    text-align: center !important;
+}
+
+.pdf-table-center td, .pdf-table-center th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.pdf-page-break {
+    page-break-after: always;
+}
+
+.pdf-no-break {
+    page-break-inside: avoid;
 }
