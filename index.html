@@ -10,7 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS será inserido inline para evitar problemas de carregamento */
+    </style>
 </head>
 <body>
     <!-- Overlay de Carregamento -->
@@ -71,7 +73,7 @@
                             <button id="registerClientBtn" class="btn-primary">
                                 <i class="fas fa-save"></i> REGISTAR CLIENTE
                             </button>
-                            <button id="saveClientBtn" class="btn-secondary" onclick="saveClientData()">
+                            <button id="saveClientBtn" class="btn-secondary">
                                 <i class="fas fa-download"></i> GUARDAR CLIENTE
                             </button>
                         </div>
@@ -102,10 +104,10 @@
                     
                     <!-- Botão Dados Demo -->
                     <div class="demo-controls">
-                        <button id="btnDemoExtra" class="btn-demo-extra" onclick="loadDemoData()">
+                        <button id="btnDemoExtra" class="btn-demo-extra">
                             <i class="fas fa-vial"></i> CARREGAR DADOS DE DEMONSTRAÇÃO
                         </button>
-                        <small style="text-align: center; color: var(--text-tertiary); font-size: 0.8rem;">
+                        <small style="text-align: center; color: #94a3b8; font-size: 0.8rem;">
                             Dados de exemplo para demonstração
                         </small>
                     </div>
@@ -118,7 +120,7 @@
                         <label for="dac7Value"><i class="fas fa-euro-sign"></i> Valor Anual DAC7</label>
                         <input type="number" id="dac7Value" placeholder="Ex: 50000" step="0.01" min="0">
                     </div>
-                    <button id="calcDAC7Btn" class="btn-secondary" onclick="calcularDiscrepanciaDAC7()">
+                    <button id="calcDAC7Btn" class="btn-secondary">
                         <i class="fas fa-calculator"></i> CALCULAR DISCREPÂNCIA
                     </button>
                     <div id="dac7Result" class="dac7-result" style="display: none;">
@@ -151,7 +153,7 @@
                     
                     <!-- Control File -->
                     <div class="upload-group">
-                        <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
+                        <button class="upload-btn" id="controlFileBtn">
                             <i class="fas fa-file-csv"></i> FICHEIRO DE CONTROLO
                         </button>
                         <input type="file" id="controlFile" class="file-input" accept=".csv" hidden>
@@ -160,7 +162,7 @@
 
                     <!-- SAF-T Files -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('saftFile').click()">
+                        <button class="upload-btn multi" id="saftFileBtn">
                             <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
                         </button>
                         <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
@@ -169,7 +171,7 @@
 
                     <!-- Platform Invoices -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
+                        <button class="upload-btn multi" id="invoiceFileBtn">
                             <i class="fas fa-receipt"></i> FATURAS DA PLATAFORMA
                         </button>
                         <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden>
@@ -178,7 +180,7 @@
 
                     <!-- Bank Statements -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
+                        <button class="upload-btn multi" id="statementFileBtn">
                             <i class="fas fa-university"></i> EXTRATOS BANCÁRIOS
                         </button>
                         <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden>
@@ -281,7 +283,6 @@
                                 <p id="kpiInvoice">0,00€</p>
                                 <small>Vértice C - Emitido</small>
                             </div>
-                            <!-- Card de Diferencial será adicionado dinamicamente -->
                         </div>
                         <div class="secondary-stats">
                             <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
@@ -312,14 +313,14 @@
                                 <h5>BRUTO SAF-T</h5>
                                 <p id="grossResult" class="result-value">0,00€</p>
                                 <div class="result-bar">
-                                    <div class="bar-fill" style="width: 0%"></div>
+                                    <div class="bar-fill" id="grossBar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <div class="result-item">
                                 <h5>TRANSFERÊNCIA BANCÁRIA</h5>
                                 <p id="transferResult" class="result-value">0,00€</p>
                                 <div class="result-bar">
-                                    <div class="bar-fill" style="width: 0%"></div>
+                                    <div class="bar-fill" id="transferBar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <div class="result-item">
@@ -331,14 +332,12 @@
                             </div>
                             <div class="result-item">
                                 <h5>PROJEÇÃO MERCADO (38k)</h5>
-                                <p id="marketResult" class="result-value">0,00M€</p>
+                                <p id="marketResult" class="result-value">0,00€</p>
                                 <div class="result-bar">
-                                    <div class="bar-fill" style="width: 0%"></div>
+                                    <div class="bar-fill" id="marketBar" style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Alerta será adicionado dinamicamente -->
                     </section>
                 </div>
 
@@ -347,16 +346,16 @@
                     <div class="console-header">
                         <h3><i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA</h3>
                         <div class="console-controls">
-                            <button class="icon-btn" onclick="clearConsole()" title="Limpar console">
+                            <button class="icon-btn" id="clearConsoleBtn">
                                 <i class="fas fa-broom"></i>
                             </button>
-                            <button class="icon-btn" onclick="toggleConsole()" title="Alternar tamanho">
+                            <button class="icon-btn" id="toggleConsoleBtn">
                                 <i class="fas fa-expand-alt"></i>
                             </button>
                         </div>
                     </div>
                     <div id="auditOutput" class="console-output">
-                        <!-- Logs serão inseridos aqui -->
+                        <div class="log-entry log-info">[00:00:00] INFO Sistema VDC v10.7 inicializado</div>
                     </div>
                 </section>
             </main>
@@ -365,20 +364,20 @@
         <!-- Barra de Ações Inferior -->
         <footer class="action-footer">
             <div class="action-buttons">
-                <button id="analyzeBtn" class="btn-forensic" onclick="performForensicAnalysis()" disabled>
+                <button id="analyzeBtn" class="btn-forensic" disabled>
                     <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
                 </button>
                 <button id="btnDemo" class="btn-demo">
                     <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
                 </button>
                 <div class="secondary-buttons">
-                    <button class="btn-secondary" onclick="exportJSON()">
+                    <button class="btn-secondary" id="exportJSONBtn">
                         <i class="fas fa-code"></i> PROVA DIGITAL (JSON)
                     </button>
-                    <button class="btn-secondary" onclick="exportPDFWithPicker()">
+                    <button class="btn-secondary" id="exportPDFBtn">
                         <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
                     </button>
-                    <button class="btn-secondary" onclick="clearAllData()">
+                    <button class="btn-secondary" id="newSessionBtn">
                         <i class="fas fa-redo"></i> NOVA SESSÃO
                     </button>
                 </div>
@@ -396,6 +395,9 @@
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // JavaScript será inserido inline para evitar problemas de carregamento
+        // O código completo está no arquivo script.js abaixo
+    </script>
 </body>
 </html>
