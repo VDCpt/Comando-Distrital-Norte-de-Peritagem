@@ -3,401 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.7</title>
+    <title>VDC | Sistema de Peritagem Forense v10.8</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* CSS será inserido inline para evitar problemas de carregamento */
+        /* CSS embutido para garantir funcionamento imediato */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --accent-primary: #00f2ff;
+            --accent-secondary: #3b82f6;
+            --warn-primary: #f59e0b;
+            --warn-secondary: #ef4444;
+            --success-primary: #10b981;
+            --border-color: #475569;
+            --border-radius: 8px;
+            --border-radius-sm: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .version-badge {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        #clockDisplay {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            background: var(--bg-tertiary);
+            padding: 10px 15px;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .upload-section {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .drop-zone {
+            border: 3px dashed var(--accent-primary);
+            border-radius: var(--border-radius);
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 242, 255, 0.05);
+        }
+
+        .drop-zone:hover {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+        }
+
+        .drop-zone p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .client-box {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.2);
+        }
+
+        .btn-save {
+            background: var(--success-primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .kpi-card {
+            text-align: center;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .kpi-card h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .kpi-card p {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        #kpi-delta.alert {
+            border-left-color: var(--warn-secondary);
+        }
+
+        #kpi-delta.alert p {
+            color: var(--warn-secondary);
+        }
+
+        .chart-container {
+            grid-column: span 2;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            height: 400px;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-main {
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: var(--bg-primary);
+            border: none;
+            padding: 18px 35px;
+            border-radius: var(--border-radius);
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            min-width: 300px;
+        }
+
+        .btn-main:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 242, 255, 0.3);
+        }
+
+        .btn-main:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-pdf, .btn-reset, .btn-demo {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-pdf:hover { background: #ef4444; border-color: #ef4444; color: white; }
+        .btn-reset:hover { background: var(--warn-primary); border-color: var(--warn-primary); }
+        .btn-demo:hover { background: #8b5cf6; border-color: #8b5cf6; }
+
+        .btn-demo.demo-active {
+            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .footer-note {
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        /* Alertas */
+        .alert-container {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        .alert-container.show {
+            display: block;
+        }
+
+        .alert-container i {
+            color: var(--warn-secondary);
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                grid-column: span 1;
+                height: 300px;
+            }
+            
+            .btn-main {
+                min-width: 100%;
+            }
+            
+            .action-bar {
+                flex-direction: column;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Overlay de Carregamento -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-spinner">
-                <i class="fas fa-fingerprint fa-spin"></i>
-            </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE v10.7</h2>
-            <p>Big Data Forense | Análise de Evasão Fiscal | Protocolo de Prova Legal | Reunião MLGTS</p>
-            <div class="loading-progress">
-                <div class="loading-progress-bar" id="loadingProgress"></div>
+    <div class="container">
+        <!-- Alertas Dinâmicos -->
+        <div id="alertContainer" class="alert-container">
+            <div style="display: flex; align-items: center;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong id="alertTitle">ALERTA DE SEGURANÇA</strong>
+                    <p id="alertMessage">Erro sistémico detetado na reconciliação triangular</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Conteúdo Principal -->
-    <div id="mainContainer" class="main-container" style="display: none;">
-        
-        <!-- Cabeçalho -->
-        <header class="main-header">
+        <header>
             <div class="header-content">
-                <div class="logo-section">
+                <h1>
                     <i class="fas fa-balance-scale"></i>
-                    <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.7</span></h1>
-                        <p class="subtitle">Protocolo de Prova Legal | Reconciliação Triangular | Gráfico Ativo | MLGTS</p>
-                    </div>
-                </div>
-                <div class="session-info">
-                    <div class="timestamp">
-                        <i class="fas fa-clock"></i>
-                        <span id="currentTime">00:00:00</span>
-                        <span id="currentDate">DD/MM/AAAA</span>
-                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
-                    </div>
+                    VDC FORENSIC SYSTEM
+                    <span class="version-badge">v10.8</span>
+                </h1>
+                <div id="clockDisplay">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentTime">00:00:00</span>
+                    <span id="currentDate">DD/MM/AAAA</span>
                 </div>
             </div>
         </header>
 
-        <!-- Grid Principal -->
-        <div class="main-grid">
-            <!-- Sidebar com Identificação e Uploads -->
-            <aside class="sidebar">
-                <!-- Identificação do Cliente -->
-                <div class="client-identification">
-                    <h3><i class="fas fa-user-tie"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
-                    <div class="client-form">
-                        <div class="form-group">
-                            <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
-                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda">
-                        </div>
-                        <div class="form-group">
-                            <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
-                            <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
-                        </div>
-                        <div class="client-buttons">
-                            <button id="registerClientBtn" class="btn-primary">
-                                <i class="fas fa-save"></i> REGISTAR CLIENTE
-                            </button>
-                            <button id="saveClientBtn" class="btn-secondary">
-                                <i class="fas fa-download"></i> GUARDAR CLIENTE
-                            </button>
-                        </div>
-                    </div>
-                    <div id="clientStatus" class="client-status" style="display: none;">
+        <main>
+            <section class="upload-section">
+                <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-file-upload"></i>
+                    <p>CARREGAR DOCUMENTOS FORENSES (PDF/XML/CSV)</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">
+                        Suporta: SAF-T, Extratos Bolt, Faturas, Controle Bancário
+                    </p>
+                </div>
+                <input type="file" id="fileInput" multiple accept=".pdf,.xml,.csv,.txt" hidden>
+                <div style="margin-top: 20px; display: none;" id="fileStatus">
+                    <p style="color: var(--success-primary); font-size: 0.9rem;">
                         <i class="fas fa-check-circle"></i>
-                        <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
-                    </div>
+                        <span id="fileCount">0</span> ficheiros carregados
+                    </p>
                 </div>
+            </section>
 
-                <!-- DADOS DE CONTACTO E DEMO -->
-                <div class="sidebar-extra">
-                    <!-- Dados de Contacto -->
-                    <div class="contact-group">
-                        <label for="clientPhone"><i class="fas fa-phone"></i> Telefone</label>
-                        <input type="tel" id="clientPhone" placeholder="Ex: +351 912 345 678">
-                    </div>
-                    
-                    <div class="contact-group">
-                        <label for="clientEmail"><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="clientEmail" placeholder="Ex: contacto@empresa.pt">
-                    </div>
-                    
-                    <div class="contact-group">
-                        <label for="clientAddress"><i class="fas fa-map-marker-alt"></i> Morada</label>
-                        <input type="text" id="clientAddress" placeholder="Ex: Rua Principal, 123, Lisboa">
-                    </div>
-                    
-                    <!-- Botão Dados Demo -->
-                    <div class="demo-controls">
-                        <button id="btnDemoExtra" class="btn-demo-extra">
-                            <i class="fas fa-vial"></i> CARREGAR DADOS DE DEMONSTRAÇÃO
-                        </button>
-                        <small style="text-align: center; color: #94a3b8; font-size: 0.8rem;">
-                            Dados de exemplo para demonstração
-                        </small>
-                    </div>
-                </div>
-
-                <!-- Módulo DAC7 -->
-                <div class="dac7-module">
-                    <h3><i class="fas fa-file-contract"></i> MÓDULO DAC7</h3>
-                    <div class="form-group">
-                        <label for="dac7Value"><i class="fas fa-euro-sign"></i> Valor Anual DAC7</label>
-                        <input type="number" id="dac7Value" placeholder="Ex: 50000" step="0.01" min="0">
-                    </div>
-                    <button id="calcDAC7Btn" class="btn-secondary">
-                        <i class="fas fa-calculator"></i> CALCULAR DISCREPÂNCIA
+            <section class="client-box">
+                <div class="input-group">
+                    <input type="text" id="clientName" placeholder="Nome do Cliente/Empresa (ex: Momento Eficaz, Lda)">
+                    <input type="text" id="clientNIF" placeholder="Número de Contribuinte (NIF)" maxlength="9">
+                    <button onclick="saveClientData()" class="btn-save">
+                        <i class="fas fa-user-check"></i> 
+                        REGISTAR CLIENTE
                     </button>
-                    <div id="dac7Result" class="dac7-result" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Discrepância: <strong id="dac7Discrepancy">0,00€</strong></span>
-                    </div>
                 </div>
-
-                <!-- Controles do Sistema -->
-                <div class="system-controls">
-                    <div class="control-group">
-                        <label for="selYear"><i class="fas fa-calendar-alt"></i> Ano Fiscal</label>
-                        <select id="selYear" class="year-select">
-                            <!-- Preenchido dinamicamente -->
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="selPlatform"><i class="fas fa-globe-europe"></i> Plataforma</label>
-                        <select id="selPlatform" class="platform-select">
-                            <option value="bolt">Bolt (Estónia)</option>
-                            <option value="uber">Uber (Holanda)</option>
-                            <option value="other">Outra Plataforma</option>
-                        </select>
-                    </div>
+                <div style="margin-top: 15px; display: none;" id="clientStatus">
+                    <p style="color: var(--success-primary);">
+                        <i class="fas fa-check-circle"></i>
+                        Cliente registado: <strong id="clientNameDisplay"></strong>
+                    </p>
                 </div>
+            </section>
 
-                <!-- Upload de Ficheiros -->
-                <div class="upload-section">
-                    <h3><i class="fas fa-upload"></i> CARREGAMENTO DE DOCUMENTOS</h3>
-                    
-                    <!-- Control File -->
-                    <div class="upload-group">
-                        <button class="upload-btn" id="controlFileBtn">
-                            <i class="fas fa-file-csv"></i> FICHEIRO DE CONTROLO
-                        </button>
-                        <input type="file" id="controlFile" class="file-input" accept=".csv" hidden>
-                        <div id="controlFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- SAF-T Files -->
-                    <div class="upload-group">
-                        <button class="upload-btn multi" id="saftFileBtn">
-                            <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
-                        </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
-                        <div id="saftFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Platform Invoices -->
-                    <div class="upload-group">
-                        <button class="upload-btn multi" id="invoiceFileBtn">
-                            <i class="fas fa-receipt"></i> FATURAS DA PLATAFORMA
-                        </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden>
-                        <div id="invoiceFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Bank Statements -->
-                    <div class="upload-group">
-                        <button class="upload-btn multi" id="statementFileBtn">
-                            <i class="fas fa-university"></i> EXTRATOS BANCÁRIOS
-                        </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden>
-                        <div id="statementFileList" class="file-list"></div>
-                    </div>
+            <section id="dashboard" class="dashboard-grid">
+                <div class="card kpi-card" id="kpi-saft">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> VÉRTICE A (SAF-T)</h3>
+                    <p id="val-saft">0,00€</p>
+                    <small>Base tributável declarada</small>
                 </div>
-
-                <!-- Contadores -->
-                <div class="counters">
-                    <div class="counter-item">
-                        <span class="counter-label">SAF-T</span>
-                        <span id="saftCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">Faturas</span>
-                        <span id="invoiceCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">Extratos</span>
-                        <span id="statementCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">Total</span>
-                        <span id="totalCount" class="counter-value">0</span>
-                    </div>
+                
+                <div class="card kpi-card" id="kpi-extrato">
+                    <h3><i class="fas fa-university"></i> VÉRTICE B (EXTRATO)</h3>
+                    <p id="val-extrato">0,00€</p>
+                    <small>Transferência bancária real</small>
                 </div>
-            </aside>
-
-            <!-- Área Principal de Análise -->
-            <main class="analysis-area">
-                <!-- Container de Dashboard -->
-                <div id="dashboard">
-                    <!-- Dashboard Fixo -->
-                    <section class="dashboard-fixed">
-                        <div class="stat-card">
-                            <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
-                            <p id="netVal">0,00€</p>
-                            <small>Base tributável SAF-T</small>
-                        </div>
-                        <div class="stat-card">
-                            <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
-                            <p id="iva6Val">0,00€</p>
-                            <small>Taxa reduzida Portugal</small>
-                        </div>
-                        <div class="stat-card">
-                            <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA</h4>
-                            <p id="commissionVal">0,00€</p>
-                            <small>Serviço de intermediação</small>
-                        </div>
-                        <div class="stat-card alert">
-                            <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
-                            <p id="iva23Val">0,00€</p>
-                            <small>Dívida ao Estado Português</small>
-                        </div>
-                    </section>
-
-                    <!-- Taxa IMT -->
-                    <section class="imt-section">
-                        <h3><i class="fas fa-landmark"></i> CONTRIBUIÇÃO DE REGULAÇÃO (IMT)</h3>
-                        <div class="imt-grid">
-                            <div class="imt-card">
-                                <h4><i class="fas fa-calculator"></i> COMISSÕES SUJEITAS A IMT</h4>
-                                <p id="imtBase">0,00€</p>
-                                <small>Base de cálculo</small>
-                            </div>
-                            <div class="imt-card">
-                                <h4><i class="fas fa-percentage"></i> TAXA IMT (5%)</h4>
-                                <p id="imtTax">0,00€</p>
-                                <small>Contribuição regulatória</small>
-                            </div>
-                            <div class="imt-card highlight">
-                                <h4><i class="fas fa-file-invoice-dollar"></i> CUSTO TOTAL PLATAFORMA</h4>
-                                <p id="imtTotal">0,00€</p>
-                                <small>Comissão + IMT</small>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Dashboard KPI Bolt -->
-                    <section class="kpi-section">
-                        <h3><i class="fas fa-chart-line"></i> KPIs BOLT - RECONCILIAÇÃO TRIANGULAR</h3>
-                        <div class="kpi-grid">
-                            <div class="kpi-card">
-                                <h4><i class="fas fa-euro-sign"></i> GANHOS BRUTOS</h4>
-                                <p id="kpiGanhos">0,00€</p>
-                                <small>Vértice A - SAF-T</small>
-                            </div>
-                            <div class="kpi-card">
-                                <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
-                                <p id="kpiComm">0,00€</p>
-                                <small>Vértice B - Retido</small>
-                            </div>
-                            <div class="kpi-card highlight">
-                                <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
-                                <p id="kpiNet">0,00€</p>
-                                <small>Transferência real</small>
-                            </div>
-                            <div class="kpi-card danger">
-                                <h4><i class="fas fa-file-invoice"></i> FATURA PLATAFORMA</h4>
-                                <p id="kpiInvoice">0,00€</p>
-                                <small>Vértice C - Emitido</small>
-                            </div>
-                        </div>
-                        <div class="secondary-stats">
-                            <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
-                            <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
-                            <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span>
-                        </div>
-                    </section>
-
-                    <!-- Gráfico Doughnut -->
-                    <section class="chart-section">
-                        <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA</h3>
-                        <div class="chart-container">
-                            <canvas id="forensicChart"></canvas>
-                        </div>
-                        <div class="chart-legend">
-                            <span class="legend-item"><i class="fas fa-circle" style="color: #00f2ff;"></i> Valor Ilíquido</span>
-                            <span class="legend-item"><i class="fas fa-circle" style="color: #3b82f6;"></i> IVA 6%</span>
-                            <span class="legend-item"><i class="fas fa-circle" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
-                            <span class="legend-item"><i class="fas fa-circle" style="color: #f59e0b;"></i> IVA 23% Devido</span>
-                        </div>
-                    </section>
-
-                    <!-- Resultados da Análise -->
-                    <section class="analysis-results">
-                        <h3><i class="fas fa-search-dollar"></i> RESULTADOS DA ANÁLISE FORENSE</h3>
-                        <div class="results-grid">
-                            <div class="result-item">
-                                <h5>BRUTO SAF-T</h5>
-                                <p id="grossResult" class="result-value">0,00€</p>
-                                <div class="result-bar">
-                                    <div class="bar-fill" id="grossBar" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div class="result-item">
-                                <h5>TRANSFERÊNCIA BANCÁRIA</h5>
-                                <p id="transferResult" class="result-value">0,00€</p>
-                                <div class="result-bar">
-                                    <div class="bar-fill" id="transferBar" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div class="result-item">
-                                <h5>ERRO SISTÉMICO</h5>
-                                <p id="differenceResult" class="result-value">0,00€</p>
-                                <div class="result-bar">
-                                    <div class="bar-fill" id="differenceBar" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div class="result-item">
-                                <h5>PROJEÇÃO MERCADO (38k)</h5>
-                                <p id="marketResult" class="result-value">0,00€</p>
-                                <div class="result-bar">
-                                    <div class="bar-fill" id="marketBar" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                
+                <div class="card kpi-card" id="kpi-fatura">
+                    <h3><i class="fas fa-receipt"></i> VÉRTICE C (FATURA)</h3>
+                    <p id="val-fatura">0,00€</p>
+                    <small>Documento emitido</small>
                 </div>
+                
+                <div class="card kpi-card" id="kpi-delta">
+                    <h3><i class="fas fa-exclamation-triangle"></i> DIFERENCIAL OCULTO</h3>
+                    <p id="val-delta">0,00€</p>
+                    <small id="delta-percent">0,00% da comissão</small>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </section>
+        </main>
 
-                <!-- Console de Auditoria -->
-                <section class="console-section">
-                    <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA</h3>
-                        <div class="console-controls">
-                            <button class="icon-btn" id="clearConsoleBtn">
-                                <i class="fas fa-broom"></i>
-                            </button>
-                            <button class="icon-btn" id="toggleConsoleBtn">
-                                <i class="fas fa-expand-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="auditOutput" class="console-output">
-                        <div class="log-entry log-info">[00:00:00] INFO Sistema VDC v10.7 inicializado</div>
-                    </div>
-                </section>
-            </main>
-        </div>
-
-        <!-- Barra de Ações Inferior -->
-        <footer class="action-footer">
-            <div class="action-buttons">
-                <button id="analyzeBtn" class="btn-forensic" disabled>
-                    <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
+        <footer>
+            <div class="action-bar">
+                <button id="btnExecutar" onclick="runForensicAnalysis()" class="btn-main" disabled>
+                    <i class="fas fa-search"></i>
+                    EXECUTAR ANÁLISE FORENSE
                 </button>
-                <button id="btnDemo" class="btn-demo">
-                    <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
+                <button onclick="exportPDF()" class="btn-pdf">
+                    <i class="fas fa-file-pdf"></i>
+                    RELATÓRIO PERICIAL
                 </button>
-                <div class="secondary-buttons">
-                    <button class="btn-secondary" id="exportJSONBtn">
-                        <i class="fas fa-code"></i> PROVA DIGITAL (JSON)
-                    </button>
-                    <button class="btn-secondary" id="exportPDFBtn">
-                        <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
-                    </button>
-                    <button class="btn-secondary" id="newSessionBtn">
-                        <i class="fas fa-redo"></i> NOVA SESSÃO
-                    </button>
-                </div>
+                <button onclick="window.location.reload()" class="btn-reset">
+                    <i class="fas fa-redo"></i>
+                    NOVA SESSÃO
+                </button>
+                <button id="btnDemo" class="btn-demo" onclick="loadDemoData()">
+                    <i class="fas fa-vial"></i>
+                    MODO DEMO
+                </button>
             </div>
-            
-            <div class="system-info">
-                <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO:</strong>
-                    <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
-                </div>
-                <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.7 | Reconciliação Triangular | Reunião MLGTS | © 2024
-                </div>
-            </div>
+            <p class="footer-note">
+                <i class="fas fa-shield-alt"></i>
+                VDC Sistema de Peritagem Forense v10.8 | Protocolo de Prova Legal | Reunião MLGTS
+            </p>
         </footer>
     </div>
-
-    <script>
-        // JavaScript será inserido inline para evitar problemas de carregamento
-        // O código completo está no arquivo script.js abaixo
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
