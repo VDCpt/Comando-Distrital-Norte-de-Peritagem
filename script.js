@@ -1,11 +1,11 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v12.4
+// VDC SISTEMA DE PERITAGEM FORENSE v12.5
 // PROTOCOLO DE AUDITORIA FINAL - SET-DEZ 2024
 // ============================================
 
 // 1. ESTADO DO SISTEMA - DADOS AUDITADOS
 const VDCSystem = {
-    version: 'v12.4',
+    version: 'v12.5',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -693,34 +693,24 @@ function updateResults() {
     }
 }
 
-// 9. RELATÓRIO PDF PROFISSIONAL
+// 9. RELATÓRIO PDF PROFISSIONAL v12.5 (3 PÁGINAS)
 async function exportPDF() {
     try {
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL PROFISSIONAL...', 'info');
+        logAudit('📄 GERANDO RELATÓRIO PERICIAL PROFISSIONAL (3 PÁGINAS)...', 'info');
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        await createRelatorioPericial(doc);
-        
-        const pdfBlob = doc.output('blob');
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a');
-        a.href = pdfUrl;
+        await createRelatorioPericial3Paginas(doc);
         
         const clienteNome = VDCSystem.client?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'CLIENTE';
         const dataStr = new Date().toISOString().split('T')[0];
-        a.download = `VDC_RELATORIO_PERICIAL_${clienteNome}_${dataStr}.pdf`;
+        const nomeFicheiro = `VDC_RELATORIO_PERICIAL_${clienteNome}_${dataStr}.pdf`;
         
-        document.body.appendChild(a);
-        a.click();
+        // FORÇAR DOWNLOAD COM NOME DINÂMICO
+        doc.save(nomeFicheiro);
         
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(pdfUrl);
-        }, 100);
-        
-        logAudit('✅ Relatório pericial profissional gerado', 'success');
+        logAudit(`✅ Relatório pericial gerado: ${nomeFicheiro}`, 'success');
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
@@ -729,32 +719,61 @@ async function exportPDF() {
     }
 }
 
-async function createRelatorioPericial(doc) {
+async function createRelatorioPericial3Paginas(doc) {
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     const margin = 20;
     
-    // Página 1: Relatório
-    doc.setFillColor(0, 0, 0);
-    doc.rect(0, 0, pageWidth, 60, 'F');
+    // ============================================
+    // PÁGINA 1: SUMÁRIO EXECUTIVO
+    // ============================================
+    doc.setDrawColor(0, 0, 0);
+    doc.setFillColor(26, 35, 126); // Azul VDC
+    doc.rect(0, 0, pageWidth, 80, 'F');
     
+    // Logótipo e Título
+    doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text("RELATÓRIO PERICIAL DE CONFORMIDADE DIGITAL", pageWidth / 2, 30, { align: 'center' });
+    doc.text("🔍", 30, 35);
+    doc.text("VDC", 45, 35);
+    doc.text("RELATÓRIO DE CONFORMIDADE FISCAL", pageWidth / 2, 35, { align: 'center' });
     
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text("VDC Sistema de Peritagem Forense v12.4", pageWidth / 2, 45, { align: 'center' });
+    doc.text("Sistema de Peritagem Forense v12.5 | Protocolo de Auditoria Final", pageWidth / 2, 45, { align: 'center' });
     doc.text("Período Auditado: Setembro a Dezembro 2024", pageWidth / 2, 52, { align: 'center' });
+    doc.text("Data de Emissão: " + new Date().toLocaleDateString('pt-PT'), pageWidth / 2, 59, { align: 'center' });
     
-    let posY = 70;
+    let posY = 85;
     
-    // Sumário Executivo
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 50, 3, 3, 'F');
+    // Dados do Cliente
+    doc.setFillColor(245, 245, 245);
+    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 40, 3, 3, 'F');
     
     doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text("DADOS DO CLIENTE", margin + 10, posY + 12);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    
+    if (VDCSystem.client) {
+        doc.text(`Nome: ${VDCSystem.client.name || 'Não informado'}`, margin + 15, posY + 22);
+        doc.text(`NIF: ${VDCSystem.client.nif || 'Não informado'}`, margin + 15, posY + 30);
+        doc.text(`Contacto: ${VDCSystem.client.phone || 'Não informado'}`, margin + 120, posY + 22);
+        doc.text(`Email: ${VDCSystem.client.email || 'Não informado'}`, margin + 120, posY + 30);
+    } else {
+        doc.text("Cliente não registado", margin + 15, posY + 22);
+    }
+    
+    posY += 50;
+    
+    // Caixa de Sumário
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 70, 3, 3, 'F');
+    
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.text("SUMÁRIO EXECUTIVO", margin + 10, posY + 12);
@@ -766,192 +785,276 @@ async function createRelatorioPericial(doc) {
     const dac7 = formatarMoeda(VDCSystem.totaisConsolidados.liquidoTotal);
     const divergencia = formatarMoeda(VDCSystem.totaisConsolidados.comissaoTotal);
     
-    doc.text(`Faturação Bruta Total: ${bruto}`, margin + 15, posY + 25);
-    doc.text(`Declarado DAC7: ${dac7}`, margin + 15, posY + 35);
+    // Valores principais em destaque
+    doc.setFontSize(11);
+    doc.text(`Faturação Bruta Total (4 meses):`, margin + 15, posY + 28);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${bruto}`, pageWidth - margin - 15, posY + 28, { align: 'right' });
     
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Valor Reportado DAC7:`, margin + 15, posY + 40);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${dac7}`, pageWidth - margin - 15, posY + 40, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Divergência Identificada:`, margin + 15, posY + 52);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Divergência Identificada: ${divergencia}`, margin + 15, posY + 45);
-    
-    posY += 60;
-    
-    // Tabela de Dados
+    doc.text(`${divergencia}`, pageWidth - margin - 15, posY + 52, { align: 'right' });
     doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text("DADOS MENSALIZADOS AUDITADOS", margin, posY);
-    posY += 10;
     
+    posY += 80;
+    
+    // Conclusão da Página 1
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.text("Este relatório foi gerado automaticamente pelo Sistema VDC de Peritagem Forense.", 
+             margin, pageHeight - 20);
+    doc.text("As conclusões são baseadas em análise forense de documentos digitais autênticos.", 
+             margin, pageHeight - 15);
+    
+    // ============================================
+    // PÁGINA 2: GRÁFICOS E MENSALIZAÇÃO
+    // ============================================
+    doc.addPage();
+    posY = margin;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(26, 35, 126);
+    doc.text("ANÁLISE DETALHADA POR MÊS", pageWidth / 2, posY, { align: 'center' });
+    posY += 15;
+    
+    // Tabela de Dados Mensalizados
     doc.setFillColor(50, 50, 50);
-    doc.setDrawColor(50, 50, 50);
-    doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
+    doc.rect(margin, posY, pageWidth - (margin * 2), 10, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text("Mês", margin + 5, posY + 5);
-    doc.text("Faturação Bruta", margin + 50, posY + 5);
-    doc.text("Reportado DAC7", margin + 110, posY + 5);
-    doc.text("Divergência", margin + 170, posY + 5);
+    doc.text("MÊS", margin + 5, posY + 6);
+    doc.text("FATURAÇÃO BRUTA", margin + 50, posY + 6);
+    doc.text("RETENÇÃO PLATAFORMA", margin + 110, posY + 6);
+    doc.text("VALOR REPORTADO DAC7", margin + 170, posY + 6);
     
-    posY += 10;
+    posY += 12;
     
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
     
-    Object.values(VDCSystem.dadosMensais).forEach((mes, index) => {
-        if (posY > pageHeight - 30) {
-            doc.addPage();
-            posY = margin;
-        }
+    // Dados dos 4 meses auditados
+    let meses = ['setembro', 'outubro', 'novembro', 'dezembro'];
+    meses.forEach((mes, index) => {
+        const dados = VDCSystem.dadosMensais[mes];
+        const bgColor = index % 2 === 0 ? [250, 250, 250] : [255, 255, 255];
         
-        const bgColor = index % 2 === 0 ? [245, 245, 245] : [255, 255, 255];
         doc.setFillColor(...bgColor);
-        doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
+        doc.rect(margin, posY, pageWidth - (margin * 2), 10, 'F');
         
-        const divergencia = mes.bruto - mes.liquido;
+        doc.setFontSize(9);
+        doc.text(dados.mes, margin + 5, posY + 6);
+        doc.text(formatarMoeda(dados.bruto), margin + 50, posY + 6);
+        doc.text(formatarMoeda(dados.comissao), margin + 110, posY + 6);
+        doc.text(formatarMoeda(dados.liquido), margin + 170, posY + 6);
         
-        doc.text(mes.mes, margin + 5, posY + 5);
-        doc.text(formatarMoeda(mes.bruto), margin + 50, posY + 5);
-        doc.text(formatarMoeda(mes.liquido), margin + 110, posY + 5);
-        doc.text(formatarMoeda(divergencia), margin + 170, posY + 5);
-        
-        posY += 9;
+        posY += 10;
     });
     
     posY += 15;
     
+    // Totais Consolidados
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, posY, pageWidth - (margin * 2), 12, 'F');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text("TOTAL 4 MESES", margin + 5, posY + 8);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.brutoTotal), margin + 50, posY + 8);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.comissaoTotal), margin + 110, posY + 8);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.liquidoTotal), margin + 170, posY + 8);
+    
+    posY += 25;
+    
+    // Gráfico de Comparação
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text("COMPARAÇÃO DE VALORES", margin, posY);
+    posY += 10;
+    
+    // Desenhar gráfico simples (barras horizontais)
+    const maxVal = Math.max(
+        VDCSystem.totaisConsolidados.brutoTotal,
+        VDCSystem.totaisConsolidados.liquidoTotal,
+        VDCSystem.totaisConsolidados.comissaoTotal
+    );
+    
+    const graficoWidth = 100;
+    const startX = margin + 20;
+    
+    // Barra 1: Faturação Bruta
+    doc.setFillColor(59, 130, 246); // Azul
+    const barWidth1 = (VDCSystem.totaisConsolidados.brutoTotal / maxVal) * graficoWidth;
+    doc.rect(startX, posY, barWidth1, 8, 'F');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Faturação Bruta", margin, posY + 6);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.brutoTotal), startX + barWidth1 + 5, posY + 6);
+    posY += 12;
+    
+    // Barra 2: Reportado DAC7
+    doc.setFillColor(16, 185, 129); // Verde
+    const barWidth2 = (VDCSystem.totaisConsolidados.liquidoTotal / maxVal) * graficoWidth;
+    doc.rect(startX, posY, barWidth2, 8, 'F');
+    doc.text("Reportado DAC7", margin, posY + 6);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.liquidoTotal), startX + barWidth2 + 5, posY + 6);
+    posY += 12;
+    
+    // Barra 3: Divergência
+    doc.setFillColor(239, 68, 68); // Vermelho
+    const barWidth3 = (VDCSystem.totaisConsolidados.comissaoTotal / maxVal) * graficoWidth;
+    doc.rect(startX, posY, barWidth3, 8, 'F');
+    doc.text("Divergência Identificada", margin, posY + 6);
+    doc.text(formatarMoeda(VDCSystem.totaisConsolidados.comissaoTotal), startX + barWidth3 + 5, posY + 6);
+    
+    posY += 25;
+    
     // Projeção Setorial
     const projecaoMensal = VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal;
     
+    doc.setFillColor(255, 243, 205); // Amarelo claro
+    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 40, 3, 3, 'F');
+    
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text("PROJEÇÃO SETORIAL", margin, posY);
-    posY += 8;
+    doc.setFontSize(11);
+    doc.text("PROJEÇÃO SETORIAL", margin + 10, posY + 12);
     
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
+    doc.text(`Com base na amostra analisada, a divergência média mensal por motorista é de`, margin + 10, posY + 22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${formatarMoeda(VDCSystem.analysis.projecaoMercado.comissaoMediaMensal)}`, margin + 10, posY + 28);
     
-    const projecaoText = `Com base na divergência média mensal identificada (${formatarMoeda(VDCSystem.analysis.projecaoMercado.comissaoMediaMensal)} por motorista), `;
-    doc.text(projecaoText, margin, posY);
-    posY += 6;
-    
-    const projecaoText2 = `a projeção para o mercado português (${VDCSystem.analysis.projecaoMercado.motoristasAtivos.toLocaleString('pt-PT')} motoristas ativos) `;
-    doc.text(projecaoText2, margin, posY);
-    posY += 6;
-    
-    const projecaoText3 = `indica um volume de negócio não reportado de aproximadamente:`;
-    doc.text(projecaoText3, margin, posY);
-    posY += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Para os ${VDCSystem.analysis.projecaoMercado.motoristasAtivos.toLocaleString('pt-PT')} motoristas ativos`, margin + 10, posY + 34);
+    doc.text(`em Portugal, a projeção indica um volume mensal não reportado de:`, margin + 10, posY + 40);
     
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
     doc.setTextColor(200, 0, 0);
-    doc.setFontSize(11);
-    doc.text(`${formatarMoeda(projecaoMensal)} / mês`, margin + 10, posY);
-    posY += 8;
+    doc.text(`${formatarMoeda(projecaoMensal)} / mês`, pageWidth / 2, posY + 50, { align: 'center' });
     
-    doc.setFontSize(10);
-    doc.text(`(${(projecaoMensal / 1000000).toFixed(2)} milhões de euros mensais)`, margin + 10, posY);
-    
-    // Página 2: Anexo Técnico
+    // ============================================
+    // PÁGINA 3: ANEXO TÉCNICO
+    // ============================================
     doc.addPage();
     posY = margin;
     
-    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text("ANEXO I: METODOLOGIA E EVIDÊNCIAS", pageWidth / 2, posY, { align: 'center' });
-    posY += 15;
+    doc.setFontSize(18);
+    doc.setTextColor(26, 35, 126);
+    doc.text("ANEXO TÉCNICO: INTEGRIDADE DE DADOS", pageWidth / 2, posY, { align: 'center' });
+    posY += 20;
     
-    doc.setDrawColor(0, 0, 0);
+    doc.setDrawColor(26, 35, 126);
     doc.setLineWidth(0.5);
     doc.line(margin, posY, pageWidth - margin, posY);
-    posY += 10;
+    posY += 15;
     
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
     
-    const metodologiaText = [
-        "METODOLOGIA DE ANÁLISE FORENSE",
+    const textoAnexo = [
+        "METODOLOGIA DE CRUZAMENTO DE DADOS",
         "",
-        "1. COLETA DE DADOS PRIMÁRIOS",
-        "Os dados analisados foram obtidos diretamente de documentos oficiais:",
-        "  • Ficheiros SAF-T (Standard Audit File for Tax) em formato XML",
-        "  • Faturas eletrónicas emitidas pelas plataformas digitais (formato PDF)",
-        "  • Extratos bancários digitalizados (formato PDF)",
+        "O Sistema VDC de Peritagem Forense emprega uma metodologia rigorosa de análise",
+        "que garante a integridade e autenticidade dos dados processados:",
         "",
-        "2. PROCESSAMENTO AUTOMATIZADO",
-        "Utilização de algoritmos especializados para:",
-        "  • Extração automática de valores numéricos de documentos",
-        "  • Reconciliação entre diferentes fontes de dados",
-        "  • Identificação de discrepâncias e padrões anómalos",
+        "1. COLETA E AUTENTICAÇÃO",
+        "   • Documentos são obtidos diretamente de fontes primárias (SAF-T, faturas eletrónicas)",
+        "   • Verificação automática de integridade digital",
+        "   • Validação de assinaturas eletrónicas quando aplicável",
         "",
-        "3. NORMALIZAÇÃO E VALIDAÇÃO",
-        "Conversão automática de diferentes formatos numéricos:",
-        "  • Suporte a formatos portugueses (1.234,56 €)",
-        "  • Suporte a formatos internacionais (1234.56)",
-        "  • Validação cruzada entre documentos para garantir consistência",
+        "2. PROCESSAMENTO FORENSE",
+        "   • Extração automatizada de valores utilizando algoritmos especializados",
+        "   • Reconhecimento ótico de caracteres (OCR) para documentos digitalizados",
+        "   • Normalização de formatos numéricos (português e internacional)",
         "",
-        "4. ANÁLISE DE CONFORMIDADE FISCAL",
-        "Verificação da conformidade com a legislação aplicável:",
-        "  • Regime DAC7 para plataformas digitais",
-        "  • Obrigações declarativas de IVA",
-        "  • Reconciliação entre valores faturados e valores declarados",
+        "3. CRUZAMENTO MULTIFONTE",
+        "   • Comparação sistemática entre diferentes fontes de dados",
+        "   • Verificação de consistência temporal e numérica",
+        "   • Identificação de discrepâncias através de algoritmos de matching",
         "",
-        "5. PROJEÇÃO E IMPACTO SETORIAL",
-        "Extrapolação matemática baseada em amostra representativa:",
-        "  • Cálculo de média por unidade analisada",
-        "  • Projeção para a totalidade do mercado nacional",
-        "  • Estimativa de impacto fiscal",
+        "4. VALIDAÇÃO DE CONFORMIDADE",
+        "   • Verificação de conformidade com legislação aplicável (DAC7, IVA)",
+        "   • Análise de requisitos declarativos",
+        "   • Deteção de omissões ou inconsistências",
         "",
-        "INTEGRIDADE PROCESSUAL",
-        "Todo o processo de análise foi documentado de forma a permitir",
-        "auditoria independente, garantindo a rastreabilidade das conclusões.",
+        "PROTEÇÃO DE DADOS",
         "",
-        "CONFIDENCIALIDADE",
-        "Este relatório destina-se exclusivamente a fins de auditoria e",
-        "peritagem financeira, em estrito cumprimento do RGPD e da",
-        "legislação de proteção de dados aplicável.",
+        "O sistema opera em estrito cumprimento do Regulamento Geral de Proteção de Dados (RGPD):",
         "",
-        "DATA DE EMISSÃO: " + new Date().toLocaleDateString('pt-PT')
+        "• Todos os dados são processados localmente no dispositivo do utilizador",
+        "• Nenhuma informação é transmitida para servidores externos",
+        "• Os ficheiros originais não são modificados durante o processamento",
+        "• Os relatórios gerados contêm apenas dados agregados e anonimizados",
+        "",
+        "RASTREABILIDADE",
+        "",
+        "Cada análise gera um hash de integridade único que permite verificar:",
+        "",
+        "• A autenticidade dos documentos processados",
+        "• A sequência cronológica das operações",
+        "• A integridade dos resultados produzidos",
+        "",
+        "Este sistema foi desenvolvido para apoiar profissionais de auditoria e peritagem",
+        "financeira, proporcionando ferramentas tecnológicas avançadas para análise de",
+        "conformidade fiscal em ambiente digital.",
+        "",
+        "SISTEMA VDC DE PERITAGEM FORENSE v12.5",
+        "Protocolo de Auditoria Final",
+        "Dados Auditados: Setembro a Dezembro 2024",
+        "",
+        `Data de geração: ${new Date().toLocaleString('pt-PT')}`
     ];
     
-    metodologiaText.forEach(linha => {
+    textoAnexo.forEach(linha => {
         if (posY > pageHeight - 20) {
             doc.addPage();
             posY = margin;
         }
         
-        if (linha.includes("METODOLOGIA") || linha.includes("INTEGRIDADE") || 
-            linha.includes("CONFIDENCIALIDADE") || linha.includes("DATA")) {
+        if (linha.includes("METODOLOGIA") || linha.includes("PROTEÇÃO") || 
+            linha.includes("RASTREABILIDADE") || linha.includes("SISTEMA VDC")) {
             doc.setFont('helvetica', 'bold');
             doc.text(linha, margin, posY);
             doc.setFont('helvetica', 'normal');
         } else if (linha.includes("1.") || linha.includes("2.") || linha.includes("3.") || 
-                   linha.includes("4.") || linha.includes("5.")) {
+                   linha.includes("4.")) {
             doc.setFont('helvetica', 'bold');
             doc.text(linha, margin, posY);
             doc.setFont('helvetica', 'normal');
-        } else if (linha.startsWith("  •")) {
+        } else if (linha.startsWith("   •")) {
             doc.text(linha, margin + 10, posY);
         } else {
             doc.text(linha, margin, posY);
         }
         
-        posY += linha.trim() === "" ? 5 : 7;
+        posY += linha.trim() === "" ? 5 : 6;
     });
     
-    // Rodapé
+    // Rodapé em todas as páginas
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v12.4 | Relatório de Conformidade Digital", 15, pageHeight - 10);
-        doc.text(`Página ${i} de ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: "right" });
+        doc.text("VDC Forensic System v12.5 | Relatório de Conformidade Fiscal | Confidencial", 
+                 margin, pageHeight - 10);
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
         
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.3);
-        doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+        doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
     }
 }
 
@@ -1056,11 +1159,11 @@ function calcularDiscrepanciaDAC7() {
              discrepancia === 0 ? 'success' : discrepancia < 100 ? 'warn' : 'error');
 }
 
-// 12. FUNÇÕES EXPORTAÇÃO
+// 12. FUNÇÕES EXPORTAÇÃO JSON
 async function exportJSON() {
     try {
         const data = {
-            sistema: "VDC Forensic System v12.4",
+            sistema: "VDC Forensic System v12.5",
             cliente: VDCSystem.client,
             periodo: VDCSystem.periodoAnalise,
             dados: VDCSystem.dadosMensais,
@@ -1113,7 +1216,7 @@ async function saveClientData() {
     
     try {
         const data = {
-            sistema: "VDC v12.4",
+            sistema: "VDC v12.5",
             cliente: VDCSystem.client,
             data: new Date().toISOString()
         };
@@ -1480,7 +1583,7 @@ function calcularProjecaoMercadoCorrigida() {
 // 18. INICIALIZAÇÃO
 async function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v12.4...');
+        console.log('🔧 Inicializando VDC Forensic System v12.5...');
         updateLoadingProgress(10);
         
         VDCSystem.sessionId = 'VDC-' + Date.now().toString(36).toUpperCase();
@@ -1506,7 +1609,7 @@ async function initializeSystem() {
             updateLoadingProgress(100);
             setTimeout(() => {
                 showMainInterface();
-                logAudit('✅ Sistema VDC v12.4 inicializado com sucesso', 'success');
+                logAudit('✅ Sistema VDC v12.5 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024', 'info');
                 updateAnalysisButton();
             }, 300);
@@ -1737,5 +1840,5 @@ window.addEventListener('DOMContentLoaded', () => {
     initializeSystem();
 });
 
-console.log('VDC Sistema de Peritagem Forense v12.4 - Carregado com sucesso');
+console.log('VDC Sistema de Peritagem Forense v12.5 - Carregado com sucesso');
 console.log('Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024');
