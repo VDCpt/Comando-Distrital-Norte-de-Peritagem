@@ -71,7 +71,7 @@ body {
     margin: 0 auto;
 }
 
-/* 3. CABEÇALHO */
+/* 3. CABEÇALHO COM DATA E RELÓGIO */
 .main-header {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
     padding: var(--spacing-md);
@@ -130,6 +130,21 @@ body {
     gap: 0.5rem;
     color: var(--text-tertiary);
     font-size: 0.9rem;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+#currentDate {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+#currentTime {
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+    font-family: var(--font-mono);
+    font-weight: 600;
 }
 
 .session-id {
@@ -154,7 +169,7 @@ body {
     }
 }
 
-/* 5. SIDEBAR - Estética Dark Gold aplicada */
+/* 5. SIDEBAR */
 .sidebar {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-right: 1px solid #444;
@@ -219,10 +234,14 @@ body {
     box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
 }
 
-.btn-primary {
-    background: linear-gradient(90deg, #d4af37 0%, #b8941f 100%);
-    color: #1a1a2e;
-    border: none;
+.btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.btn-primary, .btn-secondary {
+    flex: 1;
     padding: 0.75rem;
     border-radius: var(--border-radius-sm);
     font-weight: 600;
@@ -232,12 +251,29 @@ body {
     justify-content: center;
     gap: 0.5rem;
     transition: all 0.3s ease;
-    margin-top: var(--spacing-sm);
+    border: none;
+    font-family: var(--font-main);
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #d4af37 0%, #b8941f 100%);
+    color: #1a1a2e;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-secondary);
 }
 
 .client-status {
@@ -341,7 +377,7 @@ body {
     border-color: var(--accent-secondary);
 }
 
-/* 8. LISTA DE FICHEIROS (FEEDBACK VISUAL) */
+/* 8. LISTA DE FICHEIROS */
 .file-list {
     background: rgba(30, 41, 59, 0.5);
     border-radius: var(--border-radius-sm);
@@ -508,7 +544,7 @@ body {
     display: block;
 }
 
-/* 12. NOVA SEÇÃO: Dashboard KPI Bolt */
+/* 12. DASHBOARD KPI */
 .kpi-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -583,7 +619,6 @@ body {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, var(--bg-tertiary) 100%);
 }
 
-/* Card de Alerta para Diferencial */
 .kpi-card.alert {
     border-left-color: var(--warn-secondary);
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-tertiary) 100%);
@@ -597,23 +632,6 @@ body {
     50% { 
         box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
     }
-}
-
-#diferencialCard {
-    border-left: 4px solid var(--warn-secondary);
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--bg-tertiary) 100%);
-    animation: pulse-alert 2s infinite;
-    position: relative;
-    overflow: hidden;
-}
-
-#diferencialCard::before {
-    content: '⚠️';
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.2rem;
-    opacity: 0.3;
 }
 
 #diferencialVal {
@@ -640,79 +658,13 @@ body {
     margin-bottom: 0.25rem;
 }
 
-/* Estilo para valores de alerta */
-.alert-value {
-    color: var(--warn-primary) !important;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(255, 62, 62, 0.3);
-}
-
 .kpi-card small {
     color: var(--text-tertiary);
     font-size: 0.75rem;
     display: block;
 }
 
-/* Estatísticas Secundárias Melhoradas */
-.secondary-stats {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
-    border-radius: var(--border-radius-sm);
-    padding: 0.85rem;
-    text-align: center;
-    font-size: 0.9rem;
-    color: var(--text-tertiary);
-    border: 1px solid var(--border-color);
-    margin-top: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
-
-.secondary-stats span {
-    margin: 0 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.secondary-stats b {
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-weight: 600;
-    margin-left: 0.25rem;
-}
-
-/* Melhoria na responsividade dos KPIs */
-@media (max-width: 1200px) {
-    .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    #diferencialCard {
-        grid-column: span 2;
-    }
-}
-
-@media (max-width: 768px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    #diferencialCard {
-        grid-column: span 1;
-    }
-    
-    .secondary-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .secondary-stats span {
-        margin: 0;
-        justify-content: center;
-    }
-}
-
-/* 13. GRÁFICO DOUGHNUT (TAMANHO FIXO) */
+/* 13. GRÁFICO DOUGHNUT VERTICAL */
 .chart-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -730,12 +682,12 @@ body {
 }
 
 .chart-container {
-    height: 250px;
+    height: 350px;
     width: 100%;
     position: relative;
     background: var(--bg-tertiary);
     border-radius: var(--border-radius-sm);
-    padding: 10px;
+    padding: 20px;
 }
 
 .chart-container canvas {
@@ -833,7 +785,7 @@ body {
     transition: width 1s ease;
 }
 
-/* 15. ALERTA DE OMISSÃO */
+/* 15. ALERTAS */
 .omission-alert {
     background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, rgba(255, 62, 62, 0.05) 100%);
     border: 1px solid var(--warn-primary);
@@ -869,7 +821,6 @@ body {
     font-family: var(--font-mono);
 }
 
-/* Alerta de Diferencial Específico */
 .diferencial-alert {
     border-color: var(--warn-secondary) !important;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%) !important;
@@ -884,7 +835,7 @@ body {
     color: var(--warn-secondary) !important;
 }
 
-/* 16. CONSOLE DE AUDITORIA */
+/* 16. CONSOLA DE AUDITORIA */
 .console-section {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
@@ -1021,25 +972,6 @@ body {
     justify-content: center;
 }
 
-.btn-secondary {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-}
-
-.btn-secondary:hover {
-    background: var(--border-color);
-    border-color: var(--accent-secondary);
-}
-
 /* 18. INFORMAÇÃO DO SISTEMA */
 .system-info {
     text-align: center;
@@ -1136,10 +1068,6 @@ body {
         flex-direction: column;
         width: 100%;
     }
-    
-    .btn-secondary {
-        justify-content: center;
-    }
 }
 
 @media (max-width: 768px) {
@@ -1152,6 +1080,11 @@ body {
     .session-info {
         flex-direction: column;
         gap: var(--spacing-sm);
+        align-items: center;
+    }
+    
+    .timestamp {
+        align-items: center;
     }
     
     .results-grid {
@@ -1165,27 +1098,4 @@ body {
     .kpi-grid {
         grid-template-columns: 1fr;
     }
-}
-
-/* 21. AJUSTE DE RODAPÉ E MARGENS - CORREÇÃO SOLICITADA */
-/* Previne sobreposição no preview visual do rodapé */
-.report-footer {
-    display: flex;
-    justify-content: space-between; /* Separa os dizeres do contador de páginas */
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-}
-
-.page-counter {
-    font-size: 0.8rem;
-    color: #666;
-}
-
-/* 22. ESTILO ADICIONAL PARA GARANTIR ESTABILIDADE DO CABEÇALHO NO PREVIEW */
-.report-header-info {
-    position: absolute;
-    top: 15px; /* Ajuste para descer o texto */
-    right: 15px;
-    text-align: right;
-    line-height: 1.4;
 }
