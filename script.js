@@ -1598,16 +1598,23 @@ function calcularProjecaoMercadoCorrigida() {
     VDCSystem.analysis.extractedValues.projecaoSetorialAnual = volumeNegocioOmitidoAnual;
 }
 
-// 18. INICIALIZAÇÃO
+// 18. INICIALIZAÇÃO - CORRIGIDA
 async function initializeSystem() {
     try {
         console.log('🔧 Inicializando VDC Forensic System v12.6...');
         updateLoadingProgress(10);
         
         VDCSystem.sessionId = 'VDC-' + Date.now().toString(36).toUpperCase();
-        // LINHA PROBLEMÁTICA REMOVIDA: document.getElementById('sessionIdDisplay').textContent = VDCSystem.sessionId;
         
         updateLoadingProgress(20);
+        
+        // Verificar se os elementos DOM estão disponíveis
+        if (!document.getElementById('selYear')) {
+            console.error('❌ Elementos DOM não carregados corretamente');
+            showMainInterface(); // Forçar mostrar interface mesmo com erro
+            logAudit('⚠️ Sistema inicializado com elementos DOM ausentes', 'warn');
+            return;
+        }
         
         setupYearSelector();
         updateLoadingProgress(30);
@@ -1637,13 +1644,18 @@ async function initializeSystem() {
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
-        alert(`Falha na inicialização: ${error.message}`);
+        // Mostrar interface mesmo com erro
+        showMainInterface();
+        logAudit(`Erro na inicialização: ${error.message}`, 'error');
     }
 }
 
 function setupYearSelector() {
     const selYear = document.getElementById('selYear');
-    if (!selYear) return;
+    if (!selYear) {
+        console.warn('❌ Elemento selYear não encontrado');
+        return;
+    }
     
     const currentYear = new Date().getFullYear();
     selYear.innerHTML = '';
@@ -1666,29 +1678,93 @@ function setupYearSelector() {
 }
 
 async function setupAllEventListeners() {
-    // Botões principais
-    document.getElementById('registerClientBtn').addEventListener('click', registerClient);
-    document.getElementById('saveClientBtn').addEventListener('click', saveClientData);
-    document.getElementById('btnDemo').addEventListener('click', loadDemoData);
-    document.getElementById('calcDAC7Btn').addEventListener('click', calcularDiscrepanciaDAC7);
-    document.getElementById('analyzeBtn').addEventListener('click', performForensicAnalysis);
-    document.getElementById('exportPDFBtn').addEventListener('click', exportPDF);
-    document.getElementById('exportJSONBtn').addEventListener('click', exportJSON);
-    document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
-    document.getElementById('clearConsoleBtn').addEventListener('click', clearConsole);
-    document.getElementById('toggleConsoleBtn').addEventListener('click', toggleConsole);
-    
-    // Teclado
-    document.getElementById('clientName').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') document.getElementById('clientNIF').focus();
-    });
-    
-    document.getElementById('clientNIF').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') registerClient();
-    });
-    
-    // Upload de ficheiros
-    setupFileUploadListeners();
+    try {
+        // Verificar se os botões existem antes de adicionar event listeners
+        const buttons = [
+            'registerClientBtn', 'saveClientBtn', 'btnDemo', 'calcDAC7Btn',
+            'analyzeBtn', 'exportPDFBtn', 'exportJSONBtn', 'clearDataBtn',
+            'clearConsoleBtn', 'toggleConsoleBtn'
+        ];
+        
+        buttons.forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (!btn) {
+                console.warn(`❌ Botão não encontrado: ${btnId}`);
+            }
+        });
+        
+        // Adicionar event listeners apenas para elementos existentes
+        const registerClientBtn = document.getElementById('registerClientBtn');
+        if (registerClientBtn) {
+            registerClientBtn.addEventListener('click', registerClient);
+        }
+        
+        const saveClientBtn = document.getElementById('saveClientBtn');
+        if (saveClientBtn) {
+            saveClientBtn.addEventListener('click', saveClientData);
+        }
+        
+        const btnDemo = document.getElementById('btnDemo');
+        if (btnDemo) {
+            btnDemo.addEventListener('click', loadDemoData);
+        }
+        
+        const calcDAC7Btn = document.getElementById('calcDAC7Btn');
+        if (calcDAC7Btn) {
+            calcDAC7Btn.addEventListener('click', calcularDiscrepanciaDAC7);
+        }
+        
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', performForensicAnalysis);
+        }
+        
+        const exportPDFBtn = document.getElementById('exportPDFBtn');
+        if (exportPDFBtn) {
+            exportPDFBtn.addEventListener('click', exportPDF);
+        }
+        
+        const exportJSONBtn = document.getElementById('exportJSONBtn');
+        if (exportJSONBtn) {
+            exportJSONBtn.addEventListener('click', exportJSON);
+        }
+        
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        if (clearDataBtn) {
+            clearDataBtn.addEventListener('click', clearAllData);
+        }
+        
+        const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+        if (clearConsoleBtn) {
+            clearConsoleBtn.addEventListener('click', clearConsole);
+        }
+        
+        const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
+        if (toggleConsoleBtn) {
+            toggleConsoleBtn.addEventListener('click', toggleConsole);
+        }
+        
+        // Teclado
+        const clientName = document.getElementById('clientName');
+        const clientNIF = document.getElementById('clientNIF');
+        
+        if (clientName && clientNIF) {
+            clientName.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') clientNIF.focus();
+            });
+            
+            clientNIF.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') registerClient();
+            });
+        }
+        
+        // Upload de ficheiros
+        setupFileUploadListeners();
+        
+    } catch (error) {
+        console.error('Erro ao configurar event listeners:', error);
+        logAudit(`Erro na configuração: ${error.message}`, 'error');
+    }
 }
 
 function setupFileUploadListeners() {
@@ -1724,13 +1800,23 @@ function setupFileUploadListeners() {
                     }
                 }
             });
+        } else {
+            console.warn(`❌ Elementos de upload não encontrados: ${btnId} ou ${config.input}`);
         }
     });
 }
 
 async function registerClient() {
-    const name = document.getElementById('clientName')?.value.trim();
-    const nif = document.getElementById('clientNIF')?.value.trim();
+    const clientName = document.getElementById('clientName');
+    const clientNIF = document.getElementById('clientNIF');
+    
+    if (!clientName || !clientNIF) {
+        alert('❌ Elementos do formulário não encontrados');
+        return;
+    }
+    
+    const name = clientName.value.trim();
+    const nif = clientNIF.value.trim();
     
     if (!name || name.length < 3) {
         alert('Nome do cliente inválido (mínimo 3 caracteres)');
@@ -1763,12 +1849,19 @@ async function registerClient() {
 function resetDashboard() {
     resetCompleteSystemState();
     
-    document.getElementById('clientName').value = '';
-    document.getElementById('clientNIF').value = '';
-    document.getElementById('clientPhone').value = '';
-    document.getElementById('clientEmail').value = '';
-    document.getElementById('clientAddress').value = '';
-    document.getElementById('dac7Value').value = '';
+    const elementsToReset = [
+        { id: 'clientName', value: '' },
+        { id: 'clientNIF', value: '' },
+        { id: 'clientPhone', value: '' },
+        { id: 'clientEmail', value: '' },
+        { id: 'clientAddress', value: '' },
+        { id: 'dac7Value', value: '' }
+    ];
+    
+    elementsToReset.forEach(item => {
+        const element = document.getElementById(item.id);
+        if (element) element.value = item.value;
+    });
     
     const clientStatus = document.getElementById('clientStatus');
     if (clientStatus) clientStatus.style.display = 'none';
@@ -1831,8 +1924,19 @@ function showMainInterface() {
         setTimeout(() => {
             loadingOverlay.style.display = 'none';
             mainContainer.style.display = 'block';
-            setTimeout(() => mainContainer.style.opacity = '1', 50);
+            setTimeout(() => {
+                mainContainer.style.opacity = '1';
+                // Forçar atualização do botão de análise
+                updateAnalysisButton();
+            }, 50);
         }, 500);
+    } else {
+        // Fallback: mostrar conteúdo mesmo sem animação
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContainer) {
+            mainContainer.style.display = 'block';
+            mainContainer.style.opacity = '1';
+        }
     }
 }
 
@@ -1855,9 +1959,47 @@ function startClockAndDate() {
     setInterval(updateDateTime, 1000);
 }
 
-// 20. INICIALIZAÇÃO AUTOMÁTICA
-window.addEventListener('DOMContentLoaded', () => {
-    initializeSystem();
+// 20. INICIALIZAÇÃO AUTOMÁTICA - VERSÃO ROBUSTA
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 DOM completamente carregado. Inicializando VDC System...');
+    
+    // Verificar elementos críticos
+    const criticalElements = ['loadingOverlay', 'mainContainer', 'clientName', 'analyzeBtn'];
+    let allCriticalElementsExist = true;
+    
+    criticalElements.forEach(id => {
+        if (!document.getElementById(id)) {
+            console.error(`❌ Elemento crítico não encontrado: ${id}`);
+            allCriticalElementsExist = false;
+        }
+    });
+    
+    if (allCriticalElementsExist) {
+        // Iniciar sistema normalmente
+        setTimeout(() => {
+            initializeSystem();
+        }, 100);
+    } else {
+        // Fallback: mostrar interface mesmo com elementos faltando
+        console.warn('⚠️ Elementos críticos faltando. Tentando inicialização alternativa...');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const mainContainer = document.getElementById('mainContainer');
+        
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContainer) {
+            mainContainer.style.display = 'block';
+            mainContainer.style.opacity = '1';
+        }
+        
+        // Tentar inicializar partes funcionais
+        try {
+            startClockAndDate();
+            renderEmptyChart();
+            logAudit('⚠️ Sistema inicializado em modo de recuperação', 'warn');
+        } catch (error) {
+            console.error('Falha na inicialização alternativa:', error);
+        }
+    }
 });
 
 console.log('VDC Sistema de Peritagem Forense v12.6 - Carregado com sucesso');
