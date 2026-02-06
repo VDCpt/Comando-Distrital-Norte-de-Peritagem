@@ -1605,7 +1605,8 @@ async function initializeSystem() {
         updateLoadingProgress(10);
         
         VDCSystem.sessionId = 'VDC-' + Date.now().toString(36).toUpperCase();
-        document.getElementById('sessionIdDisplay').textContent = VDCSystem.sessionId;
+        // LINHA PROBLEMÁTICA REMOVIDA: document.getElementById('sessionIdDisplay').textContent = VDCSystem.sessionId;
+        
         updateLoadingProgress(20);
         
         setupYearSelector();
