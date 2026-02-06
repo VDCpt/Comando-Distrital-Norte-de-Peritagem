@@ -30,7 +30,7 @@
     <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
-        <!-- Cabeçalho -->
+        <!-- Cabeçalho com Data e Relógio -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
@@ -42,8 +42,8 @@
                 </div>
                 <div class="session-info">
                     <div class="timestamp">
-                        <i class="fas fa-clock"></i>
-                        <span id="currentTime">00:00:00</span>
+                        <div id="currentDate">DD/MM/AAAA</div>
+                        <div><i class="fas fa-clock"></i> <span id="currentTime">00:00:00</span></div>
                         <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
                     </div>
                 </div>
@@ -60,15 +60,30 @@
                     <div class="client-form">
                         <div class="form-group">
                             <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
-                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda">
+                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda" list="clientSuggestions">
+                            <datalist id="clientSuggestions">
+                                <option value="Momento Eficaz, Lda">
+                                <option value="Transportes Digitais, SA">
+                                <option value="Mobilidade Urbana, Lda">
+                                <option value="Taxi Digital Portugal">
+                            </datalist>
                         </div>
                         <div class="form-group">
                             <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
                             <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
                         </div>
-                        <button id="registerClientBtn" class="btn-primary">
-                            <i class="fas fa-save"></i> REGISTAR CLIENTE
-                        </button>
+                        <div class="form-group">
+                            <label for="clientDAC7"><i class="fas fa-file-contract"></i> DAC7 ID</label>
+                            <input type="text" id="clientDAC7" placeholder="Ex: DAC7-PT-2024-XXXXX">
+                        </div>
+                        <div class="btn-group">
+                            <button id="registerClientBtn" class="btn-primary">
+                                <i class="fas fa-save"></i> REGISTAR
+                            </button>
+                            <button id="saveClientBtn" class="btn-secondary">
+                                <i class="fas fa-download"></i> GUARDAR
+                            </button>
+                        </div>
                     </div>
                     <div id="clientStatus" class="client-status" style="display: none;">
                         <i class="fas fa-check-circle"></i>
@@ -89,14 +104,15 @@
                         <select id="selPlatform" class="platform-select">
                             <option value="bolt">Bolt (Estónia)</option>
                             <option value="uber">Uber (Holanda)</option>
+                            <option value="freenow">FREE NOW (Alemanha)</option>
                             <option value="other">Outra Plataforma</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Upload de Ficheiros -->
+                <!-- Upload de Ficheiros (Limite 12 por categoria) -->
                 <div class="upload-section">
-                    <h3><i class="fas fa-upload"></i> CARREGAMENTO DE DOCUMENTOS</h3>
+                    <h3><i class="fas fa-upload"></i> CARREGAMENTO DE DOCUMENTOS (Max: 12)</h3>
                     
                     <!-- Control File -->
                     <div class="upload-group">
@@ -112,7 +128,8 @@
                         <button class="upload-btn multi" onclick="document.getElementById('saftFile').click()">
                             <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
                         </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
+                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden 
+                               onchange="validateFileCount(this, 'saft', 12)">
                         <div id="saftFileList" class="file-list"></div>
                     </div>
 
@@ -121,7 +138,8 @@
                         <button class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
                             <i class="fas fa-receipt"></i> FATURAS DA PLATAFORMA
                         </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden>
+                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden
+                               onchange="validateFileCount(this, 'invoices', 12)">
                         <div id="invoiceFileList" class="file-list"></div>
                     </div>
 
@@ -130,7 +148,8 @@
                         <button class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
                             <i class="fas fa-university"></i> EXTRATOS BANCÁRIOS
                         </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden>
+                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden
+                               onchange="validateFileCount(this, 'statements', 12)">
                         <div id="statementFileList" class="file-list"></div>
                     </div>
                 </div>
@@ -211,13 +230,14 @@
                     <div class="secondary-stats">
                         <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
                         <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
-                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span>
+                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span> |
+                        <span><i class="fas fa-road"></i> Portagens: <b id="valTolls">0,00€</b></span>
                     </div>
                 </section>
 
-                <!-- Gráfico Doughnut (ATIVADO) -->
+                <!-- Gráfico Doughnut Vertical Ativo -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA</h3>
+                    <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA (€ e %)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
@@ -273,12 +293,12 @@
                     </div>
                 </section>
 
-                <!-- Console de Auditoria -->
+                <!-- Consola de Auditoria -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLE DE AUDITORIA</h3>
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA</h3>
                         <div class="console-controls">
-                            <button class="icon-btn" onclick="clearConsole()" title="Limpar console">
+                            <button class="icon-btn" onclick="clearConsole()" title="Limpar consola">
                                 <i class="fas fa-broom"></i>
                             </button>
                             <button class="icon-btn" onclick="toggleConsole()" title="Alternar tamanho">
@@ -306,7 +326,7 @@
                     <button class="btn-secondary" onclick="exportPDF()">
                         <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
                     </button>
-                    <button class="btn-secondary" onclick="clearSession()">
+                    <button class="btn-secondary" onclick="resetDashboard()">
                         <i class="fas fa-redo"></i> NOVA SESSÃO
                     </button>
                 </div>
@@ -314,7 +334,7 @@
             
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO:</strong>
+                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO (SHA-253):</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
