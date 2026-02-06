@@ -86,52 +86,49 @@ const VDCSystem = {
     },
     
     logs: [],
-    chart: null
+    chart: null,
+    fileProcessingPromises: []
 };
 
-// 2. MOTOR DE PARSING HEURÍSTICO - VDC v10.8
+// 2. MOTOR DE PARSING HEURÍSTICO - VDC v10.8 (REGRAS DO PERITO)
 const RegexEngine = {
-    // Padrões heurísticos para extração de valores - ATUALIZADOS
+    // Padrões heurísticos para extração de valores - ATUALIZADOS COM REGRAS DO PERITO
     patterns: {
-        // Âncora: "Ganhos" no extrato do saldo
-        ganhos: /(?:Ganhos\s*(?:Brutos)?|Gross\s*Earnings|Gross)\s*[:=]?\s*([\d.,]+)/i,
+        // REGRAS DE FATURA (Total\s*([\d.,]+))
+        totalFatura: /Total\s*([\d.,]+)/i,
         
-        // Âncora: "Despesas" no extrato do saldo
-        despesas: /(?:Despesas|Expenses|Commission)\s*[:=]?\s*([\d.,]+)/i,
+        // REGRAS DE EXTRATO (Ganhos, Despesas, Ganhos líquidos)
+        ganhos: /Ganhos\s*(?:Brutos)?\s*[:=]?\s*([\d.,]+)/i,
+        despesas: /Despesas\s*[:=]?\s*([\d.,]+)/i,
+        ganhosLiquidos: /Ganhos\s+L[ií]quidos\s*[:=]?\s*([\d.,]+)/i,
         
-        // Âncora: "Ganhos líquidos" no extrato do saldo
-        ganhosLiquidos: /(?:Ganhos\s+Líquidos|Net\s+Earnings|Net\s*Amount)\s*[:=]?\s*([\d.,]+)/i,
+        // REGRAS DE TRANSAÇÕES
+        campanhas: /Ganhos\s+da\s+campanha\s*[:=]?\s*([\d.,]+)/i,
+        gorjetas: /Gorjetas\s+dos\s+passageiros\s*[:=]?\s*([\d.,]+)/i,
+        cancelamentos: /Taxas\s+de\s+cancelamento\s*[:=]?\s*([\d.,]+)/i,
+        portagens: /Portagens\s*[:=]?\s*([\d.,]+)/i,
         
-        // Âncora: "Total" em faturas (sem €)
-        totalFatura: /(?:Total|Amount|Invoice\s+Total)\s*[:=]?\s*([\d.,]+)/i,
+        // Número da fatura
+        numeroFatura: /(PT\d+-\d+)/i,
         
-        // Âncora: "Ganhos da campanha" no extrato
-        campanhas: /(?:Ganhos\s+da\s+campanha|Campaign\s+Earnings|Bonuses)\s*[:=]?\s*([\d.,]+)/i,
-        
-        // Âncora: "Gorjetas dos passageiros"
-        gorjetas: /(?:Gorjetas\s+dos\s+passageiros|Passenger\s+Tips|Tips)\s*[:=]?\s*([\d.,]+)/i,
-        
-        // Âncora: "Taxas de cancelamento"
-        cancelamentos: /(?:Taxas\s+de\s+cancelamento|Cancellation\s+Fees|Cancellations)\s*[:=]?\s*([\d.,]+)/i,
-        
-        // Âncora: "Portagens"
-        portagens: /(?:Portagens|Tolls)\s*[:=]?\s*([\d.,]+)/i,
-        
-        // Número da fatura: PT seguido de números
-        numeroFatura: /(?:Fatura\s*n[º\.°]?\s*)?(PT\d+-\d+)/i,
-        
-        // Âncora genérica para qualquer valor monetário (sem símbolo)
-        anyNumber: /\b(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\b/g
+        // Transferência bancária
+        transferencia: /Transfer[êe]ncia\s*(?:.*?)(?:Bolt|Uber|Plataforma)\s*([\d.,]+)/i
     },
     
-    // Normalização de string para float
-    normalizeNumber: function(str) {
-        if (!str) return 0;
+    // FUNÇÃO DE NORMALIZAÇÃO (REMOVE SÍMBOLOS, CONVERTE , EM .)
+    cleanValue: function(val) {
+        if (!val || val === '') return 0;
         
-        // Substituir vírgula por ponto e remover espaços
-        const normalized = str.replace(/\./g, '').replace(',', '.').replace(/\s/g, '');
+        // Remove símbolos de moeda e espaços
+        let clean = val.replace(/[€$\s]/g, '');
         
-        const number = parseFloat(normalized);
+        // Substitui pontos de milhar (1.000 → 1000)
+        clean = clean.replace(/\./g, '');
+        
+        // Substitui vírgula decimal por ponto (239,00 → 239.00)
+        clean = clean.replace(',', '.');
+        
+        const number = parseFloat(clean);
         return isNaN(number) ? 0 : number;
     },
     
@@ -143,23 +140,10 @@ const RegexEngine = {
         const match = text.match(pattern);
         if (!match || !match[1]) return 0;
         
-        return this.normalizeNumber(match[1]);
+        return this.cleanValue(match[1]);
     },
     
-    // Extração de todos os valores de um texto
-    extractAllValues: function(text) {
-        const values = {};
-        
-        Object.keys(this.patterns).forEach(key => {
-            if (key !== 'anyNumber' && key !== 'numeroFatura') {
-                values[key] = this.extractByAnchor(text, key);
-            }
-        });
-        
-        return values;
-    },
-    
-    // Extração específica para faturas (PDF-to-Text) - ATUALIZADA
+    // Extração específica para faturas (PDF-to-Text) - REGRAS DO PERITO
     extractFromInvoice: function(text) {
         const extracted = {
             invoiceValue: 0,
@@ -173,21 +157,18 @@ const RegexEngine = {
             extracted.invoiceNumber = invoiceMatch[1];
         }
         
-        // Tentar encontrar o valor total da fatura (sem €)
+        // REGRA DO PERITO: Total\s*([\d.,]+)
         const totalMatch = text.match(this.patterns.totalFatura);
         if (totalMatch && totalMatch[1]) {
-            extracted.invoiceValue = this.normalizeNumber(totalMatch[1]);
+            extracted.invoiceValue = this.cleanValue(totalMatch[1]);
         }
         
-        // Fallback: extrair todos os números e pegar o maior como total
+        // Fallback: procurar qualquer número grande
         if (extracted.invoiceValue === 0) {
-            const numberMatches = text.match(this.patterns.anyNumber);
-            if (numberMatches) {
-                const numbers = numberMatches.map(match => {
-                    return this.normalizeNumber(match);
-                });
-                
-                // Filtrar números razoáveis para faturas (entre 10 e 10000)
+            const numberPattern = /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g;
+            const matches = text.match(numberPattern);
+            if (matches) {
+                const numbers = matches.map(match => this.cleanValue(match));
                 const validNumbers = numbers.filter(n => n >= 10 && n <= 10000);
                 if (validNumbers.length > 0) {
                     extracted.invoiceValue = Math.max(...validNumbers);
@@ -198,7 +179,7 @@ const RegexEngine = {
         return extracted;
     },
     
-    // Extração específica para extratos bancários - ATUALIZADA
+    // Extração específica para extratos bancários - REGRAS DO PERITO
     extractFromStatement: function(text) {
         const extracted = {
             ganhosBrutos: 0,
@@ -211,29 +192,21 @@ const RegexEngine = {
             bankTransfer: 0
         };
         
-        // Extrair por âncoras específicas ATUALIZADAS
+        // REGRAS DO PERITO: Ganhos, Despesas, Ganhos líquidos
         extracted.ganhosBrutos = this.extractByAnchor(text, 'ganhos');
         extracted.comissaoApp = -this.extractByAnchor(text, 'despesas'); // Negativo
         extracted.ganhosLiquidos = this.extractByAnchor(text, 'ganhosLiquidos');
+        
+        // REGRAS DO PERITO: Transações específicas
         extracted.campanhas = this.extractByAnchor(text, 'campanhas');
         extracted.gorjetas = this.extractByAnchor(text, 'gorjetas');
         extracted.cancelamentos = this.extractByAnchor(text, 'cancelamentos');
         extracted.portagens = this.extractByAnchor(text, 'portagens');
         
-        // Se não encontrar "portagens" separado, pode estar em "cancelamentos"
-        if (extracted.portagens === 0 && extracted.cancelamentos > 0) {
-            // Assumir que parte dos cancelamentos são portagens
-            extracted.portagens = extracted.cancelamentos * 0.5;
-        }
+        // Transferência bancária
+        extracted.bankTransfer = this.extractByAnchor(text, 'transferencia');
         
-        // Buscar transferências (padrão específico para extratos)
-        const transferPattern = /(?:Transfer[êe]ncia|Transfer|Payment|Credit)\s*(?:.*?)(?:Bolt|Uber|Plataforma)\s*([\d.,]+)/i;
-        const transferMatch = text.match(transferPattern);
-        if (transferMatch && transferMatch[1]) {
-            extracted.bankTransfer = this.normalizeNumber(transferMatch[1]);
-        }
-        
-        // Se não encontrou transferência específica, usar ganhos líquidos
+        // Se não encontrou transferência, usar ganhos líquidos
         if (extracted.bankTransfer === 0 && extracted.ganhosLiquidos > 0) {
             extracted.bankTransfer = extracted.ganhosLiquidos;
         }
@@ -242,8 +215,35 @@ const RegexEngine = {
     }
 };
 
-// 3. INICIALIZAÇÃO DO SISTEMA - COM SINCRONIZAÇÃO ASSÍNCRONA
-document.addEventListener('DOMContentLoaded', () => {
+// 3. SISTEMA DE LEITURA DE FICHEIROS COM PROMISES
+const FileSystem = {
+    readFileAsText: function(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsText(file, 'UTF-8');
+        });
+    },
+    
+    processFilesSequentially: async function(files, processor) {
+        const results = [];
+        for (const file of files) {
+            try {
+                const text = await this.readFileAsText(file);
+                const result = processor(text);
+                results.push(result);
+            } catch (error) {
+                console.error(`Erro no ficheiro ${file.name}:`, error);
+                results.push(null);
+            }
+        }
+        return results;
+    }
+};
+
+// 4. INICIALIZAÇÃO DO SISTEMA - COM DOMContentLoaded
+window.addEventListener('DOMContentLoaded', () => {
     initializeSystem();
 });
 
@@ -260,22 +260,23 @@ async function initializeSystem() {
         setupPlatformSelector();
         updateLoadingProgress(40);
         
-        // CONSOLIDAÇÃO: TODOS OS EVENT LISTENERS EM UM ÚNICO LOCAL
+        // Configurar todos os event listeners
         await setupAllEventListeners();
         updateLoadingProgress(60);
         
-        // ATIVAR BOTÃO DEMO
+        // Ativar botão demo
         setupDemoButton();
         updateLoadingProgress(70);
         
-        // INICIALIZAR COM VALORES ZERADOS
+        // Inicializar com valores zerados
         resetDashboard();
         updateLoadingProgress(80);
         
+        // Iniciar relógio e data
         startClockAndDate();
         updateLoadingProgress(90);
         
-        // RENDERIZAR GRÁFICO VAZIO
+        // Renderizar gráfico vazio
         renderEmptyChart();
         updateLoadingProgress(95);
         
@@ -287,7 +288,7 @@ async function initializeSystem() {
                 logAudit('✅ Sistema VDC v10.8 inicializado com sucesso', 'success');
                 logAudit('Protocolo de Prova Legal ativado - Motor Heurístico Ativo', 'info');
                 
-                // ATUALIZAR BOTÃO INICIAL
+                // Atualizar botão inicial
                 updateAnalysisButton();
                 
             }, 300);
@@ -299,7 +300,7 @@ async function initializeSystem() {
     }
 }
 
-// 4. SETUP DE TODOS OS EVENT LISTENERS - CONSOLIDADO
+// 5. SETUP DE TODOS OS EVENT LISTENERS - CONSOLIDADO
 async function setupAllEventListeners() {
     // Registro de cliente
     document.getElementById('registerClientBtn').addEventListener('click', registerClient);
@@ -312,7 +313,7 @@ async function setupAllEventListeners() {
     // DAC7
     document.getElementById('calcDAC7Btn').addEventListener('click', calcularDiscrepanciaDAC7);
     
-    // Upload de ficheiros (SINCRONIZAÇÃO ASSÍNCRONA GARANTIDA)
+    // Upload de ficheiros
     setupFileUploadListeners();
     
     // Análise e Exportação
@@ -335,7 +336,7 @@ async function setupAllEventListeners() {
     });
 }
 
-// 5. SETUP DE UPLOAD DE FICHEIROS - ASSÍNCRONO
+// 6. SETUP DE UPLOAD DE FICHEIROS
 function setupFileUploadListeners() {
     const fileInputs = {
         'controlFileBtn': 'controlFile',
@@ -355,21 +356,27 @@ function setupFileUploadListeners() {
                 if (e.target.files && e.target.files.length > 0) {
                     const files = Array.from(e.target.files);
                     
-                    // PROCESSAMENTO ASSÍNCRONO COM ESPERA
-                    await processFilesByType(inputId, files);
+                    // Adicionar à lista de processamento
+                    VDCSystem.fileProcessingPromises.push(
+                        processFilesByType(inputId, files)
+                    );
                     
-                    // ATUALIZAR LISTA VISUAL
+                    // Atualizar lista visual
                     updateFileList(inputId + 'List', files);
                     
-                    // ATUALIZAR CONTADORES
+                    // Atualizar contadores
                     updateCounter(inputId.replace('File', ''), files.length);
+                    
+                    // Aguardar processamento antes de atualizar botão
+                    await Promise.all(VDCSystem.fileProcessingPromises);
+                    updateAnalysisButton();
                 }
             });
         }
     });
 }
 
-// 6. PROCESSAMENTO DE FICHEIROS POR TIPO - ASSÍNCRONO
+// 7. PROCESSAMENTO DE FICHEIROS POR TIPO
 async function processFilesByType(type, files) {
     switch (type) {
         case 'controlFile':
@@ -385,27 +392,21 @@ async function processFilesByType(type, files) {
             await processStatementFiles(files);
             break;
     }
-    
-    // GARANTIR SINCRONIZAÇÃO ANTES DE ATUALIZAR BOTÃO
-    await new Promise(resolve => setTimeout(resolve, 100));
-    updateAnalysisButton();
 }
 
-// 7. FUNÇÕES DE PROCESSAMENTO COM PARSING HEURÍSTICO
+// 8. FUNÇÕES DE PROCESSAMENTO COM PARSING HEURÍSTICO
 async function processControlFile(file) {
     try {
         logAudit(`🔍 Processando ficheiro de controlo: ${file.name}`, 'info');
         
-        const text = await readFileAsText(file);
-        
-        // USAR MOTOR HEURÍSTICO
+        const text = await FileSystem.readFileAsText(file);
         const extractedValues = RegexEngine.extractFromStatement(text);
         
-        // INJETAR VALORES EXTRAÍDOS
+        // Injetar valores extraídos
         Object.assign(VDCSystem.analysis.extractedValues, extractedValues);
         
         logAudit(`✅ Controlo processado: ${file.name}`, 'success');
-        logAudit(`Valores extraídos: ${JSON.stringify(extractedValues)}`, 'info');
+        logAudit(`Valores extraídos: Ganhos ${extractedValues.ganhosBrutos}€, Líquido ${extractedValues.ganhosLiquidos}€`, 'info');
         
         VDCSystem.documents.control.files = [file];
         VDCSystem.documents.control.parsedData = extractedValues;
@@ -423,14 +424,16 @@ async function processSaftFiles(files) {
         let totalGross = 0;
         let totalIVA6 = 0;
         
-        for (const file of files) {
-            const text = await readFileAsText(file);
-            
+        const results = await FileSystem.processFilesSequentially(files, (text) => {
             // Extrair do XML/CSV do SAF-T
             const values = extractFromSaft(text);
+            return values;
+        });
+        
+        results.forEach(values => {
             totalGross += values.gross || 0;
             totalIVA6 += values.iva6 || 0;
-        }
+        });
         
         VDCSystem.analysis.extractedValues.saftGross = totalGross;
         VDCSystem.analysis.extractedValues.saftIVA6 = totalIVA6;
@@ -449,22 +452,20 @@ async function processInvoiceFiles(files) {
     try {
         logAudit(`🔍 Processando ${files.length} faturas...`, 'info');
         
-        // LIMPAR ACUMULADORES
+        // Limpar acumuladores
         VDCSystem.documents.invoices.totals = { commission: 0, iva23: 0, invoiceValue: 0, invoiceNumber: "N/D" };
         VDCSystem.analysis.extractedValues.platformCommission = 0;
         VDCSystem.analysis.extractedValues.faturaPlataforma = 0;
         VDCSystem.analysis.extractedValues.invoiceNumber = "N/D";
         
-        for (const file of files) {
-            const text = await readFileAsText(file);
-            
-            // USAR MOTOR HEURÍSTICO PARA FATURAS
-            const extracted = RegexEngine.extractFromInvoice(text);
-            
+        const results = await FileSystem.processFilesSequentially(files, (text) => {
+            return RegexEngine.extractFromInvoice(text);
+        });
+        
+        results.forEach(extracted => {
             VDCSystem.documents.invoices.totals.commission += extracted.commission;
             VDCSystem.documents.invoices.totals.invoiceValue += extracted.invoiceValue;
             
-            // Guardar número da fatura se encontrado
             if (extracted.invoiceNumber !== "N/D") {
                 VDCSystem.documents.invoices.totals.invoiceNumber = extracted.invoiceNumber;
                 VDCSystem.analysis.extractedValues.invoiceNumber = extracted.invoiceNumber;
@@ -472,7 +473,7 @@ async function processInvoiceFiles(files) {
             
             VDCSystem.analysis.extractedValues.platformCommission += extracted.commission;
             VDCSystem.analysis.extractedValues.faturaPlataforma += extracted.invoiceValue;
-        }
+        });
         
         logAudit(`✅ ${files.length} faturas processadas`, 'success');
         if (VDCSystem.analysis.extractedValues.invoiceNumber !== "N/D") {
@@ -493,22 +494,21 @@ async function processStatementFiles(files) {
         
         let totalTransfer = 0;
         
-        for (const file of files) {
-            const text = await readFileAsText(file);
-            
-            // USAR MOTOR HEURÍSTICO PARA EXTRATOS
-            const extracted = RegexEngine.extractFromStatement(text);
-            
+        const results = await FileSystem.processFilesSequentially(files, (text) => {
+            return RegexEngine.extractFromStatement(text);
+        });
+        
+        results.forEach(extracted => {
             totalTransfer += extracted.bankTransfer;
             
-            // COMBINAR VALORES EXTRAÍDOS
+            // Combinar valores extraídos
             Object.keys(extracted).forEach(key => {
                 if (extracted[key] > 0) {
                     VDCSystem.analysis.extractedValues[key] = 
                         (VDCSystem.analysis.extractedValues[key] || 0) + extracted[key];
                 }
             });
-        }
+        });
         
         VDCSystem.analysis.extractedValues.bankTransfer = totalTransfer;
         
@@ -522,17 +522,17 @@ async function processStatementFiles(files) {
     }
 }
 
-// 8. FUNÇÕES AUXILIARES DE PARSING
+// 9. FUNÇÕES AUXILIARES DE PARSING
 function extractFromSaft(text) {
     const values = { gross: 0, iva6: 0 };
     
     // Tentar XML primeiro
     if (text.includes('<GrossTotal>')) {
         const grossMatch = text.match(/<GrossTotal>([\d,]+\.?\d*)<\/GrossTotal>/);
-        if (grossMatch) values.gross = RegexEngine.normalizeNumber(grossMatch[1]);
+        if (grossMatch) values.gross = RegexEngine.cleanValue(grossMatch[1]);
         
         const iva6Match = text.match(/<Tax>6%<\/Tax>.*?<TaxAmount>([\d,]+\.?\d*)<\/TaxAmount>/s);
-        if (iva6Match) values.iva6 = RegexEngine.normalizeNumber(iva6Match[1]);
+        if (iva6Match) values.iva6 = RegexEngine.cleanValue(iva6Match[1]);
     }
     // Tentar CSV
     else if (text.includes(';')) {
@@ -541,7 +541,7 @@ function extractFromSaft(text) {
             if (line.includes('TotalGeral')) {
                 const parts = line.split(';');
                 if (parts.length > 1) {
-                    values.gross = RegexEngine.normalizeNumber(parts[1]);
+                    values.gross = RegexEngine.cleanValue(parts[1]);
                 }
             }
         });
@@ -550,26 +550,17 @@ function extractFromSaft(text) {
     return values;
 }
 
-async function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsText(file, 'UTF-8');
-    });
-}
-
-// 9. FUNÇÃO LOAD DEMO DATA - ATUALIZADA COM PARSING HEURÍSTICO
+// 10. FUNÇÃO LOAD DEMO DATA
 async function loadDemoData() {
     if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração.\nDados existentes serão substituídos.\n\nContinuar?')) {
         try {
             logAudit('🧪 CARREGANDO DADOS DE DEMONSTRAÇÃO...', 'info');
             
-            // LIMPAR ESTADO PRIMEIRO
+            // Limpar estado primeiro
             clearExtractedValues();
             resetDashboardDisplay();
             
-            // DADOS DE DEMO COM VALORES REALISTAS
+            // Dados de demo com valores realistas
             VDCSystem.analysis.extractedValues = {
                 saftGross: 3202.54,
                 saftIVA6: 192.15,
@@ -598,26 +589,26 @@ async function loadDemoData() {
                 invoiceNumber: "PT1125-3582"
             };
             
-            // PREENCHER CAMPOS DO FORMULÁRIO
+            // Preencher campos do formulário
             document.getElementById('clientName').value = 'Momento Eficaz, Lda';
             document.getElementById('clientNIF').value = '123456789';
             document.getElementById('clientPhone').value = '+351 912 345 678';
             document.getElementById('clientEmail').value = 'contacto@momentoeficaz.pt';
             document.getElementById('clientAddress').value = 'Rua Principal, 123, Lisboa';
             
-            // REGISTRAR CLIENTE AUTOMATICAMENTE
+            // Registrar cliente automaticamente
             await registerClientFromDemo();
             
-            // ATIVAR MODO DEMO
+            // Ativar modo demo
             VDCSystem.demoMode = true;
             
-            // SIMULAR FICHEIROS CARREGADOS
+            // Simular ficheiros carregados
             simulateUploadedFiles();
             
-            // ATUALIZAR BOTÕES DEMO
+            // Atualizar botões demo
             updateDemoButtons();
             
-            // ATUALIZAR BOTÃO DE ANÁLISE
+            // Atualizar botão de análise
             updateAnalysisButton();
             
             logAudit('✅ Dados de demonstração carregados com sucesso', 'success');
@@ -676,43 +667,12 @@ function simulateUploadedFiles() {
     document.getElementById('totalCount').textContent = '3';
 }
 
-function updateDemoButtons() {
-    const demoBtn = document.getElementById('btnDemo');
-    const demoBtnExtra = document.getElementById('btnDemoExtra');
-    
-    if (demoBtn) {
-        demoBtn.classList.add('btn-demo-loaded');
-        demoBtn.innerHTML = '<i class="fas fa-check"></i> DADOS DEMO CARREGADOS';
-        demoBtn.disabled = true;
-    }
-    
-    if (demoBtnExtra) {
-        demoBtnExtra.classList.add('btn-demo-loaded');
-        demoBtnExtra.innerHTML = '<i class="fas fa-check"></i> DEMO CARREGADO';
-        demoBtnExtra.disabled = true;
-    }
-    
-    // Reativar após 3 segundos
-    setTimeout(() => {
-        if (demoBtn) {
-            demoBtn.classList.remove('btn-demo-loaded');
-            demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO';
-            demoBtn.disabled = false;
-        }
-        if (demoBtnExtra) {
-            demoBtnExtra.classList.remove('btn-demo-loaded');
-            demoBtnExtra.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DE DEMONSTRAÇÃO';
-            demoBtnExtra.disabled = false;
-        }
-    }, 3000);
-}
-
-// 10. ANÁLISE FORENSE - COM VERIFICAÇÃO DE FRAUDE POR ÂNCORA
+// 11. ANÁLISE FORENSE
 async function performForensicAnalysis() {
     try {
         console.log('🚀 INICIANDO ANÁLISE FORENSE v10.8...');
         
-        // VERIFICAÇÕES DE SEGURANÇA
+        // Verificações de segurança
         if (!VDCSystem.client) {
             showError('❌ Por favor, registe um cliente primeiro');
             return;
@@ -735,14 +695,14 @@ async function performForensicAnalysis() {
         
         logAudit('🚀 INICIANDO ANÁLISE FORENSE DE BIG DATA', 'success');
         
-        // CÁLCULOS DINÂMICOS
+        // Cálculos dinâmicos
         const imtCalculos = calcularIMT();
         const diferencial = calcularDiferencialCusto();
         
-        // VERIFICAÇÃO DE FRAUDE POR ÂNCORA
+        // Verificação de fraude por âncora
         await verificarFraudePorAncora();
         
-        // ATUALIZAÇÕES DE INTERFACE
+        // Atualizações de interface
         updateDashboardWithExtractedValues();
         updateDashboard();
         updateResults();
@@ -753,7 +713,7 @@ async function performForensicAnalysis() {
         
         logAudit('✅ ANÁLISE FORENSE CONCLUÍDA COM SUCESSO', 'success');
         
-        // ALERTAS SE NECESSÁRIO
+        // Alertas se necessário
         if (VDCSystem.analysis.crossings.diferencialAlerta) {
             showDiferencialAlert();
         }
@@ -770,18 +730,18 @@ async function performForensicAnalysis() {
     }
 }
 
-// 11. VERIFICAÇÃO DE FRAUDE POR ÂNCORA (FÓRMULA CRÍTICA)
+// 12. VERIFICAÇÃO DE FRAUDE POR ÂNCORA
 async function verificarFraudePorAncora() {
     const ganhos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
     const portagens = VDCSystem.analysis.extractedValues.portagens || 0;
     const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
     const liquido = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
     
-    // FÓRMULA: (A + B) - Comissão != Líquido -> ALERTA DE FRAUDE
+    // Fórmula: (A + B) - Comissão != Líquido -> ALERTA DE FRAUDE
     const calculado = (ganhos + portagens) - comissao;
     const diferenca = Math.abs(calculado - liquido);
     
-    if (diferenca > 0.01) { // Margem de erro de 1 cêntimo
+    if (diferenca > 0.01) {
         logAudit(`⚠️ ALERTA DE FRAUDE DETETADO!`, 'error');
         logAudit(`Fórmula: (${ganhos.toFixed(2)} + ${portagens.toFixed(2)}) - ${comissao.toFixed(2)} = ${calculado.toFixed(2)}`, 'error');
         logAudit(`Líquido real: ${liquido.toFixed(2)} | Diferença: ${diferenca.toFixed(2)}`, 'error');
@@ -797,7 +757,7 @@ async function verificarFraudePorAncora() {
     }
 }
 
-// 12. FUNÇÕES DE EXPORTAÇÃO PDF - COM CENTRALIZAÇÃO
+// 13. FUNÇÕES DE EXPORTAÇÃO PDF - COM CENTRALIZAÇÃO
 async function exportPDF() {
     try {
         logAudit('📄 GERANDO RELATÓRIO PERICIAL...', 'info');
@@ -808,7 +768,7 @@ async function exportPDF() {
         // PÁGINA 1: RELATÓRIO PERICIAL
         await createPage1(doc);
         
-        // PÁGINA 2: ANEXO LEGAL
+        // PÁGINA 2: ANEXO TÉCNICO (CENTRALIZADO)
         await createPage2(doc);
         
         // DOWNLOAD
@@ -839,7 +799,7 @@ async function exportPDF() {
     }
 }
 
-// NOVA FUNÇÃO: PÁGINA 1 DO RELATÓRIO
+// FUNÇÃO: PÁGINA 1 DO RELATÓRIO
 async function createPage1(doc) {
     const pageWidth = doc.internal.pageSize.width;
     const centerX = pageWidth / 2;
@@ -903,20 +863,6 @@ async function createPage1(doc) {
         posY += 10;
     }
     
-    // PERÍODO DA ANÁLISE
-    doc.setFont('helvetica', 'bold');
-    doc.text("PERÍODO DA PERITAGEM", 20, posY);
-    posY += 7;
-    
-    doc.setFont('helvetica', 'normal');
-    // Determinar mês/meses baseado no ano selecionado
-    const mesesAnalise = VDCSystem.selectedYear === new Date().getFullYear() ? 
-        `Janeiro a ${new Date().toLocaleDateString('pt-PT', { month: 'long' })} ${VDCSystem.selectedYear}` :
-        `Ano completo de ${VDCSystem.selectedYear}`;
-    
-    doc.text(`Período Analisado: ${mesesAnalise}`, 20, posY);
-    posY += 10;
-    
     // RESUMO DA ANÁLISE
     doc.setFont('helvetica', 'bold');
     doc.text("RESUMO DA ANÁLISE FORENSE", 20, posY);
@@ -925,7 +871,6 @@ async function createPage1(doc) {
     doc.setFont('helvetica', 'normal');
     const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
-    // Usar número da fatura extraído
     const numeroFatura = VDCSystem.analysis.extractedValues.invoiceNumber || "N/D";
     
     const textoResumo = `Esta peritagem foi realizada sobre os documentos financeiros do período acima indicado, 
@@ -951,108 +896,59 @@ async function createPage1(doc) {
     });
 }
 
-// FUNÇÃO createPage2 ATUALIZADA
+// FUNÇÃO: PÁGINA 2 DO RELATÓRIO (ANEXO TÉCNICO CENTRALIZADO)
 async function createPage2(doc) {
     doc.addPage();
     
-    // CENTRALIZAÇÃO ABSOLUTA DO VIEWPORT
-    const pageWidth = doc.internal.pageSize.width;
+    const pageWidth = doc.internal.pageSize.getWidth();
     const centerX = pageWidth / 2;
     
     // TÍTULO CENTRALIZADO
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.text("ANEXO II: PARECER TÉCNICO PERICIAL", centerX, 20, { align: 'center' });
+    doc.text("ANNEX: INFORMAÇÃO GERAL SOBRE AS EVIDÊNCIAS", centerX, 30, { align: 'center' });
     
-    let posY = 40;
-    
-    // PERÍODO DA PERITAGEM
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text("PERÍODO DA PERITAGEM", 15, posY);
-    posY += 7;
+    doc.setFont('helvetica', 'normal');
     
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+    let posY = 50;
     
-    const mesesAnalise = VDCSystem.selectedYear === new Date().getFullYear() ? 
-        `Janeiro a ${new Date().toLocaleDateString('pt-PT', { month: 'long' })} ${VDCSystem.selectedYear}` :
-        `Ano completo de ${VDCSystem.selectedYear}`;
+    // CONTEÚDO DO ANEXO (TEXTO CENTRALIZADO)
+    const anexoConteudo = [
+        "Este anexo técnico descreve a metodologia de processamento de dados aplicada.",
+        "",
+        "Integridade da Fonte: Os dados brutos foram extraídos diretamente de ficheiros",
+        "PDF oficiais (Faturas de Plataforma e Extratos) e ficheiros SAF-T (PT).",
+        "",
+        "Processamento Forense: O sistema utiliza algoritmos de reconciliação para",
+        "identificar discrepâncias entre o rendimento declarado e o fluxo de caixa efetivo.",
+        "",
+        "Protocolo de Validação: A análise foca-se na neutralidade fiscal, comparando",
+        "os vértices de faturação própria, comissões retidas e recebimentos bancários.",
+        "",
+        "Nota de Confidencialidade: Este relatório é para uso exclusivo em contexto",
+        "de auditoria e peritagem financeira."
+    ];
     
-    doc.text(`Esta análise refere-se ao período: ${mesesAnalise}`, 15, posY);
-    posY += 10;
-    
-    // PARECER TÉCNICO (ATUALIZADO)
-    doc.setFont('helvetica', 'bold');
-    doc.text("PARECER TÉCNICO-PERICIAL", 15, posY);
-    posY += 10;
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    
-    // Usar número da fatura extraído
-    const numeroFatura = VDCSystem.analysis.extractedValues.invoiceNumber || "N/D";
-    
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto || 0;
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
-    const fatura = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
-    const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
-    const campanhas = VDCSystem.analysis.extractedValues.campanhas || 0;
-    const gorjetas = VDCSystem.analysis.extractedValues.gorjetas || 0;
-    const cancelamentos = VDCSystem.analysis.extractedValues.cancelamentos || 0;
-    const portagens = VDCSystem.analysis.extractedValues.portagens || 0;
-    
-    const parecerTexto = `Este documento técnico detalha os procedimentos de auditoria algorítmica aplicados aos dados financeiros do operador referentes ao período acima indicado. A análise foca-se na transparência dos fluxos de caixa e na conformidade documental entre a plataforma e a contabilidade oficial.
-
-Fatura analisada: ${numeroFatura}
-
-Protocolo de Extração: Os dados foram processados através de um motor de análise forense que reconcilia as faturas de serviços com os extratos bancários de liquidação.
-
-DETALHES DA ANÁLISE PARA O PERÍODO:
-• Ganhos Brutos: ${ganhosBrutos.toFixed(2)}€
-• Ganhos Líquidos: ${ganhosLiquidos.toFixed(2)}€
-• Comissão retida pela plataforma: ${comissao.toFixed(2)}€
-• Fatura emitida pela plataforma: ${fatura.toFixed(2)}€
-• Diferencial identificado: ${diferencial.toFixed(2)}€
-• Campanhas: ${campanhas.toFixed(2)}€
-• Gorjetas: ${gorjetas.toFixed(2)}€
-• Cancelamentos: ${cancelamentos.toFixed(2)}€
-• Portagens: ${portagens.toFixed(2)}€
-• IVA em déficit: ${(diferencial * 0.23).toFixed(2)}€
-• Prejuízo fiscal: ${(diferencial * 0.21).toFixed(2)}€
-
-METODOLOGIA PERICIAL:
-1. Extração heurística de valores por âncora específica
-2. Reconciliação cruzada entre documentos oficiais
-3. Cálculo automatizado de obrigações fiscais
-4. Verificação de conformidade documental`;
-    
-    // QUEBRA DE TEXTO COM PAGINAÇÃO
-    const splitText = doc.splitTextToSize(parecerTexto, 180);
-    
-    const margin = 15;
-    const pageHeight = 280;
-    const lineHeight = 6;
-    
-    splitText.forEach(line => {
-        if (posY + lineHeight > pageHeight) {
+    // DESENHAR CADA LINHA CENTRALIZADA
+    anexoConteudo.forEach(linea => {
+        if (posY > 250) {
             doc.addPage();
-            posY = 20;
+            posY = 30;
         }
         
-        doc.text(line, margin, posY);
-        posY += lineHeight;
+        doc.text(linea, centerX, posY, { align: 'center' });
+        posY += 8;
     });
     
-    // RODAPÉS EM TODAS AS PÁGINAS
+    // RODAPÉ EM TODAS AS PÁGINAS
     const totalPages = doc.internal.getNumberOfPages();
     
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v10.8 | Protocolo ISO 27037", 15, 285);
+        doc.text("VDC Forensic System v10.8 | Protocolo de Prova Legal", 15, 285);
         doc.text(`Página ${i} de ${totalPages}`, 185, 285, { align: "right" });
     }
 }
@@ -1717,6 +1613,19 @@ function generateSessionId() {
 }
 
 function generateMasterHash() {
+    // Verificar se CryptoJS está disponível
+    if (typeof CryptoJS === 'undefined') {
+        console.warn('CryptoJS não está disponível. Usando fallback para hash.');
+        const fallbackHash = `VDC-${VDCSystem.sessionId}-${Date.now()}`;
+        const display = document.getElementById('masterHashValue');
+        if (display) {
+            display.textContent = fallbackHash;
+            display.style.color = '#00f2ff';
+        }
+        logAudit(`🔐 Master Hash gerada (fallback): ${fallbackHash}`, 'success');
+        return;
+    }
+    
     const data = [
         VDCSystem.sessionId,
         VDCSystem.selectedYear.toString(),
@@ -1787,4 +1696,36 @@ function startClockAndDate() {
     
     updateDateTime();
     setInterval(updateDateTime, 1000);
+}
+
+// Funções auxiliares para botões demo
+function updateDemoButtons() {
+    const demoBtn = document.getElementById('btnDemo');
+    const demoBtnExtra = document.getElementById('btnDemoExtra');
+    
+    if (demoBtn) {
+        demoBtn.classList.add('btn-demo-loaded');
+        demoBtn.innerHTML = '<i class="fas fa-check"></i> DADOS DEMO CARREGADOS';
+        demoBtn.disabled = true;
+    }
+    
+    if (demoBtnExtra) {
+        demoBtnExtra.classList.add('btn-demo-loaded');
+        demoBtnExtra.innerHTML = '<i class="fas fa-check"></i> DEMO CARREGADO';
+        demoBtnExtra.disabled = true;
+    }
+    
+    // Reativar após 3 segundos
+    setTimeout(() => {
+        if (demoBtn) {
+            demoBtn.classList.remove('btn-demo-loaded');
+            demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO';
+            demoBtn.disabled = false;
+        }
+        if (demoBtnExtra) {
+            demoBtnExtra.classList.remove('btn-demo-loaded');
+            demoBtnExtra.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DE DEMONSTRAÇÃO';
+            demoBtnExtra.disabled = false;
+        }
+    }, 3000);
 }
