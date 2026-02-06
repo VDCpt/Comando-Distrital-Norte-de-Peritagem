@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC SISTEMA DE PERITAGEM FORENSE v12.5</title>
+    <title>VDC SISTEMA DE PERITAGEM FORENSE v12.6</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,7 +16,7 @@
         <div class="loading-container">
             <div class="loading-logo">
                 <i class="fas fa-search-dollar"></i>
-                <h2>VDC PERITAGEM FORENSE v12.5</h2>
+                <h2>VDC PERITAGEM FORENSE v12.6</h2>
             </div>
             <div class="loading-progress">
                 <div class="progress-bar">
@@ -39,18 +39,26 @@
                 <div class="logo">
                     <i class="fas fa-search-dollar"></i>
                     <div>
-                        <h1>VDC SISTEMA DE PERITAGEM FORENSE v12.5</h1>
+                        <h1>VDC SISTEMA DE PERITAGEM FORENSE <span class="version-badge">v12.6</span></h1>
                         <p>Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024</p>
                     </div>
                 </div>
-                <div class="session-info">
-                    <p><i class="fas fa-fingerprint"></i> Sessão: <span id="sessionIdDisplay">VDC-2024-001</span></p>
-                    <p><i class="fas fa-calendar-alt"></i> <span id="currentDate">01/01/2024</span> | <span id="currentTime">00:00:00</span></p>
+            </div>
+            <div class="header-center">
+                <div class="realtime-clock">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentDate">01/01/2024</span>
+                    <span class="time-separator">|</span>
+                    <span id="currentTime" class="time-glow">00:00:00</span>
                 </div>
             </div>
             <div class="header-right">
                 <div class="master-hash">
-                    <p>Integridade: <span id="masterHashValue">VDC-HASH-2024</span></p>
+                    <i class="fas fa-fingerprint"></i>
+                    <div class="hash-display">
+                        <span class="hash-label">INTEGRIDADE:</span>
+                        <span id="masterHashValue" class="hash-glow">VDC-HASH-2024</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -202,24 +210,44 @@
                     <div class="kpi-grid">
                         <!-- KPIs principais -->
                         <div class="kpi-card">
-                            <h4><i class="fas fa-euro-sign"></i> FATURAÇÃO BRUTA</h4>
-                            <p id="kpiGanhos">0,00 €</p>
-                            <small>Total faturado pela plataforma</small>
+                            <div class="kpi-icon">
+                                <i class="fas fa-euro-sign"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h4>FATURAÇÃO BRUTA</h4>
+                                <p id="kpiGanhos" class="kpi-value">0,00 €</p>
+                                <small>Total faturado pela plataforma</small>
+                            </div>
                         </div>
                         <div class="kpi-card">
-                            <h4><i class="fas fa-hand-holding-usd"></i> REPORTADO DAC7</h4>
-                            <p id="kpiNet">0,00 €</p>
-                            <small>Valor reportado para efeitos fiscais</small>
+                            <div class="kpi-icon">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h4>REPORTADO DAC7</h4>
+                                <p id="kpiNet" class="kpi-value">0,00 €</p>
+                                <small>Valor reportado para efeitos fiscais</small>
+                            </div>
                         </div>
                         <div class="kpi-card">
-                            <h4><i class="fas fa-percentage"></i> COMISSÕES PLATAFORMA</h4>
-                            <p id="kpiComm">0,00 €</p>
-                            <small>Divergência identificada</small>
+                            <div class="kpi-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h4>COMISSÕES PLATAFORMA</h4>
+                                <p id="kpiComm" class="kpi-value">0,00 €</p>
+                                <small>Divergência identificada</small>
+                            </div>
                         </div>
                         <div class="kpi-card">
-                            <h4><i class="fas fa-file-invoice"></i> FATURA PLATAFORMA</h4>
-                            <p id="kpiInvoice">0,00 €</p>
-                            <small>Valor das faturas processadas</small>
+                            <div class="kpi-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h4>FATURA PLATAFORMA</h4>
+                                <p id="kpiInvoice" class="kpi-value">0,00 €</p>
+                                <small>Valor das faturas processadas</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -227,36 +255,76 @@
                 <!-- Valores Detalhados -->
                 <div class="values-grid">
                     <div class="values-card">
-                        <h5><i class="fas fa-money-bill-wave"></i> VALOR LÍQUIDO</h5>
-                        <p id="netVal">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>VALOR LÍQUIDO</h5>
+                            <p id="netVal" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-receipt"></i> IVA 6%</h5>
-                        <p id="iva6Val">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>IVA 6%</h5>
+                            <p id="iva6Val" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-cut"></i> COMISSÃO</h5>
-                        <p id="commissionVal">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>COMISSÃO</h5>
+                            <p id="commissionVal" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-receipt"></i> IVA 23%</h5>
-                        <p id="iva23Val">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>IVA 23%</h5>
+                            <p id="iva23Val" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-gift"></i> CAMPANHAS</h5>
-                        <p id="valCamp">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>CAMPANHAS</h5>
+                            <p id="valCamp" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-coins"></i> GORJETAS</h5>
-                        <p id="valTips">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>GORJETAS</h5>
+                            <p id="valTips" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-ban"></i> CANCELAMENTOS</h5>
-                        <p id="valCanc">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>CANCELAMENTOS</h5>
+                            <p id="valCanc" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                     <div class="values-card">
-                        <h5><i class="fas fa-road"></i> PORTAGENS</h5>
-                        <p id="valPort">0,00 €</p>
+                        <div class="values-icon">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        <div class="values-content">
+                            <h5>PORTAGENS</h5>
+                            <p id="valPort" class="values-value">0,00 €</p>
+                        </div>
                     </div>
                 </div>
 
@@ -387,7 +455,7 @@
 
         <!-- Rodapé -->
         <footer class="main-footer">
-            <p>VDC Sistema de Peritagem Forense v12.5 | Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024</p>
+            <p>VDC Sistema de Peritagem Forense v12.6 | Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024</p>
             <p>© 2024 VDC Forensic Systems. Todos os direitos reservados.</p>
         </footer>
     </div>
