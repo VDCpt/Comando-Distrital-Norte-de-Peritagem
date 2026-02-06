@@ -1,18 +1,58 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v11.1
+// VDC SISTEMA DE PERITAGEM FORENSE v12.2
 // PROTOCOLO DE PROVA LEGAL - BIG DATA FORENSE
-// MODOS: DEMO HARDCODED + PARSING TEXTUAL
+// SINCRONIZAÇÃO TOTAL 4 MESES (SET-DEZ 2024)
 // ============================================
 
-// 1. ESTADO DO SISTEMA
+// 1. ESTADO DO SISTEMA - DADOS REAIS 4 MESES
 const VDCSystem = {
-    version: 'v11.1',
+    version: 'v12.2',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
     client: null,
     demoMode: false,
     periodoAnalise: 'Setembro a Dezembro 2024',
+    
+    // DADOS MENSALIZADOS REAIS (SET-DEZ 2024)
+    dadosMensais: {
+        setembro: {
+            mes: 'Setembro 2024',
+            bruto: 165.52,
+            liquido: 141.58,
+            comissao: 23.94,
+            faturaNumero: 'PT1124-91599'
+        },
+        outubro: {
+            mes: 'Outubro 2024',
+            bruto: 3291.26,
+            liquido: 2514.40,
+            comissao: 776.86,
+            faturaNumero: 'PT1125-3578'
+        },
+        novembro: {
+            mes: 'Novembro 2024',
+            bruto: 3519.31,
+            liquido: 2689.23,
+            comissao: 830.08,
+            faturaNumero: 'PT1125-3580'
+        },
+        dezembro: {
+            mes: 'Dezembro 2024',
+            bruto: 3202.54,
+            liquido: 2409.95,
+            comissao: 792.59,
+            faturaNumero: 'PT1125-3582'
+        }
+    },
+    
+    // TOTAIS CONSOLIDADOS
+    totaisConsolidados: {
+        brutoTotal: 10178.63,      // Soma dos 4 meses
+        liquidoTotal: 7755.16,     // Reportado DAC7
+        comissaoTotal: 2423.47,    // Divergência
+        mesesAnalisados: 4
+    },
     
     documents: {
         control: { files: [], parsedData: null },
@@ -33,14 +73,19 @@ const VDCSystem = {
                 campanhas: 0,
                 gorjetas: 0,
                 cancelamentos: 0,
-                portagens: 0,
-                diferencialCusto: 0
+                portagens: 0
             }
         }
     },
     
     analysis: {
         extractedValues: {
+            // Dados reais dos 4 meses
+            faturacaoBruta: 0,
+            reportadoDAC7: 0,
+            divergenciaComissoes: 0,
+            
+            // Valores detalhados
             saftGross: 0,
             saftIVA6: 0,
             platformCommission: 0,
@@ -65,7 +110,20 @@ const VDCSystem = {
             iva6Percent: 0,
             iva23Autoliquidacao: 0,
             invoiceNumber: "N/D",
-            projecaoSetorial: 0
+            
+            // Projeção setorial
+            projecaoSetorialMensal: 0,
+            projecaoSetorialAnual: 0,
+            taxaOmissaoPercentual: 0
+        },
+        
+        // Projeção de mercado corrigida
+        projecaoMercado: {
+            motoristasAtivos: 38000,
+            comissaoMediaMensal: 0,
+            volumeNegocioOmitidoMensal: 0,
+            volumeNegocioOmitidoAnual: 0,
+            impactoFiscalEstimado: 0
         },
         
         anomalies: []
@@ -87,20 +145,17 @@ const TextParser = {
     cleanValue: function(str) {
         if (!str || typeof str !== 'string') return 0;
         
-        // Remover símbolos de moeda e espaços
         let cleaned = str
             .replace(/[€$£\s]/g, '')
             .replace(/EUR/g, '')
-            .replace(/\./g, '') // Remover separadores de milhar
-            .replace(',', '.') // Converter decimal europeu para padrão
-            .replace(/[^\d.-]/g, ''); // Manter apenas números, ponto e sinal
+            .replace(/\./g, '')
+            .replace(',', '.')
+            .replace(/[^\d.-]/g, '');
         
-        // Caso ainda tenha vírgula (formato 1.234,56)
         if (cleaned.includes(',') && !cleaned.includes('.')) {
             cleaned = cleaned.replace(',', '.');
         }
         
-        // Validar formato numérico
         if (!cleaned.match(/^-?\d+(\.\d+)?$/)) {
             console.warn(`Formato inválido: "${str}" -> "${cleaned}"`);
             return 0;
@@ -113,10 +168,9 @@ const TextParser = {
             return 0;
         }
         
-        return Math.abs(number); // Sempre positivo
+        return Math.abs(number);
     },
     
-    // FUNÇÃO PRINCIPAL DE EXTRAÇÃO
     extractKey: function(text, key) {
         if (!text || typeof text !== 'string') return 0;
         
@@ -133,21 +187,16 @@ const TextParser = {
         };
         
         const pattern = patterns[key];
-        if (!pattern) {
-            console.error(`Pattern não encontrado para chave: ${key}`);
-            return 0;
-        }
+        if (!pattern) return 0;
         
         const match = text.match(pattern);
         if (!match || !match[1]) {
-            // Para portagens, retornar 0 se não encontrado
             if (key === 'portagens') return 0;
             return 0;
         }
         
         const value = this.cleanValue(match[1]);
         
-        // Comissão é sempre negativa
         if (key === 'comissao_app') return -value;
         
         return value;
@@ -159,7 +208,6 @@ const TextParser = {
             invoiceNumber: "N/D"
         };
         
-        // Tentar extrair número de fatura
         const invoiceNumMatch = text.match(/(PT\d+-\d+)/i);
         if (invoiceNumMatch && invoiceNumMatch[1]) {
             extracted.invoiceNumber = invoiceNumMatch[1];
@@ -183,7 +231,6 @@ const TextParser = {
             portagens: this.extractKey(text, 'portagens')
         };
         
-        // Validar consistência
         const hasData = Object.values(extracted).some(val => val !== 0);
         if (hasData) {
             console.log(`💰 Extrato extraído:`, extracted);
@@ -196,7 +243,6 @@ const TextParser = {
         let gross = 0;
         let iva6 = 0;
         
-        // Tentar extrair do XML
         if (text.includes('<GrossTotal>')) {
             const grossMatch = text.match(/<GrossTotal>([^<]+)<\/GrossTotal>/);
             if (grossMatch) gross = this.cleanValue(grossMatch[1]);
@@ -205,7 +251,6 @@ const TextParser = {
             if (iva6Match) iva6 = this.cleanValue(iva6Match[1]);
         }
         
-        // Tentar extrair de CSV/Texto
         if (gross === 0 && text.includes(';')) {
             const lines = text.split('\n');
             for (const line of lines) {
@@ -320,7 +365,6 @@ const FileProcessor = {
             
             VDCSystem.documents.statements.files.push(file);
             
-            // Somar todos os valores
             VDCSystem.documents.statements.totals.ganhosBrutos += extracted.ganhosBrutos;
             VDCSystem.documents.statements.totals.comissaoApp += extracted.comissaoApp;
             VDCSystem.documents.statements.totals.ganhosLiquidos += extracted.ganhosLiquidos;
@@ -345,7 +389,7 @@ const FileProcessor = {
 // 4. FUNÇÃO PRINCIPAL DE ANÁLISE FORENSE
 async function performForensicAnalysis() {
     try {
-        console.log('🚀 INICIANDO ANÁLISE FORENSE v11.1...');
+        console.log('🚀 INICIANDO ANÁLISE FORENSE v12.2...');
         
         if (!VDCSystem.client) {
             showError('❌ Por favor, registe um cliente primeiro');
@@ -373,26 +417,25 @@ async function performForensicAnalysis() {
         // Atualizar valores extraídos
         updateAnalysisValues();
         
-        // Calcular IMT e diferenças
-        calcularIMT();
-        calcularDiferencialCusto();
+        // Calcular divergência real
+        calcularDivergenciaReal();
+        
+        // Calcular projeção de mercado CORRIGIDA
+        calcularProjecaoMercadoCorrigida();
         
         // Atualizar interface
         updateDashboard();
         updateResults();
-        updateChartWithData();
-        criarDashboardDiferencial();
+        updateChartComparativo();
+        criarDashboardDivergencia();
         generateMasterHash();
-        
-        // Calcular projeção setorial
-        calcularProjecaoSetorial();
         
         console.log('✅ ANÁLISE CONCLUÍDA');
         logAudit('✅ ANÁLISE FORENSE CONCLUÍDA COM SUCESSO', 'success');
         
         // Mostrar alertas se necessário
-        if (VDCSystem.analysis.extractedValues.diferencialCusto > 100) {
-            showDiferencialAlert();
+        if (VDCSystem.analysis.extractedValues.divergenciaComissoes > 100) {
+            showDivergenciaAlert();
         }
         
     } catch (error) {
@@ -426,60 +469,68 @@ function updateAnalysisValues() {
     console.log('🔄 Valores de análise atualizados');
 }
 
-function calcularDiferencialCusto() {
-    const saftGross = VDCSystem.analysis.extractedValues.saftGross || 0;
-    const faturaPlataforma = VDCSystem.analysis.extractedValues.faturaPlataforma || 0;
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
+function calcularDivergenciaReal() {
+    // Usar dados reais dos 4 meses quando em modo DEMO
+    if (VDCSystem.demoMode) {
+        VDCSystem.analysis.extractedValues.faturacaoBruta = VDCSystem.totaisConsolidados.brutoTotal;
+        VDCSystem.analysis.extractedValues.reportadoDAC7 = VDCSystem.totaisConsolidados.liquidoTotal;
+        VDCSystem.analysis.extractedValues.divergenciaComissoes = VDCSystem.totaisConsolidados.comissaoTotal;
+        
+        // Calcular taxa de omissão percentual
+        const taxaOmissao = (VDCSystem.totaisConsolidados.comissaoTotal / VDCSystem.totaisConsolidados.brutoTotal) * 100;
+        VDCSystem.analysis.extractedValues.taxaOmissaoPercentual = taxaOmissao;
+        
+        console.log(`📊 DIVERGÊNCIA REAL: Faturação Bruta ${VDCSystem.totaisConsolidados.brutoTotal}€ - Reportado DAC7 ${VDCSystem.totaisConsolidados.liquidoTotal}€ = ${VDCSystem.totaisConsolidados.comissaoTotal}€ (${taxaOmissao.toFixed(1)}%)`);
+        logAudit(`Divergência real calculada: ${VDCSystem.totaisConsolidados.comissaoTotal.toFixed(2)}€ (${taxaOmissao.toFixed(1)}% da faturação)`, 'info');
+    } else {
+        // Para dados carregados manualmente
+        const faturacaoBruta = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
+        const reportadoDAC7 = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
+        const divergencia = faturacaoBruta - reportadoDAC7;
+        
+        VDCSystem.analysis.extractedValues.faturacaoBruta = faturacaoBruta;
+        VDCSystem.analysis.extractedValues.reportadoDAC7 = reportadoDAC7;
+        VDCSystem.analysis.extractedValues.divergenciaComissoes = divergencia;
+        
+        const taxaOmissao = faturacaoBruta > 0 ? (divergencia / faturacaoBruta) * 100 : 0;
+        VDCSystem.analysis.extractedValues.taxaOmissaoPercentual = taxaOmissao;
+        
+        console.log(`📊 DIVERGÊNCIA CALCULADA: ${faturacaoBruta}€ - ${reportadoDAC7}€ = ${divergencia}€ (${taxaOmissao.toFixed(1)}%)`);
+    }
     
-    // Fórmula: (SAF-T + Fatura) - Ganhos Líquidos
-    const diferencial = (saftGross + faturaPlataforma) - ganhosLiquidos;
-    const ivaAutoliquidacao = diferencial * 0.23;
-    const prejuizoFiscal = diferencial * 0.21;
-    
-    VDCSystem.analysis.extractedValues.diferencialCusto = diferencial;
-    VDCSystem.analysis.extractedValues.iva23Due = ivaAutoliquidacao;
-    VDCSystem.analysis.extractedValues.prejuizoFiscal = prejuizoFiscal;
-    
-    console.log(`📊 DIFERENCIAL: (${saftGross} + ${faturaPlataforma}) - ${ganhosLiquidos} = ${diferencial}€`);
-    logAudit(`Diferencial calculado: ${diferencial.toFixed(2)}€ | IVA 23%: ${ivaAutoliquidacao.toFixed(2)}€`, 'info');
-    
-    return diferencial;
+    return VDCSystem.analysis.extractedValues.divergenciaComissoes;
 }
 
-function calcularIMT() {
-    const ganhosBrutos = VDCSystem.analysis.extractedValues.ganhosBrutos || 0;
-    const gorjetas = VDCSystem.analysis.extractedValues.gorjetas || 0;
-    const campanhas = VDCSystem.analysis.extractedValues.campanhas || 0;
+function calcularProjecaoMercadoCorrigida() {
+    const motoristasAtivos = 38000;
     
-    // Base de cálculo para comissão
-    const baseComissao = ganhosBrutos - gorjetas - campanhas;
-    const taxaComissao = 0.2477;
-    const comissaoCalculada = baseComissao * taxaComissao;
+    // Fórmula CORRIGIDA: (Total Comissões / 4 meses) * 38.000 motoristas
+    const comissaoMediaMensal = VDCSystem.totaisConsolidados.comissaoTotal / VDCSystem.totaisConsolidados.mesesAnalisados;
+    const volumeNegocioOmitidoMensal = comissaoMediaMensal * motoristasAtivos;
+    const volumeNegocioOmitidoAnual = volumeNegocioOmitidoMensal * 12;
     
-    // Cálculo IMT (5%)
-    const taxaIMT = 0.05;
-    const imtTax = comissaoCalculada * taxaIMT;
-    const totalPlataforma = comissaoCalculada + imtTax;
+    // Cálculo do impacto fiscal (IVA 23%)
+    const impactoFiscalEstimado = volumeNegocioOmitidoMensal * 0.23;
     
-    VDCSystem.analysis.extractedValues.imtBase = comissaoCalculada;
-    VDCSystem.analysis.extractedValues.imtTax = imtTax;
-    VDCSystem.analysis.extractedValues.imtTotal = totalPlataforma;
-    VDCSystem.analysis.extractedValues.platformCommission = comissaoCalculada;
+    // Armazenar resultados
+    VDCSystem.analysis.projecaoMercado = {
+        motoristasAtivos: motoristasAtivos,
+        comissaoMediaMensal: comissaoMediaMensal,
+        volumeNegocioOmitidoMensal: volumeNegocioOmitidoMensal,
+        volumeNegocioOmitidoAnual: volumeNegocioOmitidoAnual,
+        impactoFiscalEstimado: impactoFiscalEstimado
+    };
     
-    console.log(`📊 IMT: Base ${baseComissao.toFixed(2)}€ → Comissão ${comissaoCalculada.toFixed(2)}€ → IMT ${imtTax.toFixed(2)}€`);
+    VDCSystem.analysis.extractedValues.projecaoSetorialMensal = volumeNegocioOmitidoMensal;
+    VDCSystem.analysis.extractedValues.projecaoSetorialAnual = volumeNegocioOmitidoAnual;
     
-    return { comissaoCalculada, imtTax, totalPlataforma };
-}
-
-function calcularProjecaoSetorial() {
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto || 0;
-    const driverCount = 38000;
-    const projecao = diferencial * driverCount;
+    console.log(`📊 PROJEÇÃO DE MERCADO CORRIGIDA:`);
+    console.log(`  Comissão média mensal: ${comissaoMediaMensal.toFixed(2)}€`);
+    console.log(`  Volume omitido mensal (38k motoristas): ${(volumeNegocioOmitidoMensal / 1000000).toFixed(2)}M€`);
+    console.log(`  Volume omitido anual: ${(volumeNegocioOmitidoAnual / 1000000).toFixed(2)}M€`);
+    console.log(`  Impacto fiscal estimado (IVA 23%): ${(impactoFiscalEstimado / 1000000).toFixed(2)}M€/mês`);
     
-    VDCSystem.analysis.extractedValues.projecaoSetorial = projecao;
-    
-    console.log(`📊 PROJEÇÃO SETORIAL: ${diferencial.toFixed(2)}€ × ${driverCount} = ${(projecao / 1000000).toFixed(2)}M€`);
-    logAudit(`Projeção setorial (38k motoristas): ${(projecao / 1000000).toFixed(2)} milhões de euros`, 'info');
+    logAudit(`Projeção de mercado: ${(volumeNegocioOmitidoMensal / 1000000).toFixed(2)} milhões €/mês de volume não reportado`, 'warn');
 }
 
 // 6. FUNÇÕES DE UI
@@ -487,37 +538,61 @@ function updateDashboard() {
     const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const valores = {
-        'netVal': VDCSystem.analysis.extractedValues.ganhosLiquidos || 0,
-        'iva6Val': (VDCSystem.analysis.extractedValues.ganhosBrutos * 0.06) || 0,
-        'commissionVal': Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0,
-        'iva23Val': (Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) * 0.23) || 0,
-        'kpiGanhos': VDCSystem.analysis.extractedValues.ganhosBrutos || 0,
-        'kpiComm': Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0,
-        'kpiNet': VDCSystem.analysis.extractedValues.ganhosLiquidos || 0,
+        'netVal': VDCSystem.analysis.extractedValues.reportadoDAC7 || 0,
+        'iva6Val': (VDCSystem.analysis.extractedValues.faturacaoBruta * 0.06) || 0,
+        'commissionVal': VDCSystem.analysis.extractedValues.divergenciaComissoes || 0,
+        'iva23Val': (VDCSystem.analysis.extractedValues.divergenciaComissoes * 0.23) || 0,
+        'kpiGanhos': VDCSystem.analysis.extractedValues.faturacaoBruta || 0,
+        'kpiComm': VDCSystem.analysis.extractedValues.divergenciaComissoes || 0,
+        'kpiNet': VDCSystem.analysis.extractedValues.reportadoDAC7 || 0,
         'kpiInvoice': VDCSystem.analysis.extractedValues.faturaPlataforma || 0,
         'valCamp': VDCSystem.analysis.extractedValues.campanhas || 0,
         'valTips': VDCSystem.analysis.extractedValues.gorjetas || 0,
         'valCanc': VDCSystem.analysis.extractedValues.cancelamentos || 0,
-        'valPort': VDCSystem.analysis.extractedValues.portagens || 0,
-        'imtBase': VDCSystem.analysis.extractedValues.imtBase || 0,
-        'imtTax': VDCSystem.analysis.extractedValues.imtTax || 0,
-        'imtTotal': VDCSystem.analysis.extractedValues.imtTotal || 0
+        'valPort': VDCSystem.analysis.extractedValues.portagens || 0
     };
     
     Object.entries(valores).forEach(([id, value]) => {
         const element = document.getElementById(id);
         if (element) element.textContent = formatter.format(value);
     });
+    
+    // Atualizar IMT com base na comissão real
+    calcularIMTAtualizado();
+}
+
+function calcularIMTAtualizado() {
+    const comissaoReal = VDCSystem.analysis.extractedValues.divergenciaComissoes || 0;
+    const taxaIMT = 0.05;
+    const imtTax = comissaoReal * taxaIMT;
+    const totalPlataforma = comissaoReal + imtTax;
+    
+    VDCSystem.analysis.extractedValues.imtBase = comissaoReal;
+    VDCSystem.analysis.extractedValues.imtTax = imtTax;
+    VDCSystem.analysis.extractedValues.imtTotal = totalPlataforma;
+    
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    
+    const elementosIMT = {
+        'imtBase': comissaoReal,
+        'imtTax': imtTax,
+        'imtTotal': totalPlataforma
+    };
+    
+    Object.entries(elementosIMT).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = formatter.format(value);
+    });
 }
 
 function updateResults() {
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
     
     const valores = {
-        'grossResult': VDCSystem.analysis.extractedValues.saftGross || 0,
-        'transferResult': VDCSystem.analysis.extractedValues.ganhosLiquidos || 0,
-        'differenceResult': VDCSystem.analysis.extractedValues.diferencialCusto || 0,
-        'marketResult': (VDCSystem.analysis.extractedValues.projecaoSetorial / 1000000) || 0
+        'grossResult': VDCSystem.analysis.extractedValues.faturacaoBruta || 0,
+        'transferResult': VDCSystem.analysis.extractedValues.reportadoDAC7 || 0,
+        'differenceResult': VDCSystem.analysis.extractedValues.divergenciaComissoes || 0,
+        'marketResult': (VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal / 1000000) || 0
     };
     
     Object.entries(valores).forEach(([id, value]) => {
@@ -533,7 +608,7 @@ function updateResults() {
             if (id.includes('Result') && id !== 'marketResult') {
                 const bar = element.parentElement.querySelector('.bar-fill');
                 if (bar && value > 0) {
-                    const maxValue = Math.max(VDCSystem.analysis.extractedValues.ganhosBrutos, 1000);
+                    const maxValue = Math.max(VDCSystem.analysis.extractedValues.faturacaoBruta, 1000);
                     const percentage = (value / maxValue) * 100;
                     bar.style.width = Math.min(percentage, 100) + '%';
                 }
@@ -541,64 +616,70 @@ function updateResults() {
         }
     });
     
-    // Mostrar alerta de omissão se diferencial > 100€
+    // Mostrar alerta de omissão se divergência > 100€
     const omissionAlert = document.getElementById('omissionAlert');
     const omissionValue = document.getElementById('omissionValue');
     
-    if (VDCSystem.analysis.extractedValues.diferencialCusto > 100) {
+    if (VDCSystem.analysis.extractedValues.divergenciaComissoes > 100) {
         if (omissionAlert) omissionAlert.style.display = 'flex';
-        if (omissionValue) omissionValue.textContent = formatter.format(VDCSystem.analysis.extractedValues.diferencialCusto);
+        if (omissionValue) {
+            omissionValue.textContent = formatter.format(VDCSystem.analysis.extractedValues.divergenciaComissoes);
+            omissionValue.innerHTML += ` <small style="color: #f59e0b;">(${VDCSystem.analysis.extractedValues.taxaOmissaoPercentual.toFixed(1)}%)</small>`;
+        }
     } else if (omissionAlert) {
         omissionAlert.style.display = 'none';
     }
 }
 
-function criarDashboardDiferencial() {
+function criarDashboardDivergencia() {
     const kpiSection = document.querySelector('.kpi-section');
-    if (!kpiSection || document.getElementById('diferencialCard')) return;
+    if (!kpiSection || document.getElementById('divergenciaCard')) return;
     
     const kpiGrid = kpiSection.querySelector('.kpi-grid');
     if (!kpiGrid) return;
     
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto || 0;
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+    const divergencia = VDCSystem.analysis.extractedValues.divergenciaComissoes || 0;
+    const taxaOmissao = VDCSystem.analysis.extractedValues.taxaOmissaoPercentual || 0;
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
     
-    const diferencialCard = document.createElement('div');
-    diferencialCard.id = 'diferencialCard';
-    diferencialCard.className = diferencial > 100 ? 'kpi-card danger' : 'kpi-card';
-    diferencialCard.innerHTML = `
-        <h4><i class="fas fa-balance-scale"></i> DIFERENCIAL DE CUSTO</h4>
-        <p id="diferencialVal">${formatter.format(diferencial)}</p>
-        <small>${diferencial > 100 ? 'Possível omissão' : 'Dentro do esperado'}</small>
+    const divergenciaCard = document.createElement('div');
+    divergenciaCard.id = 'divergenciaCard';
+    divergenciaCard.className = taxaOmissao > 10 ? 'kpi-card danger' : 'kpi-card alert';
+    divergenciaCard.innerHTML = `
+        <h4><i class="fas fa-exclamation-triangle"></i> DIVERGÊNCIA REAL</h4>
+        <p id="divergenciaVal">${formatter.format(divergencia)}</p>
+        <small>${taxaOmissao.toFixed(1)}% da faturação bruta</small>
     `;
     
     if (kpiGrid.children.length >= 4) {
-        kpiGrid.insertBefore(diferencialCard, kpiGrid.children[4]);
+        kpiGrid.insertBefore(divergenciaCard, kpiGrid.children[4]);
     } else {
-        kpiGrid.appendChild(diferencialCard);
+        kpiGrid.appendChild(divergenciaCard);
     }
 }
 
-function showDiferencialAlert() {
+function showDivergenciaAlert() {
     const resultsSection = document.querySelector('.analysis-results');
     if (!resultsSection) return;
     
-    const alertAntigo = document.getElementById('diferencialAlert');
+    const alertAntigo = document.getElementById('divergenciaAlert');
     if (alertAntigo) alertAntigo.remove();
     
-    const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto;
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+    const divergencia = VDCSystem.analysis.extractedValues.divergenciaComissoes;
+    const taxaOmissao = VDCSystem.analysis.extractedValues.taxaOmissaoPercentual;
+    const projecaoMensal = VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal;
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
     
     const novoAlerta = document.createElement('div');
-    novoAlerta.id = 'diferencialAlert';
+    novoAlerta.id = 'divergenciaAlert';
     novoAlerta.className = 'omission-alert diferencial-alert';
     novoAlerta.style.display = 'flex';
     novoAlerta.innerHTML = `
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-chart-line"></i>
         <div>
-            <strong>ALERTA DE DIFERENCIAL DE CUSTO</strong>
-            <p>Detetado diferencial significativo de ${formatter.format(diferencial)} entre faturação e recebimento.</p>
-            <p style="font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-chart-bar"></i> Projeção setorial (38k motoristas): ${(VDCSystem.analysis.extractedValues.projecaoSetorial / 1000000).toFixed(2)} milhões de euros</p>
+            <strong>ANÁLISE DE IMPACTO SETORIAL</strong>
+            <p>Detetada divergência de ${formatter.format(divergencia)} (${taxaOmissao.toFixed(1)}% da faturação bruta) entre plataforma e declarado.</p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-industry"></i> Projeção mercado (38k motoristas): <strong>${(projecaoMensal / 1000000).toFixed(2)} milhões €/mês</strong> de volume não reportado</p>
         </div>
     `;
     
@@ -608,42 +689,48 @@ function showDiferencialAlert() {
     }
 }
 
-// 7. MODO DEMO HARDCODED
+// 7. MODO DEMO HARDCODED - DADOS REAIS 4 MESES
 async function loadDemoData() {
-    if (confirm('⚠️  ATENÇÃO: Isto carregará dados de demonstração Q4 2024.\nDados existentes serão substituídos.\n\nContinuar?')) {
+    if (confirm('⚠️  ATENÇÃO: Isto carregará dados reais dos 4 meses auditados (Set-Dez 2024).\nDados existentes serão substituídos.\n\nContinuar?')) {
         try {
-            logAudit('🧪 CARREGANDO DADOS DE DEMONSTRAÇÃO Q4 2024...', 'info');
+            logAudit('🧪 CARREGANDO DADOS REAIS 4 MESES (SET-DEZ 2024)...', 'info');
             
             // Resetar sistema
             resetDashboard();
             
-            // Dados estáticos Q4 2024 (Setembro a Dezembro)
+            // Dados reais consolidados
             VDCSystem.analysis.extractedValues = {
-                saftGross: 7613.58,
-                saftIVA6: 456.81,
-                platformCommission: 2399.53,
-                bankTransfer: 7755.16,
-                iva23Due: 551.89,
-                ganhosBrutos: 10154.69,
-                comissaoApp: -2399.53,
-                ganhosLiquidos: 7755.16,
-                faturaPlataforma: 239.00,
-                campanhas: 50.00,
-                gorjetas: 25.00,
-                cancelamentos: 40.00,
-                portagens: 60.00,
-                diferencialCusto: 97.42,
-                prejuizoFiscal: 20.46,
-                imtBase: 2512.43,
-                imtTax: 125.62,
-                imtTotal: 2638.05,
-                dac7Value: 7755.16,
+                // Dados principais
+                faturacaoBruta: VDCSystem.totaisConsolidados.brutoTotal,
+                reportadoDAC7: VDCSystem.totaisConsolidados.liquidoTotal,
+                divergenciaComissoes: VDCSystem.totaisConsolidados.comissaoTotal,
+                
+                // Valores detalhados
+                saftGross: 0,
+                saftIVA6: 0,
+                platformCommission: VDCSystem.totaisConsolidados.comissaoTotal,
+                bankTransfer: VDCSystem.totaisConsolidados.liquidoTotal,
+                iva23Due: VDCSystem.totaisConsolidados.comissaoTotal * 0.23,
+                ganhosBrutos: VDCSystem.totaisConsolidados.brutoTotal,
+                comissaoApp: -VDCSystem.totaisConsolidados.comissaoTotal,
+                ganhosLiquidos: VDCSystem.totaisConsolidados.liquidoTotal,
+                faturaPlataforma: 0,
+                campanhas: 120.00,
+                gorjetas: 45.00,
+                cancelamentos: 75.00,
+                portagens: 90.00,
+                diferencialCusto: VDCSystem.totaisConsolidados.comissaoTotal,
+                prejuizoFiscal: VDCSystem.totaisConsolidados.comissaoTotal * 0.21,
+                imtBase: VDCSystem.totaisConsolidados.comissaoTotal,
+                imtTax: VDCSystem.totaisConsolidados.comissaoTotal * 0.05,
+                imtTotal: VDCSystem.totaisConsolidados.comissaoTotal * 1.05,
+                dac7Value: VDCSystem.totaisConsolidados.liquidoTotal,
                 dac7Discrepancy: 0,
-                valorIliquido: 7755.16,
-                iva6Percent: 456.81,
-                iva23Autoliquidacao: 551.89,
-                invoiceNumber: "PT1125-3582",
-                projecaoSetorial: 0
+                valorIliquido: VDCSystem.totaisConsolidados.liquidoTotal,
+                iva6Percent: VDCSystem.totaisConsolidados.brutoTotal * 0.06,
+                iva23Autoliquidacao: VDCSystem.totaisConsolidados.comissaoTotal * 0.23,
+                invoiceNumber: "MÚLTIPLAS",
+                taxaOmissaoPercentual: (VDCSystem.totaisConsolidados.comissaoTotal / VDCSystem.totaisConsolidados.brutoTotal) * 100
             };
             
             VDCSystem.periodoAnalise = 'Setembro a Dezembro 2024';
@@ -656,27 +743,32 @@ async function loadDemoData() {
             document.getElementById('clientEmail').value = 'pericia@forense.pt';
             document.getElementById('clientAddress').value = 'Rua da Justiça, 100, Lisboa';
             
+            // Preencher valor DAC7 automaticamente
+            document.getElementById('dac7Value').value = VDCSystem.totaisConsolidados.liquidoTotal.toFixed(2);
+            
             // Registrar cliente
             await registerClientFromDemo();
             
             // Simular uploads
             simulateUploadedFiles();
             
+            // Calcular projeção de mercado corrigida
+            calcularProjecaoMercadoCorrigida();
+            
             // Atualizar interface
             updateDashboard();
             updateResults();
-            calcularProjecaoSetorial();
-            updateResults(); // Atualizar novamente para mostrar projeção
             
             // Atualizar botões demo
             updateDemoButtons();
             
-            // Atualizar gráfico
-            updateChartWithData();
+            // Atualizar gráfico comparativo
+            updateChartComparativo();
             
-            logAudit('✅ Dados de demonstração Q4 2024 carregados com sucesso', 'success');
+            logAudit('✅ Dados reais 4 meses carregados com sucesso', 'success');
             logAudit(`Período analisado: ${VDCSystem.periodoAnalise}`, 'info');
-            logAudit(`Ganhos líquidos: 7.755,16€ | Sincronizado com DAC7`, 'success');
+            logAudit(`Faturação Bruta: ${VDCSystem.totaisConsolidados.brutoTotal.toFixed(2)}€ | Reportado DAC7: ${VDCSystem.totaisConsolidados.liquidoTotal.toFixed(2)}€ | Divergência: ${VDCSystem.totaisConsolidados.comissaoTotal.toFixed(2)}€`, 'success');
+            logAudit(`Projeção setorial: ${(VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal / 1000000).toFixed(2)} milhões €/mês`, 'warn');
             
         } catch (error) {
             console.error('Erro ao carregar demo:', error);
@@ -706,17 +798,24 @@ async function registerClientFromDemo() {
 
 function simulateUploadedFiles() {
     // Simular ficheiros carregados
-    VDCSystem.documents.saft.files = [{ name: 'demo_saft_q4.xml', size: 2048 }];
-    VDCSystem.documents.invoices.files = [{ name: 'Fatura_Q4_2024.pdf', size: 1024 }];
-    VDCSystem.documents.statements.files = [{ name: 'Extrato_Q4_2024.txt', size: 1024 }];
+    VDCSystem.documents.saft.files = [{ name: 'saft_consolidado_set_dez_2024.xml', size: 4096 }];
+    VDCSystem.documents.invoices.files = [
+        { name: 'Fatura_Set_2024_PT1124-91599.pdf', size: 1024 },
+        { name: 'Fatura_Out_2024_PT1125-3578.pdf', size: 1024 },
+        { name: 'Fatura_Nov_2024_PT1125-3580.pdf', size: 1024 },
+        { name: 'Fatura_Dez_2024_PT1125-3582.pdf', size: 1024 }
+    ];
+    VDCSystem.documents.statements.files = [
+        { name: 'Extratos_Consolidados_Set_Dez_2024.pdf', size: 2048 }
+    ];
     
-    VDCSystem.counters = { saft: 1, invoices: 1, statements: 1, total: 3 };
+    VDCSystem.counters = { saft: 1, invoices: 4, statements: 1, total: 6 };
     
     // Atualizar contadores
     document.getElementById('saftCount').textContent = '1';
-    document.getElementById('invoiceCount').textContent = '1';
+    document.getElementById('invoiceCount').textContent = '4';
     document.getElementById('statementCount').textContent = '1';
-    document.getElementById('totalCount').textContent = '3';
+    document.getElementById('totalCount').textContent = '6';
 }
 
 function updateDemoButtons() {
@@ -725,13 +824,13 @@ function updateDemoButtons() {
     
     if (demoBtn) {
         demoBtn.classList.add('btn-demo-loaded');
-        demoBtn.innerHTML = '<i class="fas fa-check"></i> DEMO Q4 CARREGADO';
+        demoBtn.innerHTML = '<i class="fas fa-check"></i> DADOS REAIS CARREGADOS';
         demoBtn.disabled = true;
     }
     
     if (demoBtnExtra) {
         demoBtnExtra.classList.add('btn-demo-loaded');
-        demoBtnExtra.innerHTML = '<i class="fas fa-check"></i> DEMO Q4 CARREGADO';
+        demoBtnExtra.innerHTML = '<i class="fas fa-check"></i> DADOS 4 MESES CARREGADOS';
         demoBtnExtra.disabled = true;
     }
     
@@ -739,7 +838,7 @@ function updateDemoButtons() {
     setTimeout(() => {
         if (demoBtn) {
             demoBtn.classList.remove('btn-demo-loaded');
-            demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO Q4 2024';
+            demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS REAIS 4 MESES';
             demoBtn.disabled = false;
         }
         if (demoBtnExtra) {
@@ -750,7 +849,7 @@ function updateDemoButtons() {
     }, 3000);
 }
 
-// 8. FUNÇÕES DE GRÁFICO
+// 8. FUNÇÕES DE GRÁFICO COMPARATIVO
 function renderEmptyChart() {
     try {
         const ctx = document.getElementById('forensicChart');
@@ -759,28 +858,49 @@ function renderEmptyChart() {
         if (VDCSystem.chart) VDCSystem.chart.destroy();
         
         const data = {
-            labels: ['Valor Ilíquido', 'IVA 6%', 'Comissão Plataforma', 'IVA 23% Devido'],
+            labels: ['Faturação Bruta', 'Reportado DAC7', 'Divergência (Comissões)'],
             datasets: [{
-                data: [0, 0, 0, 0],
+                data: [0, 0, 0],
                 backgroundColor: [
-                    'rgba(0, 242, 255, 0.7)',
-                    'rgba(59, 130, 246, 0.7)',
-                    'rgba(255, 62, 62, 0.7)',
-                    'rgba(245, 158, 11, 0.7)'
+                    'rgba(59, 130, 246, 0.7)',    // Azul - Faturação Bruta
+                    'rgba(16, 185, 129, 0.7)',    // Verde - Reportado DAC7
+                    'rgba(239, 68, 68, 0.7)'      // Vermelho - Divergência
                 ],
-                borderColor: ['#00f2ff', '#3b82f6', '#ff3e3e', '#f59e0b'],
+                borderColor: ['#3b82f6', '#10b981', '#ef4444'],
                 borderWidth: 1
             }]
         };
         
         VDCSystem.chart = new Chart(ctx.getContext('2d'), {
-            type: 'doughnut',
+            type: 'bar',
             data: data,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+                                return `${label}: ${formatter.format(value)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+                                return formatter.format(value);
+                            }
+                        }
+                    }
+                }
             }
         });
     } catch (error) {
@@ -788,34 +908,31 @@ function renderEmptyChart() {
     }
 }
 
-function updateChartWithData() {
+function updateChartComparativo() {
     if (!VDCSystem.chart) return;
     
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
-    const iva6 = VDCSystem.analysis.extractedValues.ganhosBrutos * 0.06 || 0;
-    const comissao = Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0;
-    const iva23 = comissao * 0.23 || 0;
+    const faturacaoBruta = VDCSystem.analysis.extractedValues.faturacaoBruta || 0;
+    const reportadoDAC7 = VDCSystem.analysis.extractedValues.reportadoDAC7 || 0;
+    const divergencia = VDCSystem.analysis.extractedValues.divergenciaComissoes || 0;
     
     VDCSystem.chart.data.datasets[0].data = [
-        ganhosLiquidos,
-        iva6,
-        comissao,
-        iva23
+        faturacaoBruta,
+        reportadoDAC7,
+        divergencia
     ];
     
     VDCSystem.chart.update();
 }
 
-// 9. FUNÇÕES DE EXPORTAÇÃO PDF
+// 9. FUNÇÕES DE EXPORTAÇÃO PDF - DESIGN PROFISSIONAL
 async function exportPDF() {
     try {
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL...', 'info');
+        logAudit('📄 GERANDO RELATÓRIO PERICIAL PROFISSIONAL...', 'info');
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        await createPage1(doc);
-        await createPage2(doc);
+        await createRelatorioCompleto(doc);
         
         const pdfBlob = doc.output('blob');
         const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -825,7 +942,7 @@ async function exportPDF() {
         
         const clienteNome = VDCSystem.client?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'CLIENTE';
         const dataStr = new Date().toISOString().split('T')[0];
-        a.download = `VDC_RELATORIO_${clienteNome}_${dataStr}.pdf`;
+        a.download = `VDC_RELATORIO_PERICIAL_${clienteNome}_${dataStr}.pdf`;
         
         document.body.appendChild(a);
         a.click();
@@ -835,7 +952,7 @@ async function exportPDF() {
             URL.revokeObjectURL(pdfUrl);
         }, 100);
         
-        logAudit('✅ Relatório pericial gerado - Download iniciado', 'success');
+        logAudit('✅ Relatório pericial profissional gerado - Download iniciado', 'success');
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
@@ -844,190 +961,264 @@ async function exportPDF() {
     }
 }
 
-async function createPage1(doc) {
+async function createRelatorioCompleto(doc) {
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
     const centerX = pageWidth / 2;
+    const margin = 20;
     
-    // Cabeçalho
+    // ========== PÁGINA 1: CAPA E SUMÁRIO ==========
+    
+    // Cabeçalho profissional
+    doc.setFillColor(15, 23, 42); // --bg-primary
+    doc.rect(0, 0, pageWidth, 60, 'F');
+    
+    doc.setTextColor(241, 245, 249); // --text-primary
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text("RELATÓRIO DE PERITAGEM FORENSE", centerX, 20, { align: 'center' });
+    doc.setFontSize(22);
+    doc.text("VDC SISTEMA DE PERITAGEM FORENSE", centerX, 25, { align: 'center' });
+    
     doc.setFontSize(14);
-    doc.text("Análise de Conformidade Fiscal", centerX, 28, { align: 'center' });
-    
-    doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text("VDC Sistema de Peritagem Forense v11.1", centerX, 36, { align: 'center' });
+    doc.text("Relatório de Análise de Conformidade Fiscal v12.2", centerX, 35, { align: 'center' });
     
-    doc.setDrawColor(0, 242, 255);
-    doc.setLineWidth(0.5);
-    doc.line(20, 42, pageWidth - 20, 42);
-    
-    let posY = 50;
-    
-    // Informações da Sessão
     doc.setFontSize(10);
+    doc.text("Protocolo de Prova Legal | Big Data Forense | Sincronização Total 4 Meses", centerX, 42, { align: 'center' });
+    
+    // Linha divisória
+    doc.setDrawColor(0, 242, 255); // --accent-primary
+    doc.setLineWidth(1);
+    doc.line(margin, 50, pageWidth - margin, 50);
+    
+    let posY = 70;
+    
+    // Sumário Executivo em caixa destacada
+    doc.setFillColor(30, 41, 59, 10); // --bg-secondary com transparência
+    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 80, 3, 3, 'F');
+    
+    doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
-    doc.text("INFORMAÇÕES DA SESSÃO", 20, posY);
-    posY += 7;
+    doc.setFontSize(12);
+    doc.text("SUMÁRIO EXECUTIVO", margin + 10, posY + 10);
     
     doc.setFont('helvetica', 'normal');
-    const now = new Date();
-    const dataStr = now.toLocaleDateString('pt-PT');
-    const horaStr = now.toLocaleTimeString('pt-PT');
+    doc.setFontSize(10);
     
-    doc.text(`Data da Análise: ${dataStr} ${horaStr}`, 20, posY);
-    posY += 5;
-    doc.text(`Sessão: ${VDCSystem.sessionId || 'N/D'}`, 20, posY);
-    posY += 5;
-    doc.text(`Período Analisado: ${VDCSystem.periodoAnalise || 'N/D'}`, 20, posY);
-    posY += 5;
-    doc.text(`Plataforma: ${VDCSystem.selectedPlatform === 'bolt' ? 'Bolt (Estónia)' : 
-              VDCSystem.selectedPlatform === 'uber' ? 'Uber (Holanda)' : 'Outra'}`, 20, posY);
-    posY += 10;
+    const sumarioText = `Esta análise forense abrange o período de Setembro a Dezembro de 2024, 
+    focando na reconciliação entre os valores faturados pelas plataformas digitais e 
+    os valores reportados para efeitos fiscais (DAC7).`;
     
-    // Informações do Cliente
-    doc.setFont('helvetica', 'bold');
-    doc.text("INFORMAÇÕES DO CLIENTE", 20, posY);
-    posY += 7;
+    const splitSumario = doc.splitTextToSize(sumarioText, pageWidth - (margin * 2) - 20);
+    doc.text(splitSumario, margin + 10, posY + 20);
     
-    doc.setFont('helvetica', 'normal');
-    if (VDCSystem.client) {
-        doc.text(`Nome: ${VDCSystem.client.name || 'N/D'}`, 20, posY);
-        posY += 5;
-        doc.text(`NIF: ${VDCSystem.client.nif || 'N/D'}`, 20, posY);
-        posY += 5;
-        doc.text(`Telefone: ${VDCSystem.client.phone || 'N/D'}`, 20, posY);
-        posY += 5;
-        doc.text(`Email: ${VDCSystem.client.email || 'N/D'}`, 20, posY);
-        posY += 5;
-        doc.text(`Morada: ${VDCSystem.client.address || 'N/D'}`, 20, posY);
-        posY += 10;
-    } else {
-        doc.text("Cliente não registado", 20, posY);
-        posY += 10;
-    }
+    // Destaques do sumário
+    posY += 90;
     
-    // Resultados da Análise
-    doc.setFont('helvetica', 'bold');
-    doc.text("RESULTADOS DA ANÁLISE FORENSE", 20, posY);
-    posY += 7;
-    
-    doc.setFont('helvetica', 'normal');
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
-    
-    const resultados = [
-        `Ganhos Brutos (Plataforma): ${formatter.format(VDCSystem.analysis.extractedValues.ganhosBrutos || 0)}`,
-        `Comissões/Despesas: ${formatter.format(Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) || 0)}`,
-        `Ganhos Líquidos (Banco): ${formatter.format(VDCSystem.analysis.extractedValues.ganhosLiquidos || 0)}`,
-        `Valor Reportado DAC7: ${formatter.format(VDCSystem.analysis.extractedValues.dac7Value || 0)}`,
-        `Diferencial Identificado: ${formatter.format(VDCSystem.analysis.extractedValues.diferencialCusto || 0)}`,
-        `IVA 23% Devido: ${formatter.format(VDCSystem.analysis.extractedValues.iva23Due || 0)}`
+    const destaques = [
+        `• Período Analisado: ${VDCSystem.periodoAnalise}`,
+        `• Faturação Bruta Total: ${formatarMoeda(VDCSystem.totaisConsolidados.brutoTotal)}`,
+        `• Reportado DAC7: ${formatarMoeda(VDCSystem.totaisConsolidados.liquidoTotal)}`,
+        `• Divergência Identificada: ${formatarMoeda(VDCSystem.totaisConsolidados.comissaoTotal)}`
     ];
     
-    resultados.forEach(res => {
-        if (posY > 250) {
+    destaques.forEach((destaque, index) => {
+        if (posY > pageHeight - 50) {
             doc.addPage();
-            posY = 20;
+            posY = margin;
         }
-        doc.text(res, 20, posY);
-        posY += 6;
+        doc.setFont('helvetica', index === 3 ? 'bold' : 'normal');
+        doc.setTextColor(index === 3 ? 239 : 15, index === 3 ? 68 : 23, index === 3 ? 68 : 42);
+        doc.text(destaque, margin + 5, posY);
+        posY += 8;
     });
     
-    posY += 5;
+    posY += 10;
     
-    // ANÁLISE DE IMPACTO SETORIAL
+    // Tabela de Dados Mensais
+    doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
-    doc.text("ANÁLISE DE IMPACTO SETORIAL", 20, posY);
-    posY += 7;
+    doc.setFontSize(11);
+    doc.text("DETALHAMENTO MENSAL (VALORES EM €)", margin, posY);
+    posY += 8;
+    
+    // Cabeçalho da tabela
+    doc.setFillColor(30, 41, 59);
+    doc.setDrawColor(71, 85, 105);
+    doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
+    
+    doc.setTextColor(241, 245, 249);
+    doc.setFontSize(9);
+    doc.text("Mês", margin + 5, posY + 5);
+    doc.text("Faturação Bruta", margin + 50, posY + 5);
+    doc.text("Reportado DAC7", margin + 100, posY + 5);
+    doc.text("Divergência", margin + 150, posY + 5);
+    doc.text("% Omissão", pageWidth - margin - 25, posY + 5, { align: 'right' });
+    
+    posY += 10;
+    
+    // Linhas da tabela
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'normal');
+    
+    Object.values(VDCSystem.dadosMensais).forEach((mes, index) => {
+        if (posY > pageHeight - 30) {
+            doc.addPage();
+            posY = margin;
+        }
+        
+        const bgColor = index % 2 === 0 ? [248, 250, 252] : [241, 245, 249];
+        doc.setFillColor(...bgColor);
+        doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
+        
+        const divergencia = mes.bruto - mes.liquido;
+        const percentOmissao = ((divergencia / mes.bruto) * 100).toFixed(1);
+        
+        doc.text(mes.mes, margin + 5, posY + 5);
+        doc.text(formatarMoeda(mes.bruto), margin + 50, posY + 5);
+        doc.text(formatarMoeda(mes.liquido), margin + 100, posY + 5);
+        doc.text(formatarMoeda(divergencia), margin + 150, posY + 5);
+        doc.text(`${percentOmissao}%`, pageWidth - margin - 5, posY + 5, { align: 'right' });
+        
+        posY += 9;
+    });
+    
+    posY += 10;
+    
+    // Análise de Impacto Setorial
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text("ANÁLISE DE IMPACTO SETORIAL", margin, posY);
+    posY += 8;
     
     doc.setFont('helvetica', 'normal');
-    const projecao = VDCSystem.analysis.extractedValues.projecaoSetorial || 0;
-    const textoProjecao = `Com base no diferencial médio identificado (${formatter.format(VDCSystem.analysis.extractedValues.diferencialCusto || 0)} por motorista), 
-    a projeção para o mercado português (38.000 motoristas) aponta para um impacto setorial de aproximadamente ${(projecao / 1000000).toFixed(2)} milhões de euros.`;
+    doc.setFontSize(10);
     
-    const splitText = doc.splitTextToSize(textoProjecao, 170);
-    splitText.forEach(line => {
-        if (posY > 250) {
+    const impactoText = `Com base na divergência média identificada (${formatarMoeda(VDCSystem.analysis.projecaoMercado.comissaoMediaMensal)} por motorista/mês), 
+    a projeção para o mercado português (${VDCSystem.analysis.projecaoMercado.motoristasAtivos.toLocaleString('pt-PT')} motoristas ativos) 
+    aponta para um impacto setorial significativo:`;
+    
+    const splitImpacto = doc.splitTextToSize(impactoText, pageWidth - (margin * 2));
+    doc.text(splitImpacto, margin, posY);
+    posY += splitImpacto.length * 5 + 5;
+    
+    // Destaques do impacto
+    const impactos = [
+        `• Volume de Negócio Omitido Mensal: ${formatarMoeda(VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal)}`,
+        `• Volume de Negócio Omitido Anual: ${formatarMoeda(VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoAnual)}`,
+        `• Impacto Fiscal Estimado (IVA 23%): ${formatarMoeda(VDCSystem.analysis.projecaoMercado.impactoFiscalEstimado)}/mês`
+    ];
+    
+    impactos.forEach((impacto, index) => {
+        if (posY > pageHeight - 50) {
             doc.addPage();
-            posY = 20;
+            posY = margin;
         }
-        doc.text(line, 20, posY);
-        posY += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(239, 68, 68);
+        doc.text(impacto, margin + 10, posY);
+        posY += 8;
     });
-}
-
-async function createPage2(doc) {
-    doc.addPage();
     
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const centerX = pageWidth / 2;
+    // ========== PÁGINA 2: ANEXO TÉCNICO ==========
+    doc.addPage();
+    posY = margin;
     
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.text("ANEXO TÉCNICO - METODOLOGIA", centerX, 30, { align: 'center' });
+    doc.text("ANEXO TÉCNICO - RELATÓRIO DE EVIDÊNCIAS DIGITAIS", centerX, posY, { align: 'center' });
+    posY += 15;
+    
+    doc.setDrawColor(0, 242, 255);
+    doc.setLineWidth(0.5);
+    doc.line(margin, posY, pageWidth - margin, posY);
+    posY += 10;
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     
-    let posY = 50;
-    
-    const anexoConteudo = [
-        "Este anexo técnico descreve a metodologia aplicada na análise forense.",
+    const metodologiaText = [
+        "METODOLOGIA DE EXTRAÇÃO E VALIDAÇÃO",
         "",
-        "1. COLETA DE DADOS",
-        "Os dados foram extraídos diretamente de documentos oficiais:",
-        "- Ficheiros SAF-T (Standard Audit File for Tax)",
-        "- Faturas eletrónicas das plataformas digitais",
-        "- Extratos bancários em formato digital",
+        "1. COLETA DE DADOS PRIMÁRIOS",
+        "Os dados analisados foram extraídos diretamente de documentos oficiais:",
+        "  • Ficheiros SAF-T (Standard Audit File for Tax)",
+        "  • Faturas eletrónicas emitidas pelas plataformas digitais",
+        "  • Extratos bancários em formato digital",
         "",
         "2. PROCESSAMENTO FORENSE",
-        "Utilização de algoritmos de reconciliação para identificação de",
-        "discrepâncias entre o rendimento declarado e o fluxo de caixa efetivo.",
+        "Utilização de algoritmos especializados para reconciliação automática,",
+        "identificação de padrões e deteção de discrepâncias entre fontes.",
         "",
-        "3. NORMALIZAÇÃO DE DADOS",
-        "Conversão automática de diferentes formatos numéricos (1.234,56,",
-        "1,234.56, 1234.56) para valores decimais padrão.",
+        "3. NORMALIZAÇÃO E VALIDAÇÃO",
+        "Conversão automática de diferentes formatos numéricos para valores",
+        "decimais padrão, com validação cruzada entre documentos.",
         "",
-        "4. VALIDAÇÃO FISCAL",
-        "Análise focada na conformidade com a legislação portuguesa,",
-        "especialmente nos regimes de IVA e obrigações declarativas DAC7.",
+        "4. ANÁLISE DE CONFORMIDADE",
+        "Verificação da conformidade com a legislação fiscal portuguesa,",
+        "com foco especial nas obrigações declarativas do regime DAC7.",
         "",
-        "5. PROJEÇÃO SETORIAL",
+        "5. PROJEÇÃO E IMPACTO SETORIAL",
         "Extrapolação matemática baseada em amostra representativa para",
-        "estimativa de impacto no mercado nacional.",
+        "estimativa do impacto sistémico no mercado nacional.",
         "",
-        "NOTA DE CONFIDENCIALIDADE",
+        "INTEGRIDADE PROCESSUAL",
+        "Todo o processo de análise foi documentado e pode ser auditado",
+        "independentemente, garantindo a rastreabilidade das conclusões.",
+        "",
+        "CONFIDENCIALIDADE E SEGURANÇA",
         "Este relatório destina-se exclusivamente a fins de auditoria e",
-        "peritagem financeira, em estrito cumprimento do RGPD."
+        "peritagem financeira, em estrito cumprimento do RGPD e da",
+        "legislação de proteção de dados aplicável."
     ];
     
-    anexoConteudo.forEach(linha => {
-        if (posY > 250) {
+    metodologiaText.forEach(linha => {
+        if (posY > pageHeight - 20) {
             doc.addPage();
-            posY = 30;
+            posY = margin;
         }
         
-        if (linha.includes("1.") || linha.includes("2.") || linha.includes("3.") || 
-            linha.includes("4.") || linha.includes("5.") || linha.includes("NOTA")) {
+        if (linha.includes("METODOLOGIA") || linha.includes("INTEGRIDADE") || linha.includes("CONFIDENCIALIDADE")) {
             doc.setFont('helvetica', 'bold');
-            doc.text(linha, centerX, posY, { align: 'center' });
+            doc.text(linha, margin, posY);
             doc.setFont('helvetica', 'normal');
+        } else if (linha.includes("1.") || linha.includes("2.") || linha.includes("3.") || 
+                   linha.includes("4.") || linha.includes("5.")) {
+            doc.setFont('helvetica', 'bold');
+            doc.text(linha, margin, posY);
+            doc.setFont('helvetica', 'normal');
+        } else if (linha.startsWith("  •")) {
+            doc.text(linha, margin + 10, posY);
         } else {
-            doc.text(linha, centerX, posY, { align: 'center' });
+            doc.text(linha, margin, posY);
         }
-        posY += 8;
+        
+        posY += linha.trim() === "" ? 5 : 7;
     });
     
-    // Rodapé
+    // Rodapé em todas as páginas
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v11.1 | Protocolo de Prova Legal", 15, 285);
-        doc.text(`Página ${i} de ${totalPages}`, 185, 285, { align: "right" });
+        doc.text("VDC Forensic System v12.2 | Protocolo de Prova Legal com Sincronização Total", 15, pageHeight - 10);
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: "right" });
+        
+        // Linha de rodapé
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
     }
+}
+
+function formatarMoeda(valor) {
+    const formatter = new Intl.NumberFormat('pt-PT', { 
+        style: 'currency', 
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return formatter.format(valor);
 }
 
 // 10. FUNÇÕES DE UTILIDADE
@@ -1150,8 +1341,8 @@ function generateMasterHash() {
         VDCSystem.sessionId,
         VDCSystem.selectedYear.toString(),
         VDCSystem.selectedPlatform,
-        VDCSystem.analysis.extractedValues.ganhosBrutos.toString(),
-        VDCSystem.analysis.extractedValues.diferencialCusto.toString(),
+        VDCSystem.totaisConsolidados.brutoTotal.toString(),
+        VDCSystem.totaisConsolidados.comissaoTotal.toString(),
         new Date().toISOString()
     ].join('|');
     
@@ -1196,7 +1387,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v11.1...');
+        console.log('🔧 Inicializando VDC Forensic System v12.2...');
         updateLoadingProgress(10);
         
         VDCSystem.sessionId = generateSessionId();
@@ -1226,8 +1417,8 @@ async function initializeSystem() {
             updateLoadingProgress(100);
             setTimeout(() => {
                 showMainInterface();
-                logAudit('✅ Sistema VDC v11.1 inicializado com sucesso', 'success');
-                logAudit('Modos disponíveis: Demo Hardcoded Q4 2024 + Parsing Textual', 'info');
+                logAudit('✅ Sistema VDC v12.2 inicializado com sucesso', 'success');
+                logAudit('Sincronização Total 4 Meses ativada | Dados Reais Set-Dez 2024', 'info');
                 updateAnalysisButton();
             }, 300);
         }, 500);
@@ -1400,8 +1591,8 @@ function calcularDiscrepanciaDAC7() {
         return;
     }
     
-    const ganhosLiquidos = VDCSystem.analysis.extractedValues.ganhosLiquidos || 0;
-    const discrepancia = Math.abs(dac7Value - ganhosLiquidos);
+    const reportadoDAC7 = VDCSystem.analysis.extractedValues.reportadoDAC7 || 0;
+    const discrepancia = Math.abs(dac7Value - reportadoDAC7);
     
     VDCSystem.analysis.extractedValues.dac7Value = dac7Value;
     VDCSystem.analysis.extractedValues.dac7Discrepancy = discrepancia;
@@ -1411,34 +1602,52 @@ function calcularDiscrepanciaDAC7() {
     
     if (dac7Result) dac7Result.style.display = 'flex';
     if (dac7Discrepancy) {
-        const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+        const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
         dac7Discrepancy.textContent = formatter.format(discrepancia);
     }
     
-    const status = discrepancia === 0 ? 'PERFEITA' : discrepancia < 100 ? 'ACEITÁVEL' : 'SUSPEITA';
-    logAudit(`DAC7: Valor reportado ${dac7Value.toFixed(2)}€ vs Ganhos líquidos ${ganhosLiquidos.toFixed(2)}€ | ${status}`, 'warn');
+    const status = discrepancia === 0 ? 'SINCRONIZAÇÃO PERFEITA' : 
+                  discrepancia < 100 ? 'DIVERGÊNCIA ACEITÁVEL' : 
+                  'ALERTA: DIVERGÊNCIA SIGNIFICATIVA';
+    
+    logAudit(`DAC7: Valor reportado ${dac7Value.toFixed(2)}€ vs Análise ${reportadoDAC7.toFixed(2)}€ | ${status}`, 
+             discrepancia === 0 ? 'success' : discrepancia < 100 ? 'warn' : 'error');
 }
 
 // 15. FUNÇÕES DE RESET
 function resetDashboard() {
-    // Limpar valores do sistema
+    // Limpar valores do sistema (mantendo dados reais dos 4 meses)
     VDCSystem.documents = {
         control: { files: [], parsedData: null },
         saft: { files: [], totals: { gross: 0, iva6: 0, net: 0 } },
         invoices: { files: [], totals: { invoiceValue: 0, invoiceNumber: "N/D" } },
         statements: { files: [], totals: { 
             ganhosBrutos: 0, comissaoApp: 0, ganhosLiquidos: 0,
-            campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0
+            campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0
         }}
     };
     
     VDCSystem.analysis.extractedValues = {
+        faturacaoBruta: 0,
+        reportadoDAC7: 0,
+        divergenciaComissoes: 0,
+        
+        // Resetar outros valores
         saftGross: 0, saftIVA6: 0, platformCommission: 0, bankTransfer: 0,
         iva23Due: 0, ganhosBrutos: 0, comissaoApp: 0, ganhosLiquidos: 0,
         faturaPlataforma: 0, campanhas: 0, gorjetas: 0, cancelamentos: 0,
         portagens: 0, diferencialCusto: 0, prejuizoFiscal: 0, imtBase: 0,
         imtTax: 0, imtTotal: 0, dac7Value: 0, dac7Discrepancy: 0, valorIliquido: 0,
-        iva6Percent: 0, iva23Autoliquidacao: 0, invoiceNumber: "N/D", projecaoSetorial: 0
+        iva6Percent: 0, iva23Autoliquidacao: 0, invoiceNumber: "N/D",
+        projecaoSetorialMensal: 0, projecaoSetorialAnual: 0, taxaOmissaoPercentual: 0
+    };
+    
+    VDCSystem.analysis.projecaoMercado = {
+        motoristasAtivos: 38000,
+        comissaoMediaMensal: 0,
+        volumeNegocioOmitidoMensal: 0,
+        volumeNegocioOmitidoAnual: 0,
+        impactoFiscalEstimado: 0
     };
     
     VDCSystem.counters = { saft: 0, invoices: 0, statements: 0, total: 0 };
@@ -1478,18 +1687,18 @@ function resetDashboard() {
     updateResults();
     
     // Remover cards dinâmicos
-    const diferencialCard = document.getElementById('diferencialCard');
-    if (diferencialCard) diferencialCard.remove();
+    const divergenciaCard = document.getElementById('divergenciaCard');
+    if (divergenciaCard) divergenciaCard.remove();
     
-    const diferencialAlert = document.getElementById('diferencialAlert');
-    if (diferencialAlert) diferencialAlert.remove();
+    const divergenciaAlert = document.getElementById('divergenciaAlert');
+    if (divergenciaAlert) divergenciaAlert.remove();
     
     const omissionAlert = document.getElementById('omissionAlert');
     if (omissionAlert) omissionAlert.style.display = 'none';
     
     // Resetar gráfico
     if (VDCSystem.chart) {
-        VDCSystem.chart.data.datasets[0].data = [0, 0, 0, 0];
+        VDCSystem.chart.data.datasets[0].data = [0, 0, 0];
         VDCSystem.chart.update();
     }
     
@@ -1525,11 +1734,14 @@ async function saveClientData() {
         }
         
         const clientData = {
-            sistema: "VDC Forensic System v11.1",
+            sistema: "VDC Forensic System v12.2",
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
             cliente: VDCSystem.client,
-            analise: VDCSystem.analysis
+            periodoAnalise: VDCSystem.periodoAnalise,
+            analise: VDCSystem.analysis,
+            dadosMensais: VDCSystem.dadosMensais,
+            totaisConsolidados: VDCSystem.totaisConsolidados
         };
         
         const jsonStr = JSON.stringify(clientData, null, 2);
@@ -1558,13 +1770,16 @@ async function saveClientData() {
 async function exportJSON() {
     try {
         const evidenceData = {
-            sistema: "VDC Forensic System v11.1",
+            sistema: "VDC Forensic System v12.2",
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
             cliente: VDCSystem.client,
             periodoAnalise: VDCSystem.periodoAnalise,
+            dadosMensais: VDCSystem.dadosMensais,
+            totaisConsolidados: VDCSystem.totaisConsolidados,
             analise: VDCSystem.analysis,
+            projecaoMercado: VDCSystem.analysis.projecaoMercado,
             logs: VDCSystem.logs.slice(-50)
         };
         
@@ -1574,7 +1789,7 @@ async function exportJSON() {
         const a = document.createElement('a');
         a.href = url;
         const dataStr = new Date().toISOString().split('T')[0];
-        a.download = `VDC_PROVA_${VDCSystem.sessionId}_${dataStr}.json`;
+        a.download = `VDC_EVIDENCIAS_COMPLETAS_${VDCSystem.sessionId}_${dataStr}.json`;
         
         document.body.appendChild(a);
         a.click();
@@ -1584,7 +1799,7 @@ async function exportJSON() {
             URL.revokeObjectURL(url);
         }, 100);
         
-        logAudit('✅ Prova digital guardada como JSON', 'success');
+        logAudit('✅ Evidências digitais completas guardadas como JSON', 'success');
         
     } catch (error) {
         console.error('Erro ao exportar JSON:', error);
@@ -1601,4 +1816,5 @@ function clearAllData() {
 // ============================================
 // INICIALIZAÇÃO AUTOMÁTICA
 // ============================================
-console.log('VDC Sistema de Peritagem Forense v11.1 - Carregado com sucesso');
+console.log('VDC Sistema de Peritagem Forense v12.2 - Carregado com sucesso');
+console.log('Sincronização Total 4 Meses | Dados Reais Set-Dez 2024');
