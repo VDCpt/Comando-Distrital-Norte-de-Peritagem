@@ -587,7 +587,7 @@ function showDiferencialAlert() {
     if (alertAntigo) alertAntigo.remove();
     
     const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto;
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const novoAlerta = document.createElement('div');
     novoAlerta.id = 'diferencialAlert';
