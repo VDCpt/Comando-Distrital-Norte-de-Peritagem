@@ -1,12 +1,11 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v12.6
-// EDIÇÃO FORENSE - RECUPERAÇÃO IMEDIATA
+// VDC SISTEMA DE PERITAGEM FORENSE v12.4
 // PROTOCOLO DE AUDITORIA FINAL - SET-DEZ 2024
 // ============================================
 
 // 1. ESTADO DO SISTEMA - DADOS AUDITADOS
 const VDCSystem = {
-    version: 'v12.6',
+    version: 'v12.4',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -46,7 +45,7 @@ const VDCSystem = {
         }
     },
     
-    // TOTAIS AUDITADOS (SOMA EXATA) - MATEMÁTICA BLINDADA
+    // TOTAIS AUDITADOS (SOMA EXATA)
     totaisConsolidados: {
         brutoTotal: 10178.63,
         liquidoTotal: 7755.16,
@@ -454,7 +453,6 @@ async function loadDemoData() {
             
             resetCompleteSystemState();
             
-            // MATEMÁTICA BLINDADA - TOTAIS EXATOS
             VDCSystem.analysis.extractedValues = {
                 faturacaoBruta: 10178.63,
                 reportadoDAC7: 7755.16,
@@ -503,7 +501,6 @@ async function loadDemoData() {
             updateResults();
             updateDemoButtons();
             updateChartComparativo();
-            updateMasterHash();
             
             logAudit('✅ Dados auditados 4 meses carregados com sucesso', 'success');
             logAudit(`Faturação Bruta: 10.178,63 € | Reportado DAC7: 7.755,16 € | Divergência: 2.423,47 €`, 'success');
@@ -696,24 +693,34 @@ function updateResults() {
     }
 }
 
-// 9. RELATÓRIO PDF PROFISSIONAL v12.6 (3 PÁGINAS)
+// 9. RELATÓRIO PDF PROFISSIONAL
 async function exportPDF() {
     try {
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL PROFISSIONAL (3 PÁGINAS)...', 'info');
+        logAudit('📄 GERANDO RELATÓRIO PERICIAL PROFISSIONAL...', 'info');
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        await createRelatorioPericial3Paginas(doc);
+        await createRelatorioPericial(doc);
+        
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = pdfUrl;
         
         const clienteNome = VDCSystem.client?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'CLIENTE';
         const dataStr = new Date().toISOString().split('T')[0];
-        const nomeFicheiro = `VDC_RELATORIO_PERICIAL_${clienteNome}_${dataStr}.pdf`;
+        a.download = `VDC_RELATORIO_PERICIAL_${clienteNome}_${dataStr}.pdf`;
         
-        // FORÇAR DOWNLOAD COM NOME DINÂMICO
-        doc.save(nomeFicheiro);
+        document.body.appendChild(a);
+        a.click();
         
-        logAudit(`✅ Relatório pericial gerado: ${nomeFicheiro}`, 'success');
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(pdfUrl);
+        }, 100);
+        
+        logAudit('✅ Relatório pericial profissional gerado', 'success');
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
@@ -722,61 +729,32 @@ async function exportPDF() {
     }
 }
 
-async function createRelatorioPericial3Paginas(doc) {
+async function createRelatorioPericial(doc) {
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     const margin = 20;
     
-    // ============================================
-    // PÁGINA 1: SUMÁRIO EXECUTIVO
-    // ============================================
-    doc.setDrawColor(0, 0, 0);
-    doc.setFillColor(2, 6, 23); // #020617
-    doc.rect(0, 0, pageWidth, 80, 'F');
+    // Página 1: Relatório
+    doc.setFillColor(0, 0, 0);
+    doc.rect(0, 0, pageWidth, 60, 'F');
     
-    // Logótipo e Título
-    doc.setFontSize(28);
-    doc.setTextColor(0, 247, 255); // Neon Ciano
+    doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.text("🔍", 30, 35);
-    doc.text("VDC", 45, 35);
-    doc.text("RELATÓRIO DE CONFORMIDADE FISCAL", pageWidth / 2, 35, { align: 'center' });
+    doc.setFontSize(18);
+    doc.text("RELATÓRIO PERICIAL DE CONFORMIDADE DIGITAL", pageWidth / 2, 30, { align: 'center' });
     
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text("Sistema de Peritagem Forense v12.6 | Protocolo de Auditoria Final", pageWidth / 2, 45, { align: 'center' });
-    doc.text("Período Auditado: Setembro a Dezembro 2024", pageWidth / 2, 52, { align: 'center' });
-    doc.text("Data de Emissão: " + new Date().toLocaleDateString('pt-PT'), pageWidth / 2, 59, { align: 'center' });
-    
-    let posY = 85;
-    
-    // Dados do Cliente
-    doc.setFillColor(15, 23, 42); // #0f172a
-    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 40, 3, 3, 'F');
-    
-    doc.setTextColor(248, 250, 252); // #f8fafc
-    doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text("DADOS DO CLIENTE", margin + 10, posY + 12);
-    
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.text("VDC Sistema de Peritagem Forense v12.4", pageWidth / 2, 45, { align: 'center' });
+    doc.text("Período Auditado: Setembro a Dezembro 2024", pageWidth / 2, 52, { align: 'center' });
     
-    if (VDCSystem.client) {
-        doc.text(`Nome: ${VDCSystem.client.name || 'Não informado'}`, margin + 15, posY + 22);
-        doc.text(`NIF: ${VDCSystem.client.nif || 'Não informado'}`, margin + 15, posY + 30);
-        doc.text(`Contacto: ${VDCSystem.client.phone || 'Não informado'}`, margin + 120, posY + 22);
-        doc.text(`Email: ${VDCSystem.client.email || 'Não informado'}`, margin + 120, posY + 30);
-    } else {
-        doc.text("Cliente não registado", margin + 15, posY + 22);
-    }
+    let posY = 70;
     
-    posY += 50;
+    // Sumário Executivo
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 50, 3, 3, 'F');
     
-    // Caixa de Sumário
-    doc.setFillColor(30, 41, 59); // #1e293b
-    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 70, 3, 3, 'F');
-    
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.text("SUMÁRIO EXECUTIVO", margin + 10, posY + 12);
@@ -784,258 +762,172 @@ async function createRelatorioPericial3Paginas(doc) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     
-    // MATEMÁTICA BLINDADA - TOTAIS EXATOS
-    const bruto = formatarMoeda(10178.63);
-    const dac7 = formatarMoeda(7755.16);
-    const divergencia = formatarMoeda(2423.47);
+    const bruto = formatarMoeda(VDCSystem.totaisConsolidados.brutoTotal);
+    const dac7 = formatarMoeda(VDCSystem.totaisConsolidados.liquidoTotal);
+    const divergencia = formatarMoeda(VDCSystem.totaisConsolidados.comissaoTotal);
     
-    // Valores principais em destaque
-    doc.setFontSize(11);
-    doc.text(`Faturação Bruta Total (4 meses):`, margin + 15, posY + 28);
+    doc.text(`Faturação Bruta Total: ${bruto}`, margin + 15, posY + 25);
+    doc.text(`Declarado DAC7: ${dac7}`, margin + 15, posY + 35);
+    
+    doc.setTextColor(255, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${bruto}`, pageWidth - margin - 15, posY + 28, { align: 'right' });
+    doc.text(`Divergência Identificada: ${divergencia}`, margin + 15, posY + 45);
     
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Valor Reportado DAC7:`, margin + 15, posY + 40);
+    posY += 60;
+    
+    // Tabela de Dados
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${dac7}`, pageWidth - margin - 15, posY + 40, { align: 'right' });
+    doc.setFontSize(12);
+    doc.text("DADOS MENSALIZADOS AUDITADOS", margin, posY);
+    posY += 10;
     
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Divergência Identificada:`, margin + 15, posY + 52);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(239, 68, 68); // Vermelho
-    doc.text(`${divergencia}`, pageWidth - margin - 15, posY + 52, { align: 'right' });
-    doc.setTextColor(248, 250, 252);
+    doc.setFillColor(50, 50, 50);
+    doc.setDrawColor(50, 50, 50);
+    doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
     
-    posY += 80;
-    
-    // Conclusão da Página 1
-    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text("Este relatório foi gerado automaticamente pelo Sistema VDC de Peritagem Forense.", 
-             margin, pageHeight - 20);
-    doc.text("As conclusões são baseadas em análise forense de documentos digitais autênticos.", 
-             margin, pageHeight - 15);
+    doc.text("Mês", margin + 5, posY + 5);
+    doc.text("Faturação Bruta", margin + 50, posY + 5);
+    doc.text("Reportado DAC7", margin + 110, posY + 5);
+    doc.text("Divergência", margin + 170, posY + 5);
     
-    // ============================================
-    // PÁGINA 2: GRÁFICOS E MENSALIZAÇÃO
-    // ============================================
-    doc.addPage();
-    posY = margin;
+    posY += 10;
     
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(0, 247, 255); // Neon Ciano
-    doc.text("ANÁLISE DETALHADA POR MÊS", pageWidth / 2, posY, { align: 'center' });
-    posY += 15;
-    
-    // Tabela de Dados Mensalizados
-    doc.setFillColor(51, 65, 85); // #334155
-    doc.rect(margin, posY, pageWidth - (margin * 2), 10, 'F');
-    
-    doc.setTextColor(248, 250, 252);
-    doc.setFontSize(9);
-    doc.text("MÊS", margin + 5, posY + 6);
-    doc.text("FATURAÇÃO BRUTA", margin + 50, posY + 6);
-    doc.text("RETENÇÃO PLATAFORMA", margin + 110, posY + 6);
-    doc.text("VALOR REPORTADO DAC7", margin + 170, posY + 6);
-    
-    posY += 12;
-    
-    doc.setTextColor(203, 213, 225); // #cbd5e1
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
     
-    // Dados dos 4 meses auditados
-    let meses = ['setembro', 'outubro', 'novembro', 'dezembro'];
-    meses.forEach((mes, index) => {
-        const dados = VDCSystem.dadosMensais[mes];
-        const bgColor = index % 2 === 0 ? [30, 41, 59] : [15, 23, 42]; // Alternando cores
+    Object.values(VDCSystem.dadosMensais).forEach((mes, index) => {
+        if (posY > pageHeight - 30) {
+            doc.addPage();
+            posY = margin;
+        }
         
+        const bgColor = index % 2 === 0 ? [245, 245, 245] : [255, 255, 255];
         doc.setFillColor(...bgColor);
-        doc.rect(margin, posY, pageWidth - (margin * 2), 10, 'F');
+        doc.rect(margin, posY, pageWidth - (margin * 2), 8, 'F');
         
-        doc.setFontSize(9);
-        doc.text(dados.mes, margin + 5, posY + 6);
-        doc.text(formatarMoeda(dados.bruto), margin + 50, posY + 6);
-        doc.text(formatarMoeda(dados.comissao), margin + 110, posY + 6);
-        doc.text(formatarMoeda(dados.liquido), margin + 170, posY + 6);
+        const divergencia = mes.bruto - mes.liquido;
         
-        posY += 10;
+        doc.text(mes.mes, margin + 5, posY + 5);
+        doc.text(formatarMoeda(mes.bruto), margin + 50, posY + 5);
+        doc.text(formatarMoeda(mes.liquido), margin + 110, posY + 5);
+        doc.text(formatarMoeda(divergencia), margin + 170, posY + 5);
+        
+        posY += 9;
     });
     
     posY += 15;
     
-    // Totais Consolidados
-    doc.setFillColor(30, 41, 59);
-    doc.rect(margin, posY, pageWidth - (margin * 2), 12, 'F');
-    
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(0, 247, 255); // Neon Ciano
-    doc.text("TOTAL 4 MESES", margin + 5, posY + 8);
-    doc.text(formatarMoeda(10178.63), margin + 50, posY + 8);
-    doc.text(formatarMoeda(2423.47), margin + 110, posY + 8);
-    doc.text(formatarMoeda(7755.16), margin + 170, posY + 8);
-    
-    posY += 25;
-    
-    // Gráfico de Comparação
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(248, 250, 252);
-    doc.text("COMPARAÇÃO DE VALORES", margin, posY);
-    posY += 10;
-    
-    // Desenhar gráfico simples (barras horizontais)
-    const maxVal = Math.max(10178.63, 7755.16, 2423.47);
-    const graficoWidth = 100;
-    const startX = margin + 20;
-    
-    // Barra 1: Faturação Bruta
-    doc.setFillColor(59, 130, 246); // Azul
-    const barWidth1 = (10178.63 / maxVal) * graficoWidth;
-    doc.rect(startX, posY, barWidth1, 8, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(203, 213, 225);
-    doc.text("Faturação Bruta", margin, posY + 6);
-    doc.text(formatarMoeda(10178.63), startX + barWidth1 + 5, posY + 6);
-    posY += 12;
-    
-    // Barra 2: Reportado DAC7
-    doc.setFillColor(16, 185, 129); // Verde
-    const barWidth2 = (7755.16 / maxVal) * graficoWidth;
-    doc.rect(startX, posY, barWidth2, 8, 'F');
-    doc.text("Reportado DAC7", margin, posY + 6);
-    doc.text(formatarMoeda(7755.16), startX + barWidth2 + 5, posY + 6);
-    posY += 12;
-    
-    // Barra 3: Divergência
-    doc.setFillColor(239, 68, 68); // Vermelho
-    const barWidth3 = (2423.47 / maxVal) * graficoWidth;
-    doc.rect(startX, posY, barWidth3, 8, 'F');
-    doc.text("Divergência Identificada", margin, posY + 6);
-    doc.text(formatarMoeda(2423.47), startX + barWidth3 + 5, posY + 6);
-    
-    posY += 25;
-    
     // Projeção Setorial
     const projecaoMensal = VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal;
     
-    doc.setFillColor(30, 41, 59);
-    doc.roundedRect(margin, posY, pageWidth - (margin * 2), 40, 3, 3, 'F');
-    
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(0, 247, 255);
-    doc.text("PROJEÇÃO SETORIAL", margin + 10, posY + 12);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(203, 213, 225);
-    
-    doc.text(`Com base na amostra analisada, a divergência média mensal por motorista é de`, margin + 10, posY + 22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${formatarMoeda(VDCSystem.analysis.projecaoMercado.comissaoMediaMensal)}`, margin + 10, posY + 28);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Para os ${VDCSystem.analysis.projecaoMercado.motoristasAtivos.toLocaleString('pt-PT')} motoristas ativos`, margin + 10, posY + 34);
-    doc.text(`em Portugal, a projeção indica um volume mensal não reportado de:`, margin + 10, posY + 40);
-    
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(239, 68, 68);
-    doc.text(`${formatarMoeda(projecaoMensal)} / mês`, pageWidth / 2, posY + 50, { align: 'center' });
+    doc.text("PROJEÇÃO SETORIAL", margin, posY);
+    posY += 8;
     
-    // ============================================
-    // PÁGINA 3: ANEXO TÉCNICO
-    // ============================================
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    
+    const projecaoText = `Com base na divergência média mensal identificada (${formatarMoeda(VDCSystem.analysis.projecaoMercado.comissaoMediaMensal)} por motorista), `;
+    doc.text(projecaoText, margin, posY);
+    posY += 6;
+    
+    const projecaoText2 = `a projeção para o mercado português (${VDCSystem.analysis.projecaoMercado.motoristasAtivos.toLocaleString('pt-PT')} motoristas ativos) `;
+    doc.text(projecaoText2, margin, posY);
+    posY += 6;
+    
+    const projecaoText3 = `indica um volume de negócio não reportado de aproximadamente:`;
+    doc.text(projecaoText3, margin, posY);
+    posY += 10;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(200, 0, 0);
+    doc.setFontSize(11);
+    doc.text(`${formatarMoeda(projecaoMensal)} / mês`, margin + 10, posY);
+    posY += 8;
+    
+    doc.setFontSize(10);
+    doc.text(`(${(projecaoMensal / 1000000).toFixed(2)} milhões de euros mensais)`, margin + 10, posY);
+    
+    // Página 2: Anexo Técnico
     doc.addPage();
     posY = margin;
     
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(0, 247, 255);
-    doc.text("ANEXO TÉCNICO: INTEGRIDADE DE DADOS", pageWidth / 2, posY, { align: 'center' });
-    posY += 20;
-    
-    doc.setDrawColor(0, 247, 255);
-    doc.setLineWidth(0.5);
-    doc.line(margin, posY, pageWidth - margin, posY);
+    doc.setFontSize(16);
+    doc.text("ANEXO I: METODOLOGIA E EVIDÊNCIAS", pageWidth / 2, posY, { align: 'center' });
     posY += 15;
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(margin, posY, pageWidth - margin, posY);
+    posY += 10;
     
-    const textoAnexo = [
-        "METODOLOGIA DE CRUZAMENTO DE DADOS",
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    const metodologiaText = [
+        "METODOLOGIA DE ANÁLISE FORENSE",
         "",
-        "O Sistema VDC de Peritagem Forense emprega uma metodologia rigorosa de análise",
-        "que garante a integridade e autenticidade dos dados processados:",
+        "1. COLETA DE DADOS PRIMÁRIOS",
+        "Os dados analisados foram obtidos diretamente de documentos oficiais:",
+        "  • Ficheiros SAF-T (Standard Audit File for Tax) em formato XML",
+        "  • Faturas eletrónicas emitidas pelas plataformas digitais (formato PDF)",
+        "  • Extratos bancários digitalizados (formato PDF)",
         "",
-        "1. COLETA E AUTENTICAÇÃO",
-        "   • Documentos são obtidos diretamente de fontes primárias (SAF-T, faturas eletrónicas)",
-        "   • Verificação automática de integridade digital",
-        "   • Validação de assinaturas eletrónicas quando aplicável",
+        "2. PROCESSAMENTO AUTOMATIZADO",
+        "Utilização de algoritmos especializados para:",
+        "  • Extração automática de valores numéricos de documentos",
+        "  • Reconciliação entre diferentes fontes de dados",
+        "  • Identificação de discrepâncias e padrões anómalos",
         "",
-        "2. PROCESSAMENTO FORENSE",
-        "   • Extração automatizada de valores utilizando algoritmos especializados",
-        "   • Reconhecimento ótico de caracteres (OCR) para documentos digitalizados",
-        "   • Normalização de formatos numéricos (português e internacional)",
+        "3. NORMALIZAÇÃO E VALIDAÇÃO",
+        "Conversão automática de diferentes formatos numéricos:",
+        "  • Suporte a formatos portugueses (1.234,56 €)",
+        "  • Suporte a formatos internacionais (1234.56)",
+        "  • Validação cruzada entre documentos para garantir consistência",
         "",
-        "3. CRUZAMENTO MULTIFONTE",
-        "   • Comparação sistemática entre diferentes fontes de dados",
-        "   • Verificação de consistência temporal e numérica",
-        "   • Identificação de discrepâncias através de algoritmos de matching",
+        "4. ANÁLISE DE CONFORMIDADE FISCAL",
+        "Verificação da conformidade com a legislação aplicável:",
+        "  • Regime DAC7 para plataformas digitais",
+        "  • Obrigações declarativas de IVA",
+        "  • Reconciliação entre valores faturados e valores declarados",
         "",
-        "4. VALIDAÇÃO DE CONFORMIDADE",
-        "   • Verificação de conformidade com legislação aplicável (DAC7, IVA)",
-        "   • Análise de requisitos declarativos",
-        "   • Deteção de omissões ou inconsistências",
+        "5. PROJEÇÃO E IMPACTO SETORIAL",
+        "Extrapolação matemática baseada em amostra representativa:",
+        "  • Cálculo de média por unidade analisada",
+        "  • Projeção para a totalidade do mercado nacional",
+        "  • Estimativa de impacto fiscal",
         "",
-        "PROTEÇÃO DE DADOS",
+        "INTEGRIDADE PROCESSUAL",
+        "Todo o processo de análise foi documentado de forma a permitir",
+        "auditoria independente, garantindo a rastreabilidade das conclusões.",
         "",
-        "O sistema opera em estrito cumprimento do Regulamento Geral de Proteção de Dados (RGPD):",
+        "CONFIDENCIALIDADE",
+        "Este relatório destina-se exclusivamente a fins de auditoria e",
+        "peritagem financeira, em estrito cumprimento do RGPD e da",
+        "legislação de proteção de dados aplicável.",
         "",
-        "• Todos os dados são processados localmente no dispositivo do utilizador",
-        "• Nenhuma informação é transmitida para servidores externos",
-        "• Os ficheiros originais não são modificados durante o processamento",
-        "• Os relatórios gerados contêm apenas dados agregados e anonimizados",
-        "",
-        "RASTREABILIDADE",
-        "",
-        "Cada análise gera um hash de integridade único que permite verificar:",
-        "",
-        "• A autenticidade dos documentos processados",
-        "• A sequência cronológica das operações",
-        "• A integridade dos resultados produzidos",
-        "",
-        "Este sistema foi desenvolvido para apoiar profissionais de auditoria e peritagem",
-        "financeira, proporcionando ferramentas tecnológicas avançadas para análise de",
-        "conformidade fiscal em ambiente digital.",
-        "",
-        "SISTEMA VDC DE PERITAGEM FORENSE v12.6",
-        "Protocolo de Auditoria Final",
-        "Dados Auditados: Setembro a Dezembro 2024",
-        "",
-        `Data de geração: ${new Date().toLocaleString('pt-PT')}`
+        "DATA DE EMISSÃO: " + new Date().toLocaleDateString('pt-PT')
     ];
     
-    textoAnexo.forEach(linha => {
+    metodologiaText.forEach(linha => {
         if (posY > pageHeight - 20) {
             doc.addPage();
             posY = margin;
         }
         
-        if (linha.includes("METODOLOGIA") || linha.includes("PROTEÇÃO") || 
-            linha.includes("RASTREABILIDADE") || linha.includes("SISTEMA VDC")) {
+        if (linha.includes("METODOLOGIA") || linha.includes("INTEGRIDADE") || 
+            linha.includes("CONFIDENCIALIDADE") || linha.includes("DATA")) {
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 247, 255);
             doc.text(linha, margin, posY);
-            doc.setTextColor(203, 213, 225);
             doc.setFont('helvetica', 'normal');
         } else if (linha.includes("1.") || linha.includes("2.") || linha.includes("3.") || 
-                   linha.includes("4.")) {
+                   linha.includes("4.") || linha.includes("5.")) {
             doc.setFont('helvetica', 'bold');
             doc.text(linha, margin, posY);
             doc.setFont('helvetica', 'normal');
@@ -1045,22 +937,21 @@ async function createRelatorioPericial3Paginas(doc) {
             doc.text(linha, margin, posY);
         }
         
-        posY += linha.trim() === "" ? 5 : 6;
+        posY += linha.trim() === "" ? 5 : 7;
     });
     
-    // Rodapé em todas as páginas
+    // Rodapé
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v12.6 | Relatório de Conformidade Fiscal | Confidencial", 
-                 margin, pageHeight - 10);
-        doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+        doc.text("VDC Forensic System v12.4 | Relatório de Conformidade Digital", 15, pageHeight - 10);
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth - 15, pageHeight - 10, { align: "right" });
         
-        doc.setDrawColor(0, 247, 255);
+        doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.3);
-        doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+        doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
     }
 }
 
@@ -1165,11 +1056,11 @@ function calcularDiscrepanciaDAC7() {
              discrepancia === 0 ? 'success' : discrepancia < 100 ? 'warn' : 'error');
 }
 
-// 12. FUNÇÕES EXPORTAÇÃO JSON
+// 12. FUNÇÕES EXPORTAÇÃO
 async function exportJSON() {
     try {
         const data = {
-            sistema: "VDC Forensic System v12.6",
+            sistema: "VDC Forensic System v12.4",
             cliente: VDCSystem.client,
             periodo: VDCSystem.periodoAnalise,
             dados: VDCSystem.dadosMensais,
@@ -1222,7 +1113,7 @@ async function saveClientData() {
     
     try {
         const data = {
-            sistema: "VDC v12.6",
+            sistema: "VDC v12.4",
             cliente: VDCSystem.client,
             data: new Date().toISOString()
         };
@@ -1316,17 +1207,11 @@ function criarDashboardDivergencia() {
     
     const divergenciaCard = document.createElement('div');
     divergenciaCard.id = 'divergenciaCard';
-    divergenciaCard.className = 'kpi-card';
-    divergenciaCard.style.borderLeftColor = taxaOmissao > 10 ? '#ef4444' : '#f59e0b';
+    divergenciaCard.className = taxaOmissao > 10 ? 'kpi-card danger' : 'kpi-card alert';
     divergenciaCard.innerHTML = `
-        <div class="kpi-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="kpi-content">
-            <h4>DIVERGÊNCIA</h4>
-            <p class="kpi-value">${formatarMoeda(divergencia)}</p>
-            <small>${taxaOmissao.toFixed(1)}% da faturação</small>
-        </div>
+        <h4><i class="fas fa-exclamation-triangle"></i> DIVERGÊNCIA</h4>
+        <p>${formatarMoeda(divergencia)}</p>
+        <small>${taxaOmissao.toFixed(1)}% da faturação</small>
     `;
     
     const kpiGrid = kpiSection.querySelector('.kpi-grid');
@@ -1346,7 +1231,7 @@ function showDivergenciaAlert() {
     
     const novoAlerta = document.createElement('div');
     novoAlerta.id = 'divergenciaAlert';
-    novoAlerta.className = 'omission-alert';
+    novoAlerta.className = 'omission-alert diferencial-alert';
     novoAlerta.style.display = 'flex';
     novoAlerta.innerHTML = `
         <i class="fas fa-chart-line"></i>
@@ -1418,7 +1303,7 @@ function updateAnalysisButton() {
     if (hasValidData) {
         analyzeBtn.style.opacity = '1';
         analyzeBtn.style.cursor = 'pointer';
-        analyzeBtn.style.boxShadow = '0 0 10px rgba(0, 247, 255, 0.5)';
+        analyzeBtn.style.boxShadow = '0 0 10px rgba(0, 242, 255, 0.5)';
     } else {
         analyzeBtn.style.opacity = '0.7';
         analyzeBtn.style.cursor = 'not-allowed';
@@ -1455,22 +1340,17 @@ function updateAuditConsole(logEntry) {
 }
 
 function getLogColor(type) {
-    const colors = { 
-        success: '#10b981', 
-        warn: '#f59e0b', 
-        error: '#ef4444', 
-        info: '#06b6d4' 
-    };
+    const colors = { success: '#10b981', warn: '#f59e0b', error: '#ef4444', info: '#3b82f6' };
     return colors[type] || '#cbd5e1';
 }
 
-function updateMasterHash() {
+function generateMasterHash() {
     const data = [
         VDCSystem.sessionId,
         VDCSystem.selectedYear.toString(),
         VDCSystem.selectedPlatform,
-        '10178.63',
-        '2423.47',
+        VDCSystem.totaisConsolidados.brutoTotal.toString(),
+        VDCSystem.totaisConsolidados.comissaoTotal.toString(),
         new Date().toISOString()
     ].join('|');
     
@@ -1481,7 +1361,7 @@ function updateMasterHash() {
     const display = document.getElementById('masterHashValue');
     if (display) {
         display.textContent = masterHash.substring(0, 32) + '...';
-        display.style.color = '#00f7ff';
+        display.style.color = '#00b0ff';
     }
 }
 
@@ -1522,7 +1402,7 @@ async function performForensicAnalysis() {
         updateResults();
         updateChartComparativo();
         criarDashboardDivergencia();
-        updateMasterHash();
+        generateMasterHash();
         
         if (VDCSystem.analysis.extractedValues.divergenciaComissoes > 100) {
             showDivergenciaAlert();
@@ -1560,7 +1440,6 @@ function updateAnalysisValues() {
 
 function calcularDivergenciaReal() {
     if (VDCSystem.demoMode) {
-        // MATEMÁTICA BLINDADA - TOTAIS EXATOS
         VDCSystem.analysis.extractedValues.faturacaoBruta = 10178.63;
         VDCSystem.analysis.extractedValues.reportadoDAC7 = 7755.16;
         VDCSystem.analysis.extractedValues.divergenciaComissoes = 2423.47;
@@ -1598,271 +1477,214 @@ function calcularProjecaoMercadoCorrigida() {
     VDCSystem.analysis.extractedValues.projecaoSetorialAnual = volumeNegocioOmitidoAnual;
 }
 
-// 18. INICIALIZAÇÃO - VERSÃO SIMPLIFICADA E ROBUSTA
-function initializeSystem() {
-    console.log('🔧 Inicializando VDC Forensic System v12.6...');
-    
+// 18. INICIALIZAÇÃO
+async function initializeSystem() {
     try {
-        // Passo 1: Configurar ID da sessão
+        console.log('🔧 Inicializando VDC Forensic System v12.4...');
+        updateLoadingProgress(10);
+        
         VDCSystem.sessionId = 'VDC-' + Date.now().toString(36).toUpperCase();
-        console.log('✅ Sessão criada:', VDCSystem.sessionId);
+        document.getElementById('sessionIdDisplay').textContent = VDCSystem.sessionId;
+        updateLoadingProgress(20);
         
-        // Passo 2: Configurar seletor de ano (com verificação)
-        try {
-            const selYear = document.getElementById('selYear');
-            if (selYear) {
-                const currentYear = new Date().getFullYear();
-                selYear.innerHTML = '';
-                
-                for (let year = 2018; year <= 2036; year++) {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.textContent = year;
-                    if (year === currentYear) {
-                        option.selected = true;
-                        VDCSystem.selectedYear = year;
-                    }
-                    selYear.appendChild(option);
-                }
-                
-                selYear.addEventListener('change', (e) => {
-                    VDCSystem.selectedYear = parseInt(e.target.value);
-                    console.log('Ano alterado para:', VDCSystem.selectedYear);
-                });
-                console.log('✅ Seletor de ano configurado');
-            }
-        } catch (yearError) {
-            console.warn('⚠️ Erro no seletor de ano:', yearError);
-        }
+        setupYearSelector();
+        updateLoadingProgress(30);
         
-        // Passo 3: Configurar event listeners básicos
-        setupBasicEventListeners();
+        await setupAllEventListeners();
+        updateLoadingProgress(50);
         
-        // Passo 4: Iniciar relógio
+        resetDashboard();
+        updateLoadingProgress(60);
+        
         startClockAndDate();
+        updateLoadingProgress(70);
         
-        // Passo 5: Renderizar gráfico vazio
-        try {
-            renderEmptyChart();
-            console.log('✅ Gráfico renderizado');
-        } catch (chartError) {
-            console.warn('⚠️ Erro no gráfico:', chartError);
-        }
+        renderEmptyChart();
+        updateLoadingProgress(80);
         
-        // Passo 6: Atualizar hash
-        updateMasterHash();
-        
-        // Passo 7: Simular progresso de loading
-        simulateLoadingProgress();
+        setTimeout(() => {
+            updateLoadingProgress(100);
+            setTimeout(() => {
+                showMainInterface();
+                logAudit('✅ Sistema VDC v12.4 inicializado com sucesso', 'success');
+                logAudit('Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024', 'info');
+                updateAnalysisButton();
+            }, 300);
+        }, 500);
         
     } catch (error) {
-        console.error('❌ Erro crítico na inicialização:', error);
-        // Forçar mostrar interface mesmo com erro
-        forceShowInterface();
+        console.error('Erro na inicialização:', error);
+        alert(`Falha na inicialização: ${error.message}`);
     }
 }
 
-function simulateLoadingProgress() {
-    let progress = 0;
-    const progressBar = document.getElementById('loadingProgress');
+function setupYearSelector() {
+    const selYear = document.getElementById('selYear');
+    if (!selYear) return;
     
-    if (!progressBar) {
-        // Se não houver barra de progresso, mostrar interface imediatamente
-        forceShowInterface();
+    const currentYear = new Date().getFullYear();
+    selYear.innerHTML = '';
+    
+    for (let year = 2018; year <= 2036; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) {
+            option.selected = true;
+            VDCSystem.selectedYear = year;
+        }
+        selYear.appendChild(option);
+    }
+    
+    selYear.addEventListener('change', (e) => {
+        VDCSystem.selectedYear = parseInt(e.target.value);
+        logAudit(`Ano fiscal alterado para: ${VDCSystem.selectedYear}`, 'info');
+    });
+}
+
+async function setupAllEventListeners() {
+    // Botões principais
+    document.getElementById('registerClientBtn').addEventListener('click', registerClient);
+    document.getElementById('saveClientBtn').addEventListener('click', saveClientData);
+    document.getElementById('btnDemo').addEventListener('click', loadDemoData);
+    document.getElementById('calcDAC7Btn').addEventListener('click', calcularDiscrepanciaDAC7);
+    document.getElementById('analyzeBtn').addEventListener('click', performForensicAnalysis);
+    document.getElementById('exportPDFBtn').addEventListener('click', exportPDF);
+    document.getElementById('exportJSONBtn').addEventListener('click', exportJSON);
+    document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+    document.getElementById('clearConsoleBtn').addEventListener('click', clearConsole);
+    document.getElementById('toggleConsoleBtn').addEventListener('click', toggleConsole);
+    
+    // Teclado
+    document.getElementById('clientName').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('clientNIF').focus();
+    });
+    
+    document.getElementById('clientNIF').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') registerClient();
+    });
+    
+    // Upload de ficheiros
+    setupFileUploadListeners();
+}
+
+function setupFileUploadListeners() {
+    const uploadConfig = {
+        'controlFileBtn': { input: 'controlFile', type: 'control' },
+        'saftFileBtn': { input: 'saftFile', type: 'saft' },
+        'invoiceFileBtn': { input: 'invoiceFile', type: 'invoice' },
+        'statementFileBtn': { input: 'statementFile', type: 'statement' }
+    };
+    
+    Object.entries(uploadConfig).forEach(([btnId, config]) => {
+        const btn = document.getElementById(btnId);
+        const input = document.getElementById(config.input);
+        
+        if (btn && input) {
+            btn.addEventListener('click', () => input.click());
+            
+            input.addEventListener('change', async (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    const files = Array.from(e.target.files);
+                    
+                    try {
+                        for (const file of files) {
+                            await handleFileUpload(file, config.type);
+                        }
+                        
+                        updateFileList(config.input + 'List', files);
+                        updateAnalysisButton();
+                        
+                    } catch (error) {
+                        console.error(`Erro no processamento:`, error);
+                        alert(`Erro ao processar ficheiros: ${error.message}`);
+                    }
+                }
+            });
+        }
+    });
+}
+
+async function registerClient() {
+    const name = document.getElementById('clientName')?.value.trim();
+    const nif = document.getElementById('clientNIF')?.value.trim();
+    
+    if (!name || name.length < 3) {
+        alert('Nome do cliente inválido (mínimo 3 caracteres)');
         return;
     }
     
-    const interval = setInterval(() => {
-        progress += 10;
-        progressBar.style.width = progress + '%';
-        
-        if (progress >= 100) {
-            clearInterval(interval);
-            showMainInterface();
-            console.log('✅ Sistema VDC inicializado com sucesso');
-            logAudit('Sistema VDC v12.6 inicializado', 'success');
-            updateAnalysisButton();
-        }
-    }, 200);
-}
-
-function setupBasicEventListeners() {
-    console.log('🔧 Configurando event listeners básicos...');
-    
-    // Configurar listeners apenas para elementos que existem
-    const elementConfigs = [
-        { id: 'registerClientBtn', event: 'click', handler: registerClient },
-        { id: 'saveClientBtn', event: 'click', handler: saveClientData },
-        { id: 'btnDemo', event: 'click', handler: loadDemoData },
-        { id: 'calcDAC7Btn', event: 'click', handler: calcularDiscrepanciaDAC7 },
-        { id: 'analyzeBtn', event: 'click', handler: performForensicAnalysis },
-        { id: 'exportPDFBtn', event: 'click', handler: exportPDF },
-        { id: 'exportJSONBtn', event: 'click', handler: exportJSON },
-        { id: 'clearDataBtn', event: 'click', handler: clearAllData },
-        { id: 'clearConsoleBtn', event: 'click', handler: clearConsole },
-        { id: 'toggleConsoleBtn', event: 'click', handler: toggleConsole }
-    ];
-    
-    elementConfigs.forEach(config => {
-        try {
-            const element = document.getElementById(config.id);
-            if (element) {
-                element.addEventListener(config.event, config.handler);
-                console.log(`✅ Listener configurado para: ${config.id}`);
-            } else {
-                console.warn(`⚠️ Elemento não encontrado: ${config.id}`);
-            }
-        } catch (error) {
-            console.error(`❌ Erro ao configurar ${config.id}:`, error);
-        }
-    });
-    
-    // Configurar upload de ficheiros
-    setupFileUploadListenersSimple();
-    
-    console.log('✅ Event listeners configurados');
-}
-
-function setupFileUploadListenersSimple() {
-    const uploadConfigs = [
-        { btn: 'controlFileBtn', input: 'controlFile', type: 'control' },
-        { btn: 'saftFileBtn', input: 'saftFile', type: 'saft' },
-        { btn: 'invoiceFileBtn', input: 'invoiceFile', type: 'invoice' },
-        { btn: 'statementFileBtn', input: 'statementFile', type: 'statement' }
-    ];
-    
-    uploadConfigs.forEach(config => {
-        try {
-            const btn = document.getElementById(config.btn);
-            const input = document.getElementById(config.input);
-            
-            if (btn && input) {
-                btn.addEventListener('click', () => input.click());
-                
-                input.addEventListener('change', async (e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                        const files = Array.from(e.target.files);
-                        console.log(`📁 ${files.length} ficheiros para ${config.type}`);
-                        
-                        // Simular upload (implementação real seria aqui)
-                        updateAnalysisButton();
-                    }
-                });
-            }
-        } catch (error) {
-            console.error(`Erro no upload ${config.type}:`, error);
-        }
-    });
-}
-
-function forceShowInterface() {
-    console.log('🔄 Forçando exibição da interface...');
-    
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const mainContainer = document.getElementById('mainContainer');
-    
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
+    if (!nif || !/^\d{9}$/.test(nif)) {
+        alert('NIF inválido (deve ter 9 dígitos)');
+        return;
     }
     
-    if (mainContainer) {
-        mainContainer.style.display = 'block';
-        mainContainer.style.opacity = '1';
-        console.log('✅ Interface principal exibida');
-    } else {
-        console.error('❌ Elemento mainContainer não encontrado');
-    }
-}
-
-function showMainInterface() {
-    console.log('🔄 Mostrando interface principal...');
+    VDCSystem.client = { 
+        name, nif, 
+        phone: document.getElementById('clientPhone')?.value.trim() || 'Não informado',
+        email: document.getElementById('clientEmail')?.value.trim() || 'Não informado',
+        address: document.getElementById('clientAddress')?.value.trim() || 'Não informado',
+        registrationDate: new Date().toISOString()
+    };
     
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const mainContainer = document.getElementById('mainContainer');
+    const status = document.getElementById('clientStatus');
+    const nameDisplay = document.getElementById('clientNameDisplay');
     
-    if (loadingOverlay && mainContainer) {
-        // Fade out do loading
-        loadingOverlay.style.opacity = '0';
-        
-        setTimeout(() => {
-            loadingOverlay.style.display = 'none';
-            mainContainer.style.display = 'block';
-            
-            // Fade in da interface principal
-            setTimeout(() => {
-                mainContainer.style.opacity = '1';
-                console.log('✅ Interface principal completamente visível');
-                
-                // Atualizar botão de análise
-                updateAnalysisButton();
-                
-                // Log de auditoria
-                logAudit('Sistema VDC Peritagem Forense v12.6 inicializado com sucesso', 'success');
-                logAudit('Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024', 'info');
-                
-            }, 50);
-        }, 500);
-    } else {
-        forceShowInterface();
-    }
-}
-
-function startClockAndDate() {
-    function updateDateTime() {
-        try {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('pt-PT', { 
-                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-            });
-            const dateString = now.toLocaleDateString('pt-PT');
-            
-            const timeEl = document.getElementById('currentTime');
-            const dateEl = document.getElementById('currentDate');
-            
-            if (timeEl) timeEl.textContent = timeString;
-            if (dateEl) dateEl.textContent = dateString;
-        } catch (error) {
-            console.warn('⚠️ Erro ao atualizar data/hora:', error);
-        }
-    }
+    if (status) status.style.display = 'flex';
+    if (nameDisplay) nameDisplay.textContent = name;
     
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+    logAudit(`✅ Cliente registado: ${name} (NIF: ${nif})`, 'success');
+    updateAnalysisButton();
 }
 
 function resetDashboard() {
-    console.log('🔄 Resetando dashboard...');
+    resetCompleteSystemState();
     
-    try {
-        resetCompleteSystemState();
-        
-        // Resetar campos do formulário
-        const fields = ['clientName', 'clientNIF', 'clientPhone', 'clientEmail', 'clientAddress', 'dac7Value'];
-        fields.forEach(id => {
-            const field = document.getElementById(id);
-            if (field) field.value = '';
-        });
-        
-        // Resetar contadores
-        const counters = ['saftCount', 'invoiceCount', 'statementCount', 'totalCount'];
-        counters.forEach(id => {
-            const counter = document.getElementById(id);
-            if (counter) counter.textContent = '0';
-        });
-        
-        // Resetar status
-        const status = document.getElementById('clientStatus');
-        if (status) status.style.display = 'none';
-        
-        const dac7Result = document.getElementById('dac7Result');
-        if (dac7Result) dac7Result.style.display = 'none';
-        
-        console.log('✅ Dashboard resetado');
-        logAudit('Dashboard resetado - Pronto para nova análise', 'info');
-        
-    } catch (error) {
-        console.error('❌ Erro ao resetar dashboard:', error);
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientNIF').value = '';
+    document.getElementById('clientPhone').value = '';
+    document.getElementById('clientEmail').value = '';
+    document.getElementById('clientAddress').value = '';
+    document.getElementById('dac7Value').value = '';
+    
+    const clientStatus = document.getElementById('clientStatus');
+    if (clientStatus) clientStatus.style.display = 'none';
+    
+    const dac7Result = document.getElementById('dac7Result');
+    if (dac7Result) dac7Result.style.display = 'none';
+    
+    ['controlFileList', 'saftFileList', 'invoiceFileList', 'statementFileList'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = '';
+            element.classList.remove('visible');
+        }
+    });
+    
+    ['saftCount', 'invoiceCount', 'statementCount', 'totalCount'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '0';
+    });
+    
+    updateDashboard();
+    updateResults();
+    
+    const divergenciaCard = document.getElementById('divergenciaCard');
+    if (divergenciaCard) divergenciaCard.remove();
+    
+    const divergenciaAlert = document.getElementById('divergenciaAlert');
+    if (divergenciaAlert) divergenciaAlert.remove();
+    
+    const omissionAlert = document.getElementById('omissionAlert');
+    if (omissionAlert) omissionAlert.style.display = 'none';
+    
+    if (VDCSystem.chart) {
+        VDCSystem.chart.data.datasets[0].data = [0, 0, 0];
+        VDCSystem.chart.update();
     }
+    
+    logAudit('📊 Dashboard resetado - Aguardando novos dados', 'info');
+    updateAnalysisButton();
 }
 
 function clearAllData() {
@@ -1871,37 +1693,49 @@ function clearAllData() {
     }
 }
 
-// 19. INICIALIZAÇÃO AUTOMÁTICA - VERSÃO ULTRA-ROBUSTA
-window.addEventListener('load', function() {
-    console.log('🚀 Página completamente carregada. Iniciando VDC System...');
+// 19. FUNÇÕES AUXILIARES
+function updateLoadingProgress(percent) {
+    const progressBar = document.getElementById('loadingProgress');
+    if (progressBar) progressBar.style.width = percent + '%';
+}
+
+function showMainInterface() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const mainContainer = document.getElementById('mainContainer');
     
-    // Verificar se elementos mínimos existem
-    const requiredElements = ['loadingOverlay', 'mainContainer'];
-    let allElementsExist = true;
-    
-    requiredElements.forEach(id => {
-        if (!document.getElementById(id)) {
-            console.error(`❌ Elemento obrigatório não encontrado: ${id}`);
-            allElementsExist = false;
-        }
-    });
-    
-    if (allElementsExist) {
-        // Iniciar sistema com delay para garantir que tudo está carregado
+    if (loadingOverlay && mainContainer) {
+        loadingOverlay.style.opacity = '0';
         setTimeout(() => {
-            initializeSystem();
-        }, 300);
-    } else {
-        console.error('❌ Elementos obrigatórios faltando. Tentando recuperação...');
-        
-        // Tentativa de recuperação
-        setTimeout(() => {
-            forceShowInterface();
-            console.log('⚠️ Sistema iniciado em modo de recuperação');
+            loadingOverlay.style.display = 'none';
+            mainContainer.style.display = 'block';
+            setTimeout(() => mainContainer.style.opacity = '1', 50);
         }, 500);
     }
+}
+
+function startClockAndDate() {
+    function updateDateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-PT', { 
+            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        const dateString = now.toLocaleDateString('pt-PT');
+        
+        const timeEl = document.getElementById('currentTime');
+        const dateEl = document.getElementById('currentDate');
+        
+        if (timeEl) timeEl.textContent = timeString;
+        if (dateEl) dateEl.textContent = dateString;
+    }
+    
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+}
+
+// 20. INICIALIZAÇÃO AUTOMÁTICA
+window.addEventListener('DOMContentLoaded', () => {
+    initializeSystem();
 });
 
-console.log('VDC Sistema de Peritagem Forense v12.6 - Script carregado');
-console.log('Edição Forense - Recuperação Imediata');
+console.log('VDC Sistema de Peritagem Forense v12.4 - Carregado com sucesso');
 console.log('Protocolo de Auditoria Final | Dados Auditados Set-Dez 2024');
