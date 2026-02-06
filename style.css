@@ -207,7 +207,7 @@ body {
     margin: 0 auto;
     width: 100%;
     flex: 1;
-    justify-content: center; /* Adicionado para centralização */
+    justify-content: center;
 }
 
 /* 5. SIDEBAR */
@@ -590,7 +590,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
-    align-items: center; /* Centraliza os elementos filhos */
+    align-items: center;
     width: 100%;
 }
 
@@ -600,8 +600,8 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .stat-card {
@@ -654,8 +654,8 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .imt-section h3 {
@@ -671,7 +671,7 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-md);
-    justify-content: center; /* Centralizar cards */
+    justify-content: center;
 }
 
 .imt-card {
@@ -721,8 +721,8 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .kpi-section h3 {
@@ -739,7 +739,7 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
-    justify-content: center; /* Centralizar cards */
+    justify-content: center;
 }
 
 .kpi-card {
@@ -829,8 +829,8 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .chart-section h3 {
@@ -845,8 +845,8 @@ body {
 .chart-container {
     height: 300px;
     position: relative;
-    margin: 0 auto; /* Centralizar o canvas */
-    max-width: 800px; /* Limitar largura do gráfico */
+    margin: 0 auto;
+    max-width: 800px;
 }
 
 .chart-legend {
@@ -872,8 +872,8 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .analysis-results h3 {
@@ -890,7 +890,7 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
-    justify-content: center; /* Centralizar cards */
+    justify-content: center;
 }
 
 .result-item {
@@ -972,8 +972,8 @@ body {
     border-radius: var(--border-radius);
     overflow: hidden;
     width: 100%;
-    max-width: 1200px; /* Limitar largura máxima */
-    margin: 0 auto; /* Centralizar horizontalmente */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .console-header {
