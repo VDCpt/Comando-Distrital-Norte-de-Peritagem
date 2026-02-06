@@ -571,7 +571,7 @@ function calcularIMTAtualizado() {
     VDCSystem.analysis.extractedValues.imtTax = imtTax;
     VDCSystem.analysis.extractedValues.imtTotal = totalPlataforma;
     
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const elementosIMT = {
         'imtBase': comissaoReal,
@@ -586,7 +586,7 @@ function calcularIMTAtualizado() {
 }
 
 function updateResults() {
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const valores = {
         'grossResult': VDCSystem.analysis.extractedValues.faturacaoBruta || 0,
@@ -640,7 +640,7 @@ function criarDashboardDivergencia() {
     
     const divergencia = VDCSystem.analysis.extractedValues.divergenciaComissoes || 0;
     const taxaOmissao = VDCSystem.analysis.extractedValues.taxaOmissaoPercentual || 0;
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const divergenciaCard = document.createElement('div');
     divergenciaCard.id = 'divergenciaCard';
@@ -668,7 +668,7 @@ function showDivergenciaAlert() {
     const divergencia = VDCSystem.analysis.extractedValues.divergenciaComissoes;
     const taxaOmissao = VDCSystem.analysis.extractedValues.taxaOmissaoPercentual;
     const projecaoMensal = VDCSystem.analysis.projecaoMercado.volumeNegocioOmitidoMensal;
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     
     const novoAlerta = document.createElement('div');
     novoAlerta.id = 'divergenciaAlert';
@@ -1602,7 +1602,7 @@ function calcularDiscrepanciaDAC7() {
     
     if (dac7Result) dac7Result.style.display = 'flex';
     if (dac7Discrepancy) {
-        const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' );
+        const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
         dac7Discrepancy.textContent = formatter.format(discrepancia);
     }
     
