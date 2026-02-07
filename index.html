@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.0</title>
+    <title>VDC | Sistema de Peritagem Forense v10.1 - Digital Forensic Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,8 +19,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC SISTEMA DE PERITAGEM FORENSE v10.0</h2>
-            <p>Big Data Forense | Análise de Evasão Fiscal | Protocolo de Prova Legal</p>
+            <h2>VDC FORENSIC SYSTEM v10.1 - DIGITAL FORENSIC EDITION</h2>
+            <p>Big Data Forense | Análise de Layering & Evasão | Protocolo FBI/Interpol</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -30,21 +30,21 @@
     <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
-        <!-- Cabeçalho com Data e Relógio -->
+        <!-- Cabeçalho FBI/Interpol -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
-                    <i class="fas fa-balance-scale"></i>
+                    <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.0</span></h1>
-                        <p class="subtitle">Protocolo de Prova Legal | Big Data Forense | Gráfico Ativo</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.1 DF</span></h1>
+                        <p class="subtitle">Protocolo FBI/Interpol | Layering Analysis | Asset Forfeiture</p>
                     </div>
                 </div>
                 <div class="session-info">
-                    <div class="timestamp">
-                        <div id="currentDate">DD/MM/AAAA</div>
-                        <div><i class="fas fa-clock"></i> <span id="currentTime">00:00:00</span></div>
-                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
+                    <div class="timestamp-fbi">
+                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span> | 
+                        <span>Data: <strong id="currentDate">DD/MM/AAAA</strong></span> | 
+                        <span><i class="fas fa-clock"></i> <strong id="currentTime">00:00:00</strong></span>
                     </div>
                 </div>
             </div>
@@ -56,23 +56,23 @@
             <aside class="sidebar">
                 <!-- Identificação do Cliente -->
                 <div class="client-identification">
-                    <h3><i class="fas fa-user-tie"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
+                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
                     <div class="client-form">
                         <div class="form-group">
-                            <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
+                            <label for="clientName"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
                             <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda" list="clientSuggestions">
                             <datalist id="clientSuggestions"></datalist>
                         </div>
                         <div class="form-group">
-                            <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
+                            <label for="clientNIF"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
                             <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
                         </div>
                         <div class="btn-group">
                             <button id="registerClientBtn" class="btn-primary">
-                                <i class="fas fa-save"></i> REGISTAR
+                                <i class="fas fa-user-check"></i> REGISTAR
                             </button>
                             <button id="saveClientBtn" class="btn-secondary">
-                                <i class="fas fa-download"></i> GUARDAR
+                                <i class="fas fa-database"></i> GUARDAR
                             </button>
                         </div>
                     </div>
@@ -85,38 +85,39 @@
                 <!-- Controles do Sistema -->
                 <div class="system-controls">
                     <div class="control-group">
-                        <label for="selYear"><i class="fas fa-calendar-alt"></i> Ano Fiscal</label>
+                        <label for="selYear"><i class="fas fa-calendar-check"></i> Ano Fiscal</label>
                         <select id="selYear" class="year-select">
                             <!-- Preenchido dinamicamente -->
                         </select>
                     </div>
                     <div class="control-group">
-                        <label for="selPlatform"><i class="fas fa-globe-europe"></i> Plataforma</label>
+                        <label for="selPlatform"><i class="fas fa-server"></i> Plataforma</label>
                         <select id="selPlatform" class="platform-select">
-                            <option value="bolt">Bolt (Estónia)</option>
-                            <option value="uber">Uber (Holanda)</option>
-                            <option value="freenow">FREE NOW (Alemanha)</option>
-                            <option value="other">Outra Plataforma</option>
+                            <option value="bolt">Bolt (Estónia) - Alvo Principal</option>
+                            <option value="uber">Uber (Holanda) - Alvo Secundário</option>
+                            <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
+                            <option value="other">Outra Plataforma - Investigação</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Upload de Ficheiros (Limite 12 por categoria) -->
                 <div class="upload-section">
-                    <h3><i class="fas fa-upload"></i> CARREGAMENTO DE DOCUMENTOS (Max: 12)</h3>
+                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO DE DOCUMENTOS (Máx: 12/categoria)</h3>
                     
-                    <!-- Campo DAC7 MOVIDO para aqui -->
+                    <!-- Campo DAC7 na secção de upload -->
                     <div class="upload-group">
-                        <label for="clientDAC7"><i class="fas fa-file-contract"></i> DAC7 ID (Opcional)</label>
+                        <label for="clientDAC7"><i class="fas fa-passport"></i> DAC7 ID (Obrigatório para plataformas)</label>
                         <input type="text" id="clientDAC7" class="file-input" placeholder="Ex: DAC7-PT-2024-XXXXX" style="margin-top: 0.5rem; width: 100%;">
                     </div>
 
                     <!-- Control File -->
                     <div class="upload-group">
                         <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
-                            <i class="fas fa-file-csv"></i> FICHEIRO DE CONTROLO
+                            <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
                         </button>
-                        <input type="file" id="controlFile" class="file-input" accept=".csv" hidden>
+                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf" hidden 
+                               onchange="validateFileCount(this, 'control', 12)">
                         <div id="controlFileList" class="file-list"></div>
                     </div>
 
@@ -133,9 +134,9 @@
                     <!-- Platform Invoices -->
                     <div class="upload-group">
                         <button class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
-                            <i class="fas fa-receipt"></i> FATURAS DA PLATAFORMA
+                            <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
                         </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml" hidden
+                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png" hidden
                                onchange="validateFileCount(this, 'invoices', 12)">
                         <div id="invoiceFileList" class="file-list"></div>
                     </div>
@@ -143,9 +144,9 @@
                     <!-- Bank Statements -->
                     <div class="upload-group">
                         <button class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
-                            <i class="fas fa-university"></i> EXTRATOS BANCÁRIOS
+                            <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
                         </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt" hidden
+                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif" hidden
                                onchange="validateFileCount(this, 'statements', 12)">
                         <div id="statementFileList" class="file-list"></div>
                     </div>
@@ -154,19 +155,23 @@
                 <!-- Contadores -->
                 <div class="counters">
                     <div class="counter-item">
+                        <span class="counter-label">CONTROLO</span>
+                        <span id="controlCount" class="counter-value">0</span>
+                    </div>
+                    <div class="counter-item">
                         <span class="counter-label">SAF-T</span>
                         <span id="saftCount" class="counter-value">0</span>
                     </div>
                     <div class="counter-item">
-                        <span class="counter-label">Faturas</span>
+                        <span class="counter-label">FATURAS</span>
                         <span id="invoiceCount" class="counter-value">0</span>
                     </div>
                     <div class="counter-item">
-                        <span class="counter-label">Extratos</span>
+                        <span class="counter-label">EXTRATOS</span>
                         <span id="statementCount" class="counter-value">0</span>
                     </div>
                     <div class="counter-item">
-                        <span class="counter-label">Total</span>
+                        <span class="counter-label">TOTAL</span>
                         <span id="totalCount" class="counter-value">0</span>
                     </div>
                 </div>
@@ -174,6 +179,24 @@
 
             <!-- Área Principal de Análise -->
             <main class="analysis-area">
+                <!-- Barra de Ferramentas com MODO DEMO -->
+                <section class="toolbar-section">
+                    <div class="toolbar-grid">
+                        <button id="demoModeBtn" class="btn-demo" onclick="activateDemoMode()">
+                            <i class="fas fa-vial"></i> MODO DEMO FORENSE
+                        </button>
+                        <button id="analyzeBtn" class="btn-forensic" onclick="performForensicAnalysis()" disabled>
+                            <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
+                        </button>
+                        <button class="btn-tool" onclick="exportJSON()">
+                            <i class="fas fa-file-code"></i> EXPORTAR JSON
+                        </button>
+                        <button class="btn-tool" onclick="exportPDF()">
+                            <i class="fas fa-file-pdf"></i> RELATÓRIO PDF
+                        </button>
+                    </div>
+                </section>
+
                 <!-- Dashboard Fixo -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
@@ -198,12 +221,12 @@
                     </div>
                 </section>
 
-                <!-- Dashboard KPI Bolt -->
+                <!-- Dashboard KPI Bolt com Dados Reais -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-line"></i> KPIs BOLT - EXTRATO OFICIAL</h3>
+                    <h3><i class="fas fa-chart-network"></i> KPIs PLATAFORMA - DADOS REAIS</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <h4><i class="fas fa-euro-sign"></i> GANHOS BRUTOS</h4>
+                            <h4><i class="fas fa-money-bill-wave"></i> GANHOS BRUTOS</h4>
                             <p id="kpiGanhos">0,00€</p>
                             <small>Valor real do extrato</small>
                         </div>
@@ -217,10 +240,10 @@
                             <p id="kpiNet">0,00€</p>
                             <small>Transferência bancária real</small>
                         </div>
-                        <div class="kpi-card danger">
-                            <h4><i class="fas fa-file-invoice"></i> FATURA PLATAFORMA</h4>
+                        <div class="kpi-card danger blink-alert">
+                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA</h4>
                             <p id="kpiInvoice">0,00€</p>
-                            <small>Valor faturado (documento PDF)</small>
+                            <small>Valor faturado (documento)</small>
                         </div>
                         <!-- Card de Diferencial será adicionado dinamicamente -->
                     </div>
@@ -232,9 +255,9 @@
                     </div>
                 </section>
 
-                <!-- Gráfico Doughnut Vertical Ativo -->
+                <!-- Gráfico Doughnut Vertical Compacto -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA (€ e %)</h3>
+                    <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
@@ -246,9 +269,9 @@
                     </div>
                 </section>
 
-                <!-- Resultados da Análise -->
+                <!-- Resultados da Análise Forense -->
                 <section class="analysis-results">
-                    <h3><i class="fas fa-search-dollar"></i> RESULTADOS DA ANÁLISE FORENSE</h3>
+                    <h3><i class="fas fa-search-dollar"></i> ANÁLISE DE LAYERING E EVASÃO</h3>
                     <div class="results-grid">
                         <div class="result-item">
                             <h5>BRUTO SAF-T</h5>
@@ -272,7 +295,7 @@
                             </div>
                         </div>
                         <div class="result-item">
-                            <h5>PROJEÇÃO MERCADO (38k)</h5>
+                            <h5>QUANTUM BENEFÍCIO ILÍCITO</h5>
                             <p id="marketResult" class="result-value">0,00M€</p>
                             <div class="result-bar">
                                 <div class="bar-fill" style="width: 0%"></div>
@@ -284,31 +307,34 @@
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA DE OMISSÃO DE RECEITA</strong>
-                            <p>Detetada discrepância significativa entre faturação e recebimento. Valor omitido: <span id="omissionValue">0,00€</span></p>
+                            <strong>ALERTA DE LAYERING DETETADO</strong>
+                            <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
 
                     <!-- Alerta Intermitente BigData -->
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
-                        <i class="fas fa-exclamation-circle"></i>
+                        <i class="fas fa-radiation-alt"></i>
                         <div>
-                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA DETETADA</strong>
-                            <p>FATURA PLATAFORMA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO RETIDA (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
+                            <strong>⚠️ ALERTA FORENSE: DISCREPÂNCIA CRÍTICA</strong>
+                            <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
                         </div>
                     </div>
                 </section>
 
-                <!-- CONSOLA DE AUDITORIA -->
+                <!-- Consola de Auditoria -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA</h3>
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA FORENSE</h3>
                         <div class="console-controls">
                             <button class="icon-btn" onclick="clearConsole()" title="Limpar consola">
                                 <i class="fas fa-broom"></i>
                             </button>
                             <button class="icon-btn" onclick="toggleConsole()" title="Alternar tamanho">
                                 <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button class="icon-btn" onclick="resetDashboard()" title="Nova Sessão">
+                                <i class="fas fa-redo"></i>
                             </button>
                         </div>
                     </div>
@@ -319,32 +345,15 @@
             </main>
         </div>
 
-        <!-- Barra de Ações Inferior -->
+        <!-- Rodapé com Master Hash -->
         <footer class="action-footer">
-            <div class="action-buttons">
-                <button id="analyzeBtn" class="btn-forensic" onclick="performForensicAnalysis()" disabled>
-                    <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
-                </button>
-                <div class="secondary-buttons">
-                    <button class="btn-secondary" onclick="exportJSON()">
-                        <i class="fas fa-code"></i> PROVA DIGITAL (JSON)
-                    </button>
-                    <button class="btn-secondary" onclick="exportPDF()">
-                        <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL (PDF)
-                    </button>
-                    <button class="btn-secondary" onclick="resetDashboard()">
-                        <i class="fas fa-redo"></i> NOVA SESSÃO
-                    </button>
-                </div>
-            </div>
-            
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH DA SESSÃO (SHA-256):</strong>
+                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH SHA-256 | PROTOCOLO VDC v10.1:</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.0 | Protocolo de Prova Legal com Gráfico Ativo | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.1 - Digital Forensic Edition | Protocolo FBI/Interpol | © 2024
                 </div>
             </div>
         </footer>
