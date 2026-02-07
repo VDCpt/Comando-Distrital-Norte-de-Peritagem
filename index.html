@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.2 - Digital Forensic Edition</title>
+    <title>VDC | Sistema de Peritagem Forense v10.3 - ISO/NIST Compliance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -13,14 +13,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Overlay de Carregamento -->
+    <!-- Overlay de Carregamento ISO/NIST -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v10.2 - DIGITAL FORENSIC EDITION</h2>
-            <p>Big Data Forense | Análise de Layering & Evasão | Protocolo FBI/Interpol</p>
+            <h2>VDC FORENSIC SYSTEM v10.3 - ISO/NIST COMPLIANCE EDITION</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | Protocolo FBI/Interpol</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -30,21 +30,21 @@
     <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
-        <!-- Cabeçalho FBI/Interpol com Botão DEMO -->
+        <!-- Cabeçalho ISO/NIST Compliance -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.2 DF</span></h1>
-                        <p class="subtitle">Protocolo FBI/Interpol | Layering Analysis | Asset Forfeiture</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.3 ISO</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital</p>
                     </div>
                 </div>
                 
-                <!-- Botão DEMO FORENSE na Navbar -->
+                <!-- Botão MODO DEMO FORENSE na Navbar -->
                 <div class="demo-section">
                     <button id="demoModeBtn" class="btn-demo-nav" onclick="activateDemoMode()">
-                        <i class="fas fa-vial"></i> DEMO FORENSE
+                        <i class="fas fa-vial"></i> MODO DEMO FORENSE
                     </button>
                 </div>
                 
@@ -101,8 +101,8 @@
                     <div class="control-group">
                         <label for="selPlatform"><i class="fas fa-server"></i> Plataforma</label>
                         <select id="selPlatform" class="platform-select">
-                            <option value="bolt">Bolt (Estónia) - Alvo Principal</option>
-                            <option value="uber">Uber (Holanda) - Alvo Secundário</option>
+                            <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
+                            <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
                             <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
                             <option value="other">Outra Plataforma - Investigação</option>
                         </select>
@@ -113,23 +113,23 @@
                 <div class="upload-section">
                     <h3><i class="fas fa-file-upload"></i> CARREGAMENTO DE DOCUMENTOS (Máx: 12/categoria)</h3>
                     
-                    <!-- Campo DAC7 específico -->
+                    <!-- Campo DAC7 ISO/NIST -->
                     <div class="upload-group">
-                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email)</label>
+                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
                         <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
                             <i class="fas fa-file-contract"></i> UPLOAD DAC7
                         </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf" hidden
+                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden
                                onchange="validateFileCount(this, 'dac7', 12)">
                         <div id="dac7FileList" class="file-list"></div>
                     </div>
 
-                    <!-- Control File -->
+                    <!-- Control File (ISO/IEC 27037) -->
                     <div class="upload-group">
                         <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
                             <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
                         </button>
-                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf" hidden 
+                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden 
                                onchange="validateFileCount(this, 'control', 12)">
                         <div id="controlFileList" class="file-list"></div>
                     </div>
@@ -139,7 +139,7 @@
                         <button class="upload-btn multi" onclick="document.getElementById('saftFile').click()">
                             <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
                         </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden 
+                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv,.txt" hidden 
                                onchange="validateFileCount(this, 'saft', 12)">
                         <div id="saftFileList" class="file-list"></div>
                     </div>
@@ -149,7 +149,7 @@
                         <button class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
                             <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
                         </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png" hidden
+                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden
                                onchange="validateFileCount(this, 'invoices', 12)">
                         <div id="invoiceFileList" class="file-list"></div>
                     </div>
@@ -159,7 +159,7 @@
                         <button class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
                             <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
                         </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif" hidden
+                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden
                                onchange="validateFileCount(this, 'statements', 12)">
                         <div id="statementFileList" class="file-list"></div>
                     </div>
@@ -187,6 +187,10 @@
                         <span class="counter-label">DAC7</span>
                         <span id="dac7Count" class="counter-value">0</span>
                     </div>
+                    <div class="counter-item">
+                        <span class="counter-label">TOTAL</span>
+                        <span id="totalCount" class="counter-value">0</span>
+                    </div>
                 </div>
             </aside>
 
@@ -210,7 +214,7 @@
                     </div>
                 </section>
 
-                <!-- Dashboard Fixo -->
+                <!-- Dashboard Fixo ISO/NIST -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
                         <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
@@ -234,9 +238,9 @@
                     </div>
                 </section>
 
-                <!-- Dashboard KPI Bolt com Dados Reais -->
+                <!-- Dashboard KPI com Dados Reais -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> KPIs PLATAFORMA - DADOS REAIS</h3>
+                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE FUNDAMENTADO</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
                             <h4><i class="fas fa-money-bill-wave"></i> GANHOS BRUTOS</h4>
@@ -268,9 +272,9 @@
                     </div>
                 </section>
 
-                <!-- Gráfico Vertical Compacto -->
+                <!-- Gráfico Vertical Compacto ISO/NIST -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (€)</h3>
+                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
@@ -316,11 +320,11 @@
                         </div>
                     </div>
 
-                    <!-- Alerta de Omissão -->
+                    <!-- Alerta de Omissão ISO/NIST -->
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA DE LAYERING DETETADO</strong>
+                            <strong>ALERTA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
                             <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
@@ -334,26 +338,29 @@
                         </div>
                     </div>
                     
-                    <!-- Alerta Diferencial -->
+                    <!-- Alerta Diferencial ISO/NIST -->
                     <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
                         <i class="fas fa-balance-scale"></i>
                         <div>
                             <strong>🔴 EVIDÊNCIA FORENSE: DIFERENCIAL DE CUSTO DETETADO</strong>
-                            <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado</p>
+                            <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Consola de Auditoria -->
+                <!-- Consola de Auditoria ISO/NIST -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA FORENSE</h3>
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA FORENSE (ISO/IEC 27037)</h3>
                         <div class="console-controls">
                             <button class="icon-btn" onclick="clearConsole()" title="Limpar consola">
                                 <i class="fas fa-broom"></i>
                             </button>
                             <button class="icon-btn" onclick="toggleConsole()" title="Alternar tamanho">
                                 <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button class="icon-btn" onclick="showChainOfCustody()" title="Cadeia de Custódia">
+                                <i class="fas fa-link"></i>
                             </button>
                         </div>
                     </div>
@@ -364,15 +371,15 @@
             </main>
         </div>
 
-        <!-- Rodapé com Master Hash -->
+        <!-- Rodapé ISO/NIST Compliance -->
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH SHA-256 | PROTOCOLO VDC v10.2:</strong>
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.2 - Digital Forensic Edition | Protocolo FBI/Interpol | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.3 - ISO/NIST Compliance Edition | Protocolo de Integridade Digital | © 2024
                 </div>
             </div>
         </footer>
