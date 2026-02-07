@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.4
-   ISO/NIST COMPLIANCE EDITION - FINAL RELEASE
+   VDC SISTEMA DE PERITAGEM FORENSE v10.5
+   ISO/NIST COMPLIANCE EDITION - FINAL LEGAL WEAPON
    ============================================ */
 
-/* 0. SPLASH SCREEN V10.4 */
+/* 0. SPLASH SCREEN V10.5 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -16,6 +16,8 @@
     justify-content: center;
     z-index: 9999;
     font-family: var(--font-main);
+    opacity: 1;
+    transition: opacity 0.5s ease;
 }
 
 .splash-content {
@@ -121,6 +123,7 @@
     --info-primary: #8c7ae6;
     --iso-blue: #0066cc;
     --nist-green: #00cc88;
+    --regulatory-orange: #ff6b35;
     
     /* Texto */
     --text-primary: #e4eaf7;
@@ -174,6 +177,8 @@ body {
     min-height: 100vh;
     max-width: 1920px;
     margin: 0 auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 /* 4. CABEÇALHO ISO/NIST COMPLIANCE */
@@ -376,6 +381,16 @@ body {
     border-color: var(--iso-blue);
     box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
     background: rgba(30, 42, 68, 0.9);
+}
+
+.form-group input.success {
+    border-color: var(--success-primary);
+    background: rgba(68, 189, 50, 0.05);
+}
+
+.form-group input.error {
+    border-color: var(--warn-primary);
+    background: rgba(232, 65, 24, 0.05);
 }
 
 .btn-group {
@@ -734,6 +749,11 @@ body {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
 }
 
+.stat-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
 .stat-card h4 {
     color: var(--text-secondary);
     font-size: 0.85rem;
@@ -755,6 +775,11 @@ body {
 .alert-text {
     color: var(--warn-primary) !important;
     animation: pulse 2s infinite;
+    font-weight: 800;
+}
+
+.regulatory-text {
+    color: var(--regulatory-orange) !important;
     font-weight: 800;
 }
 
@@ -854,6 +879,11 @@ body {
     background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
 }
 
+.kpi-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
 /* 14. ANIMAÇÃO BLINK-ALERT ISO/NIST (VERMELHO/AMARELO) */
 .blink-alert {
     animation: blinkAlert 1.5s infinite;
@@ -879,6 +909,14 @@ body {
     font-weight: 900;
     margin: 0.5rem 0;
     color: var(--warn-secondary);
+    font-family: var(--font-mono);
+}
+
+#regulatoryVal {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    color: var(--regulatory-orange);
     font-family: var(--font-mono);
 }
 
@@ -1161,6 +1199,21 @@ body {
     font-weight: 800;
 }
 
+.regulatory-alert {
+    border-color: var(--regulatory-orange) !important;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%) !important;
+}
+
+.regulatory-alert i.fa-gavel {
+    color: var(--regulatory-orange) !important;
+    font-size: 1.8rem;
+}
+
+.regulatory-alert strong {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
 /* 18. CONSOLA DE AUDITORIA ISO/NIST */
 .console-section {
     background: rgba(30, 42, 68, 0.5);
@@ -1224,6 +1277,7 @@ body {
     overflow-x: hidden;
     line-height: 1.4;
     border-top: 1px solid var(--border-color);
+    transition: height 0.3s ease;
 }
 
 .console-output::-webkit-scrollbar {
@@ -1257,6 +1311,7 @@ body {
 .log-success { color: var(--nist-green); }
 .log-warn { color: var(--warn-secondary); }
 .log-error { color: var(--warn-primary); }
+.log-regulatory { color: var(--regulatory-orange); }
 
 /* 19. RODAPÉ ISO/NIST COMPLIANCE */
 .action-footer {
@@ -1526,5 +1581,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.4 - ISO/NIST COMPLIANCE EDITION - FINAL RELEASE
+   FIM DO CSS VDC v10.5 - ISO/NIST COMPLIANCE EDITION - FINAL LEGAL WEAPON
    ============================================ */
