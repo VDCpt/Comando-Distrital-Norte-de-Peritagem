@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.4 - ISO/NIST Compliance</title>
+    <title>VDC | Sistema de Peritagem Forense v10.5 - ISO/NIST Compliance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -13,15 +13,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V10.4 -->
+    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V10.5 -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v10.4</h1>
+            <h1>VDC FORENSIC SYSTEM v10.5</h1>
             <h2>SISTEMA DE PERITAGEM FORENSE</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital</p>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | AMT/IMT Compliance</p>
             <p class="splash-warning">
                 <i class="fas fa-lock"></i> Acesso Restrito a Peritos Autorizados
             </p>
@@ -29,8 +29,8 @@
                 <i class="fas fa-fingerprint"></i> INICIAR SESSÃO DE PERITAGEM
             </button>
             <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Certificação ISO/NIST</p>
-                <p class="version">v10.4 - Final Release</p>
+                <p>Protocolo de Integridade Digital | Certificação ISO/NIST | Final Legal Weapon</p>
+                <p class="version">v10.5 - Final Legal Weapon</p>
             </div>
         </div>
     </div>
@@ -41,8 +41,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v10.4 - ISO/NIST COMPLIANCE EDITION</h2>
-            <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | Protocolo FBI/Interpol</p>
+            <h2>VDC FORENSIC SYSTEM v10.5 - ISO/NIST COMPLIANCE EDITION</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | Protocolo FBI/Interpol | AMT/IMT</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -58,8 +58,8 @@
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.4 ISO</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.5 ISO</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | AMT/IMT Compliance</p>
                     </div>
                 </div>
                 
@@ -258,6 +258,12 @@
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
+                    <!-- Novo Card: RISCO REGULATÓRIO (AMT/IMT) -->
+                    <div class="stat-card regulatory" id="regulatoryCard" style="display: none;">
+                        <h4><i class="fas fa-balance-scale-right"></i> RISCO REGULATÓRIO</h4>
+                        <p id="regulatoryVal" class="regulatory-text">0,00€</p>
+                        <small>Taxa de Regulação 5% (AMT/IMT)</small>
+                    </div>
                 </section>
 
                 <!-- Dashboard KPI com Dados Reais -->
@@ -285,6 +291,7 @@
                             <small>Valor faturado (documento)</small>
                         </div>
                         <!-- Card de Diferencial será adicionado dinamicamente -->
+                        <!-- Card de Risco Regulatório será adicionado dinamicamente -->
                     </div>
                     <div class="secondary-stats">
                         <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
@@ -305,6 +312,7 @@
                         <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Risco Regulatório (5%)</span>
                     </div>
                 </section>
 
@@ -368,6 +376,15 @@
                             <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
                         </div>
                     </div>
+
+                    <!-- Novo Alerta: RISCO REGULATÓRIO AMT/IMT -->
+                    <div id="regulatoryAlert" class="regulatory-alert" style="display: none;">
+                        <i class="fas fa-gavel"></i>
+                        <div>
+                            <strong>⚖️ RISCO REGULATÓRIO DETETADO (AMT/IMT)</strong>
+                            <p>Taxa de Regulação de 5% não discriminada sobre comissão de intermediação. Valor: <span id="regulatoryValue">0,00€</span></p>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Consola de Auditoria ISO/NIST -->
@@ -397,11 +414,11 @@
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256</strong>
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AMT/IMT</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.4 - ISO/NIST Compliance Edition | Protocolo de Integridade Digital | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.5 - ISO/NIST Compliance Edition | Final Legal Weapon | © 2024
                 </div>
             </div>
         </footer>
