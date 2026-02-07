@@ -1457,9 +1457,9 @@ async function exportPDF() {
         doc.text(`Sessão: ${VDCSystem.sessionId}`, 195, 30, { align: "right" });
         doc.text(`Data: ${dataAtual}`, 195, 35, { align: "right" });
         
-        // Master Hash SHA-253 no rodapé
+        // Master Hash SHA-256 no rodapé
         const masterHash = document.getElementById('masterHashValue')?.textContent || 'N/A';
-        doc.text(`Hash SHA-253: ${masterHash.substring(0, 24)}`, 195, 40, { align: "right" });
+        doc.text(`Hash SHA-256: ${masterHash.substring(0, 24)}`, 195, 40, { align: "right" });
         
         let posY = 55;
         
@@ -1496,13 +1496,13 @@ async function exportPDF() {
             posY += 6;
         });
         
-        // RODAPÉ PÁGINA 1 com Master Hash SHA-253
+        // RODAPÉ PÁGINA 1 com Master Hash SHA-256
         posY = 285;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         doc.text("VDC Forensic System v10.0 | Protocolo ISO 27037", 15, posY);
         doc.text(`Página 1 de ${totalPages}`, 195, posY, { align: "right" });
-        doc.text(`Master Hash SHA-253: ${masterHash.substring(0, 32)}`, 105, posY, { align: "center" });
+        doc.text(`Master Hash SHA-256: ${masterHash.substring(0, 32)}`, 105, posY, { align: "center" });
         
         // ========== PÁGINAS 2 e 3 ==========
         // (código similar, mantendo apenas estrutura essencial)
@@ -1638,7 +1638,7 @@ function generateMasterHash() {
         display.style.fontSize = '0.8rem';
     }
     
-    logAudit(`🔐 Master Hash SHA-253 gerada: ${masterHash.substring(0, 32)}...`, 'success');
+    logAudit(`🔐 Master Hash SHA-256 gerada: ${masterHash.substring(0, 32)}...`, 'success');
     
     return masterHash;
 }
