@@ -1358,7 +1358,7 @@ async function exportJSON() {
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
-            hashProtocolo: "SHA-253", // Conforme instrução de rodapé
+            hashProtocolo: "SHA-253",
             
             cliente: VDCSystem.client || { 
                 nome: "Cliente de Demonstração", 
@@ -1988,7 +1988,12 @@ function showError(message) {
 
 // 14. FUNÇÕES GLOBAIS PARA HTML
 window.validateFileCount = function(input, type, maxFiles) {
-    return validateFileCount(input, type, maxFiles);
+    if (input.files.length > maxFiles) {
+        showError(`Limite máximo: ${maxFiles} ficheiros para ${type.toUpperCase()}`);
+        input.value = '';
+        return false;
+    }
+    return true;
 };
 
 window.clearConsole = clearConsole;
