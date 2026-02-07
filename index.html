@@ -61,20 +61,11 @@
                         <div class="form-group">
                             <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
                             <input type="text" id="clientName" placeholder="Ex: Momento Eficaz, Lda" list="clientSuggestions">
-                            <datalist id="clientSuggestions">
-                                <option value="Momento Eficaz, Lda">
-                                <option value="Transportes Digitais, SA">
-                                <option value="Mobilidade Urbana, Lda">
-                                <option value="Taxi Digital Portugal">
-                            </datalist>
+                            <datalist id="clientSuggestions"></datalist>
                         </div>
                         <div class="form-group">
                             <label for="clientNIF"><i class="fas fa-id-card"></i> Número de Contribuinte (NIF)</label>
                             <input type="text" id="clientNIF" placeholder="Ex: 123456789" maxlength="9">
-                        </div>
-                        <div class="form-group">
-                            <label for="clientDAC7"><i class="fas fa-file-contract"></i> DAC7 ID</label>
-                            <input type="text" id="clientDAC7" placeholder="Ex: DAC7-PT-2024-XXXXX">
                         </div>
                         <div class="btn-group">
                             <button id="registerClientBtn" class="btn-primary">
@@ -114,6 +105,12 @@
                 <div class="upload-section">
                     <h3><i class="fas fa-upload"></i> CARREGAMENTO DE DOCUMENTOS (Max: 12)</h3>
                     
+                    <!-- Campo DAC7 MOVIDO para aqui -->
+                    <div class="upload-group">
+                        <label for="clientDAC7"><i class="fas fa-file-contract"></i> DAC7 ID (Opcional)</label>
+                        <input type="text" id="clientDAC7" class="file-input" placeholder="Ex: DAC7-PT-2024-XXXXX" style="margin-top: 0.5rem; width: 100%;">
+                    </div>
+
                     <!-- Control File -->
                     <div class="upload-group">
                         <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
@@ -291,9 +288,18 @@
                             <p>Detetada discrepância significativa entre faturação e recebimento. Valor omitido: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
+
+                    <!-- Alerta Intermitente BigData -->
+                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA DETETADA</strong>
+                            <p>FATURA PLATAFORMA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO RETIDA (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
+                        </div>
+                    </div>
                 </section>
 
-                <!-- Consola de Auditoria -->
+                <!-- CONSOLA DE AUDITORIA (nome alterado) -->
                 <section class="console-section">
                     <div class="console-header">
                         <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA</h3>
