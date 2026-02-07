@@ -1,5 +1,5 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.1
+   VDC SISTEMA DE PERITAGEM FORENSE v10.2
    DIGITAL FORENSIC EDITION - FBI/INTERPOL STYLE
    ============================================ */
 
@@ -73,7 +73,7 @@ body {
     margin: 0 auto;
 }
 
-/* 4. CABEÇALHO FBI/INTERPOL */
+/* 4. CABEÇALHO FBI/INTERPOL COM BOTÃO DEMO */
 .main-header {
     background: linear-gradient(135deg, #0c1629 0%, #0a0f1d 100%);
     padding: var(--spacing-md);
@@ -90,12 +90,14 @@ body {
     align-items: center;
     max-width: 1800px;
     margin: 0 auto;
+    gap: var(--spacing-md);
 }
 
 .logo-section {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    flex: 1;
 }
 
 .logo-section i {
@@ -130,6 +132,34 @@ body {
     letter-spacing: 0.3px;
 }
 
+/* Botão DEMO na navbar */
+.demo-section {
+    flex-shrink: 0;
+}
+
+.btn-demo-nav {
+    background: linear-gradient(90deg, #ff9f1a 0%, #ffaf40 100%);
+    color: #0a0f1d;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.btn-demo-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
+}
+
 /* 5. TIMESTAMP FBI - UMA LINHA */
 .timestamp-fbi {
     display: flex;
@@ -142,6 +172,7 @@ body {
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius);
     border: 1px solid rgba(0, 168, 255, 0.2);
+    flex-shrink: 0;
 }
 
 .timestamp-fbi strong {
@@ -160,7 +191,7 @@ body {
 /* 6. GRID PRINCIPAL */
 .main-grid {
     display: grid;
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: 380px 1fr;
     flex: 1;
     min-height: calc(100vh - 120px);
     gap: 0;
@@ -485,7 +516,7 @@ body {
     font-family: var(--font-mono);
 }
 
-/* 11. BARRA DE FERRAMENTAS COM MODO DEMO */
+/* 11. BARRA DE FERRAMENTAS */
 .toolbar-section {
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
@@ -498,29 +529,6 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-sm);
-}
-
-.btn-demo {
-    background: linear-gradient(90deg, #ff9f1a 0%, #ffaf40 100%);
-    color: #0a0f1d;
-    border: none;
-    padding: 0.75rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-}
-
-.btn-demo:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
 }
 
 .btn-forensic {
@@ -742,10 +750,12 @@ body {
     0%, 100% {
         border-left-color: var(--warn-primary);
         box-shadow: 0 0 10px rgba(232, 65, 24, 0.3);
+        color: var(--warn-primary);
     }
     50% {
         border-left-color: var(--warn-secondary);
         box-shadow: 0 0 15px rgba(255, 159, 26, 0.4);
+        color: var(--warn-secondary);
     }
 }
 
@@ -827,7 +837,7 @@ body {
 }
 
 .chart-container {
-    height: 240px;
+    height: 280px;
     width: 100%;
     position: relative;
     background: rgba(20, 30, 48, 0.8);
@@ -1127,6 +1137,8 @@ body {
     border-top: 1px solid var(--border-color);
     padding: var(--spacing-md);
     margin-top: auto;
+    position: relative;
+    z-index: 100;
 }
 
 .system-info {
@@ -1229,7 +1241,7 @@ body {
     }
     
     .chart-container {
-        height: 220px;
+        height: 250px;
     }
     
     .toolbar-grid {
@@ -1238,6 +1250,20 @@ body {
     
     .dashboard-fixed {
         position: static;
+    }
+    
+    .header-content {
+        flex-wrap: wrap;
+    }
+    
+    .demo-section {
+        order: 3;
+        width: 100%;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .btn-demo-nav {
+        width: 100%;
     }
 }
 
@@ -1248,6 +1274,11 @@ body {
         gap: var(--spacing-sm);
     }
     
+    .logo-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
     .timestamp-fbi {
         flex-direction: column;
         gap: 0.5rem;
@@ -1255,9 +1286,10 @@ body {
         width: 100%;
     }
     
-    .session-info {
-        width: 100%;
-        justify-content: center;
+    .demo-section {
+        order: 0;
+        width: auto;
+        margin-top: 0;
     }
     
     .kpi-grid {
@@ -1289,6 +1321,12 @@ body {
     
     .counters {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .secondary-stats {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
     }
 }
 
@@ -1337,5 +1375,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.1 - DIGITAL FORENSIC EDITION
+   FIM DO CSS VDC v10.2 - DIGITAL FORENSIC EDITION
    ============================================ */
