@@ -1735,7 +1735,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         splitConclusao.forEach(line => {
             if (posY + lineHeight > pageHeight - 20) {
                 // Não criar nova página, ajustar texto
-                break;
+                return;
             }
             
             doc.text(line, 15, posY);
