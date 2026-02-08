@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.6 - ISO/NIST Compliance</title>
+    <title>VDC | Sistema de Peritagem Forense v10.7 - Big Data Forense</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -13,24 +13,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V10.6 -->
+    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V10.7 -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v10.6</h1>
-            <h2>SISTEMA DE PERITAGEM FORENSE</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | AMT/IMT Compliance</p>
+            <h1>VDC FORENSIC SYSTEM v10.7</h1>
+            <h2>BIG DATA FORENSE EDITION</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Análise Massiva de Dados</p>
             <p class="splash-warning">
-                <i class="fas fa-lock"></i> Acesso Restrito a Peritos Autorizados
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Dados Reais
             </p>
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO DE PERITAGEM
+                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO BIG DATA
             </button>
             <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Certificação ISO/NIST | Instrumento de Prova Legal</p>
-                <p class="version">v10.6 - Instrumento de Prova Legal</p>
+                <p>Protocolo de Integridade Digital | Upload Ilimitado | Análise Forense em Tempo Real</p>
+                <p class="version">v10.7 - Big Data Forense Edition</p>
             </div>
         </div>
     </div>
@@ -41,13 +41,16 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v10.6 - ISO/NIST COMPLIANCE EDITION</h2>
-            <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | Protocolo FBI/Interpol | AMT/IMT</p>
+            <h2>VDC FORENSIC SYSTEM v10.7 - BIG DATA FORENSE EDITION</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Processamento Massivo de Dados</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
         </div>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
 
     <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
@@ -58,15 +61,15 @@
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.6 ISO</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital | AMT/IMT Compliance</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.7 BD</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Big Data Forense</p>
                     </div>
                 </div>
                 
                 <!-- Botão MODO DEMO FORENSE na Navbar -->
                 <div class="demo-section">
                     <button id="demoModeBtn" class="btn-demo-nav" onclick="activateDemoMode()">
-                        <i class="fas fa-vial"></i> MODO DEMO FORENSE
+                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
                     </button>
                 </div>
                 
@@ -99,10 +102,10 @@
                         </div>
                         <div class="btn-group">
                             <button id="registerClientBtn" class="btn-primary">
-                                <i class="fas fa-user-check"></i> REGISTAR
+                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE
                             </button>
                             <button id="saveClientBtn" class="btn-secondary">
-                                <i class="fas fa-database"></i> GUARDAR
+                                <i class="fas fa-database"></i> GUARDAR NA SESSÃO
                             </button>
                         </div>
                     </div>
@@ -131,58 +134,53 @@
                     </div>
                 </div>
 
-                <!-- Upload de Ficheiros (Limite 12 por categoria) -->
+                <!-- Upload de Ficheiros - BIG DATA ILIMITADO -->
                 <div class="upload-section">
-                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO DE DOCUMENTOS (Máx: 12/categoria)</h3>
+                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO BIG DATA (ILIMITADO)</h3>
                     
                     <!-- Campo DAC7 ISO/NIST -->
                     <div class="upload-group">
                         <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
-                        <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
+                        <button id="dac7UploadBtn" class="upload-btn" onclick="document.getElementById('dac7File').click()">
                             <i class="fas fa-file-contract"></i> UPLOAD DAC7
                         </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden
-                               onchange="validateFileCount(this, 'dac7', 12)">
+                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
                         <div id="dac7FileList" class="file-list"></div>
                     </div>
 
                     <!-- Control File (ISO/IEC 27037) -->
                     <div class="upload-group">
-                        <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
+                        <button id="controlUploadBtn" class="upload-btn" onclick="document.getElementById('controlFile').click()">
                             <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
                         </button>
-                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden 
-                               onchange="validateFileCount(this, 'control', 12)">
+                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden>
                         <div id="controlFileList" class="file-list"></div>
                     </div>
 
                     <!-- SAF-T Files -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('saftFile').click()">
+                        <button id="saftUploadBtn" class="upload-btn multi" onclick="document.getElementById('saftFile').click()">
                             <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
                         </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv,.txt" hidden 
-                               onchange="validateFileCount(this, 'saft', 12)">
+                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv,.txt" hidden>
                         <div id="saftFileList" class="file-list"></div>
                     </div>
 
                     <!-- Platform Invoices -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
+                        <button id="invoiceUploadBtn" class="upload-btn multi" onclick="document.getElementById('invoiceFile').click()">
                             <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
                         </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden
-                               onchange="validateFileCount(this, 'invoices', 12)">
+                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoiceFileList" class="file-list"></div>
                     </div>
 
                     <!-- Bank Statements -->
                     <div class="upload-group">
-                        <button class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
+                        <button id="statementUploadBtn" class="upload-btn multi" onclick="document.getElementById('statementFile').click()">
                             <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
                         </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden
-                               onchange="validateFileCount(this, 'statements', 12)">
+                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
                         <div id="statementFileList" class="file-list"></div>
                     </div>
                 </div>
@@ -222,13 +220,13 @@
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" onclick="performForensicAnalysis()" disabled>
-                            <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
+                            <i class="fas fa-search"></i> EXECUTAR ANÁLISE BIG DATA
                         </button>
                         <button class="btn-tool" onclick="exportJSON()">
                             <i class="fas fa-file-code"></i> EXPORTAR JSON
                         </button>
                         <button class="btn-tool" onclick="exportPDF()">
-                            <i class="fas fa-file-pdf"></i> RELATÓRIO PDF
+                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL
                         </button>
                         <button class="btn-tool" onclick="resetDashboard()">
                             <i class="fas fa-redo"></i> NOVA SESSÃO
@@ -258,17 +256,17 @@
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
-                    <!-- Novo Card: RISCO REGULATÓRIO (AMT/IMT) -->
-                    <div class="stat-card regulatory" id="regulatoryCard" style="display: none;">
-                        <h4><i class="fas fa-balance-scale-right"></i> RISCO REGULATÓRIO</h4>
-                        <p id="regulatoryVal" class="regulatory-text">0,00€</p>
-                        <small>Taxa de Regulação 5% (AMT/IMT)</small>
+                    <!-- Novo Card: JUROS DE MORA -->
+                    <div class="stat-card regulatory" id="jurosCard" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
+                        <p id="jurosVal" class="regulatory-text">0,00€</p>
+                        <small>Base anual civil (RGRC)</small>
                     </div>
                 </section>
 
                 <!-- Dashboard KPI com Dados Reais -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE FUNDAMENTADO</h3>
+                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
                             <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS</h4>
@@ -312,13 +310,13 @@
                         <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
                         <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Risco Regulatório (5%)</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%)</span>
                     </div>
                 </section>
 
                 <!-- Resultados da Análise Forense -->
                 <section class="analysis-results">
-                    <h3><i class="fas fa-search-dollar"></i> ANÁLISE DE LAYERING E EVASÃO</h3>
+                    <h3><i class="fas fa-search-dollar"></i> ANÁLISE BIG DATA DE LAYERING</h3>
                     <div class="results-grid">
                         <div class="result-item">
                             <h5>BRUTO SAF-T</h5>
@@ -354,7 +352,7 @@
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
+                            <strong>ALERTA BIG DATA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
                             <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
@@ -363,7 +361,7 @@
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation-alt"></i>
                         <div>
-                            <strong>⚠️ ALERTA FORENSE: DISCREPÂNCIA CRÍTICA</strong>
+                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
                             <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
                         </div>
                     </div>
@@ -372,17 +370,17 @@
                     <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
                         <i class="fas fa-balance-scale"></i>
                         <div>
-                            <strong>🔴 EVIDÊNCIA FORENSE: DIFERENCIAL DE CUSTO DETETADO</strong>
+                            <strong>🔴 EVIDÊNCIA BIG DATA: DIFERENCIAL DE CUSTO DETETADO</strong>
                             <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
                         </div>
                     </div>
 
-                    <!-- Novo Alerta: RISCO REGULATÓRIO AMT/IMT -->
-                    <div id="regulatoryAlert" class="regulatory-alert" style="display: none;">
-                        <i class="fas fa-gavel"></i>
+                    <!-- Novo Alerta: JUROS DE MORA -->
+                    <div id="jurosAlert" class="regulatory-alert" style="display: none;">
+                        <i class="fas fa-percent"></i>
                         <div>
-                            <strong>⚖️ RISCO REGULATÓRIO DETETADO (AMT/IMT)</strong>
-                            <p>Taxa de Regulação de 5% não discriminada sobre comissão de intermediação. Valor: <span id="regulatoryValue">0,00€</span></p>
+                            <strong>⚖️ JUROS DE MORA CALCULADOS (RGRC 4%)</strong>
+                            <p>Juros civis acumulados sobre valor em dívida: <span id="jurosValue">0,00€</span></p>
                         </div>
                     </div>
                 </section>
@@ -390,7 +388,7 @@
                 <!-- Consola de Auditoria ISO/NIST -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA FORENSE (ISO/IEC 27037)</h3>
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA (ISO/IEC 27037)</h3>
                         <div class="console-controls">
                             <button class="icon-btn" onclick="clearConsole()" title="Limpar consola">
                                 <i class="fas fa-broom"></i>
@@ -414,11 +412,11 @@
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AMT/IMT</strong>
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | BIG DATA FORENSE</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.6 - ISO/NIST Compliance Edition | Instrumento de Prova Legal | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.7 - Big Data Forense Edition | © 2024
                 </div>
             </div>
         </footer>
