@@ -1,11 +1,11 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v10.5
-// ISO/NIST COMPLIANCE EDITION - FINAL LEGAL WEAPON
+// VDC SISTEMA DE PERITAGEM FORENSE v10.6
+// ISO/NIST COMPLIANCE EDITION - INSTRUMENTO DE PROVA LEGAL
 // ============================================
 
 // 1. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST
 const VDCSystem = {
-    version: 'v10.5-ISO',
+    version: 'v10.6-ISO',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -26,9 +26,9 @@ const VDCSystem = {
         statements: { files: [], parsedData: [], totals: { 
             transfer: 0, 
             expected: 0,
-            ganhosBrutos: 0,
+            rendimentosBrutos: 0,
             comissaoApp: 0,
-            ganhosLiquidos: 0,
+            rendimentosLiquidos: 0,
             campanhas: 0,
             gorjetas: 0,
             cancelamentos: 0,
@@ -50,9 +50,9 @@ const VDCSystem = {
             iva23Due: 0,
             
             // Bolt KPIs
-            ganhosBrutos: 0,
+            rendimentosBrutos: 0,
             comissaoApp: 0,
-            ganhosLiquidos: 0,
+            rendimentosLiquidos: 0,
             faturaPlataforma: 0,
             campanhas: 0,
             gorjetas: 0,
@@ -100,7 +100,7 @@ const VDCSystem = {
         legalCitations: [
             "ISO/IEC 27037:2012 - Preservação de Evidência Digital",
             "NIST SP 800-86 - Guia para Análise Forense de Dados",
-            "Código do IRC, Artigo 87º - Contabilização integral de custos e proveitos",
+            "Código do IRC, Artigo 87º - Tratamento Contabilístico integral de custos e proveitos",
             "CIVA, Artigo 29º - Obrigação de faturação completa",
             "RGIT, Artigo 103º - Crime de Fraude Fiscal",
             "Código Penal, Art. 158-A a 158-F - Cadeia de Custódia Digital",
@@ -128,14 +128,14 @@ const VDCSystem = {
     discrepanciaAlertaInterval: null
 };
 
-// 2. INICIALIZAÇÃO DO SISTEMA ISO/NIST V10.5
+// 2. INICIALIZAÇÃO DO SISTEMA ISO/NIST V10.6
 document.addEventListener('DOMContentLoaded', () => {
     initializeSystem();
 });
 
 function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v10.5 - ISO/NIST Compliance Edition...');
+        console.log('🔧 Inicializando VDC Forensic System v10.6 - ISO/NIST Compliance Edition...');
         
         // Configurar evento do botão de splash screen
         const startBtn = document.getElementById('startSessionBtn');
@@ -146,7 +146,7 @@ function initializeSystem() {
         // Inicializar relógio e data mesmo na splash screen
         startClockAndDate();
         
-        logAudit('✅ Sistema VDC v10.5 pronto para iniciar sessão de peritagem', 'success');
+        logAudit('✅ Sistema VDC v10.6 pronto para iniciar sessão de peritagem', 'success');
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
@@ -159,21 +159,18 @@ function startForensicSession() {
         const splashScreen = document.getElementById('splashScreen');
         const loadingOverlay = document.getElementById('loadingOverlay');
         
-        if (splashScreen) {
+        if (splashScreen && loadingOverlay) {
             splashScreen.style.opacity = '0';
             splashScreen.style.transition = 'opacity 0.5s ease';
             
             setTimeout(() => {
                 splashScreen.style.display = 'none';
+                loadingOverlay.style.display = 'flex';
                 
-                if (loadingOverlay) {
-                    loadingOverlay.style.display = 'flex';
-                    
-                    // Iniciar sequência de carregamento
-                    setTimeout(() => {
-                        loadForensicSystem();
-                    }, 300);
-                }
+                // Iniciar sequência de carregamento
+                setTimeout(() => {
+                    loadForensicSystem();
+                }, 300);
             }, 500);
         }
     } catch (error) {
@@ -240,7 +237,7 @@ async function loadForensicSystem() {
             
             setTimeout(() => {
                 showMainInterface();
-                logAudit('✅ Sistema VDC v10.5 - ISO/NIST Compliance Edition inicializado', 'success');
+                logAudit('✅ Sistema VDC v10.6 - ISO/NIST Compliance Edition inicializado', 'success');
                 logAudit('🔍 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, AMT/IMT', 'info');
                 logAudit('⚖️ Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
                 
@@ -516,9 +513,9 @@ function activateDemoMode() {
             platformCommission: 0,
             bankTransfer: 0,
             iva23Due: 0,
-            ganhosBrutos: 3202.54,
+            rendimentosBrutos: 3202.54,
             comissaoApp: -792.59,
-            ganhosLiquidos: 2409.95,
+            rendimentosLiquidos: 2409.95,
             faturaPlataforma: 239.00,
             campanhas: 20.00,
             gorjetas: 9.00,
@@ -866,7 +863,7 @@ function extractDAC7Data(text, filename) {
         // Padrões robustos para encontrar receitas anuais no DAC7
         const patterns = [
             /(?:total de receitas anuais|annual revenue|receitas totais|total annual revenue)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR|euros?)/gi,
-            /(?:receitas|revenue|ganhos|income)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
+            /(?:receitas|revenue|rendimentos|income)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
             /([\d\.,]+)\s*(?:€|EUR)\s*(?:total.*receitas|annual.*revenue)/gi,
             /Total.*?([\d\.,]+)\s*(?:€|EUR)/gi
         ];
@@ -1090,9 +1087,9 @@ function extractStatementData(text, filename) {
         // Padrões completos para extratos Bolt (ISO/NIST)
         const patterns = {
             grossEarnings: [
-                /(?:ganhos|earnings|bruto|gross|total|rendimento)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR|euros?)/gi,
-                /([\d\.,]+)\s*(?:€|EUR)\s*(?:ganhos|bruto|gross)/gi,
-                /(?:ganhos da campanha|campaign earnings|total earnings)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
+                /(?:rendimentos|earnings|bruto|gross|total)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR|euros?)/gi,
+                /([\d\.,]+)\s*(?:€|EUR)\s*(?:rendimentos|bruto|gross)/gi,
+                /(?:rendimentos da campanha|campaign earnings|total earnings)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
                 /Total.*?([\d\.,]+)\s*(?:€|EUR)/gi
             ],
             commission: [
@@ -1207,7 +1204,7 @@ function parseBigDataNumber(numberStr) {
     return isNaN(number) ? 0 : Math.abs(number);
 }
 
-// 11. FUNÇÃO DE RESET COMPLETO DO DASHBOARD ISO/NIST V10.5
+// 11. FUNÇÃO DE RESET COMPLETO DO DASHBOARD ISO/NIST V10.6
 function resetDashboard() {
     logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO FORENSE ISO/NIST', 'info');
     
@@ -1353,8 +1350,8 @@ function resetDashboard() {
             commission: 0, iva23: 0, invoiceValue: 0, invoicesFound: [], invoiceNumbers: []
         }, hashes: {}},
         statements: { files: [], parsedData: [], totals: { 
-            transfer: 0, expected: 0, ganhosBrutos: 0, comissaoApp: 0, 
-            ganhosLiquidos: 0, campanhas: 0, gorjetas: 0, 
+            transfer: 0, expected: 0, rendimentosBrutos: 0, comissaoApp: 0, 
+            rendimentosLiquidos: 0, campanhas: 0, gorjetas: 0, 
             cancelamentos: 0, portagens: 0, diferencialCusto: 0
         }, hashes: {}}
     };
@@ -1362,7 +1359,7 @@ function resetDashboard() {
     VDCSystem.analysis.extractedValues = {
         saftGross: 0, saftIVA6: 0, saftNet: 0,
         platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-        ganhosBrutos: 0, comissaoApp: 0, ganhosLiquidos: 0,
+        rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
         faturaPlataforma: 0, campanhas: 0, gorjetas: 0,
         cancelamentos: 0, portagens: 0, diferencialCusto: 0,
         prejuizoFiscal: 0, ivaAutoliquidacao: 0,
@@ -1555,16 +1552,16 @@ async function processLoadedData() {
         const totals = VDCSystem.documents.statements.totals;
         
         VDCSystem.documents.statements.parsedData.forEach(item => {
-            totals.ganhosBrutos += item.data.grossEarnings || 0;
+            totals.rendimentosBrutos += item.data.grossEarnings || 0;
             totals.comissaoApp += item.data.commission || 0;
-            totals.ganhosLiquidos += item.data.netTransfer || 0;
+            totals.rendimentosLiquidos += item.data.netTransfer || 0;
             totals.campanhas += item.data.campaigns || 0;
             totals.gorjetas += item.data.tips || 0;
             totals.cancelamentos += item.data.cancellations || 0;
             totals.portagens += item.data.tolls || 0;
         });
         
-        logAudit(`Extratos: Bruto=${totals.ganhosBrutos.toFixed(2)}€ | Comissão=${totals.comissaoApp.toFixed(2)}€ (NIST SP 800-86)`, 'info');
+        logAudit(`Extratos: Bruto=${totals.rendimentosBrutos.toFixed(2)}€ | Comissão=${totals.comissaoApp.toFixed(2)}€ (NIST SP 800-86)`, 'info');
     }
 }
 
@@ -1578,9 +1575,9 @@ function calculateExtractedValues() {
     ev.saftNet = docs.saft.totals.net || (VDCSystem.demoMode ? 2409.95 : 0);
     
     // Valores Extratos
-    ev.ganhosBrutos = docs.statements.totals.ganhosBrutos || (VDCSystem.demoMode ? 3202.54 : 0);
+    ev.rendimentosBrutos = docs.statements.totals.rendimentosBrutos || (VDCSystem.demoMode ? 3202.54 : 0);
     ev.comissaoApp = docs.statements.totals.comissaoApp || (VDCSystem.demoMode ? -792.59 : 0);
-    ev.ganhosLiquidos = docs.statements.totals.ganhosLiquidos || (VDCSystem.demoMode ? 2409.95 : 0);
+    ev.rendimentosLiquidos = docs.statements.totals.rendimentosLiquidos || (VDCSystem.demoMode ? 2409.95 : 0);
     ev.campanhas = docs.statements.totals.campanhas || (VDCSystem.demoMode ? 20.00 : 0);
     ev.gorjetas = docs.statements.totals.gorjetas || (VDCSystem.demoMode ? 9.00 : 0);
     ev.cancelamentos = docs.statements.totals.cancelamentos || (VDCSystem.demoMode ? 15.60 : 0);
@@ -1604,7 +1601,7 @@ function calculateExtractedValues() {
     }
     
     // DAC7
-    ev.dac7Revenue = docs.dac7.totals.annualRevenue || ev.ganhosBrutos;
+    ev.dac7Revenue = docs.dac7.totals.annualRevenue || ev.rendimentosBrutos;
     ev.dac7Period = docs.dac7.totals.period || (VDCSystem.demoMode ? 'Set-Dez 2024' : `${VDCSystem.selectedYear}-01 a ${VDCSystem.selectedYear}-12`);
 }
 
@@ -1612,7 +1609,7 @@ function performForensicCrossings() {
     const ev = VDCSystem.analysis.extractedValues;
     const crossings = VDCSystem.analysis.crossings;
     
-    crossings.deltaA = Math.abs(ev.saftGross - ev.ganhosBrutos);
+    crossings.deltaA = Math.abs(ev.saftGross - ev.rendimentosBrutos);
     crossings.deltaB = Math.abs(Math.abs(ev.comissaoApp) - ev.faturaPlataforma);
     crossings.omission = Math.max(crossings.deltaA, crossings.deltaB);
     crossings.diferencialAlerta = ev.diferencialCusto > 100;
@@ -1624,7 +1621,7 @@ function performForensicCrossings() {
     }
     
     if (ev.diferencialCusto > 0) {
-        crossings.fraudIndicators.push('Saída de caixa não documentada detectada (NIST SP 800-86)');
+        crossings.fraudIndicators.push('Saída de caixa não documentada detetada (NIST SP 800-86)');
     }
     
     if (crossings.deltaA > ev.saftGross * 0.05) {
@@ -1726,9 +1723,9 @@ function updateKPIResults() {
     const proj = VDCSystem.analysis.projection;
     
     const kpis = {
-        'kpiGanhos': ev.ganhosBrutos,
+        'kpiGanhos': ev.rendimentosBrutos,
         'kpiComm': ev.comissaoApp,
-        'kpiNet': ev.ganhosLiquidos,
+        'kpiNet': ev.rendimentosLiquidos,
         'kpiInvoice': ev.faturaPlataforma,
         'valCamp': ev.campanhas,
         'valTips': ev.gorjetas,
@@ -1745,7 +1742,7 @@ function updateKPIResults() {
     
     const results = {
         'grossResult': ev.saftGross,
-        'transferResult': ev.ganhosLiquidos,
+        'transferResult': ev.rendimentosLiquidos,
         'differenceResult': VDCSystem.analysis.crossings.deltaB,
         'marketResult': proj.marketProjection.toFixed(2) + 'M€'
     };
@@ -1772,7 +1769,7 @@ function updateKPIResults() {
 
 function updateProgressBars() {
     const ev = VDCSystem.analysis.extractedValues;
-    const maxValue = Math.max(ev.saftGross, ev.ganhosBrutos, Math.abs(ev.comissaoApp));
+    const maxValue = Math.max(ev.saftGross, ev.rendimentosBrutos, Math.abs(ev.comissaoApp));
     const differenceBar = document.getElementById('differenceBar');
     
     if (differenceBar && maxValue > 0) {
@@ -2060,14 +2057,14 @@ function renderDashboardChart() {
     }
 }
 
-// 15. FUNÇÕES DE EXPORTAÇÃO ISO/NIST V10.5 (PDF CORRIGIDO)
+// 15. FUNÇÕES DE EXPORTAÇÃO ISO/NIST V10.6 (PDF CORRIGIDO)
 async function exportJSON() {
     try {
         logAudit('💾 PREPARANDO EVIDÊNCIA DIGITAL ISO/NIST (JSON)...', 'info');
         
         // ESTRUTURA COMPLETA DA EVIDÊNCIA FORENSE ISO/NIST
         const evidenceData = {
-            sistema: "VDC Forensic System v10.5 - ISO/NIST Compliance Edition - Final Legal Weapon",
+            sistema: "VDC Forensic System v10.6 - ISO/NIST Compliance Edition - Instrumento de Prova Legal",
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
@@ -2192,7 +2189,7 @@ function generateQuesitosEstrategicos() {
     
     VDCSystem.analysis.quesitosEstrategicos = [
         `1. Queira a Plataforma explicar a discrepância de ${crossings.deltaB.toFixed(2)}€ entre o fluxo financeiro BTOR (Bancário) e o reportado no SAF-T, à luz do Art. 2º do CIVA?`,
-        `2. Onde se encontra evidenciado o pagamento da Taxa de Regulação (5%) devida à AMT sobre a comissão de gestão no valor de ${ev.taxaRegulacao.toFixed(2)}€?`,
+        `2. Onde se encontra comprovado o pagamento da Taxa de Regulação (5%) devida à AMT sobre a comissão de gestão no valor de ${ev.taxaRegulacao.toFixed(2)}€?`,
         `3. Pode a plataforma demonstrar a integridade do registo .CSV face à norma ISO/IEC 27037, considerando a ausência de hash na origem?`,
         `4. Como justifica a plataforma a diferença de ${ev.diferencialCusto.toFixed(2)}€ entre a comissão retida (${Math.abs(ev.comissaoApp).toFixed(2)}€) e a fatura emitida (${ev.faturaPlataforma.toFixed(2)}€)?`,
         `5. Em que documento está discriminado o IVA de 23% sobre o diferencial de ${ev.diferencialCusto.toFixed(2)}€, no montante de ${ev.ivaAutoliquidacao.toFixed(2)}€?`,
@@ -2212,32 +2209,33 @@ async function exportPDF() {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-        const totalPages = 7; // +1 página para quesitos estratégicos
+        const totalPages = 7;
+        const maxWidth = 175;
         
-        // ========== PÁGINA 1: CABEÇALHO ISO/NIST V10.5 ==========
+        // ========== PÁGINA 1: CABEÇALHO ISO/NIST V10.6 ==========
         doc.setLineWidth(1);
         doc.rect(10, 10, pageWidth - 20, 28);
         doc.setLineWidth(0.5);
         doc.rect(12, 12, pageWidth - 24, 24);
         
-        // CABEÇALHO
+        // CABEÇALHO - TÍTULO À ESQUERDA
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
-        doc.text("VDC FORENSIC SYSTEM v10.5", 20, 22);
+        doc.text("VDC FORENSIC SYSTEM v10.6", 20, 22);
         
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        doc.text("ISO/NIST Compliance Edition | Análise de Layering & Evasão | Final Legal Weapon", 20, 29);
+        doc.text("ISO/NIST Compliance Edition | Análise de Layering & Evasão | Instrumento de Prova Legal", 20, 29);
         
         // Protocolo de Integridade DENTRO da caixa
         doc.setFontSize(8);
         doc.text("Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | AMT/IMT Compliance", 20, 35);
         
-        // INFORMAÇÃO DA SESSÃO
+        // INFORMAÇÃO DA SESSÃO - CANTO SUPERIOR DIREITO
         const dataAtual = new Date().toLocaleDateString('pt-PT');
         doc.setFontSize(9);
-        doc.text(`Sessão: ${VDCSystem.sessionId}`, pageWidth - 20, 30, { align: "right" });
-        doc.text(`Data: ${dataAtual}`, pageWidth - 20, 35, { align: "right" });
+        doc.text(`Sessão: ${VDCSystem.sessionId}`, 150, 20, { align: "right" });
+        doc.text(`Data: ${dataAtual}`, 150, 25, { align: "right" });
         
         let posY = 55;
         
@@ -2275,7 +2273,8 @@ async function exportPDF() {
         // 1. IDENTIFICAÇÃO
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("1. PARECER TÉCNICO-FORENSE FUNDAMENTADO", 15, posY);
+        const linha1 = doc.splitTextToSize("1. PARECER TÉCNICO-FORENSE FUNDAMENTADO", maxWidth);
+        doc.text(linha1, 15, posY);
         posY += 10;
         
         doc.setFontSize(10);
@@ -2298,7 +2297,8 @@ async function exportPDF() {
         // 2. VALORES EXTRAÍDOS
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("2. VALORES EXTRAÍDOS (DOCUMENTOS OFICIAIS)", 15, posY);
+        const linha2 = doc.splitTextToSize("2. VALORES EXTRAÍDOS (DOCUMENTOS OFICIAIS)", maxWidth);
+        doc.text(linha2, 15, posY);
         posY += 10;
         
         const formatter = new Intl.NumberFormat('pt-PT', {
@@ -2309,9 +2309,9 @@ async function exportPDF() {
         const ev = VDCSystem.analysis.extractedValues;
         
         const valores = [
-            ["Ganhos Brutos (Extrato):", formatter.format(ev.ganhosBrutos)],
+            ["Rendimentos Brutos (Extrato):", formatter.format(ev.rendimentosBrutos)],
             ["Comissão Retida:", formatter.format(ev.comissaoApp)],
-            ["Ganhos Líquidos:", formatter.format(ev.ganhosLiquidos)],
+            ["Rendimentos Líquidos:", formatter.format(ev.rendimentosLiquidos)],
             ["Fatura Emitida:", formatter.format(ev.faturaPlataforma)],
             ["IVA 6% (SAF-T):", formatter.format(ev.saftIVA6)],
             ["IVA 23% Devido:", formatter.format(ev.ivaAutoliquidacao)],
@@ -2326,10 +2326,11 @@ async function exportPDF() {
         
         posY += 5;
         
-        // 3. CÁLCULO DE INCONGRUÊNCIA FORENSE (COM VALOR 239,00€ EXPLÍCITO)
+        // 3. CÁLCULO DE INCONGRUÊNCIA FORENSE
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("3. ANÁLISE DE DISCREPÂNCIAS FISCAIS (BTOR vs. BRF)", 15, posY);
+        const linha3 = doc.splitTextToSize("3. ANÁLISE DE DISCREPÂNCIAS FISCAIS (BTOR vs. BRF)", maxWidth);
+        doc.text(linha3, 15, posY);
         posY += 10;
         
         const diferencial = ev.diferencialCusto;
@@ -2356,10 +2357,10 @@ async function exportPDF() {
         });
         
         // RODAPÉ PÁGINA 1 COM COORDENADAS ABSOLUTAS
-        const footerY1 = pageHeight - 15;
+        const footerY1 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText1 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86";
+        const footerText1 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86";
         const footerLines1 = doc.splitTextToSize(footerText1, pageWidth - 30);
         footerLines1.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY1 + (index * 3), { align: "center" });
@@ -2368,6 +2369,9 @@ async function exportPDF() {
         
         // ========== PÁGINA 2: ANÁLISE FORENSE ISO/NIST ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 20;
         
         doc.setFontSize(16);
@@ -2376,7 +2380,8 @@ async function exportPDF() {
         posY += 15;
         
         doc.setFontSize(11);
-        doc.text("PARECER TÉCNICO-PERICIAL FORENSE (ISO/IEC 27037)", 15, posY);
+        const linhaParecer = doc.splitTextToSize("PARECER TÉCNICO-PERICIAL FORENSE (ISO/IEC 27037)", maxWidth);
+        doc.text(linhaParecer, 15, posY);
         posY += 10;
         
         doc.setFontSize(10);
@@ -2412,7 +2417,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
 • ISO/IEC 27037:2012 - Preservação de Evidência Digital
 • NIST SP 800-86 - Guia para Análise Forense de Dados
 • Regulamento (UE) 2016/679 - RGPD - Governança de Dados
-• Código do IRC, Art. 87º: Obrigação de contabilização integral
+• Código do IRC, Art. 87º: Obrigação de tratamento contabilístico integral
 • CIVA, Art. 29º: Falta de emissão de fatura-recibo pelo valor total
 • RGIT, Art. 103º: Crime de Fraude Fiscal por omissão
 • Código Penal, Art. 217º: Abuso de Confiança
@@ -2421,14 +2426,17 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
 • Decreto-Lei 83/2017: Taxa de Regulação AMT/IMT (5%)
 • Protocolo FBI/Interpol: Procedimentos de Asset Forfeiture`;
         
-        const splitParecer = doc.splitTextToSize(parecerTexto, 180);
+        const splitParecer = doc.splitTextToSize(parecerTexto, maxWidth);
         
         const lineHeight = 6;
         
         splitParecer.forEach(line => {
-            if (posY + lineHeight > pageHeight - 30) {
+            if (posY + lineHeight > pageHeight - 40) {
                 doc.addPage();
                 posY = 20;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(40, 45, 60);
             }
             
             doc.text(line, 15, posY);
@@ -2436,18 +2444,21 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         });
         
         // RODAPÉ PÁGINA 2 COM COORDENADAS ABSOLUTAS
-        const footerY2 = pageHeight - 15;
+        const footerY2 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText2 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86";
+        const footerText2 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86";
         const footerLines2 = doc.splitTextToSize(footerText2, pageWidth - 30);
         footerLines2.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY2 + (index * 3), { align: "center" });
         });
         doc.text(`Página 2 de ${totalPages}`, pageWidth - 15, footerY2, { align: "right" });
         
-        // ========== PÁGINA 3: CADEIA DE CUSTÓDIA (ART. 158-A a 158-F) ==========
+        // ========== PÁGINA 3: CADEIA DE CUSTÓDIA ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 20;
         
         doc.setFontSize(16);
@@ -2461,7 +2472,8 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        doc.text("Registo de todos os ficheiros carregados com respetivo Hash SHA-256:", 15, posY);
+        const linhaCadeia = doc.splitTextToSize("Registo de todos os ficheiros carregados com respetivo Hash SHA-256:", maxWidth);
+        doc.text(linhaCadeia, 15, posY);
         posY += 10;
         
         // Tabela de Cadeia de Custódia
@@ -2492,9 +2504,11 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
             const docs = VDCSystem.documents[type];
             if (docs && docs.files && docs.files.length > 0) {
                 docs.files.forEach((file, index) => {
-                    if (posY > pageHeight - 30) {
+                    if (posY > pageHeight - 40) {
                         doc.addPage();
                         posY = 30;
+                        doc.setFontSize(8);
+                        doc.setFont("helvetica", "normal");
                     }
                     
                     const hash = docs.hashes[file.name] || 'N/A';
@@ -2537,32 +2551,38 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         ];
         
         conformidade.forEach(item => {
-            if (posY > pageHeight - 30) {
+            if (posY > pageHeight - 40) {
                 doc.addPage();
                 posY = 30;
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "normal");
             }
             doc.text(item, 20, posY);
             posY += 6;
         });
         
-        // RODAPÉ PÁGINA 3 COM COORDENADAS ABSOLUTAS
-        const footerY3 = pageHeight - 15;
+        // RODAPÉ PÁGINA 3
+        const footerY3 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText3 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Cadeia de Custódia Digital | Protocolo ISO/IEC 27037";
+        const footerText3 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Cadeia de Custódia Digital | Protocolo ISO/IEC 27037";
         const footerLines3 = doc.splitTextToSize(footerText3, pageWidth - 30);
         footerLines3.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY3 + (index * 3), { align: "center" });
         });
         doc.text(`Página 3 de ${totalPages}`, pageWidth - 15, footerY3, { align: "right" });
         
-        // ========== PÁGINA 4: ANEXO LEGAL E METODOLÓGICO ==========
+        // ========== PÁGINA 4: ANEXO LEGAL ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 20;
         
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("ANEXO IV: ENQUADRAMENTO LEGAL E METODOLÓGICO", 15, posY);
+        const linhaLegal = doc.splitTextToSize("ANEXO IV: ENQUADRAMENTO LEGAL E METODOLÓGICO", maxWidth);
+        doc.text(linhaLegal, 15, posY);
         posY += 15;
         
         // ENQUADRAMENTO LEGAL
@@ -2590,12 +2610,15 @@ ANÁLISE DE DISCREPÂNCIAS FISCAIS (BTOR vs BRF):
 SELF-BILLING E CLEARING ACCOUNT:
 Mecanismos utilizados por plataformas digitais que, quando não transparentes, podem ocultar fluxos financeiros e criar camadas (layering) de complexidade artificial.`;
 
-        const splitLegal = doc.splitTextToSize(enquadramentoLegal, 180);
+        const splitLegal = doc.splitTextToSize(enquadramentoLegal, maxWidth);
         
         splitLegal.forEach(line => {
-            if (posY + lineHeight > pageHeight - 50) {
+            if (posY + lineHeight > pageHeight - 60) {
                 doc.addPage();
                 posY = 20;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(40, 45, 60);
             }
             
             doc.text(line, 15, posY);
@@ -2633,23 +2656,26 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
 2. Avaliação Técnica: Quantificação do impacto fiscal e regulatório
 3. Proposta: Medidas corretivas e regularização fiscal`;
         
-        const splitBTOR = doc.splitTextToSize(metodologiaBTOR, 180);
+        const splitBTOR = doc.splitTextToSize(metodologiaBTOR, maxWidth);
         
         splitBTOR.forEach(line => {
-            if (posY + lineHeight > pageHeight - 50) {
+            if (posY + lineHeight > pageHeight - 60) {
                 doc.addPage();
                 posY = 20;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(40, 45, 60);
             }
             
             doc.text(line, 15, posY);
             posY += lineHeight;
         });
         
-        // RODAPÉ PÁGINA 4 COM COORDENADAS ABSOLUTAS
-        const footerY4 = pageHeight - 15;
+        // RODAPÉ PÁGINA 4
+        const footerY4 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText4 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Anexo Legal e Metodológico | Protocolo ISO/IEC 27037";
+        const footerText4 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Anexo Legal e Metodológico | Protocolo ISO/IEC 27037";
         const footerLines4 = doc.splitTextToSize(footerText4, pageWidth - 30);
         footerLines4.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY4 + (index * 3), { align: "center" });
@@ -2658,16 +2684,21 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         
         // ========== PÁGINA 5: QUANTUM BENEFÍCIO ILÍCITO ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 20;
         
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("ANEXO V: QUANTUM DE BENEFÍCIO ILÍCITO", 15, posY);
+        const linhaQuantum = doc.splitTextToSize("ANEXO V: QUANTUM DE BENEFÍCIO ILÍCITO", maxWidth);
+        doc.text(linhaQuantum, 15, posY);
         posY += 15;
         
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("PROJEÇÃO DE MERCADO / QUANTUM DE BENEFÍCIO ILÍCITO", 15, posY);
+        const linhaProjecao = doc.splitTextToSize("PROJEÇÃO DE MERCADO / QUANTUM DE BENEFÍCIO ILÍCITO", maxWidth);
+        doc.text(linhaProjecao, 15, posY);
         posY += 10;
         
         const proj = VDCSystem.analysis.projection;
@@ -2726,10 +2757,10 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         
 6. Este relatório constitui prova digital válida em tribunal, com cadeia de custódia auditável e hash SHA-256 de integridade.`;
         
-        const splitConclusao = doc.splitTextToSize(conclusao, 180);
+        const splitConclusao = doc.splitTextToSize(conclusao, maxWidth);
         
         splitConclusao.forEach(line => {
-            if (posY + lineHeight > pageHeight - 30) {
+            if (posY + lineHeight > pageHeight - 40) {
                 return;
             }
             
@@ -2737,29 +2768,34 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
             posY += lineHeight;
         });
         
-        // RODAPÉ PÁGINA 5 COM COORDENADAS ABSOLUTAS
-        const footerY5 = pageHeight - 15;
+        // RODAPÉ PÁGINA 5
+        const footerY5 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText5 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | Master Hash SHA-256";
+        const footerText5 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | Master Hash SHA-256";
         const footerLines5 = doc.splitTextToSize(footerText5, pageWidth - 30);
         footerLines5.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY5 + (index * 3), { align: "center" });
         });
         doc.text(`Página 5 de ${totalPages}`, pageWidth - 15, footerY5, { align: "right" });
         
-        // ========== PÁGINA 6: QUESITOS ESTRATÉGICOS (NOVA) ==========
+        // ========== PÁGINA 6: QUESITOS ESTRATÉGICOS ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 20;
         
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("ANEXO VI: QUESITOS TÉCNICOS PARA INQUIRIÇÃO", 15, posY);
+        const linhaQuesitos = doc.splitTextToSize("ANEXO VI: QUESITOS TÉCNICOS PARA INQUIRIÇÃO", maxWidth);
+        doc.text(linhaQuesitos, 15, posY);
         posY += 15;
         
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("QUESITOS ESTRATÉGICOS PARA INQUIRIÇÃO DA PLATAFORMA", 15, posY);
+        const linhaQuesitos2 = doc.splitTextToSize("QUESITOS ESTRATÉGICOS PARA INQUIRIÇÃO DA PLATAFORMA", maxWidth);
+        doc.text(linhaQuesitos2, 15, posY);
         posY += 10;
         
         doc.setFontSize(10);
@@ -2771,9 +2807,12 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         }
         
         VDCSystem.analysis.quesitosEstrategicos.forEach((quesito, index) => {
-            if (posY + lineHeight > pageHeight - 30) {
+            if (posY + lineHeight > pageHeight - 40) {
                 doc.addPage();
                 posY = 20;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(40, 45, 60);
             }
             
             // Número do quesito em negrito
@@ -2804,19 +2843,19 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         posY += 8;
         
         doc.setFont("helvetica", "normal");
-        const notaFinal = `Estes quesitos foram gerados automaticamente pelo VDC Forensic System v10.5 com base nas evidências coletadas e análises realizadas. Constituem pontos críticos para inquirição técnica da plataforma, visando esclarecer as discrepâncias identificadas e garantir conformidade legal e regulatória.`;
+        const notaFinal = `Estes quesitos foram gerados automaticamente pelo VDC Forensic System v10.6 com base nas evidências coletadas e análises realizadas. Constituem pontos críticos para inquirição técnica da plataforma, visando esclarecer as discrepâncias identificadas e garantir conformidade legal e regulatória.`;
         
-        const splitNota = doc.splitTextToSize(notaFinal, 180);
+        const splitNota = doc.splitTextToSize(notaFinal, maxWidth);
         splitNota.forEach(line => {
             doc.text(line, 15, posY);
             posY += lineHeight;
         });
         
-        // RODAPÉ PÁGINA 6 COM COORDENADAS ABSOLUTAS
-        const footerY6 = pageHeight - 15;
+        // RODAPÉ PÁGINA 6
+        const footerY6 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText6 = "VDC Forensic System v10.5 - ISO/NIST Compliance Edition | Documento Final - Completo e Auditável";
+        const footerText6 = "VDC Forensic System v10.6 - ISO/NIST Compliance Edition | Documento Final - Completo e Auditável";
         const footerLines6 = doc.splitTextToSize(footerText6, pageWidth - 30);
         footerLines6.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY6 + (index * 3), { align: "center" });
@@ -2825,11 +2864,14 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         
         // ========== PÁGINA 7: ASSINATURA DIGITAL ==========
         doc.addPage();
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 45, 60);
         posY = 50;
         
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text("ASSINATURA DIGITAL E CERTIFICAÇÃO", pageWidth / 2, posY, { align: "center" });
+        doc.text("ASSINATURA DIGITAL E CERTIFICAÇÃO", 20, posY);
         posY += 20;
         
         doc.setFontSize(10);
@@ -2837,7 +2879,7 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         
         const masterHash = document.getElementById('masterHashValue')?.textContent || "NÃO GERADA";
         
-        const assinaturaTexto = `Este relatório foi gerado automaticamente pelo VDC Forensic System v10.5 - Final Legal Weapon e encontra-se protegido por criptografia SHA-256.
+        const assinaturaTexto = `Este relatório foi gerado automaticamente pelo VDC Forensic System v10.6 - Instrumento de Prova Legal e encontra-se protegido por criptografia SHA-256.
 
 MASTER HASH (SHA-256):
 ${masterHash}
@@ -2862,10 +2904,10 @@ ANÁLISES REALIZADAS:
 • Identificação de Violações: Desvio, Risco e Omissão de Proveitos
 • Processo de Triagem → Avaliação Técnica → Proposta`;
 
-        const splitAssinatura = doc.splitTextToSize(assinaturaTexto, 180);
+        const splitAssinatura = doc.splitTextToSize(assinaturaTexto, maxWidth);
         
         splitAssinatura.forEach(line => {
-            doc.text(line, pageWidth / 2, posY, { align: "center" });
+            doc.text(line, 20, posY);
             posY += 7;
         });
         
@@ -2873,14 +2915,14 @@ ANÁLISES REALIZADAS:
         
         // Linha para assinatura
         doc.setLineWidth(0.5);
-        doc.line(pageWidth / 2 - 40, posY, pageWidth / 2 + 40, posY);
-        doc.text("Perito Forense Digital Autorizado", pageWidth / 2, posY + 5, { align: "center" });
+        doc.line(20, posY, 100, posY);
+        doc.text("Perito Forense Digital Autorizado", 20, posY + 5);
         
         // RODAPÉ FINAL
-        const footerY7 = pageHeight - 15;
+        const footerY7 = pageHeight - 20;
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v10.5 - ISO/NIST Compliance Edition - Final Legal Weapon", 15, footerY7);
+        doc.text("VDC Forensic System v10.6 - ISO/NIST Compliance Edition - Instrumento de Prova Legal", 15, footerY7);
         doc.text(`Página 7 de ${totalPages}`, pageWidth - 15, footerY7, { align: "right" });
         doc.text("Documento Final - Completo e Auditável | Todos os direitos reservados", pageWidth / 2, footerY7 + 5, { align: "center" });
         
@@ -3124,7 +3166,7 @@ function showError(message) {
     logAudit(`ERRO: ${message}`, 'error');
     
     if (message.includes('crítico') || message.includes('Falha')) {
-        alert(`ERRO DO SISTEMA VDC v10.5 ISO/NIST:\n${message}\n\nVerifique a consola de auditoria para detalhes.`);
+        alert(`ERRO DO SISTEMA VDC v10.6 ISO/NIST:\n${message}\n\nVerifique a consola de auditoria para detalhes.`);
     }
 }
 
@@ -3148,7 +3190,7 @@ window.activateDemoMode = activateDemoMode;
 window.showChainOfCustody = showChainOfCustody;
 
 // ============================================
-// FIM DO SCRIPT VDC v10.5 - ISO/NIST COMPLIANCE EDITION
+// FIM DO SCRIPT VDC v10.6 - ISO/NIST COMPLIANCE EDITION
 // TODAS AS CHAVES {} FECHADAS CORRETAMENTE
-// FINAL LEGAL WEAPON
+// INSTRUMENTO DE PROVA LEGAL
 // ============================================
