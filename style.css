@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.5
-   ISO/NIST COMPLIANCE EDITION - FINAL LEGAL WEAPON
+   VDC SISTEMA DE PERITAGEM FORENSE v10.6
+   ISO/NIST COMPLIANCE EDITION - INSTRUMENTO DE PROVA LEGAL
    ============================================ */
 
-/* 0. SPLASH SCREEN V10.5 */
+/* 0. SPLASH SCREEN V10.6 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -1038,7 +1038,7 @@ body {
     margin-bottom: var(--spacing-md);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* ESPAÇAMENTO ENTRE ALERTAS CORRIGIDO */
+    gap: 1.5rem;
 }
 
 .analysis-results h3 {
@@ -1108,7 +1108,7 @@ body {
     transition: width 1s ease;
 }
 
-/* 17. ALERTAS ISO/NIST - COM MAIS ESPAÇAMENTO */
+/* 17. ALERTAS ISO/NIST */
 .omission-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
     border: 1px solid var(--warn-primary);
@@ -1581,5 +1581,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.5 - ISO/NIST COMPLIANCE EDITION - FINAL LEGAL WEAPON
+   FIM DO CSS VDC v10.6 - ISO/NIST COMPLIANCE EDITION
    ============================================ */
