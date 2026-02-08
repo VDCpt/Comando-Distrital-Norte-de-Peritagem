@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.6
-   ISO/NIST COMPLIANCE EDITION - INSTRUMENTO DE PROVA LEGAL
+   VDC SISTEMA DE PERITAGEM FORENSE v10.7
+   ISO/NIST COMPLIANCE EDITION - BIG DATA FORENSE
    ============================================ */
 
-/* 0. SPLASH SCREEN V10.6 */
+/* 0. SPLASH SCREEN V10.7 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -486,14 +486,16 @@ body {
     font-size: 0.85rem;
     width: 100%;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .year-select:focus, .platform-select:focus {
     outline: none;
     border-color: var(--iso-blue);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
 }
 
-/* 9. UPLOAD DE FICHEIROS ISO/NIST */
+/* 9. UPLOAD DE FICHEIROS ISO/NIST - BIG DATA ILIMITADO */
 .upload-section {
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
@@ -555,12 +557,27 @@ body {
     border-color: var(--accent-secondary);
 }
 
+.upload-btn.processing {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    color: white;
+    border-color: var(--iso-blue);
+}
+
+.upload-btn.processing i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .file-list {
     background: rgba(20, 30, 48, 0.5);
     border-radius: var(--border-radius-sm);
     padding: 0.6rem;
     margin-top: 0.4rem;
-    max-height: 180px;
+    max-height: 200px;
     overflow-y: auto;
     display: none;
     border: 1px solid var(--border-color);
@@ -587,6 +604,13 @@ body {
     color: var(--nist-green);
     font-size: 0.85rem;
     flex-shrink: 0;
+}
+
+.file-item i.fa-spinner {
+    color: var(--iso-blue);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    animation: spin 1s linear infinite;
 }
 
 .file-name {
@@ -1407,7 +1431,53 @@ body {
     transition: width 0.3s ease;
 }
 
-/* 21. RESPONSIVIDADE ISO/NIST */
+/* 21. TOAST NOTIFICATION */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards;
+    max-width: 350px;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+}
+
+.toast-notification i {
+    font-size: 1.2rem;
+}
+
+.toast-notification p {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.toast-notification.error {
+    background: linear-gradient(90deg, var(--warn-primary) 0%, #e84118 100%);
+}
+
+.toast-notification.warning {
+    background: linear-gradient(90deg, var(--warn-secondary) 0%, #ff9f1a 100%);
+}
+
+/* 22. RESPONSIVIDADE ISO/NIST */
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
@@ -1536,7 +1606,7 @@ body {
     }
 }
 
-/* 22. ANIMAÇÕES ADICIONAIS ISO/NIST */
+/* 23. ANIMAÇÕES ADICIONAIS ISO/NIST */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1546,7 +1616,7 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* 23. ESTADOS DE FOCO E HOVER ISO/NIST */
+/* 24. ESTADOS DE FOCO E HOVER ISO/NIST */
 input:focus, select:focus, button:focus {
     outline: 2px solid var(--iso-blue);
     outline-offset: 2px;
@@ -1556,7 +1626,7 @@ button:active {
     transform: translateY(1px);
 }
 
-/* 24. UTILITÁRIOS ISO/NIST */
+/* 25. UTILITÁRIOS ISO/NIST */
 .hidden {
     display: none !important;
 }
@@ -1581,5 +1651,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.6 - ISO/NIST COMPLIANCE EDITION
+   FIM DO CSS VDC v10.7 - BIG DATA FORENSE EDITION
    ============================================ */
