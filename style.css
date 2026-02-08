@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.7
-   ISO/NIST COMPLIANCE EDITION - BIG DATA FORENSE
+   VDC SISTEMA DE PERITAGEM FORENSE v10.8
+   FINAL STABLE RELEASE - BIG DATA FORENSE
    ============================================ */
 
-/* 0. SPLASH SCREEN V10.7 */
+/* 0. SPLASH SCREEN V10.8 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -393,13 +393,20 @@ body {
     background: rgba(232, 65, 24, 0.05);
 }
 
+.form-group input.readonly {
+    background: rgba(30, 42, 68, 0.6);
+    border-color: var(--text-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
 .btn-group {
     display: flex;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-sm);
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary, .btn-secondary, .btn-edit {
     flex: 1;
     padding: 0.6rem;
     border-radius: var(--border-radius-sm);
@@ -434,6 +441,16 @@ body {
 .btn-secondary:hover {
     background: rgba(0, 168, 255, 0.1);
     border-color: var(--iso-blue);
+}
+
+.btn-edit {
+    background: linear-gradient(90deg, var(--warn-secondary) 0%, #ffaf40 100%);
+    color: #0a0f1d;
+}
+
+.btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 159, 26, 0.3);
 }
 
 .client-status {
@@ -1651,5 +1668,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.7 - BIG DATA FORENSE EDITION
+   FIM DO CSS VDC v10.8 - FINAL STABLE RELEASE
    ============================================ */
