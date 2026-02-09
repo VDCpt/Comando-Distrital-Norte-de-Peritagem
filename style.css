@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v10.8
+   VDC SISTEMA DE PERITAGEM FORENSE v10.9
    FINAL STABLE RELEASE - BIG DATA FORENSE
    ============================================ */
 
-/* 0. SPLASH SCREEN V10.8 */
+/* 0. SPLASH SCREEN V10.9 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -170,13 +170,13 @@ body {
     font-size: 14px;
 }
 
-/* 3. LAYOUT PRINCIPAL */
+/* 3. LAYOUT PRINCIPAL - CORREÇÃO 3: CENTRALIZAÇÃO DO DASHBOARD */
 .main-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: 1920px;
-    margin: 0 auto;
+    max-width: 1400px; /* CORREÇÃO 3: Centralização */
+    margin: 0 auto; /* CORREÇÃO 3: Centralização */
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -1668,5 +1668,5 @@ button:active {
 .mb-3 { margin-bottom: 1rem; }
 
 /* ============================================
-   FIM DO CSS VDC v10.8 - FINAL STABLE RELEASE
+   FIM DO CSS VDC v10.9 - FINAL STABLE RELEASE
    ============================================ */
