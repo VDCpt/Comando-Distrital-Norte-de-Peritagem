@@ -335,7 +335,6 @@ function setupYearSelector() {
     selYear.addEventListener('change', (e) => {
         VDCSystem.selectedYear = parseInt(e.target.value);
         logAudit(`Ano fiscal alterado para: ${VDCSystem.selectedYear} (ISO/IEC 27037)`, 'info');
-        // NÃO CHAMA resetDashboard() aqui - apenas log
     });
 }
 
@@ -379,7 +378,6 @@ function setupPlatformSelector() {
             taxaRegulacao: 0, riscoRegulatorio: 0
         };
         
-        // NÃO CHAMA resetDashboard() completo - apenas atualiza display
         updateDashboard();
         updateKPIResults();
     });
@@ -3242,6 +3240,15 @@ window.resetDashboard = resetDashboard;
 window.performForensicAnalysis = performForensicAnalysis;
 window.activateDemoMode = activateDemoMode;
 window.showChainOfCustody = showChainOfCustody;
+
+// Inicialização segura do sistema
+window.addEventListener('load', () => {
+    if (typeof initializeSystem === 'function') {
+        initializeSystem();
+    } else {
+        console.error('Função initializeSystem não encontrada');
+    }
+});
 
 // ============================================
 // FIM DO SCRIPT VDC v10.9 - FINAL STABLE RELEASE
