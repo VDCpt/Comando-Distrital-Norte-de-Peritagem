@@ -1,11 +1,11 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v10.8
+// VDC SISTEMA DE PERITAGEM FORENSE v10.9
 // FINAL STABLE RELEASE - BIG DATA FORENSE
 // ============================================
 
-// 1. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V10.8
+// 1. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V10.9
 const VDCSystem = {
-    version: 'v10.8-FS',
+    version: 'v10.9-FS',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -143,14 +143,14 @@ const VDCSystem = {
     }
 };
 
-// 2. INICIALIZAÇÃO DO SISTEMA ISO/NIST V10.8 - CORRIGIDA
+// 2. INICIALIZAÇÃO DO SISTEMA ISO/NIST V10.9 - CORRIGIDA
 document.addEventListener('DOMContentLoaded', () => {
     initializeSystem();
 });
 
 function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v10.8 - Final Stable Release...');
+        console.log('🔧 Inicializando VDC Forensic System v10.9 - Final Stable Release...');
         
         // Configurar evento do botão de splash screen
         const startBtn = document.getElementById('startSessionBtn');
@@ -161,7 +161,7 @@ function initializeSystem() {
         // Inicializar relógio e data mesmo na splash screen
         startClockAndDate();
         
-        logAudit('✅ Sistema VDC v10.8 pronto para iniciar sessão de peritagem Big Data', 'success');
+        logAudit('✅ Sistema VDC v10.9 pronto para iniciar sessão de peritagem Big Data', 'success');
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
@@ -252,7 +252,7 @@ async function loadForensicSystem() {
             
             setTimeout(() => {
                 showMainInterface();
-                logAudit('✅ Sistema VDC v10.8 - Final Stable Release inicializado', 'success');
+                logAudit('✅ Sistema VDC v10.9 - Final Stable Release inicializado', 'success');
                 logAudit('🔍 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%', 'info');
                 logAudit('⚖️ Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
                 logAudit('📊 Upload Big Data ilimitado ativado', 'info');
@@ -266,7 +266,7 @@ async function loadForensicSystem() {
     }
 }
 
-// 3. CONFIGURAÇÃO DE CONTROLES V10.8 (CORREÇÃO CRÍTICA FIX)
+// 3. CONFIGURAÇÃO DE CONTROLES V10.9 (CORREÇÃO CRÍTICA FIX)
 function setupYearSelector() {
     const selYear = document.getElementById('selYear');
     if (!selYear) return;
@@ -374,7 +374,7 @@ function startClockAndDate() {
     setInterval(updateDateTime, 1000);
 }
 
-// 4. CONFIGURAÇÃO DE EVENTOS V10.8 (CORRIGIDO COM BOTÃO EDITAR)
+// 4. CONFIGURAÇÃO DE EVENTOS V10.9 (CORRIGIDO COM BOTÃO EDITAR)
 function setupEventListeners() {
     // Registro de cliente
     const registerBtn = document.getElementById('registerClientBtn');
@@ -386,7 +386,7 @@ function setupEventListeners() {
     
     if (saveBtn) {
         // Inicialmente é botão "GUARDAR NA SESSÃO"
-        saveBtn.addEventListener('click', toggleClientEditMode);
+        saveBtn.addEventListener('click', saveClientToJSON); // CORREÇÃO 4: Alterado para exportar JSON
     }
     
     // Autocomplete para nome do cliente
@@ -500,7 +500,7 @@ function setupUploadButtons() {
     }
 }
 
-// 5. BIG DATA FORENSE - UPLOAD ILIMITADO (CORREÇÃO DE SEGURANÇA)
+// 5. BIG DATA FORENSE - UPLOAD ILIMITADO (CORREÇÃO 2: CARREGAMENTO APPEND)
 async function handleFileUpload(event, type) {
     if (!event.target.files || event.target.files.length === 0) return;
     
@@ -519,16 +519,20 @@ async function handleFileUpload(event, type) {
     });
     
     try {
-        await processMultipleFiles(type, files);
-        updateFileList(`${type}FileList`, files);
-        updateCounter(type, files.length);
+        // CORREÇÃO 2: Usar .push(...newFiles) para append em vez de substituir
+        await processMultipleFiles(type, files, true); // true = modo append
+        updateFileList(`${type}FileList`, VDCSystem.documents[type].files);
+        
+        // Atualizar contador com total acumulado
+        const totalCount = VDCSystem.documents[type].files.length;
+        updateCounter(type, totalCount);
         
         // Atualizar análise se já houver cliente
         if (VDCSystem.client) {
             updateAnalysisButton();
         }
         
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} carregados (Big Data Ilimitado)`, 'success');
+        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} adicionados (Big Data Append) - Total: ${totalCount}`, 'success');
     } catch (error) {
         logAudit(`❌ Erro no processamento de ${type}: ${error.message}`, 'error');
     } finally {
@@ -550,7 +554,7 @@ async function handleFileUpload(event, type) {
     }
 }
 
-// 6. CADEIA DE CUSTÓDIA ISO/NIST V10.8
+// 6. CADEIA DE CUSTÓDIA ISO/NIST V10.9
 function addToChainOfCustody(file, type) {
     const custodyRecord = {
         id: CryptoJS.SHA256(Date.now() + file.name + type).toString().substring(0, 16),
@@ -593,7 +597,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// 7. MODO DEMO FORENSE ISO/NIST V10.8 (CORRIGIDO)
+// 7. MODO DEMO FORENSE ISO/NIST V10.9 (CORRIGIDO)
 function activateDemoMode() {
     try {
         if (VDCSystem.processing) return;
@@ -784,10 +788,10 @@ function activateDiscrepancyAlert() {
     }
 }
 
-// 8. REGISTRO E GESTÃO DE CLIENTES V10.8 (COM BOTÃO EDITAR)
+// 8. REGISTRO E GESTÃO DE CLIENTES V10.9 (COM BOTÃO EDITAR)
 function loadClientsFromLocal() {
     try {
-        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v10_8') || '[]');
+        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v10_9') || '[]');
         VDCSystem.preRegisteredClients = clients;
         logAudit(`📋 ${clients.length} clientes carregados do armazenamento local (ISO/IEC 27037)`, 'info');
     } catch (error) {
@@ -867,7 +871,8 @@ function registerClient() {
         nif: nif,
         registrationDate: new Date().toISOString(),
         isoCompliance: 'ISO/IEC 27037',
-        session: VDCSystem.sessionId
+        session: VDCSystem.sessionId,
+        platform: VDCSystem.selectedPlatform // CORREÇÃO 4: Adicionado platform
     };
     
     const status = document.getElementById('clientStatus');
@@ -881,58 +886,93 @@ function registerClient() {
     updateAnalysisButton();
 }
 
-function toggleClientEditMode() {
-    const nameInput = document.getElementById('clientName');
-    const nifInput = document.getElementById('clientNIF');
-    const saveBtn = document.getElementById('saveClientBtn');
-    const registerBtn = document.getElementById('registerClientBtn');
-    
-    if (!nameInput || !nifInput || !saveBtn) return;
-    
-    if (!VDCSystem.clientLocked) {
-        // Modo "GUARDAR" - bloquear edição
-        VDCSystem.clientLocked = true;
+// CORREÇÃO 4: Função para guardar cliente em JSON
+async function saveClientToJSON() {
+    try {
+        if (!VDCSystem.client) {
+            showError('Registe um cliente primeiro');
+            return;
+        }
         
-        // Aplicar readonly
-        nameInput.readOnly = true;
-        nifInput.readOnly = true;
-        nameInput.classList.add('readonly');
-        nifInput.classList.add('readonly');
+        // CORREÇÃO 4: Incluir platform no objeto do cliente
+        const clientData = {
+            cliente: {
+                nome: VDCSystem.client.name,
+                nif: VDCSystem.client.nif,
+                platform: VDCSystem.selectedPlatform, // CORREÇÃO 4: Adicionado
+                dataRegisto: new Date().toISOString(),
+                sessao: VDCSystem.sessionId,
+                isoCompliance: 'ISO/IEC 27037'
+            },
+            sistema: {
+                versao: VDCSystem.version,
+                anoFiscal: VDCSystem.selectedYear,
+                plataformaSelecionada: VDCSystem.selectedPlatform,
+                dataExportacao: new Date().toISOString()
+            }
+        };
         
-        // Alterar botão para "EDITAR"
-        saveBtn.innerHTML = '<i class="fas fa-edit"></i> EDITAR';
-        saveBtn.className = 'btn-edit';
+        const dataStr = JSON.stringify(clientData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
         
-        // Desabilitar botão de registo
-        if (registerBtn) registerBtn.disabled = true;
+        // Nome do ficheiro conforme especificado
+        const dataAtual = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const fileName = `VDC_CLIENTE_${VDCSystem.client.nif}_${dataAtual}.json`;
         
-        // Mostrar toast
-        showToast('✅ Dados do Cliente Preservados na Sessão', 'success');
-        logAudit(`💾 Cliente ${VDCSystem.client?.name || 'desconhecido'} guardado na sessão atual (ISO/IEC 27037)`, 'success');
-    } else {
-        // Modo "EDITAR" - desbloquear edição
-        VDCSystem.clientLocked = false;
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'Ficheiro JSON do Cliente',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+                
+                const writable = await handle.createWritable();
+                await writable.write(dataBlob);
+                await writable.close();
+                
+                logAudit('✅ Dados do cliente exportados para JSON', 'success');
+                showToast('✅ Ficheiro JSON do cliente gerado com sucesso', 'success');
+                
+            } catch (fsError) {
+                if (fsError.name !== 'AbortError') {
+                    // Fallback
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                }
+            }
+        } else {
+            // Fallback para browsers antigos
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            
+            logAudit('✅ Dados do cliente exportados para JSON (download automático)', 'success');
+            showToast('✅ Ficheiro JSON do cliente gerado com sucesso', 'success');
+        }
         
-        // Remover readonly
-        nameInput.readOnly = false;
-        nifInput.readOnly = false;
-        nameInput.classList.remove('readonly');
-        nifInput.classList.remove('readonly');
-        
-        // Restaurar botão "GUARDAR"
-        saveBtn.innerHTML = '<i class="fas fa-database"></i> GUARDAR NA SESSÃO';
-        saveBtn.className = 'btn-secondary';
-        
-        // Habilitar botão de registo
-        if (registerBtn) registerBtn.disabled = false;
-        
-        showToast('📝 Modo de Edição Ativado', 'info');
-        logAudit('📝 Modo de edição do cliente ativado', 'info');
+    } catch (error) {
+        console.error('Erro ao exportar JSON do cliente:', error);
+        logAudit(`❌ Erro ao exportar JSON do cliente: ${error.message}`, 'error');
+        showError(`Erro ao exportar JSON: ${error.message}`);
     }
 }
 
-// 9. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS BIG DATA V10.8 (CORREÇÃO DE SEGURANÇA)
-async function processMultipleFiles(type, files) {
+// 9. FUNÇÕES DE PROCESSAMENTO DE FICHEIROS BIG DATA V10.9 (CORREÇÃO 2: MODO APPEND)
+async function processMultipleFiles(type, files, appendMode = true) {
     try {
         logAudit(`📁 Processando ${files.length} ficheiros ${type.toUpperCase()} (Big Data Forense)...`, 'info');
         
@@ -946,7 +986,12 @@ async function processMultipleFiles(type, files) {
         if (!VDCSystem.documents[type].parsedData) VDCSystem.documents[type].parsedData = [];
         if (!VDCSystem.documents[type].hashes) VDCSystem.documents[type].hashes = {};
         
-        VDCSystem.documents[type].files = files;
+        // CORREÇÃO 2: Modo APPEND - adicionar novos ficheiros aos existentes
+        if (appendMode) {
+            VDCSystem.documents[type].files.push(...files);
+        } else {
+            VDCSystem.documents[type].files = files;
+        }
         
         // Processar cada ficheiro individualmente com try/catch
         for (const file of files) {
@@ -1004,7 +1049,7 @@ async function processMultipleFiles(type, files) {
             }
         }
         
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados (Big Data Forense)`, 'success');
+        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados (Big Data Append)`, 'success');
         updateAnalysisButton();
         
     } catch (error) {
@@ -1378,7 +1423,7 @@ function parseBigDataNumber(numberStr) {
     return isNaN(number) ? 0 : Math.abs(number);
 }
 
-// 11. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V10.8 (HARD RESET)
+// 11. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V10.9 (HARD RESET)
 function resetDashboard() {
     try {
         logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO FORENSE BIG DATA', 'info');
@@ -1429,7 +1474,7 @@ function resetDashboard() {
         }
         
         // Limpar localStorage do cliente
-        localStorage.removeItem('vdc_clients_bd_v10_8');
+        localStorage.removeItem('vdc_clients_bd_v10_9');
         VDCSystem.preRegisteredClients = [];
         
         // Resetar valores de exibição
@@ -1604,7 +1649,7 @@ function resetDashboard() {
     }
 }
 
-// 12. FUNÇÕES DE ANÁLISE FORENSE BIG DATA V10.8
+// 12. FUNÇÕES DE ANÁLISE FORENSE BIG DATA V10.9
 async function performForensicAnalysis() {
     try {
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -1632,6 +1677,9 @@ async function performForensicAnalysis() {
         criarDashboardRegulatorio();
         generateMasterHash();
         generateQuesitosEstrategicos();
+        
+        // CORREÇÃO 3: Garantir que updateDashboard() é chamado no final
+        updateDashboard();
         
         // Verificar disparidade para alerta intermitente (> 50%)
         const discrepancia = Math.abs(Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) - 
@@ -1976,6 +2024,8 @@ function updateKPIResults() {
         const elemento = document.getElementById(id);
         if (elemento) {
             elemento.textContent = formatter.format(value);
+            // CORREÇÃO 3: Remover classe hidden se existir
+            elemento.classList.remove('hidden');
         }
     });
     
@@ -1994,6 +2044,8 @@ function updateKPIResults() {
             } else {
                 elemento.textContent = value;
             }
+            // CORREÇÃO 3: Remover classe hidden se existir
+            elemento.classList.remove('hidden');
         }
     });
     
@@ -2089,7 +2141,7 @@ function criarDashboardRegulatorio() {
     }
 }
 
-// 13. ALERTA INTERMITENTE BIG DATA ISO/NIST V10.8 (COM VERIFICAÇÃO)
+// 13. ALERTA INTERMITENTE BIG DATA ISO/NIST V10.9 (COM VERIFICAÇÃO)
 function triggerBigDataAlert(invoiceVal, commissionVal, deltaVal) {
     // CORREÇÃO: Só ativar alerta se houver valores reais
     if ((invoiceVal === 0 && commissionVal === 0 && deltaVal === 0) && !VDCSystem.demoMode) {
@@ -2176,7 +2228,7 @@ function showOmissionAlert() {
     }
 }
 
-// 14. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V10.8
+// 14. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V10.9
 function renderDashboardChart() {
     try {
         const ctx = document.getElementById('forensicChart');
@@ -2311,14 +2363,14 @@ function renderDashboardChart() {
     }
 }
 
-// 15. FUNÇÕES DE EXPORTAÇÃO BIG DATA V10.8 (PDF COM PAGINAÇÃO DINÂMICA)
+// 15. FUNÇÕES DE EXPORTAÇÃO BIG DATA V10.9 (PDF COM PAGINAÇÃO DINÂMICA - CORREÇÃO 5)
 async function exportJSON() {
     try {
         logAudit('💾 PREPARANDO EVIDÊNCIA DIGITAL BIG DATA (JSON)...', 'info');
         
         // ESTRUTURA COMPLETA DA EVIDÊNCIA FORENSE BIG DATA
         const evidenceData = {
-            sistema: "VDC Forensic System v10.8 - Final Stable Release",
+            sistema: "VDC Forensic System v10.9 - Final Stable Release",
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
@@ -2327,6 +2379,7 @@ async function exportJSON() {
             cliente: VDCSystem.client || { 
                 nome: "Cliente de Demonstração", 
                 nif: "000000000",
+                platform: VDCSystem.selectedPlatform, // CORREÇÃO 4: Incluído
                 registo: new Date().toISOString(),
                 isoCompliance: "ISO/IEC 27037"
             },
@@ -2472,6 +2525,9 @@ async function exportPDF() {
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         
+        // CORREÇÃO 5: Aumentar margem inferior
+        const marginBottom = 30; // Aumentado de 20 para 30mm
+        
         // Calcular número total de páginas dinamicamente
         let totalPages = 8; // Páginas base
         
@@ -2483,7 +2539,7 @@ async function exportPDF() {
         
         const maxWidth = 175;
         
-        // ========== PÁGINA 1: CABEÇALHO BIG DATA V10.8 ==========
+        // ========== PÁGINA 1: CABEÇALHO BIG DATA V10.9 ==========
         doc.setLineWidth(1);
         doc.rect(10, 10, pageWidth - 20, 28);
         doc.setLineWidth(0.5);
@@ -2492,7 +2548,7 @@ async function exportPDF() {
         // CABEÇALHO - TÍTULO À ESQUERDA
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
-        doc.text("VDC FORENSIC SYSTEM v10.8", 20, 22);
+        doc.text("VDC FORENSIC SYSTEM v10.9", 20, 22);
         
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
@@ -2502,11 +2558,11 @@ async function exportPDF() {
         doc.setFontSize(8);
         doc.text("Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | AMT/IMT | RGRC 4%", 20, 35);
         
-        // INFORMAÇÃO DA SESSÃO - CANTO SUPERIOR DIREITO
+        // CORREÇÃO 5: INFORMAÇÃO DA SESSÃO - CANTO SUPERIOR DIREITO (DENTRO DO BOX)
         const dataAtual = new Date().toLocaleDateString('pt-PT');
-        doc.setFontSize(9);
-        doc.text(`Sessão: ${VDCSystem.sessionId}`, 150, 20, { align: "right" });
-        doc.text(`Data: ${dataAtual}`, 150, 25, { align: "right" });
+        doc.setFontSize(9); // Tamanho 9 conforme solicitado
+        doc.text(`Sessão: ${VDCSystem.sessionId}`, 150, 22, { align: "right" }); // Linha 1
+        doc.text(`Data: ${dataAtual}`, 150, 27, { align: "right" }); // Linha 2
         
         let posY = 55;
         
@@ -2565,6 +2621,26 @@ async function exportPDF() {
         doc.text(`Data Análise: ${dataAtual}`, 100, posY);
         posY += 12;
         
+        // CORREÇÃO 5: QUEBRA DE PÁGINA APÓS IDENTIFICAÇÃO
+        if (posY > pageHeight - marginBottom - 40) {
+            // RODAPÉ PÁGINA 1 COM COORDENADAS ABSOLUTAS
+            const footerY1 = pageHeight - marginBottom;
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            const footerText1 = "VDC Forensic System v10.9 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
+            const footerLines1 = doc.splitTextToSize(footerText1, pageWidth - 30);
+            footerLines1.forEach((line, index) => {
+                doc.text(line, pageWidth / 2, footerY1 + (index * 3), { align: "center" });
+            });
+            doc.text(`Página 1 de ${totalPages}`, pageWidth - 15, footerY1, { align: "right" });
+            
+            doc.addPage(); // CORREÇÃO 5: Quebra de página
+            posY = 20;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(40, 45, 60);
+        }
+        
         // 2. VALORES EXTRAÍDOS
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
@@ -2597,6 +2673,26 @@ async function exportPDF() {
         });
         
         posY += 5;
+        
+        // CORREÇÃO 5: QUEBRA DE PÁGINA APÓS VALORES EXTRAÍDOS
+        if (posY > pageHeight - marginBottom - 40) {
+            // RODAPÉ PÁGINA 1 COM COORDENADAS ABSOLUTAS
+            const footerY1 = pageHeight - marginBottom;
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            const footerText1 = "VDC Forensic System v10.9 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
+            const footerLines1 = doc.splitTextToSize(footerText1, pageWidth - 30);
+            footerLines1.forEach((line, index) => {
+                doc.text(line, pageWidth / 2, footerY1 + (index * 3), { align: "center" });
+            });
+            doc.text(`Página 1 de ${totalPages}`, pageWidth - 15, footerY1, { align: "right" });
+            
+            doc.addPage(); // CORREÇÃO 5: Quebra de página
+            posY = 20;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(40, 45, 60);
+        }
         
         // 3. CÁLCULO DE INCONGRUÊNCIA FORENSE
         doc.setFontSize(12);
@@ -2631,10 +2727,10 @@ async function exportPDF() {
         });
         
         // RODAPÉ PÁGINA 1 COM COORDENADAS ABSOLUTAS
-        const footerY1 = pageHeight - 20;
+        const footerY1 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText1 = "VDC Forensic System v10.8 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
+        const footerText1 = "VDC Forensic System v10.9 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
         const footerLines1 = doc.splitTextToSize(footerText1, pageWidth - 30);
         footerLines1.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY1 + (index * 3), { align: "center" });
@@ -2710,7 +2806,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         const lineHeight = 6;
         
         splitParecer.forEach(line => {
-            if (posY + lineHeight > pageHeight - 40) {
+            if (posY + lineHeight > pageHeight - marginBottom - 40) { // CORREÇÃO 5: Usar marginBottom
                 doc.addPage();
                 posY = 20;
                 doc.setFontSize(10);
@@ -2723,10 +2819,10 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         });
         
         // RODAPÉ PÁGINA 2
-        const footerY2 = pageHeight - 20;
+        const footerY2 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText2 = "VDC Forensic System v10.8 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
+        const footerText2 = "VDC Forensic System v10.9 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4%";
         const footerLines2 = doc.splitTextToSize(footerText2, pageWidth - 30);
         footerLines2.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY2 + (index * 3), { align: "center" });
@@ -2784,7 +2880,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
             const docs = VDCSystem.documents[type];
             if (docs && docs.files && docs.files.length > 0) {
                 docs.files.forEach((file, index) => {
-                    if (posY > pageHeight - 40) {
+                    if (posY > pageHeight - marginBottom - 40) { // CORREÇÃO 5: Usar marginBottom
                         // PAGINAÇÃO DINÂMICA: Criar nova página se necessário
                         doc.addPage();
                         currentPage++;
@@ -2842,7 +2938,7 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         ];
         
         conformidade.forEach(item => {
-            if (posY > pageHeight - 40) {
+            if (posY > pageHeight - marginBottom - 40) { // CORREÇÃO 5: Usar marginBottom
                 doc.addPage();
                 currentPage++;
                 posY = 30;
@@ -2857,10 +2953,10 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
         totalPages = Math.max(totalPages, currentPage);
         
         // RODAPÉ PÁGINA 3
-        const footerY3 = pageHeight - 20;
+        const footerY3 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText3 = "VDC Forensic System v10.8 - Final Stable Release | Cadeia de Custódia Digital | Protocolo ISO/IEC 27037";
+        const footerText3 = "VDC Forensic System v10.9 - Final Stable Release | Cadeia de Custódia Digital | Protocolo ISO/IEC 27037";
         const footerLines3 = doc.splitTextToSize(footerText3, pageWidth - 30);
         footerLines3.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY3 + (index * 3), { align: "center" });
@@ -2915,7 +3011,7 @@ Mecanismos utilizados por plataformas digitais que, quando não transparentes, p
         const splitLegal = doc.splitTextToSize(enquadramentoLegal, maxWidth);
         
         splitLegal.forEach(line => {
-            if (posY + lineHeight > pageHeight - 60) {
+            if (posY + lineHeight > pageHeight - marginBottom - 60) { // CORREÇÃO 5: Usar marginBottom
                 doc.addPage();
                 posY = 20;
                 doc.setFontSize(10);
@@ -2963,7 +3059,7 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         const splitBTOR = doc.splitTextToSize(metodologiaBTOR, maxWidth);
         
         splitBTOR.forEach(line => {
-            if (posY + lineHeight > pageHeight - 60) {
+            if (posY + lineHeight > pageHeight - marginBottom - 60) { // CORREÇÃO 5: Usar marginBottom
                 doc.addPage();
                 posY = 20;
                 doc.setFontSize(10);
@@ -2976,10 +3072,10 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         });
         
         // RODAPÉ PÁGINA 4
-        const footerY4 = pageHeight - 20;
+        const footerY4 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText4 = "VDC Forensic System v10.8 - Final Stable Release | Anexo Legal e Metodológico | Protocolo ISO/IEC 27037";
+        const footerText4 = "VDC Forensic System v10.9 - Final Stable Release | Anexo Legal e Metodológico | Protocolo ISO/IEC 27037";
         const footerLines4 = doc.splitTextToSize(footerText4, pageWidth - 30);
         footerLines4.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY4 + (index * 3), { align: "center" });
@@ -3067,7 +3163,7 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         const splitConclusao = doc.splitTextToSize(conclusao, maxWidth);
         
         splitConclusao.forEach(line => {
-            if (posY + lineHeight > pageHeight - 40) {
+            if (posY + lineHeight > pageHeight - marginBottom - 40) { // CORREÇÃO 5: Usar marginBottom
                 return;
             }
             
@@ -3076,10 +3172,10 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         });
         
         // RODAPÉ PÁGINA 5
-        const footerY5 = pageHeight - 20;
+        const footerY5 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText5 = "VDC Forensic System v10.8 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4% | Master Hash SHA-256";
+        const footerText5 = "VDC Forensic System v10.9 - Final Stable Release | Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4% | Master Hash SHA-256";
         const footerLines5 = doc.splitTextToSize(footerText5, pageWidth - 30);
         footerLines5.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY5 + (index * 3), { align: "center" });
@@ -3138,7 +3234,7 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
             const docs = VDCSystem.documents[type];
             if (docs && docs.files && docs.files.length > 0) {
                 docs.files.forEach((file, index) => {
-                    if (posY > pageHeight - 40) {
+                    if (posY > pageHeight - marginBottom - 40) { // CORREÇÃO 5: Usar marginBottom
                         // PAGINAÇÃO DINÂMICA: Criar nova página para continuação
                         doc.addPage();
                         integridadePage++;
@@ -3194,20 +3290,15 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         });
         
         // RODAPÉ PÁGINA 6
-        const footerY6 = pageHeight - 20;
+        const footerY6 = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const footerText6 = "VDC Forensic System v10.8 - Final Stable Release | Certificado de Integridade Digital | Protocolo ISO/IEC 27037";
+        const footerText6 = "VDC Forensic System v10.9 - Final Stable Release | Certificado de Integridade Digital | Protocolo ISO/IEC 27037";
         const footerLines6 = doc.splitTextToSize(footerText6, pageWidth - 30);
         footerLines6.forEach((line, index) => {
             doc.text(line, pageWidth / 2, footerY6 + (index * 3), { align: "center" });
         });
         doc.text(`Página 6 de ${totalPages}`, pageWidth - 15, footerY6, { align: "right" });
-        
-        // ========== PÁGINAS RESTANTES (7-...) ==========
-        // Páginas 7+ seguem a mesma lógica da versão anterior
-        // Para manter o código conciso, mantemos a estrutura anterior
-        // As páginas adicionais são criadas dinamicamente conforme necessário
         
         // ========== PÁGINA FINAL: ASSINATURA DIGITAL ==========
         doc.addPage();
@@ -3226,7 +3317,7 @@ RECOMENDAÇÃO: Processo de Triagem → Avaliação Técnica → Proposta
         
         const masterHashFinal = document.getElementById('masterHashValue')?.textContent || "NÃO GERADA";
         
-        const assinaturaTexto = `Este relatório foi gerado automaticamente pelo VDC Forensic System v10.8 - Instrumento de Prova Legal e encontra-se protegido por criptografia SHA-256.
+        const assinaturaTexto = `Este relatório foi gerado automaticamente pelo VDC Forensic System v10.9 - Instrumento de Prova Legal e encontra-se protegido por criptografia SHA-256.
 
 MASTER HASH (SHA-256):
 ${masterHashFinal}
@@ -3268,10 +3359,10 @@ ANÁLISES REALIZADAS:
         doc.text("Perito Forense Digital Autorizado", 20, posY + 5);
         
         // RODAPÉ FINAL
-        const footerFinal = pageHeight - 20;
+        const footerFinal = pageHeight - marginBottom; // CORREÇÃO 5: Usar marginBottom
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text("VDC Forensic System v10.8 - Final Stable Release - Instrumento de Prova Legal", 15, footerFinal);
+        doc.text("VDC Forensic System v10.9 - Final Stable Release - Instrumento de Prova Legal", 15, footerFinal);
         doc.text(`Página ${totalPages} de ${totalPages}`, pageWidth - 15, footerFinal, { align: "right" });
         doc.text("Documento Final - Completo e Auditável | Todos os direitos reservados", pageWidth / 2, footerFinal + 5, { align: "center" });
         
@@ -3314,7 +3405,7 @@ ANÁLISES REALIZADAS:
     }
 }
 
-// 16. FUNÇÕES DE LOG E AUDITORIA BIG DATA V10.8
+// 16. FUNÇÕES DE LOG E AUDITORIA BIG DATA V10.9
 function logAudit(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString('pt-PT', { 
         hour12: false,
@@ -3382,7 +3473,7 @@ function toggleConsole() {
     consoleElement.style.height = consoleElement.style.height === '200px' ? '120px' : '200px';
 }
 
-// 17. FUNÇÕES UTILITÁRIAS BIG DATA V10.8
+// 17. FUNÇÕES UTILITÁRIAS BIG DATA V10.9
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -3552,7 +3643,7 @@ window.activateDemoMode = activateDemoMode;
 window.showChainOfCustody = showChainOfCustody;
 
 // ============================================
-// FIM DO SCRIPT VDC v10.8 - FINAL STABLE RELEASE
+// FIM DO SCRIPT VDC v10.9 - FINAL STABLE RELEASE
 // TODAS AS CORREÇÕES IMPLEMENTADAS
 // INSTRUMENTO DE PROVA LEGAL
 // ============================================
