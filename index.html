@@ -2,478 +2,173 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VDC | Sistema de Peritagem Forense v10.9-FS - Final Stable Release</title>
-    <link rel="shortcut icon" href="#">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDC Forensic System v11.0-FS | Comando Distrital Norte de Peritagem</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO ISO/NIST -->
-    <div id="splashScreen" class="splash-screen">
-        <div class="splash-content">
-            <div class="splash-logo">
-                <i class="fas fa-fingerprint"></i>
+    <!-- CONTAINER PRINCIPAL GRID -->
+    <div class="forensic-container" id="mainContainer">
+        
+        <!-- ===== SIDEBAR DE INPUTS ===== -->
+        <div class="input-sidebar">
+            <h2>🔍 PARÂMETROS DE PERÍCIA</h2>
+            
+            <div class="input-group">
+                <label for="caseNumber">Nº Processo:</label>
+                <input type="text" id="caseNumber" placeholder="EX: 1234/2024-JTR">
             </div>
-            <h1>VDC FORENSIC SYSTEM v10.9-FS</h1>
-            <h2>FINAL STABLE RELEASE</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Análise Massiva de Dados</p>
-            <div class="splash-warning">
-                <i class="fas fa-shield-alt"></i> Sistema de Peritagem Forense - Dados Reais | Cadeia de Custódia Ativa
+            
+            <div class="input-group">
+                <label for="entityType">Tipo Entidade:</label>
+                <select id="entityType">
+                    <option value="">-- Selecione --</option>
+                    <option value="SAFTPT">SAF-T PT (XML)</option>
+                    <option value="DAC7">DAC-7 (CSV)</option>
+                    <option value="BANK">Extrato Bancário</option>
+                    <option value="CUSTOM">Estrutura Personalizada</option>
+                </select>
             </div>
-            <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO BIG DATA FORENSE
+            
+            <div class="input-group">
+                <label for="dataInput">Dados para Análise (JSON/XML/CSV):</label>
+                <textarea id="dataInput" placeholder='[{"id": 1, "valor": 1500.00}, {"id": 2, "valor": -300.00}]'></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="fileUpload">Upload de Ficheiro:</label>
+                <input type="file" id="fileUpload" accept=".csv,.xml,.json,.txt">
+            </div>
+            
+            <div class="input-group">
+                <label for="timeframe">Período Temporal:</label>
+                <select id="timeframe">
+                    <option value="30">Últimos 30 dias</option>
+                    <option value="90">Últimos 90 dias</option>
+                    <option value="365">Últimos 365 dias</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+            
+            <button class="btn-primary" id="analyzeBtn" onclick="VDCSystem.startAnalysis()">
+                ⚡ INICIAR ANÁLISE FORENSE
             </button>
-            <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Análise Forense em Tempo Real | Conformidade RGRC/AMT/IMT</p>
-                <p class="version">v10.9-FS - Final Stable Release</p>
+            
+            <button class="btn-primary" id="exportBtn" onclick="VDCSystem.exportPDF()">
+                📄 GERAR RELATÓRIO PDF
+            </button>
+            
+            <button class="btn-primary" id="clearBtn" onclick="VDCSystem.clearAll()">
+                🗑️ LIMPAR TUDO
+            </button>
+            
+            <!-- KPIs Rápidos -->
+            <div class="input-group">
+                <h3>🔢 ESTATÍSTICAS RÁPIDAS</h3>
+                <div id="quickStats">
+                    <p>🔍 Transações: <span id="transactionCount">0</span></p>
+                    <p>💰 Total: €<span id="totalAmount">0.00</span></p>
+                    <p>⚠️ Alertas: <span id="alertCount">0</span></p>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Overlay de Carregamento -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-spinner">
-                <i class="fas fa-fingerprint fa-spin"></i>
-            </div>
-            <h2>VDC FORENSIC SYSTEM v10.9-FS</h2>
-            <p>ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Processamento Massivo de Dados</p>
-            <div class="loading-progress">
-                <div id="loadingProgress" class="loading-progress-bar"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notifications -->
-    <div id="toastContainer"></div>
-
-    <!-- Container Principal -->
-    <div id="mainContainer" class="main-container" style="display: none;">
-        <!-- Cabeçalho ISO/NIST -->
-        <header class="main-header">
-            <div class="header-content">
-                <div class="logo-section">
-                    <i class="fas fa-shield-alt"></i>
-                    <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.9-FS</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Análise de Layering | Conformidade Fiscal</p>
-                    </div>
-                </div>
-                
-                <div class="demo-section">
-                    <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
-                    </button>
-                </div>
-                
-                <div class="timestamp-fbi">
-                    <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span>
-                    <span>Data: <strong id="currentDate">DD/MM/AAAA</strong></span>
-                    <span><i class="fas fa-clock"></i> <strong id="currentTime">00:00:00</strong></span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Grid Principal (2 Colunas + Consola na Base) -->
-        <div class="main-grid">
-            <!-- Coluna 1: Sidebar de Inputs (FIXA) -->
-            <aside class="sidebar">
-                <!-- Identificação do Cliente -->
-                <section class="client-identification">
-                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
-                    <div class="client-form">
-                        <div class="form-group">
-                            <label for="clientName"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
-                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz Unipessoal, Lda" list="clientSuggestions">
-                            <datalist id="clientSuggestions"></datalist>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientNIF"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
-                            <input type="text" id="clientNIF" placeholder="Ex: 517905450" maxlength="9">
-                        </div>
-                        <div class="btn-group">
-                            <button id="registerClientBtn" class="btn-primary">
-                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE
-                            </button>
-                            <button id="saveClientBtn" class="btn-secondary">
-                                <i class="fas fa-database"></i> GUARDAR NA SESSÃO
-                            </button>
-                        </div>
-                    </div>
-                    <div id="clientStatus" class="client-status" style="display: none;">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
-                    </div>
-                </section>
-
-                <!-- Controles do Sistema -->
-                <section class="system-controls">
-                    <div class="control-group">
-                        <label for="selYear"><i class="fas fa-calendar-check"></i> Ano Fiscal</label>
-                        <select id="selYear" class="year-select"></select>
-                    </div>
-                    <div class="control-group">
-                        <label for="selPlatform"><i class="fas fa-server"></i> Plataforma</label>
-                        <select id="selPlatform" class="platform-select">
-                            <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
-                            <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
-                            <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
-                            <option value="other">Outra Plataforma - Investigação</option>
-                        </select>
-                    </div>
-                </section>
-
-                <!-- Upload de Ficheiros Big Data -->
-                <section class="upload-section">
-                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO BIG DATA (ILIMITADO)</h3>
-                    
-                    <!-- Ficheiro de Controle -->
-                    <div class="upload-group">
-                        <label for="controlFile"><i class="fas fa-file-shield"></i> Ficheiro de Controle (ISO/IEC 27037)</label>
-                        <button id="controlUploadBtn" class="upload-btn">
-                            <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
-                        </button>
-                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden>
-                        <div id="controlFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- DAC7 -->
-                    <div class="upload-group">
-                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
-                        <button id="dac7UploadBtn" class="upload-btn">
-                            <i class="fas fa-file-contract"></i> UPLOAD DAC7
-                        </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
-                        <div id="dac7FileList" class="file-list"></div>
-                    </div>
-
-                    <!-- SAF-T -->
-                    <div class="upload-group">
-                        <button id="saftUploadBtn" class="upload-btn">
-                            <i class="fas fa-file-code"></i> SAF-T / XML / CSV
-                        </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
-                        <div id="saftFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Faturas -->
-                    <div class="upload-group">
-                        <button id="invoiceUploadBtn" class="upload-btn">
-                            <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
-                        </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
-                        <div id="invoiceFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Extratos -->
-                    <div class="upload-group">
-                        <button id="statementUploadBtn" class="upload-btn">
-                            <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
-                        </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
-                        <div id="statementFileList" class="file-list"></div>
-                    </div>
-                </section>
-
-                <!-- Contadores -->
-                <section class="counters">
-                    <div class="counter-item">
-                        <span class="counter-label">CONTROLO</span>
-                        <span id="controlCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">SAF-T</span>
-                        <span id="saftCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">FATURAS</span>
-                        <span id="invoiceCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">EXTRATOS</span>
-                        <span id="statementCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">DAC7</span>
-                        <span id="dac7Count" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">TOTAL</span>
-                        <span id="totalCount" class="counter-value">0</span>
-                    </div>
-                </section>
-            </aside>
-
-            <!-- Coluna 2: Área Principal de Análise (Largura Total) -->
-            <main class="analysis-area">
-                <!-- Barra de Ferramentas -->
-                <section class="toolbar-section">
-                    <div class="toolbar-grid">
-                        <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search"></i> EXECUTAR ANÁLISE BIG DATA
-                        </button>
-                        <button id="exportJSONBtn" class="btn-tool">
-                            <i class="fas fa-file-code"></i> EXPORTAR JSON
-                        </button>
-                        <button id="exportPDFBtn" class="btn-tool">
-                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL
-                        </button>
-                        <button id="resetBtn" class="btn-tool">
-                            <i class="fas fa-redo"></i> NOVA SESSÃO
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Dashboard Fixo -->
-                <section class="dashboard-fixed">
-                    <div class="stat-card">
-                        <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
-                        <p id="netVal">0,00€</p>
-                        <small>Base tributável SAF-T</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
-                        <p id="iva6Val">0,00€</p>
-                        <small>Taxa reduzida Portugal</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA</h4>
-                        <p id="commissionVal">0,00€</p>
-                        <small>Serviço de intermediação</small>
-                    </div>
-                    <div class="stat-card alert">
-                        <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
-                        <p id="iva23Val" class="alert-text">0,00€</p>
-                        <small>Dívida ao Estado Português</small>
-                    </div>
-                    <div class="stat-card regulatory" id="jurosCard" style="display: none;">
-                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
-                        <p id="jurosVal" class="regulatory-text">0,00€</p>
-                        <small>Base anual civil (RGRC)</small>
-                    </div>
-                    <div class="stat-card regulatory" id="taxaRegCard" style="display: none;">
-                        <h4><i class="fas fa-balance-scale"></i> TAXA REGULAÇÃO (5%)</h4>
-                        <p id="taxaRegVal" class="regulatory-text">0,00€</p>
-                        <small>AMT/IMT Compliance</small>
-                    </div>
-                </section>
-
-                <!-- KPIs -->
-                <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE</h3>
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS</h4>
-                            <p id="kpiGanhos">0,00€</p>
-                            <small>Valor real do extrato</small>
-                        </div>
-                        <div class="kpi-card">
-                            <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
-                            <p id="kpiComm">0,00€</p>
-                            <small>Taxa retida pela plataforma</small>
-                        </div>
-                        <div class="kpi-card highlight">
-                            <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
-                            <p id="kpiNet">0,00€</p>
-                            <small>Transferência bancária real</small>
-                        </div>
-                        <div class="kpi-card danger">
-                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA</h4>
-                            <p id="kpiInvoice">0,00€</p>
-                            <small>Valor faturado (documento)</small>
-                        </div>
-                        <!-- Diferencial será inserido dinamicamente -->
-                        <div id="diferencialCard" class="kpi-card alert blink-alert" style="display: none;">
-                            <h4><i class="fas fa-exclamation-triangle"></i> DIFERENCIAL DE CUSTO</h4>
-                            <p id="diferencialVal">0,00€</p>
-                            <small>Saída de caixa não documentada</small>
-                        </div>
-                        <!-- Risco Regulatório será inserido dinamicamente -->
-                        <div id="regulatoryCardKPI" class="kpi-card regulatory" style="display: none;">
-                            <h4><i class="fas fa-balance-scale-right"></i> RISCO REGULATÓRIO</h4>
-                            <p id="regulatoryValKPI">0,00€</p>
-                            <small>Taxa de Regulação 5% (AMT/IMT)</small>
-                        </div>
-                    </div>
-                    <div class="secondary-stats">
-                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
-                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
-                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span> |
-                        <span><i class="fas fa-road"></i> Portagens: <b id="valTolls">0,00€</b></span>
-                    </div>
-                </section>
-
-                <!-- Gráfico -->
-                <section class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
+        
+        <!-- ===== ÁREA DE ANÁLISE CENTRAL ===== -->
+        <div class="analysis-area">
+            <h2>📊 DASHBOARD DE ANÁLISE FORENSE</h2>
+            
+            <!-- KPIs Principais -->
+            <div class="dashboard-grid">
+                <div class="kpi-card">
+                    <h3>🧮 INTEGRIDADE DOS DADOS</h3>
                     <div class="chart-container">
-                        <canvas id="forensicChart"></canvas>
+                        <canvas id="integrityChart"></canvas>
                     </div>
-                    <div class="chart-legend">
-                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Valor Ilíquido</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%)</span>
+                    <div id="integrityScore">Score: 0/100</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <h3>📈 MOVIMENTAÇÃO FINANCEIRA</h3>
+                    <div class="chart-container">
+                        <canvas id="financialChart"></canvas>
                     </div>
-                </section>
-
-                <!-- Resultados -->
-                <section class="analysis-results">
-                    <h3><i class="fas fa-search-dollar"></i> ANÁLISE BIG DATA DE LAYERING</h3>
-                    <div class="results-grid">
-                        <div class="result-item">
-                            <h5>BRUTO SAF-T</h5>
-                            <p id="grossResult" class="result-value">0,00€</p>
-                            <div class="result-bar">
-                                <div class="bar-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <h5>TRANSFERÊNCIA BANCÁRIA</h5>
-                            <p id="transferResult" class="result-value">0,00€</p>
-                            <div class="result-bar">
-                                <div class="bar-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <h5>DIFERENÇA (CRUZAMENTO)</h5>
-                            <p id="differenceResult" class="result-value">0,00€</p>
-                            <div class="result-bar">
-                                <div class="bar-fill" id="differenceBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <h5>QUANTUM BENEFÍCIO ILÍCITO</h5>
-                            <p id="marketResult" class="result-value">0,00M€</p>
-                            <div class="result-bar">
-                                <div class="bar-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
+                    <div id="financialTotal">Total: €0.00</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <h3>⚠️ DETECÇÃO DE ANOMALIAS</h3>
+                    <div class="chart-container">
+                        <canvas id="anomalyChart"></canvas>
                     </div>
-
-                    <!-- Alertas -->
-                    <div id="omissionAlert" class="omission-alert" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>ALERTA BIG DATA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
-                            <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
-                        </div>
+                    <div id="anomalyCount">Anomalias: 0</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <h3>🔗 CADEIA DE CUSTÓDIA</h3>
+                    <div id="custodyChain">
+                        <p>🆔 Hash Master: <span id="masterHashValue">Não calculado</span></p>
+                        <p>📅 Timestamp: <span id="analysisTimestamp">--/--/---- --:--:--</span></p>
+                        <p>📝 Documentos: <span id="documentCount">0</span></p>
                     </div>
-
-                    <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
-                        <i class="fas fa-balance-scale"></i>
-                        <div>
-                            <strong>🔴 EVIDÊNCIA BIG DATA: DIFERENCIAL DE CUSTO DETETADO</strong>
-                            <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
-                        </div>
-                    </div>
-
-                    <div id="regulatoryAlert" class="regulatory-alert" style="display: none;">
-                        <i class="fas fa-gavel"></i>
-                        <div>
-                            <strong>⚖️ RISCO REGULATÓRIO IDENTIFICADO (AMT/IMT)</strong>
-                            <p>Taxa de Regulação 5% não discriminada: <span id="regulatoryValue">0,00€</span></p>
-                        </div>
-                    </div>
-
-                    <div id="jurosAlert" class="juros-alert" style="display: none;">
-                        <i class="fas fa-percent"></i>
-                        <div>
-                            <strong>📈 JUROS DE MORA CALCULADOS (RGRC 4%)</strong>
-                            <p>Juros civis acumulados: <span id="jurosValue">0,00€</span> (base anual civil)</p>
-                        </div>
-                    </div>
-
-                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
-                        <i class="fas fa-radiation-alt"></i>
-                        <div>
-                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
-                            <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- CONSOLA DE AUDITORIA - MOVIDA PARA AQUI (BASE DO DASHBOARD) -->
-                <section class="audit-console-section">
-                    <div class="console-section">
-                        <div class="console-header">
-                            <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA</h3>
-                            <div class="console-controls">
-                                <button id="clearConsoleBtn" class="icon-btn" title="Limpar consola">
-                                    <i class="fas fa-broom"></i>
-                                </button>
-                                <button id="toggleConsoleBtn" class="icon-btn" title="Alternar tamanho">
-                                    <i class="fas fa-expand-alt"></i>
-                                </button>
-                                <button id="custodyBtn" class="icon-btn" title="Cadeia de Custódia">
-                                    <i class="fas fa-link"></i>
-                                </button>
-                                <button id="exportLogBtn" class="icon-btn" title="Exportar Logs">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="auditOutput" class="console-output">
-                            <!-- Logs inseridos dinamicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Hash Master -->
-                    <div class="master-hash-section">
-                        <h4><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE</h4>
-                        <div class="master-hash-value" id="masterHashValue">
-                            AGUARDANDO GERAÇÃO DO HASH SHA-256...
-                        </div>
-                        <div class="hash-info">
-                            <p><i class="fas fa-shield-alt"></i> ISO/IEC 27037:2012 | NIST SP 800-86</p>
-                            <p><i class="fas fa-gavel"></i> RGRC 4% | AMT/IMT Compliance</p>
-                            <p><i class="fas fa-link"></i> Cadeia de Custódia Digital Ativa</p>
-                        </div>
-                    </div>
-
-                    <!-- Info da Sessão -->
-                    <div class="session-info-section">
-                        <h4><i class="fas fa-info-circle"></i> INFORMAÇÃO DA SESSÃO</h4>
-                        <div class="session-info-content">
-                            <div class="info-item">
-                                <span class="info-label">Sessão:</span>
-                                <span class="info-value" id="sessionInfoId">VDC-XXXXXX</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Cliente:</span>
-                                <span class="info-value" id="sessionInfoClient">Não registado</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Ficheiros:</span>
-                                <span class="info-value" id="sessionInfoFiles">0</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Início:</span>
-                                <span class="info-value" id="sessionInfoStart">--:--:--</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-        </div>
-
-        <!-- Rodapé -->
-        <footer class="action-footer">
-            <div class="copyright">
-                <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.9-FS - Final Stable Release | © 2024
-                <br>
-                <small>Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4% | AMT/IMT Compliance | SHA-256 | Cadeia de Custódia Digital</small>
+                </div>
             </div>
-        </footer>
+            
+            <!-- Tabela de Resultados -->
+            <div class="results-section">
+                <h3>📋 RESULTADOS DETALHADOS</h3>
+                <table class="data-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Valor (€)</th>
+                            <th>Hash SHA-256</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- ===== CONSOLA DE AUDITORIA (FUNDO) ===== -->
+        <div class="audit-console">
+            <div class="console-header">
+                <h2>📜 CONSOLA DE AUDITORIA FORENSE</h2>
+                <div class="console-controls">
+                    <button onclick="VDCSystem.clearConsole()">Limpar Consola</button>
+                    <button onclick="VDCSystem.exportLogs()">Exportar Logs</button>
+                    <button onclick="VDCSystem.toggleAutoScroll()">Auto-scroll</button>
+                </div>
+            </div>
+            <div class="console-output" id="auditOutput">
+                [VDC v11.0-FS] Sistema iniciado em: <span id="systemTimestamp"></span><br>
+                ► Aguardando análise de dados...
+            </div>
+            
+            <!-- Estatísticas da Consola -->
+            <div class="console-stats">
+                <span>🔍 Entradas: <span id="logEntryCount">0</span></span>
+                <span>⚠️ Erros: <span id="logErrorCount">0</span></span>
+                <span>✅ Sucessos: <span id="logSuccessCount">0</span></span>
+                <span>⏱️ Última atualização: <span id="lastUpdate">--:--:--</span></span>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
+    
+    <script>
+        // Inicialização quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            VDCSystem.initializeSystem();
+        });
+    </script>
 </body>
 </html>
