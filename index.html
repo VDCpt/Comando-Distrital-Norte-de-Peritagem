@@ -54,7 +54,7 @@
     <div id="toastContainer"></div>
 
     <!-- Container Principal -->
-    <div id="mainContainer" class="main-container">
+    <div id="mainContainer" class="main-container" style="display: none;">
         <!-- Cabeçalho ISO/NIST -->
         <header class="main-header">
             <div class="header-content">
@@ -106,7 +106,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="clientStatus" class="client-status">
+                    <div id="clientStatus" class="client-status" style="display: none;">
                         <i class="fas fa-check-circle"></i>
                         <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
                     </div>
@@ -133,6 +133,17 @@
                 <section class="upload-section">
                     <h3><i class="fas fa-file-upload"></i> CARREGAMENTO BIG DATA (ILIMITADO)</h3>
                     
+                    <!-- Ficheiro de Controle -->
+                    <div class="upload-group">
+                        <label for="controlFile"><i class="fas fa-file-shield"></i> Ficheiro de Controle (ISO/IEC 27037)</label>
+                        <button id="controlUploadBtn" class="upload-btn">
+                            <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
+                        </button>
+                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden>
+                        <div id="controlFileList" class="file-list"></div>
+                    </div>
+
+                    <!-- DAC7 -->
                     <div class="upload-group">
                         <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
                         <button id="dac7UploadBtn" class="upload-btn">
@@ -142,6 +153,7 @@
                         <div id="dac7FileList" class="file-list"></div>
                     </div>
 
+                    <!-- SAF-T -->
                     <div class="upload-group">
                         <button id="saftUploadBtn" class="upload-btn">
                             <i class="fas fa-file-code"></i> SAF-T / XML / CSV
@@ -150,6 +162,7 @@
                         <div id="saftFileList" class="file-list"></div>
                     </div>
 
+                    <!-- Faturas -->
                     <div class="upload-group">
                         <button id="invoiceUploadBtn" class="upload-btn">
                             <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
@@ -158,6 +171,7 @@
                         <div id="invoiceFileList" class="file-list"></div>
                     </div>
 
+                    <!-- Extratos -->
                     <div class="upload-group">
                         <button id="statementUploadBtn" class="upload-btn">
                             <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
@@ -170,8 +184,8 @@
                 <!-- Contadores -->
                 <section class="counters">
                     <div class="counter-item">
-                        <span class="counter-label">DAC7</span>
-                        <span id="dac7Count" class="counter-value">0</span>
+                        <span class="counter-label">CONTROLO</span>
+                        <span id="controlCount" class="counter-value">0</span>
                     </div>
                     <div class="counter-item">
                         <span class="counter-label">SAF-T</span>
@@ -184,6 +198,10 @@
                     <div class="counter-item">
                         <span class="counter-label">EXTRATOS</span>
                         <span id="statementCount" class="counter-value">0</span>
+                    </div>
+                    <div class="counter-item">
+                        <span class="counter-label">DAC7</span>
+                        <span id="dac7Count" class="counter-value">0</span>
                     </div>
                     <div class="counter-item">
                         <span class="counter-label">TOTAL</span>
@@ -234,6 +252,16 @@
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
+                    <div class="stat-card regulatory" id="jurosCard" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
+                        <p id="jurosVal" class="regulatory-text">0,00€</p>
+                        <small>Base anual civil (RGRC)</small>
+                    </div>
+                    <div class="stat-card regulatory" id="taxaRegCard" style="display: none;">
+                        <h4><i class="fas fa-balance-scale"></i> TAXA REGULAÇÃO (5%)</h4>
+                        <p id="taxaRegVal" class="regulatory-text">0,00€</p>
+                        <small>AMT/IMT Compliance</small>
+                    </div>
                 </section>
 
                 <!-- KPIs -->
@@ -260,6 +288,24 @@
                             <p id="kpiInvoice">0,00€</p>
                             <small>Valor faturado (documento)</small>
                         </div>
+                        <!-- Diferencial será inserido dinamicamente -->
+                        <div id="diferencialCard" class="kpi-card alert blink-alert" style="display: none;">
+                            <h4><i class="fas fa-exclamation-triangle"></i> DIFERENCIAL DE CUSTO</h4>
+                            <p id="diferencialVal">0,00€</p>
+                            <small>Saída de caixa não documentada</small>
+                        </div>
+                        <!-- Risco Regulatório será inserido dinamicamente -->
+                        <div id="regulatoryCardKPI" class="kpi-card regulatory" style="display: none;">
+                            <h4><i class="fas fa-balance-scale-right"></i> RISCO REGULATÓRIO</h4>
+                            <p id="regulatoryValKPI">0,00€</p>
+                            <small>Taxa de Regulação 5% (AMT/IMT)</small>
+                        </div>
+                    </div>
+                    <div class="secondary-stats">
+                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
+                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
+                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span> |
+                        <span><i class="fas fa-road"></i> Portagens: <b id="valTolls">0,00€</b></span>
                     </div>
                 </section>
 
@@ -268,6 +314,13 @@
                     <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Valor Ilíquido</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%)</span>
                     </div>
                 </section>
 
@@ -306,7 +359,7 @@
                     </div>
 
                     <!-- Alertas -->
-                    <div id="omissionAlert" class="omission-alert">
+                    <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
                             <strong>ALERTA BIG DATA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
@@ -314,11 +367,35 @@
                         </div>
                     </div>
 
-                    <div id="diferencialAlert" class="diferencial-alert">
+                    <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
                         <i class="fas fa-balance-scale"></i>
                         <div>
                             <strong>🔴 EVIDÊNCIA BIG DATA: DIFERENCIAL DE CUSTO DETETADO</strong>
                             <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
+                        </div>
+                    </div>
+
+                    <div id="regulatoryAlert" class="regulatory-alert" style="display: none;">
+                        <i class="fas fa-gavel"></i>
+                        <div>
+                            <strong>⚖️ RISCO REGULATÓRIO IDENTIFICADO (AMT/IMT)</strong>
+                            <p>Taxa de Regulação 5% não discriminada: <span id="regulatoryValue">0,00€</span></p>
+                        </div>
+                    </div>
+
+                    <div id="jurosAlert" class="juros-alert" style="display: none;">
+                        <i class="fas fa-percent"></i>
+                        <div>
+                            <strong>📈 JUROS DE MORA CALCULADOS (RGRC 4%)</strong>
+                            <p>Juros civis acumulados: <span id="jurosValue">0,00€</span> (base anual civil)</p>
+                        </div>
+                    </div>
+
+                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
+                        <i class="fas fa-radiation-alt"></i>
+                        <div>
+                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
+                            <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
                         </div>
                     </div>
                 </section>
@@ -339,6 +416,9 @@
                             <button id="custodyBtn" class="icon-btn" title="Cadeia de Custódia">
                                 <i class="fas fa-link"></i>
                             </button>
+                            <button id="exportLogBtn" class="icon-btn" title="Exportar Logs">
+                                <i class="fas fa-download"></i>
+                            </button>
                         </div>
                     </div>
                     <div id="auditOutput" class="console-output">
@@ -352,7 +432,34 @@
                     <div class="master-hash-value" id="masterHashValue">
                         AGUARDANDO GERAÇÃO DO HASH SHA-256...
                     </div>
-                    <p class="hash-info">ISO/IEC 27037 | NIST SP 800-86 | SHA-256 | Cadeia de Custódia Ativa</p>
+                    <div class="hash-info">
+                        <p><i class="fas fa-shield-alt"></i> ISO/IEC 27037:2012 | NIST SP 800-86</p>
+                        <p><i class="fas fa-gavel"></i> RGRC 4% | AMT/IMT Compliance</p>
+                        <p><i class="fas fa-link"></i> Cadeia de Custódia Digital Ativa</p>
+                    </div>
+                </div>
+
+                <!-- Info da Sessão -->
+                <div class="session-info-section">
+                    <h4><i class="fas fa-info-circle"></i> INFORMAÇÃO DA SESSÃO</h4>
+                    <div class="session-info-content">
+                        <div class="info-item">
+                            <span class="info-label">Sessão:</span>
+                            <span class="info-value" id="sessionInfoId">VDC-XXXXXX</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Cliente:</span>
+                            <span class="info-value" id="sessionInfoClient">Não registado</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ficheiros:</span>
+                            <span class="info-value" id="sessionInfoFiles">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Início:</span>
+                            <span class="info-value" id="sessionInfoStart">--:--:--</span>
+                        </div>
+                    </div>
                 </div>
             </aside>
         </div>
@@ -362,7 +469,7 @@
             <div class="copyright">
                 <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.9-FS - Final Stable Release | © 2024
                 <br>
-                <small>Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4% | AMT/IMT Compliance</small>
+                <small>Protocolo de Integridade: ISO/IEC 27037 | NIST SP 800-86 | RGRC 4% | AMT/IMT Compliance | SHA-256 | Cadeia de Custódia Digital</small>
             </div>
         </footer>
     </div>
