@@ -403,21 +403,25 @@ body {
     color: var(--accent-primary);
 }
 
-/* 7. MAIN GRID (3 COLUNAS) */
+/* 7. MAIN GRID (2 COLUNAS + CONSOLA NA BASE) */
 .main-grid {
     display: grid;
-    grid-template-columns: 350px 1fr 400px;
+    grid-template-columns: 350px 1fr;
+    grid-template-rows: 1fr auto;
     flex: 1;
     min-height: calc(100vh - 80px);
     max-height: calc(100vh - 80px);
     overflow: hidden;
     width: 100%;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
 }
 
-/* 8. SIDEBAR ESQUERDA */
+/* 8. SIDEBAR ESQUERDA (FIXA) */
 .sidebar {
     background: linear-gradient(180deg, var(--bg-sidebar) 0%, var(--bg-secondary) 100%);
-    border-right: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
     padding: var(--spacing-md);
     overflow-y: auto;
     overflow-x: hidden;
@@ -428,6 +432,12 @@ body {
     max-height: 100%;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
+    position: sticky;
+    top: var(--spacing-md);
+    align-self: start;
+    height: calc(100vh - 120px);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .sidebar::-webkit-scrollbar {
@@ -827,9 +837,9 @@ body {
     font-family: var(--font-mono);
 }
 
-/* 9. ANALYSIS AREA (COLUNA CENTRAL) */
+/* 9. ANALYSIS AREA (COLUNA CENTRAL - LARGURA TOTAL) */
 .analysis-area {
-    padding: var(--spacing-md);
+    padding: 0;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
@@ -838,6 +848,7 @@ body {
     max-height: 100%;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
+    width: 100%;
 }
 
 .analysis-area::-webkit-scrollbar {
@@ -1489,17 +1500,16 @@ body {
 #alertCommVal { color: var(--warn-primary); }
 #alertDeltaVal { color: var(--warn-secondary); }
 
-/* 10. CONSOLE SIDEBAR (COLUNA DIREITA) */
-.console-sidebar {
-    background: linear-gradient(180deg, var(--bg-sidebar) 0%, var(--bg-secondary) 100%);
-    border-left: 1px solid var(--border-color);
-    padding: var(--spacing-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
-    min-width: 400px;
-    max-height: 100%;
-    overflow: hidden;
+/* 10. CONSOLA DE AUDITORIA NA BASE DO DASHBOARD */
+.audit-console-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 300px 250px;
+    gap: var(--spacing-md);
+    height: 30vh;
+    min-height: 250px;
+    max-height: 300px;
+    margin-top: var(--spacing-md);
 }
 
 .console-section {
@@ -1507,10 +1517,9 @@ body {
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     overflow: hidden;
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 400px;
+    height: 100%;
 }
 
 .console-header {
@@ -1571,7 +1580,6 @@ body {
     overflow-x: hidden;
     line-height: 1.4;
     border-top: 1px solid var(--border-color);
-    transition: height 0.3s ease;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
 }
@@ -1630,7 +1638,9 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .master-hash-section h4 {
@@ -1656,8 +1666,7 @@ body {
     border: 1px solid rgba(0, 102, 204, 0.3);
     box-shadow: var(--shadow-inset);
     margin: var(--spacing-sm) 0;
-    min-height: 80px;
-    max-height: 120px;
+    flex: 1;
     overflow-y: auto;
 }
 
@@ -1680,7 +1689,9 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .session-info-section h4 {
@@ -1699,6 +1710,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
+    flex: 1;
 }
 
 .info-item {
@@ -1720,7 +1732,7 @@ body {
     font-weight: 700;
     font-family: var(--font-mono);
     text-align: right;
-    max-width: 200px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -1809,7 +1821,7 @@ body {
 /* 13. RESPONSIVIDADE */
 @media (max-width: 1920px) {
     .main-grid {
-        grid-template-columns: 320px 1fr 380px;
+        grid-template-columns: 320px 1fr;
     }
     
     .dashboard-fixed {
@@ -1819,11 +1831,15 @@ body {
     .kpi-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+    
+    .audit-console-section {
+        grid-template-columns: 1fr 280px 220px;
+    }
 }
 
 @media (max-width: 1600px) {
     .main-grid {
-        grid-template-columns: 300px 1fr 350px;
+        grid-template-columns: 300px 1fr;
     }
     
     .dashboard-fixed {
@@ -1837,29 +1853,44 @@ body {
     .results-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .audit-console-section {
+        grid-template-columns: 1fr 250px 200px;
+    }
 }
 
 @media (max-width: 1400px) {
     .main-grid {
-        grid-template-columns: 280px 1fr 320px;
+        grid-template-columns: 280px 1fr;
     }
     
-    .sidebar, .console-sidebar {
-        min-width: auto;
+    .sidebar {
+        min-width: 280px;
+    }
+    
+    .audit-console-section {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        height: auto;
+        max-height: none;
+    }
+    
+    .console-section {
+        height: 250px;
     }
 }
 
 @media (max-width: 1200px) {
     .main-grid {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto 1fr auto;
         max-height: none;
     }
     
     .sidebar {
-        max-height: 400px;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        position: static;
+        height: auto;
+        max-height: 500px;
         grid-row: 1;
         min-width: 100%;
     }
@@ -1869,8 +1900,10 @@ body {
         max-height: none;
     }
     
-    .console-sidebar {
-        display: none;
+    .audit-console-section {
+        grid-row: 3;
+        grid-template-columns: 1fr;
+        margin-top: var(--spacing-lg);
     }
     
     .dashboard-fixed {
@@ -1963,7 +1996,7 @@ body {
     }
     
     .main-grid {
-        grid-template-columns: 1fr;
+        padding: var(--spacing-sm);
     }
     
     .dashboard-fixed {
@@ -2005,6 +2038,10 @@ body {
     
     .stat-card p, .kpi-card p, .result-value {
         font-size: 1.2rem;
+    }
+    
+    .main-grid {
+        gap: var(--spacing-sm);
     }
 }
 
