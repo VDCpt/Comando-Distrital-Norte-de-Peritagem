@@ -153,7 +153,7 @@
     --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 2. RESET E BASE ISO/NIST */
+/* 2. RESET E BASE ISO/NIST - CORREÇÃO 3: ESTABILIZAÇÃO VISUAL */
 * {
     margin: 0;
     padding: 0;
@@ -166,19 +166,22 @@ body {
     color: var(--text-primary);
     line-height: 1.5;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: hidden; /* CORREÇÃO 3: Impede scroll horizontal */
     font-size: 14px;
+    max-width: 100vw; /* CORREÇÃO 3: Garante que não ultrapassa a largura */
 }
 
-/* 3. LAYOUT PRINCIPAL - CORREÇÃO 3: CENTRALIZAÇÃO DO DASHBOARD */
+/* 3. LAYOUT PRINCIPAL - CORREÇÃO 3: CENTRALIZAÇÃO E ESTABILIDADE */
 .main-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: 1400px; /* CORREÇÃO 3: Centralização */
-    margin: 0 auto; /* CORREÇÃO 3: Centralização */
+    max-width: 1400px;
+    margin: 0 auto;
     opacity: 0;
     transition: opacity 0.3s ease;
+    overflow-x: hidden; /* CORREÇÃO 3: Garante estabilidade */
+    width: 100%;
 }
 
 /* 4. CABEÇALHO ISO/NIST COMPLIANCE */
@@ -190,6 +193,7 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: var(--shadow-md);
+    width: 100%;
 }
 
 .header-content {
@@ -199,6 +203,7 @@ body {
     max-width: 1800px;
     margin: 0 auto;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .logo-section {
@@ -206,6 +211,7 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     flex: 1;
+    min-width: 250px;
 }
 
 .logo-section i {
@@ -836,13 +842,14 @@ body {
     font-weight: 500;
 }
 
-/* 13. DASHBOARD KPI ISO/NIST */
+/* 13. DASHBOARD KPI ISO/NIST - CORREÇÃO 3: ESTABILIZAÇÃO DE LAYOUT */
 .kpi-section {
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
     margin-bottom: var(--spacing-md);
+    overflow: hidden; /* CORREÇÃO 3: Impede overflow */
 }
 
 .kpi-section h3 {
@@ -899,6 +906,9 @@ body {
     position: relative;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+    min-width: 250px; /* CORREÇÃO 3: Tamanho mínimo */
+    max-width: 350px; /* CORREÇÃO 3: Tamanho máximo */
+    word-break: break-word; /* CORREÇÃO 3: Quebra palavras longas */
 }
 
 .kpi-card:hover {
@@ -969,6 +979,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     font-weight: 700;
+    word-break: break-word; /* CORREÇÃO 3: Quebra títulos longos */
 }
 
 .kpi-card p {
@@ -977,6 +988,7 @@ body {
     color: var(--text-primary);
     font-family: var(--font-mono);
     margin-bottom: 0.25rem;
+    word-break: break-all; /* CORREÇÃO 3: Quebra números longos */
 }
 
 .kpi-card small {
@@ -984,6 +996,7 @@ body {
     font-size: 0.7rem;
     display: block;
     font-weight: 500;
+    word-break: break-word; /* CORREÇÃO 3: Quebra texto longo */
 }
 
 .secondary-stats {
@@ -1080,6 +1093,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    overflow: hidden; /* CORREÇÃO 3: Impede overflow */
 }
 
 .analysis-results h3 {
@@ -1117,6 +1131,8 @@ body {
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
+    min-width: 200px; /* CORREÇÃO 3: Tamanho mínimo */
+    max-width: 350px; /* CORREÇÃO 3: Tamanho máximo */
 }
 
 .result-item h5 {
