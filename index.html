@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VDC | Sistema de Peritagem Forense v10.9 - Final Stable Release</title>
-    <!-- CORREÇÃO 1: Adicionado favicon para eliminar erro 404 -->
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -159,12 +158,12 @@
                         <div id="controlFileList" class="file-list"></div>
                     </div>
 
-                    <!-- SAF-T Files -->
+                    <!-- SAF-T Files (XML + CSV) -->
                     <div class="upload-group">
                         <button id="saftUploadBtn" class="upload-btn multi">
-                            <i class="fas fa-file-code"></i> SAF-T / XML (MÚLTIPLOS)
+                            <i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)
                         </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv,.txt" hidden>
+                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
                         <div id="saftFileList" class="file-list"></div>
                     </div>
 
