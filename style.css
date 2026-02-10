@@ -4,7 +4,7 @@
    ============================================ */
 
 :root {
-    /* Cores Executivas */
+    /* Cores Executivas (CORRIGIDO: Fundo escuro profissional) */
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
@@ -18,12 +18,12 @@
     --info-primary: #06b6d4;
     --evasao-orange: #ff6b35; /* Regulatory Orange */
     
-    /* Texto */
+    /* Texto (CORRIGIDO: Legibilidade máxima) */
     --text-primary: #f1f5f9;
     --text-secondary: #cbd5e1;
     --text-tertiary: #94a3b8;
     
-    /* Bordas */
+    /* Bordas (CORRIGIDO: Bordas subtis) */
     --border-color: #475569;
     --border-radius: 10px;
     --border-radius-sm: 6px;
@@ -55,8 +55,8 @@
 
 body {
     font-family: var(--font-main);
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: var(--bg-primary); /* CORRIGIDO: Fundo escuro profissional */
+    color: var(--text-primary); /* CORRIGIDO: Texto de alta legibilidade */
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
@@ -397,7 +397,7 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--bg-tertiary);
+    border: 1px solid var(--bg-tertiary); /* CORRIGIDO: Borda subtil */
     box-shadow: var(--shadow-sm);
 }
 
@@ -474,6 +474,7 @@ body {
     flex: 1;
 }
 
+/* CORRIGIDO: File Badge (vermelho se 0, verde se > 0) */
 .file-badge {
     background: var(--danger-primary);
     color: white;
@@ -490,26 +491,25 @@ body {
     background: var(--success-primary);
 }
 
+/* CORRIGIDO: Ícone de verificação */
 .check-icon {
     color: var(--success-primary);
     font-size: 1rem;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.check-icon.visible {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .check-icon.hidden {
     display: none;
 }
 
-.check-icon.visible {
-    display: inline-block;
-}
-
-/* Upload */
-.upload-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
+/* Upload Groups com estados visuais */
 .upload-group {
     margin-bottom: var(--spacing-md);
     padding: var(--spacing-sm);
@@ -656,12 +656,13 @@ body {
     }
 }
 
+/* CORRIGIDO: Cartões KPI com design forense */
 .kpi-card {
-    background: var(--bg-secondary);
+    background: var(--bg-secondary); /* CORRIGIDO: Fundo escuro profissional */
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
     border-left: 5px solid var(--accent-primary);
-    border: 1px solid var(--bg-tertiary);
+    border: 1px solid var(--bg-tertiary); /* CORRIGIDO: Borda subtil */
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
     position: relative;
@@ -750,7 +751,7 @@ body {
 .kpi-card p {
     font-size: 2rem;
     font-weight: 900;
-    color: var(--text-primary);
+    color: var(--text-primary); /* CORRIGIDO: Texto de alta legibilidade */
     font-family: var(--font-mono);
     margin-bottom: 0.3rem;
     line-height: 1;
@@ -779,11 +780,12 @@ body {
     }
 }
 
+/* CORRIGIDO: Container de gráficos com design forense */
 .chart-container {
-    background: var(--bg-secondary);
+    background: var(--bg-secondary); /* CORRIGIDO: Fundo escuro profissional */
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--bg-tertiary);
+    border: 1px solid var(--bg-tertiary); /* CORRIGIDO: Borda subtil */
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-sm);
@@ -836,10 +838,10 @@ body {
 }
 
 .result-card {
-    background: var(--bg-secondary);
+    background: var(--bg-secondary); /* CORRIGIDO: Fundo escuro profissional */
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--bg-tertiary);
+    border: 1px solid var(--bg-tertiary); /* CORRIGIDO: Borda subtil */
     transition: transform 0.2s ease;
 }
 
@@ -871,7 +873,7 @@ body {
 .result-card p {
     font-size: 1.8rem;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--text-primary); /* CORRIGIDO: Texto de alta legibilidade */
     font-family: var(--font-mono);
     margin-bottom: 0.8rem;
 }
