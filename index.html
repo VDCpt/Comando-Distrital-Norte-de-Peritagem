@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Forensic System v12.0 - Forensic Elite</title>
+    <title>VDC | Forensic System v12.1 - Forensic Elite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -17,7 +17,7 @@
         <div class="splash-container">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
-                <span class="splash-version">v12.0</span>
+                <span class="splash-version">v12.1</span>
             </div>
             <div class="splash-title">
                 <h1>VDC FORENSIC SYSTEM</h1>
@@ -39,7 +39,7 @@
             <div class="loading-spinner">
                 <i class="fas fa-database fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v12.0</h2>
+            <h2>VDC FORENSIC SYSTEM v12.1</h2>
             <p>Forensic Elite | Inicializando motor Big Data acumulativo...</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
@@ -55,10 +55,11 @@
             <div class="header-left">
                 <i class="fas fa-database"></i>
                 <div>
-                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v12.0 ELITE</span></h1>
+                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v12.1 ELITE</span></h1>
                     <!-- Identificação do Processo -->
                     <div class="process-id">
                         <input type="text" id="expertNameInput" placeholder="Perito" class="id-input">
+                        <input type="text" id="analystNameInput" placeholder="Analista" class="id-input">
                         <input type="text" id="clientNameInput" placeholder="Cliente" class="id-input">
                         <input type="text" id="clientNIFInput" placeholder="NIF (9 dígitos)" class="id-input" maxlength="9">
                         <select id="expertiseYearSelect" class="id-input">
@@ -115,6 +116,13 @@
                             <option value="custom">Personalizado</option>
                         </select>
                     </div>
+                    <!-- Data Personalizada (escondido por defeito) -->
+                    <div id="customDateRange" class="form-group hidden">
+                        <label for="dateStart"><i class="fas fa-calendar"></i> Data Início</label>
+                        <input type="date" id="dateStart" class="form-select">
+                        <label for="dateEnd"><i class="fas fa-calendar"></i> Data Fim</label>
+                        <input type="date" id="dateEnd" class="form-select">
+                    </div>
                     <div class="form-group">
                         <label for="selYear"><i class="fas fa-calendar-alt"></i> Ano Fiscal (RGRC 4%)</label>
                         <select id="selYear" class="form-select">
@@ -129,7 +137,11 @@
                     <p class="upload-info">Modo Acumulativo: Ficheiros são adicionados sem limpar dados anteriores</p>
                     
                     <div class="upload-group">
-                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
+                        <div class="upload-header">
+                            <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
+                            <div class="file-badge" id="count-dac7">0</div>
+                            <i class="fas fa-check-circle check-icon hidden" id="check-dac7"></i>
+                        </div>
                         <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
                             <i class="fas fa-file-contract"></i> ADICIONAR DAC7
                         </button>
@@ -137,7 +149,11 @@
                     </div>
 
                     <div class="upload-group">
-                        <label for="saftFile"><i class="fas fa-file-code"></i> SAF-T / XML Fiscal</label>
+                        <div class="upload-header">
+                            <label for="saftFile"><i class="fas fa-file-code"></i> SAF-T / XML Fiscal</label>
+                            <div class="file-badge" id="count-saft">0</div>
+                            <i class="fas fa-check-circle check-icon hidden" id="check-saft"></i>
+                        </div>
                         <button class="upload-btn" onclick="document.getElementById('saftFile').click()">
                             <i class="fas fa-file-code"></i> ADICIONAR SAF-T
                         </button>
@@ -145,7 +161,11 @@
                     </div>
 
                     <div class="upload-group">
-                        <label for="invoiceFile"><i class="fas fa-file-invoice-dollar"></i> Faturas da Plataforma</label>
+                        <div class="upload-header">
+                            <label for="invoiceFile"><i class="fas fa-file-invoice-dollar"></i> Faturas da Plataforma</label>
+                            <div class="file-badge" id="count-invoices">0</div>
+                            <i class="fas fa-check-circle check-icon hidden" id="check-invoices"></i>
+                        </div>
                         <button class="upload-btn" onclick="document.getElementById('invoiceFile').click()">
                             <i class="fas fa-file-invoice"></i> ADICIONAR FATURAS
                         </button>
@@ -153,11 +173,28 @@
                     </div>
 
                     <div class="upload-group">
-                        <label for="statementFile"><i class="fas fa-file-contract"></i> Extratos Bancários</label>
+                        <div class="upload-header">
+                            <label for="statementFile"><i class="fas fa-file-contract"></i> Extratos Bancários</label>
+                            <div class="file-badge" id="count-statements">0</div>
+                            <i class="fas fa-check-circle check-icon hidden" id="check-statements"></i>
+                        </div>
                         <button class="upload-btn" onclick="document.getElementById('statementFile').click()">
                             <i class="fas fa-file-contract"></i> ADICIONAR EXTRATOS
                         </button>
                         <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.ofx,.mt940" hidden>
+                    </div>
+
+                    <!-- Ficheiros de Controle/Autenticidade -->
+                    <div class="upload-group">
+                        <div class="upload-header">
+                            <label for="controlFile"><i class="fas fa-file-shield"></i> Ficheiros de Controle/Autenticidade</label>
+                            <div class="file-badge" id="count-control">0</div>
+                            <i class="fas fa-check-circle check-icon hidden" id="check-control"></i>
+                        </div>
+                        <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
+                            <i class="fas fa-file-shield"></i> ADICIONAR CONTROLES
+                        </button>
+                        <input type="file" id="controlFile" class="file-input" multiple accept=".pdf,.txt,.xml,.json" hidden>
                     </div>
 
                     <!-- Contadores -->
@@ -312,7 +349,7 @@
                 <div class="footer-info">
                     <span>Sessão: <strong id="sessionIdDisplay">VDC-ELITE-XXXXXX</strong></span> |
                     <span>Ficheiros: <strong id="totalFilesDisplay">0</strong></span> |
-                    <span>VDC Forensic System v12.0 Forensic Elite | © 2024</span>
+                    <span>VDC Forensic System v12.1 Forensic Elite | © 2024</span>
                 </div>
             </div>
         </footer>
