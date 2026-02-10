@@ -1,9 +1,9 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v11.0
-   AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX
+   VDC SISTEMA DE PERITAGEM FORENSE v11.1
+   AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX COMPLETA
    ============================================ */
 
-/* 0. SPLASH SCREEN V11.0 */
+/* 0. SPLASH SCREEN V11.1 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -212,7 +212,7 @@ body {
     box-sizing: border-box;
 }
 
-/* 4. SIDEBAR RESTRUTURADA COM HIERARQUIA STICKY */
+/* 4. SIDEBAR RESTRUTURADA - HIERARQUIA CORRIGIDA */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
@@ -397,47 +397,25 @@ body {
     box-sizing: border-box;
 }
 
-/* CONTEÚDO ROLÁVEL DA SIDEBAR */
-.sidebar-scrollable {
+/* SECÇÃO DE EVIDÊNCIAS BIG DATA - LAYOUT BLOCO SÓLIDO (SEM SCROLL) */
+.evidence-management-section-solid {
     flex: 1;
-    overflow-y: auto;
-    padding: var(--spacing-md);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
     box-sizing: border-box;
-    max-height: 45vh;
+    /* REMOVIDO: max-height, overflow-y */
+    height: auto;
 }
 
-.sidebar-scrollable::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar-scrollable::-webkit-scrollbar-track {
-    background: rgba(30, 42, 68, 0.5);
-}
-
-.sidebar-scrollable::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
-    background: var(--iso-blue);
-}
-
-/* SEÇÃO DE EVIDÊNCIAS COM OVERFLOW */
-.evidence-management-section {
-    box-sizing: border-box;
-}
-
-.evidence-management-btn {
+/* BOTÃO DE EVIDÊNCIAS - FULL WIDTH */
+.evidence-management-btn-solid {
     width: 100%;
-    padding: 0.8rem;
+    padding: 1rem;
     background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
     color: var(--bg-primary);
     border: none;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius);
     font-weight: 800;
     cursor: pointer;
     display: flex;
@@ -445,100 +423,76 @@ body {
     justify-content: space-between;
     gap: 0.5rem;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
+    font-size: 1rem;
     box-shadow: var(--shadow-md);
     box-sizing: border-box;
+    margin-bottom: var(--spacing-md);
+    position: relative;
+    overflow: hidden;
 }
 
-.evidence-management-btn:hover {
+.evidence-management-btn-solid:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 204, 136, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 204, 136, 0.4);
 }
 
-.evidence-count {
+.evidence-management-btn-solid:active {
+    transform: translateY(0);
+}
+
+.evidence-count-solid {
     background: var(--bg-primary);
     color: var(--nist-green);
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 800;
     font-family: var(--font-mono);
 }
 
-/* CONTADORES */
-.counters {
+/* CONTADORES COMPACTOS - LAYOUT HORIZONTAL */
+.counters-compact {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     box-sizing: border-box;
+    margin-top: auto;
 }
 
-.counter-item {
+.counter-item-compact {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.6rem;
+    justify-content: center;
+    padding: 0.5rem;
     background: rgba(20, 30, 48, 0.8);
     border-radius: var(--border-radius-sm);
     box-sizing: border-box;
+    min-height: 50px;
 }
 
-.counter-label {
+.counter-label-compact {
     color: var(--text-tertiary);
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     margin-bottom: 0.2rem;
     font-weight: 700;
-}
-
-.counter-value {
-    color: var(--text-primary);
-    font-size: 1.2rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-}
-
-/* SEÇÃO GUARDAR CLIENTE NO FINAL */
-.save-client-section {
-    margin-top: auto;
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-    box-sizing: border-box;
-}
-
-.btn-save-client {
-    width: 100%;
-    padding: 0.7rem;
-    background: linear-gradient(90deg, var(--regulatory-orange) 0%, #ff9f1a 100%);
-    color: var(--bg-primary);
-    border: none;
-    border-radius: var(--border-radius-sm);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-}
-
-.btn-save-client:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
-}
-
-.save-client-note {
-    display: block;
-    color: var(--text-tertiary);
-    font-size: 0.7rem;
-    margin-top: 0.5rem;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.counter-value-compact {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
     font-family: var(--font-mono);
+    text-align: center;
 }
 
 /* 5. CABEÇALHO ISO/NIST COMPLIANCE */
@@ -2005,6 +1959,10 @@ body {
         max-width: 95%;
         margin: 1rem;
     }
+    
+    .counters-compact {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -2059,7 +2017,7 @@ body {
         width: 300px;
     }
     
-    .counters {
+    .counters-compact {
         grid-template-columns: repeat(2, 1fr);
     }
     
@@ -2204,6 +2162,6 @@ button:active {
 }
 
 /* ============================================
-   FIM DO CSS VDC v11.0 - AUDITORIA FISCAL BIG DATA
+   FIM DO CSS VDC v11.1 - AUDITORIA FISCAL BIG DATA
    RESTRUTURAÇÃO UI/UX COMPLETA
    ============================================ */
