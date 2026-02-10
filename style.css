@@ -1,7 +1,7 @@
 /* ============================================
    VDC SISTEMA DE PERITAGEM FORENSE v11.2
-   AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX COMPLETA
-   ZERO ERROR POLICY - RETIFICAÇÃO ESTRUTURAL
+   AUDITORIA FISCAL BIG DATA - ZERO ERROR POLICY
+   CORREÇÃO COMPLETA: SIDEBAR FLEX-BOX | OVERFLOW | STICKY
    ============================================ */
 
 /* 0. SPLASH SCREEN V11.2 */
@@ -179,7 +179,7 @@ body {
     box-sizing: border-box;
 }
 
-/* 3. LAYOUT PRINCIPAL - CSS GRID RESTRUTURADO V11.2 */
+/* 3. LAYOUT PRINCIPAL - CSS GRID RESTRUTURADO */
 .main-container {
     display: flex;
     flex-direction: column;
@@ -209,17 +209,17 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-y: auto;
     padding: 0 var(--spacing-md);
     box-sizing: border-box;
-    overflow-y: auto;
-    max-height: calc(100vh - 120px);
+    height: calc(100vh - 120px);
 }
 
-/* 4. SIDEBAR REESTRUTURADA - LAYOUT VERTICAL CORRIGIDO V11.2 */
+/* 4. SIDEBAR RESTRUTURADA V11.2 - CORREÇÃO COMPLETA FLEX-BOX */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
-    overflow-y: hidden;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     width: 320px;
@@ -227,24 +227,20 @@ body {
     max-width: 320px;
     flex-shrink: 0;
     position: sticky;
-    top: 120px;
+    top: 0;
     height: calc(100vh - 120px);
     box-sizing: border-box;
-    order: 1;
 }
 
-/* CABEÇALHO FIXO DA SIDEBAR - POSIÇÃO STICKY TOP */
+/* CABEÇALHO FIXO DA SIDEBAR - ORDEM 1 */
 .sidebar-header-fixed {
     background: linear-gradient(135deg, #0c1629 0%, #0a1322 100%);
     border-bottom: 2px solid var(--iso-blue);
     padding: var(--spacing-md);
-    position: sticky;
-    top: 0;
-    z-index: 100;
     flex-shrink: 0;
+    order: 1;
     box-shadow: var(--shadow-md);
     box-sizing: border-box;
-    order: 1;
 }
 
 .sidebar-header-fixed h3 {
@@ -333,7 +329,7 @@ body {
     box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
-/* INFORMAÇÕES FIXAS (STICKY) */
+/* INFORMAÇÕES FIXAS */
 .info-fixed {
     background: rgba(20, 30, 48, 0.7);
     border-radius: var(--border-radius-sm);
@@ -341,9 +337,6 @@ body {
     margin-top: var(--spacing-md);
     border: 1px solid var(--border-color);
     box-sizing: border-box;
-    position: sticky;
-    top: 180px;
-    z-index: 90;
 }
 
 .info-item {
@@ -402,106 +395,76 @@ body {
     box-sizing: border-box;
 }
 
-/* SECÇÃO DE EVIDÊNCIAS BIG DATA - LAYOUT FLEX-GROW V11.2 */
-.evidence-management-section-solid {
-    flex: 1;
+/* GESTÃO DE EVIDÊNCIAS BIG DATA - FLEX-GROW: 1 - ORDEM 2 */
+.evidence-section-sidebar {
+    flex-grow: 1;
+    order: 2;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
     box-sizing: border-box;
-    order: 2;
-    flex-grow: 1;
-    overflow-y: auto;
-    max-height: none;
-    margin-bottom: 0;
+    overflow: hidden;
 }
 
-/* BOTÃO DE EVIDÊNCIAS - FULL WIDTH */
-.evidence-management-btn-solid {
-    width: 100%;
-    padding: 1rem;
-    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
-    color: var(--bg-primary);
-    border: none;
-    border-radius: var(--border-radius);
+.evidence-section-sidebar h3 {
+    color: var(--nist-green);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 800;
+    border-bottom: 1px solid rgba(0, 204, 136, 0.2);
+    padding-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.upload-group-sidebar {
+    margin-bottom: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.upload-group-sidebar label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.upload-btn-sidebar {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(30, 42, 68, 0.9);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    box-shadow: var(--shadow-md);
-    box-sizing: border-box;
-    margin-bottom: var(--spacing-md);
-    position: relative;
-    overflow: hidden;
-}
-
-.evidence-management-btn-solid:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 204, 136, 0.4);
-}
-
-.evidence-management-btn-solid:active {
-    transform: translateY(0);
-}
-
-.evidence-count-solid {
-    background: var(--bg-primary);
-    color: var(--nist-green);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-}
-
-/* CONTADORES COMPACTOS - LAYOUT HORIZONTAL */
-.counters-compact {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    box-sizing: border-box;
-    margin-top: auto;
-    order: 3;
-}
-
-.counter-item-compact {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    padding: 0.5rem;
-    background: rgba(20, 30, 48, 0.8);
-    border-radius: var(--border-radius-sm);
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
     box-sizing: border-box;
-    min-height: 50px;
 }
 
-.counter-label-compact {
+.upload-btn-sidebar:hover {
+    background: rgba(0, 102, 204, 0.2);
+    border-color: var(--iso-blue);
+}
+
+.file-list-sidebar {
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
     color: var(--text-tertiary);
-    font-size: 0.65rem;
-    margin-bottom: 0.2rem;
-    font-weight: 700;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
 }
 
-.counter-value-compact {
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-    text-align: center;
+.file-input-sidebar {
+    display: none;
 }
 
 /* 5. CABEÇALHO ISO/NIST COMPLIANCE */
@@ -551,18 +514,7 @@ body {
     font-weight: 700;
 }
 
-.version-badge {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
-    color: var(--bg-primary);
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    font-family: var(--font-mono);
-}
-
-.subtitle {
+.logo-section p {
     color: var(--text-tertiary);
     font-size: 0.8rem;
     margin-top: 0.2rem;
@@ -616,13 +568,10 @@ body {
     box-sizing: border-box;
 }
 
-.timestamp-fbi strong {
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-.session-id {
-    color: var(--accent-primary);
+.timestamp-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 #currentTime {
@@ -631,8 +580,8 @@ body {
 
 /* 7. DASHBOARD FIXO ISO/NIST - CENTRALIZADO */
 .dashboard-fixed {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-md);
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
@@ -641,96 +590,86 @@ body {
     position: sticky;
     top: 70px;
     z-index: 50;
-    justify-content: center;
-    align-content: start;
     width: 100%;
     max-width: 1400px;
     margin: 0 auto var(--spacing-md) auto;
     box-sizing: border-box;
 }
 
-@media (max-width: 1400px) {
-    .dashboard-fixed {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 1200px;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-fixed {
-        grid-template-columns: 1fr;
-        position: static;
-        max-width: 100%;
-    }
-}
-
-.stat-card {
-    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    border-left: 4px solid var(--iso-blue);
-    transition: transform 0.2s ease;
-    box-shadow: var(--shadow-sm);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
     box-sizing: border-box;
 }
 
-.stat-card:hover {
-    transform: translateY(-1px);
-}
-
-.stat-card.alert {
-    border-left-color: var(--warn-primary);
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
-}
-
-.stat-card.regulatory {
-    border-left-color: var(--regulatory-orange);
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
-}
-
-.stat-card h4 {
-    color: var(--text-secondary);
+.toolbar-btn {
+    background: rgba(20, 30, 48, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
     font-size: 0.85rem;
-    margin-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.toolbar-btn:hover {
+    background: rgba(0, 102, 204, 0.1);
+    border-color: var(--iso-blue);
+}
+
+.toolbar-btn.danger {
+    background: rgba(232, 65, 24, 0.1);
+    border-color: var(--warn-primary);
+    color: var(--warn-primary);
+}
+
+.toolbar-btn.danger:hover {
+    background: rgba(232, 65, 24, 0.2);
+}
+
+/* Contadores Compactos */
+.counters-compact {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.counter-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    box-sizing: border-box;
+}
+
+.counter-label {
+    color: var(--text-tertiary);
+    font-size: 0.65rem;
     font-weight: 700;
 }
 
-.stat-card p {
-    font-size: 1.3rem;
-    font-weight: 800;
+.counter-value {
     color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
     font-family: var(--font-mono);
-    margin-bottom: 0.25rem;
-}
-
-.alert-text {
-    color: var(--warn-primary) !important;
-    animation: pulse 2s infinite;
-    font-weight: 800;
-}
-
-.regulatory-text {
-    color: var(--regulatory-orange) !important;
-    font-weight: 800;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-}
-
-.stat-card small {
-    color: var(--text-tertiary);
-    font-size: 0.7rem;
-    display: block;
-    font-weight: 500;
 }
 
 /* 8. DASHBOARD KPI ISO/NIST - ALINHAMENTO CORRIGIDO */
@@ -759,7 +698,7 @@ body {
 
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
     justify-content: center;
@@ -768,35 +707,6 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     box-sizing: border-box;
-}
-
-@media (min-width: 1400px) {
-    .kpi-grid {
-        grid-template-columns: repeat(5, 1fr);
-        max-width: 1400px;
-    }
-}
-
-@media (max-width: 1399px) and (min-width: 768px) {
-    .kpi-grid {
-        grid-template-columns: repeat(3, 1fr);
-        max-width: 1200px;
-    }
-    
-    #diferencialCard {
-        grid-column: span 3;
-    }
-}
-
-@media (max-width: 767px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-    }
-    
-    #diferencialCard {
-        grid-column: span 1;
-    }
 }
 
 .kpi-card {
@@ -808,7 +718,7 @@ body {
     position: relative;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    min-width: 250px;
+    min-width: 200px;
     max-width: 100%;
     word-break: break-word;
     margin: 0 auto;
@@ -859,23 +769,80 @@ body {
     }
 }
 
-#diferencialVal {
-    font-size: 1.5rem;
-    font-weight: 900;
-    margin: 0.5rem 0;
-    color: var(--warn-secondary);
-    font-family: var(--font-mono);
+.kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
-#regulatoryVal {
+.kpi-value {
     font-size: 1.3rem;
-    font-weight: 900;
-    margin: 0.5rem 0;
-    color: var(--regulatory-orange);
+    font-weight: 800;
+    color: var(--text-primary);
     font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
 }
 
-.kpi-card h4 {
+/* 10. STATS SECTION */
+.stats-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.stats-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--iso-blue);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.stat-card:hover {
+    transform: translateY(-1px);
+}
+
+.stat-card.alert {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card h5 {
     color: var(--text-secondary);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
@@ -883,24 +850,30 @@ body {
     align-items: center;
     gap: 0.5rem;
     font-weight: 700;
-    word-break: break-word;
 }
 
-.kpi-card p {
+.stat-value {
     font-size: 1.3rem;
     font-weight: 800;
     color: var(--text-primary);
     font-family: var(--font-mono);
     margin-bottom: 0.25rem;
-    word-break: break-all;
 }
 
-.kpi-card small {
-    color: var(--text-tertiary);
-    font-size: 0.7rem;
-    display: block;
-    font-weight: 500;
-    word-break: break-word;
+.alert-text {
+    color: var(--warn-primary) !important;
+    animation: pulse 2s infinite;
+    font-weight: 800;
+}
+
+.regulatory-text {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
 }
 
 .secondary-stats {
@@ -927,75 +900,6 @@ body {
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
-}
-
-/* 10. BARRA DE FERRAMENTAS ISO/NIST */
-.toolbar-section {
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-    margin-bottom: var(--spacing-md);
-    box-sizing: border-box;
-}
-
-.toolbar-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--spacing-sm);
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-}
-
-.btn-forensic {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
-    color: white;
-    border: none;
-    padding: 0.75rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-}
-
-.btn-forensic:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 102, 204, 0.4);
-}
-
-.btn-forensic:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--border-color);
-}
-
-.btn-tool {
-    background: rgba(20, 30, 48, 0.8);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    padding: 0.75rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-    box-sizing: border-box;
-}
-
-.btn-tool:hover {
-    background: rgba(0, 102, 204, 0.1);
-    border-color: var(--iso-blue);
 }
 
 /* 11. GRÁFICO VERTICAL COMPACTO ISO/NIST */
@@ -1097,20 +1001,6 @@ body {
     box-sizing: border-box;
 }
 
-@media (max-width: 1200px) {
-    .results-grid {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 1200px;
-    }
-}
-
-@media (max-width: 768px) {
-    .results-grid {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-    }
-}
-
 .result-item {
     background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
     border-radius: var(--border-radius-sm);
@@ -1157,8 +1047,7 @@ body {
 }
 
 /* 13. ALERTAS ISO/NIST */
-.omission-alert {
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
+.omission-alert, .bigdata-alert, .diferencial-alert, .regulatory-alert {
     border: 1px solid var(--warn-primary);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-md);
@@ -1166,6 +1055,10 @@ body {
     align-items: center;
     gap: var(--spacing-md);
     box-sizing: border-box;
+}
+
+.omission-alert {
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
 }
 
 .omission-alert i {
@@ -1197,12 +1090,6 @@ body {
 .bigdata-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
     border: 2px solid var(--warn-primary);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    box-sizing: border-box;
 }
 
 .bigdata-alert i {
@@ -1239,7 +1126,7 @@ body {
     background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(255, 159, 26, 0.05) 100%) !important;
 }
 
-.diferencial-alert i.fa-balance-scale {
+.diferencial-alert i {
     color: var(--warn-secondary) !important;
     font-size: 1.8rem;
 }
@@ -1254,7 +1141,7 @@ body {
     background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%) !important;
 }
 
-.regulatory-alert i.fa-gavel {
+.regulatory-alert i {
     color: var(--regulatory-orange) !important;
     font-size: 1.8rem;
 }
@@ -1527,18 +1414,6 @@ body {
     box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-    .summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 .summary-item {
     display: flex;
     flex-direction: column;
@@ -1571,23 +1446,16 @@ body {
     text-align: center;
 }
 
-.summary-value.total {
-    color: var(--nist-green);
-    font-size: 1.1rem;
-}
-
-.modal-footer {
-    background: rgba(30, 42, 68, 0.9);
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
+.modal-actions {
     display: flex;
     gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
     box-sizing: border-box;
 }
 
-.modal-footer .btn-primary, .modal-footer .btn-secondary {
+.modal-action-btn {
     flex: 1;
-    padding: 0.8rem;
+    padding: 1rem;
     border-radius: var(--border-radius-sm);
     font-weight: 700;
     cursor: pointer;
@@ -1602,23 +1470,23 @@ body {
     box-sizing: border-box;
 }
 
-.modal-footer .btn-primary {
+.btn-primary {
     background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
     color: white;
 }
 
-.modal-footer .btn-primary:hover {
+.btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
-.modal-footer .btn-secondary {
+.btn-secondary {
     background: rgba(30, 42, 68, 0.8);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
-.modal-footer .btn-secondary:hover {
+.btn-secondary:hover {
     background: rgba(0, 168, 255, 0.1);
     border-color: var(--iso-blue);
 }
@@ -1930,6 +1798,7 @@ body {
     
     .analysis-area {
         padding: 0 var(--spacing-sm);
+        height: auto;
     }
     
     .chart-section {
@@ -2069,6 +1938,10 @@ body {
     .summary-grid {
         grid-template-columns: 1fr;
     }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
 }
 
 /* 20. ANIMAÇÕES ADICIONAIS ISO/NIST */
@@ -2173,5 +2046,4 @@ button:active {
 /* ============================================
    FIM DO CSS VDC v11.2 - AUDITORIA FISCAL BIG DATA
    RESTRUTURAÇÃO UI/UX COMPLETA
-   ZERO ERROR POLICY IMPLEMENTADA
    ============================================ */
