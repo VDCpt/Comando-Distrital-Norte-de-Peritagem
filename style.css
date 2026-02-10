@@ -1,9 +1,10 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v11.1
-   AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX COMPLETA
+   VDC SISTEMA DE PERITAGEM FORENSE v11.2
+   AUDITORIA FISCAL BIG DATA - LAYOUT CORRIGIDO
+   ZERO ERROR POLICY - RETIFICAÇÃO ESTRUTURAL
    ============================================ */
 
-/* 0. SPLASH SCREEN V11.1 */
+/* 0. SPLASH SCREEN V11.2 */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -178,7 +179,7 @@ body {
     box-sizing: border-box;
 }
 
-/* 3. LAYOUT PRINCIPAL - CSS GRID RESTRUTURADO */
+/* 3. LAYOUT PRINCIPAL - CSS GRID CORRIGIDO V11.2 */
 .main-container {
     display: flex;
     flex-direction: column;
@@ -210,13 +211,15 @@ body {
     overflow-x: hidden;
     padding: 0 var(--spacing-md);
     box-sizing: border-box;
+    overflow-y: auto;
+    height: calc(100vh - 120px);
 }
 
-/* 4. SIDEBAR RESTRUTURADA - HIERARQUIA CORRIGIDA */
+/* 4. SIDEBAR RESTRUTURADA - LAYOUT FLEX CORRIGIDO V11.2 */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
-    overflow-y: hidden;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     width: 320px;
@@ -227,6 +230,7 @@ body {
     top: 120px;
     height: calc(100vh - 120px);
     box-sizing: border-box;
+    order: 1;
 }
 
 /* CABEÇALHO FIXO DA SIDEBAR - POSIÇÃO STICKY TOP */
@@ -240,6 +244,7 @@ body {
     flex-shrink: 0;
     box-shadow: var(--shadow-md);
     box-sizing: border-box;
+    order: 1;
 }
 
 .sidebar-header-fixed h3 {
@@ -397,15 +402,18 @@ body {
     box-sizing: border-box;
 }
 
-/* SECÇÃO DE EVIDÊNCIAS BIG DATA - LAYOUT BLOCO SÓLIDO (SEM SCROLL) */
+/* SECÇÃO DE EVIDÊNCIAS BIG DATA - LAYOUT BLOCO SÓLIDO (FLEX-GROW CORRIGIDO) */
 .evidence-management-section-solid {
     flex: 1;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
     box-sizing: border-box;
-    /* REMOVIDO: max-height, overflow-y */
     height: auto;
+    order: 2;
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: hidden;
 }
 
 /* BOTÃO DE EVIDÊNCIAS - FULL WIDTH */
@@ -461,6 +469,7 @@ body {
     border: 1px solid var(--border-color);
     box-sizing: border-box;
     margin-top: auto;
+    flex-shrink: 0;
 }
 
 .counter-item-compact {
@@ -1909,6 +1918,8 @@ body {
         max-width: 100%;
         position: static;
         height: auto;
+        flex-grow: 0;
+        order: 1;
     }
     
     .sidebar-header-fixed {
@@ -1921,6 +1932,8 @@ body {
     
     .analysis-area {
         padding: 0 var(--spacing-sm);
+        height: auto;
+        overflow-y: visible;
     }
     
     .chart-section {
@@ -1962,6 +1975,10 @@ body {
     
     .counters-compact {
         grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .evidence-management-section-solid {
+        flex-grow: 0;
     }
 }
 
@@ -2161,7 +2178,50 @@ button:active {
     z-index: 90;
 }
 
+/* 25. CORREÇÕES ESPECÍFICAS V11.2 - LAYOUT ESTRUTURAL */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    position: sticky;
+    top: 120px;
+    overflow: hidden;
+}
+
+.sidebar-header-fixed {
+    order: 1;
+    flex-shrink: 0;
+}
+
+.evidence-management-section-solid {
+    order: 2;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: hidden;
+}
+
+.counters-compact {
+    order: 3;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* Garantir que o scroll só exista na área de análise */
+.analysis-area {
+    overflow-y: auto;
+    height: calc(100vh - 120px);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Remover qualquer scroll da sidebar */
+.sidebar {
+    overflow-y: hidden;
+}
+
 /* ============================================
-   FIM DO CSS VDC v11.1 - AUDITORIA FISCAL BIG DATA
-   RESTRUTURAÇÃO UI/UX COMPLETA
+   FIM DO CSS VDC v11.2 - AUDITORIA FISCAL BIG DATA
+   LAYOUT ESTRUTURAL CORRIGIDO
+   ZERO ERROR POLICY IMPLEMENTADA
    ============================================ */
