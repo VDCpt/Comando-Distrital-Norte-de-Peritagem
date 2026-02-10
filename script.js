@@ -298,8 +298,8 @@ async function loadForensicSystem() {
                 updatePageTitle('Sistema Pronto');
                 logAudit('✅ Sistema VDC v10.9 - Final Stable Release inicializado', 'success');
                 logAudit('🔍 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%', 'info');
-                logAudit('⚖️ Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
-                logAudit('📊 Upload Big Data ilimitado ativado', 'info');
+                logAudit('🔐 Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
+                logAudit('📈 Upload Big Data ilimitado ativado', 'info');
                 
             }, 300);
         }, 500);
@@ -368,7 +368,7 @@ function setupPlatformSelector() {
         if (VDCSystem.selectedPlatform === 'bolt') {
             logAudit(`🎯 ALVO PRINCIPAL: Bolt Operations OÜ | EE102090374`, 'warn');
             logAudit(`🏢 Endereço: Vana-Lõuna 15, Tallinn 10134 Estonia`, 'info');
-            logAudit(`💼 Obrigação DAC7 ativada para plataforma estrangeira`, 'info');
+            logAudit(`📋 Obrigação DAC7 ativada para plataforma estrangeira`, 'info');
         }
         
         // Limpar análise específica da plataforma
@@ -654,7 +654,7 @@ function activateDemoMode() {
             demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO DADOS DEMO...';
         }
         
-        logAudit('🔬 ATIVANDO MODO DEMO FORENSE ISO/NIST - DADOS REAIS BOLT', 'warn');
+        logAudit('🔍 ATIVANDO MODO DEMO FORENSE ISO/NIST - DADOS REAIS BOLT', 'warn');
         
         // Preencher automaticamente o cliente
         const clientNameInput = document.getElementById('clientName');
@@ -740,7 +740,7 @@ function activateDemoMode() {
             logAudit('💰 VALORES REAIS BOLT: Fatura 239.00€ | Comissão 792.59€ | Diferencial 553.59€', 'info');
             logAudit('⚖️ RISCO REGULATÓRIO: Taxa de Regulação 5% = 39,63€ (AMT/IMT)', 'regulatory');
             logAudit('📊 JUROS DE MORA: 4% base anual civil = 22,14€ (RGRC)', 'warn');
-            logAudit('📊 ANÁLISE AUTOMÁTICA: Gráficos e cálculos gerados (ISO/NIST)', 'success');
+            logAudit('📈 ANÁLISE AUTOMÁTICA: Gráficos e cálculos gerados (ISO/NIST)', 'success');
             
             // Mostrar alertas
             showDiferencialAlert();
@@ -1107,7 +1107,7 @@ function updateChainOfCustodyHash(filename, hash) {
     }
 }
 
-// 10. FUNÇÕES DE EXTRACAÇÃO DE DADOS (COM CORREÇÃO 1: HIGIENIZAÇÃO)
+// 10. FUNÇÕES DE EXTRAÇÃO DE DADOS (COM CORREÇÃO 1: HIGIENIZAÇÃO)
 function extractDAC7Data(text, filename) {
     const data = {
         filename: filename,
@@ -1725,10 +1725,10 @@ async function performForensicAnalysis() {
             analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ANALISANDO BIG DATA (ISO/IEC 27037)...';
         }
         
-        logAudit('🚀 INICIANDO ANÁLISE FORENSE DE LAYERING BIG DATA', 'success');
+        logAudit('🕵️ INICIANDO ANÁLISE FORENSE DE LAYERING BIG DATA', 'success');
         logAudit('📊 Cruzamento SAF-T vs Extratos vs Faturas (NIST SP 800-86)', 'info');
         logAudit('⚖️ Verificação de Conformidade AMT/IMT - Taxa de Regulação 5%', 'regulatory');
-        logAudit('📈 Cálculo de Juros de Mora (RGRC 4% base anual civil)', 'warn');
+        logAudit('📊 Cálculo de Juros de Mora (RGRC 4% base anual civil)', 'warn');
         logAudit('🔍 Ativação do Protocolo FBI/Interpol - Asset Forfeiture', 'warn');
         
         await processLoadedData();
@@ -1765,8 +1765,8 @@ async function performForensicAnalysis() {
         
         logAudit('✅ ANÁLISE FORENSE BIG DATA CONCLUÍDA COM SUCESSO (ISO/IEC 27037)', 'success');
         logAudit(`⚖️ Diferencial identificado: ${VDCSystem.analysis.extractedValues.diferencialCusto.toFixed(2)}€`, 'warn');
-        logAudit(`📈 Juros de Mora (4%): ${VDCSystem.analysis.extractedValues.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
-        logAudit(`📊 Quantum Benefício Ilícito (38k × 12 × 7): ${(VDCSystem.analysis.projection.totalMarketImpact / 1000000).toFixed(2)}M€`, 'info');
+        logAudit(`📊 Juros de Mora (4%): ${VDCSystem.analysis.extractedValues.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
+        logAudit(`📈 Quantum Benefício Ilícito (38k × 12 × 7): ${(VDCSystem.analysis.projection.totalMarketImpact / 1000000).toFixed(2)}M€`, 'info');
         logAudit(`⚖️ Risco Regulatório AMT/IMT: ${VDCSystem.analysis.extractedValues.taxaRegulacao.toFixed(2)}€ (5% sobre comissão)`, 'regulatory');
         
         if (VDCSystem.analysis.crossings.diferencialAlerta) {
@@ -1924,7 +1924,7 @@ function calculateExtractedValues() {
         
         logAudit(`⚖️ DIFERENCIAL CALCULADO: |${Math.abs(ev.comissaoApp).toFixed(2)}€| - ${ev.faturaPlataforma.toFixed(2)}€ = ${ev.diferencialCusto.toFixed(2)}€ (ISO/IEC 27037)`, 'warn');
         logAudit(`💰 Prejuízo Fiscal (21%): ${ev.prejuizoFiscal.toFixed(2)}€`, 'error');
-        logAudit(`🏛️ IVA Autoliquidação (23%): ${ev.ivaAutoliquidacao.toFixed(2)}€`, 'error');
+        logAudit(`🧾 IVA Autoliquidação (23%): ${ev.ivaAutoliquidacao.toFixed(2)}€`, 'error');
     }
     
     // DAC7
@@ -1982,7 +1982,7 @@ function calculateMarketProjection() {
     proj.totalMarketImpact = proj.averagePerDriver * proj.driverCount * proj.monthsPerYear * proj.yearsOfOperation;
     proj.marketProjection = proj.totalMarketImpact / 1000000;
     
-    logAudit(`📈 QUANTUM BENEFÍCIO ILÍCITO CALCULADO (38k × 12 × 7):`, 'info');
+    logAudit(`📊 QUANTUM BENEFÍCIO ILÍCITO CALCULADO (38k × 12 × 7):`, 'info');
     logAudit(`   • Diferencial/motorista: ${proj.averagePerDriver.toFixed(2)}€`, 'info');
     logAudit(`   • Impacto mensal (38k): ${(proj.averagePerDriver * proj.driverCount / 1000000).toFixed(2)}M€`, 'info');
     logAudit(`   • Asset Forfeiture (7 anos): ${proj.marketProjection.toFixed(2)}M€ (ISO/IEC 27037)`, 'warn');
@@ -2010,7 +2010,7 @@ function calcularJurosMora() {
             jurosCard.style.display = 'flex';
         }
         
-        logAudit(`📈 JUROS DE MORA CALCULADOS: ${ev.diferencialCusto.toFixed(2)}€ × 4% = ${ev.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
+        logAudit(`📊 JUROS DE MORA CALCULADOS: ${ev.diferencialCusto.toFixed(2)}€ × 4% = ${ev.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
     }
 }
 
@@ -2167,7 +2167,7 @@ function criarDashboardDiferencial() {
             kpiGrid.appendChild(diferencialCard);
         }
         
-        logAudit(`📊 Dashboard diferencial criado: ${diferencial.toFixed(2)}€ (NIST SP 800-86)`, 'info');
+        logAudit(`📈 Dashboard diferencial criado: ${diferencial.toFixed(2)}€ (NIST SP 800-86)`, 'info');
     }
 }
 
@@ -2201,7 +2201,7 @@ function criarDashboardRegulatorio() {
             kpiGrid.appendChild(regulatoryCard);
         }
         
-        logAudit(`📊 Dashboard regulatório criado: ${taxaRegulacao.toFixed(2)}€ (AMT/IMT)`, 'regulatory');
+        logAudit(`📈 Dashboard regulatório criado: ${taxaRegulacao.toFixed(2)}€ (AMT/IMT)`, 'regulatory');
     }
 }
 
@@ -2414,7 +2414,7 @@ function renderDashboardChart() {
             }
         });
         
-        logAudit('📊 Gráfico VERTICAL renderizado com valores em € e % (Big Data Forense)', 'success');
+        logAudit('📈 Gráfico VERTICAL renderizado com valores em € e % (Big Data Forense)', 'success');
         
     } catch (error) {
         console.error('Erro ao renderizar gráfico:', error);
@@ -2593,7 +2593,7 @@ function generateQuesitosEstrategicos() {
 async function exportPDF() {
     try {
         updatePageTitle('Gerando PDF...');
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL BIG DATA (ANÁLISE DE LAYERING)...', 'info');
+        logAudit('🔄 GERANDO RELATÓRIO PERICIAL BIG DATA (ANÁLISE DE LAYERING)...', 'info');
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -3185,7 +3185,7 @@ function updateFileList(listId, files) {
         fileItem.innerHTML = `
             <i class="fas fa-check-circle"></i>
             <span class="file-name">${file.name}</span>
-            <span class="file-status">${sizeStr} ✓</span>
+            <span class="file-status">${sizeStr} ✅</span>
         `;
         fileList.appendChild(fileItem);
     });
