@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v11.1 - Auditoria Fiscal Big Data</title>
+    <title>VDC | Sistema de Peritagem Forense v11.2 - Auditoria Fiscal Big Data</title>
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,24 +14,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V11.1 -->
+    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V11.2 -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.1</h1>
+            <h1>VDC FORENSIC SYSTEM v11.2</h1>
             <h2>BIG DATA AUDITORIA FISCAL</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5% | ZERO ERROR POLICY</p>
             <p class="splash-warning">
-                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense V11.2 - Extração de Dados Estruturados
             </p>
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA
+                <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA V11.2
             </button>
             <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
-                <p class="version">v11.1 - Auditoria Fiscal Big Data</p>
+                <p>Protocolo de Integridade Digital V11.2 | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
+                <p class="version">v11.2 - Auditoria Fiscal Big Data - ZERO ERROR POLICY</p>
             </div>
         </div>
     </div>
@@ -42,8 +42,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v11.1 - AUDITORIA FISCAL</h2>
-            <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação AMT/IMT</p>
+            <h2>VDC FORENSIC SYSTEM v11.2 - AUDITORIA FISCAL</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada V11.2 | Taxa Regulação AMT/IMT</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -53,22 +53,22 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
 
-    <!-- Modal de GESTÃO DE EVIDÊNCIAS BIG DATA -->
+    <!-- Modal de GESTÃO DE EVIDÊNCIAS BIG DATA V11.2 -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (EXTRUÇÃO ESTRUTURADA)</h3>
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA V11.2 (EXTRUÇÃO ESTRUTURADA)</h3>
                 <button id="closeModalBtn" class="icon-btn">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
-                    <!-- DAC7 ISO/NIST -->
+                    <!-- DAC7 ISO/NIST V11.2 -->
                     <div class="upload-group-modal">
                         <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
-                            <i class="fas fa-file-contract"></i> SELECIONAR FICHEIROS DAC7
+                            <i class="fas fa-file-contract"></i> SELECIONAR FICHEIROS DAC7 V11.2
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
@@ -76,71 +76,71 @@
 
                     <!-- Control File (ISO/IEC 27037) -->
                     <div class="upload-group-modal">
-                        <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
+                        <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST V11.2</label>
                         <button id="controlUploadBtnModal" class="upload-btn modal-btn">
-                            <i class="fas fa-file-shield"></i> SELECIONAR FICHEIRO DE CONTROLO
+                            <i class="fas fa-file-shield"></i> SELECIONAR FICHEIRO DE CONTROLO V11.2
                         </button>
                         <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.xml,.pdf,.txt" hidden>
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- SAF-T Files (XML + CSV) -->
+                    <!-- SAF-T Files (XML + CSV) V11.2 -->
                     <div class="upload-group-modal">
-                        <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)</label>
+                        <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS) V11.2</label>
                         <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-code"></i> SELECIONAR FICHEIROS SAF-T/XML/CSV
+                            <i class="fas fa-file-code"></i> SELECIONAR FICHEIROS SAF-T/XML/CSV V11.2
                         </button>
                         <input type="file" id="saftFileModal" class="file-input-modal" multiple accept=".xml,.csv" hidden>
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Platform Invoices -->
+                    <!-- Platform Invoices V11.2 -->
                     <div class="upload-group-modal">
-                        <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
+                        <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA V11.2</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
+                            <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS V11.2
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- EXTRATOS BANCÁRIOS -->
+                    <!-- EXTRATOS BANCÁRIOS V11.2 -->
                     <div class="upload-group-modal">
-                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS</label>
+                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS V11.2</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
+                            <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS V11.2
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
                         <div id="statementFileListModal" class="file-list-modal"></div>
                     </div>
                 </div>
 
-                <!-- Resumo de Processamento -->
+                <!-- Resumo de Processamento V11.2 -->
                 <div class="processing-summary">
-                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
+                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO V11.2 (HASH SHA-256)</h4>
                     <div class="summary-grid">
                         <div class="summary-item">
-                            <span class="summary-label">DAC7</span>
+                            <span class="summary-label">DAC7 V11.2</span>
                             <span id="summaryDac7" class="summary-value">0 ficheiros | 0 registos</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">CONTROLO</span>
+                            <span class="summary-label">CONTROLO V11.2</span>
                             <span id="summaryControl" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">SAF-T</span>
+                            <span class="summary-label">SAF-T V11.2</span>
                             <span id="summarySaft" class="summary-value">0 ficheiros | 0 registos</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">FATURAS</span>
+                            <span class="summary-label">FATURAS V11.2</span>
                             <span id="summaryInvoices" class="summary-value">0 ficheiros | 0 registos</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">EXTRATOS</span>
+                            <span class="summary-label">EXTRATOS V11.2</span>
                             <span id="summaryStatements" class="summary-value">0 ficheiros | 0 registos</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">TOTAL</span>
+                            <span class="summary-label">TOTAL V11.2</span>
                             <span id="summaryTotal" class="summary-value total">0 ficheiros | 0 registos</span>
                         </div>
                     </div>
@@ -148,33 +148,33 @@
             </div>
             <div class="modal-footer">
                 <button id="closeAndSaveBtn" class="btn-primary">
-                    <i class="fas fa-save"></i> FECHAR E GUARDAR EVIDÊNCIAS
+                    <i class="fas fa-save"></i> FECHAR E GUARDAR EVIDÊNCIAS V11.2
                 </button>
                 <button id="clearAllBtn" class="btn-secondary">
-                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS
+                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS V11.2
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo Principal V11.2 -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
-        <!-- Cabeçalho ISO/NIST Compliance -->
+        <!-- Cabeçalho ISO/NIST Compliance V11.2 -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.1 AF</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.2 AF</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada V11.2 | Taxa Regulação 5% | ZERO ERROR POLICY</p>
                     </div>
                 </div>
                 
-                <!-- Botão MODO DEMO FORENSE na Navbar -->
+                <!-- Botão MODO DEMO FORENSE V11.2 na Navbar -->
                 <div class="demo-section">
                     <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
+                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO V11.2
                     </button>
                 </div>
                 
@@ -188,13 +188,13 @@
             </div>
         </header>
 
-        <!-- Grid Principal com CSS Grid Corrigido -->
+        <!-- Grid Principal com CSS Grid Corrigido V11.2 -->
         <div class="app-container">
-            <!-- Sidebar reestruturada - Hierarquia corrigida -->
+            <!-- Sidebar reestruturada - Layout Flex corrigido V11.2 -->
             <aside class="sidebar">
-                <!-- CABEÇALHO FIXO DA SIDEBAR - IDENTIFICAÇÃO DO CLIENTE NO TOPO -->
+                <!-- CABEÇALHO FIXO DA SIDEBAR V11.2 - IDENTIFICAÇÃO DO CLIENTE NO TOPO -->
                 <div class="sidebar-header-fixed">
-                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
+                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE V11.2</h3>
                     
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
@@ -206,14 +206,14 @@
                             <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
                         </div>
                         
-                        <!-- Botão Registar Cliente no TOPO -->
+                        <!-- Botão Registar Cliente no TOPO V11.2 -->
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
-                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE
+                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE V11.2
                             </button>
                         </div>
                         
-                        <!-- Informações Fixas (STICKY TOP) -->
+                        <!-- Informações Fixas (STICKY TOP) V11.2 -->
                         <div class="info-fixed">
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
@@ -232,7 +232,7 @@
                             </div>
                         </div>
                         
-                        <!-- Status do Cliente Fixo -->
+                        <!-- Status do Cliente Fixo V11.2 -->
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
                             <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong></span>
@@ -240,115 +240,115 @@
                     </div>
                 </div>
 
-                <!-- SECÇÃO DE EVIDÊNCIAS BIG DATA - SEM SCROLL, LAYOUT BLOCO SÓLIDO -->
+                <!-- SECÇÃO DE EVIDÊNCIAS BIG DATA V11.2 - LAYOUT FLEX-GROW CORRIGIDO -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
-                        <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
+                        <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA V11.2
                         <span class="evidence-count-solid">0 ficheiros</span>
                     </button>
                     
-                    <!-- Contadores Compactos -->
+                    <!-- Contadores Compactos V11.2 -->
                     <div class="counters-compact">
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">CONTROLO</span>
+                            <span class="counter-label-compact">CONTROLO V11.2</span>
                             <span id="controlCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">SAF-T</span>
+                            <span class="counter-label-compact">SAF-T V11.2</span>
                             <span id="saftCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">FATURAS</span>
+                            <span class="counter-label-compact">FATURAS V11.2</span>
                             <span id="invoiceCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">EXTRATOS</span>
+                            <span class="counter-label-compact">EXTRATOS V11.2</span>
                             <span id="statementCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">DAC7</span>
+                            <span class="counter-label-compact">DAC7 V11.2</span>
                             <span id="dac7CountCompact" class="counter-value-compact">0</span>
                         </div>
                     </div>
                 </div>
             </aside>
 
-            <!-- Área Principal de Análise -->
+            <!-- Área Principal de Análise V11.2 -->
             <main class="analysis-area">
-                <!-- Barra de Ferramentas -->
+                <!-- Barra de Ferramentas V11.2 -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search"></i> EXECUTAR AUDITORIA BIG DATA
+                            <i class="fas fa-search"></i> EXECUTAR AUDITORIA BIG DATA V11.2
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
-                            <i class="fas fa-file-code"></i> EXPORTAR JSON
+                            <i class="fas fa-file-code"></i> EXPORTAR JSON V11.2
                         </button>
                         <button id="exportPDFBtn" class="btn-tool">
-                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL
+                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL V11.2
                         </button>
                         <button id="resetBtn" class="btn-tool">
-                            <i class="fas fa-redo"></i> NOVA SESSÃO
+                            <i class="fas fa-redo"></i> NOVA SESSÃO V11.2
                         </button>
                     </div>
                 </section>
 
-                <!-- Dashboard Fixo ISO/NIST -->
+                <!-- Dashboard Fixo ISO/NIST V11.2 -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
-                        <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
+                        <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO V11.2</h4>
                         <p id="netVal">0,00€</p>
                         <small>Base tributável SAF-T</small>
                     </div>
                     <div class="stat-card">
-                        <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
+                        <h4><i class="fas fa-percentage"></i> IVA 6% V11.2</h4>
                         <p id="iva6Val">0,00€</p>
                         <small>Taxa reduzida Portugal</small>
                     </div>
                     <div class="stat-card">
-                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA</h4>
+                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA V11.2</h4>
                         <p id="commissionVal">0,00€</p>
                         <small>Serviço de intermediação</small>
                     </div>
                     <div class="stat-card alert">
-                        <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
+                        <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO V11.2</h4>
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
-                    <!-- Card: JUROS DE MORA -->
+                    <!-- Card: JUROS DE MORA V11.2 -->
                     <div class="stat-card regulatory" id="jurosCard" style="display: none;">
-                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
+                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%) V11.2</h4>
                         <p id="jurosVal" class="regulatory-text">0,00€</p>
                         <small>Base anual civil (RGRC)</small>
                     </div>
                 </section>
 
-                <!-- Dashboard KPI com Dados Reais -->
+                <!-- Dashboard KPI com Dados Reais V11.2 -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA</h3>
+                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA V11.2</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS</h4>
+                            <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS V11.2</h4>
                             <p id="kpiGanhos">0,00€</p>
                             <small>Valor real do extrato</small>
                         </div>
                         <div class="kpi-card">
-                            <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
+                            <h4><i class="fas fa-percentage"></i> COMISSÃO APP V11.2</h4>
                             <p id="kpiComm">0,00€</p>
                             <small>Taxa retida pela plataforma</small>
                         </div>
                         <div class="kpi-card highlight">
-                            <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
+                            <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER V11.2</h4>
                             <p id="kpiNet">0,00€</p>
                             <small>Transferência bancária real</small>
                         </div>
                         <div class="kpi-card danger">
-                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA</h4>
+                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA V11.2</h4>
                             <p id="kpiInvoice">0,00€</p>
                             <small>Valor faturado (documento)</small>
                         </div>
-                        <!-- Card de Diferencial será adicionado dinamicamente -->
-                        <!-- Card de Risco Regulatório será adicionado dinamicamente -->
+                        <!-- Card de Diferencial será adicionado dinamicamente V11.2 -->
+                        <!-- Card de Risco Regulatório será adicionado dinamicamente V11.2 -->
                     </div>
                     <div class="secondary-stats">
                         <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
@@ -358,48 +358,48 @@
                     </div>
                 </section>
 
-                <!-- Gráfico Vertical Compacto ISO/NIST -->
+                <!-- Gráfico Vertical Compacto ISO/NIST V11.2 -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
+                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA V11.2 (% e €)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
                     <div class="chart-legend">
-                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Valor Ilíquido</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
-                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%)</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Valor Ilíquido V11.2</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6% V11.2</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma V11.2</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido V11.2</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%) V11.2</span>
                     </div>
                 </section>
 
-                <!-- Resultados da Análise Forense -->
+                <!-- Resultados da Análise Forense V11.2 -->
                 <section class="analysis-results">
-                    <h3><i class="fas fa-search-dollar"></i> AUDITORIA BIG DATA DE LAYERING</h3>
+                    <h3><i class="fas fa-search-dollar"></i> AUDITORIA BIG DATA DE LAYERING V11.2</h3>
                     <div class="results-grid">
                         <div class="result-item">
-                            <h5>BRUTO SAF-T</h5>
+                            <h5>BRUTO SAF-T V11.2</h5>
                             <p id="grossResult" class="result-value">0,00€</p>
                             <div class="result-bar">
                                 <div class="bar-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="result-item">
-                            <h5>TRANSFERÊNCIA BANCÁRIA</h5>
+                            <h5>TRANSFERÊNCIA BANCÁRIA V11.2</h5>
                             <p id="transferResult" class="result-value">0,00€</p>
                             <div class="result-bar">
                                 <div class="bar-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="result-item">
-                            <h5>DIFERENÇA (CRUZAMENTO)</h5>
+                            <h5>DIFERENÇA (CRUZAMENTO) V11.2</h5>
                             <p id="differenceResult" class="result-value">0,00€</p>
                             <div class="result-bar">
                                 <div class="bar-fill" id="differenceBar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="result-item">
-                            <h5>QUANTUM BENEFÍCIO ILÍCITO</h5>
+                            <h5>QUANTUM BENEFÍCIO ILÍCITO V11.2</h5>
                             <p id="marketResult" class="result-value">0,00M€</p>
                             <div class="result-bar">
                                 <div class="bar-fill" style="width: 0%"></div>
@@ -407,47 +407,47 @@
                         </div>
                     </div>
 
-                    <!-- Alerta de Omissão ISO/NIST -->
+                    <!-- Alerta de Omissão ISO/NIST V11.2 -->
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA BIG DATA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
+                            <strong>ALERTA BIG DATA DE LAYERING DETETADO V11.2 (ISO/IEC 27037)</strong>
                             <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
 
-                    <!-- Alerta Intermitente BigData -->
+                    <!-- Alerta Intermitente BigData V11.2 -->
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation-alt"></i>
                         <div>
-                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
+                            <strong>⚠️ ALERTA BIG DATA V11.2: DISCREPÂNCIA CRÍTICA</strong>
                             <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
                         </div>
                     </div>
                     
-                    <!-- Alerta Diferencial ISO/NIST -->
+                    <!-- Alerta Diferencial ISO/NIST V11.2 -->
                     <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
                         <i class="fas fa-balance-scale"></i>
                         <div>
-                            <strong>🔴 EVIDÊNCIA BIG DATA: DIFERENCIAL DE CUSTO DETETADO</strong>
+                            <strong>🔴 EVIDÊNCIA BIG DATA V11.2: DIFERENCIAL DE CUSTO DETETADO</strong>
                             <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
                         </div>
                     </div>
 
-                    <!-- Novo Alerta: JUROS DE MORA -->
+                    <!-- Novo Alerta: JUROS DE MORA V11.2 -->
                     <div id="jurosAlert" class="regulatory-alert" style="display: none;">
                         <i class="fas fa-percent"></i>
                         <div>
-                            <strong>⚖️ JUROS DE MORA CALCULADOS (RGRC 4%)</strong>
+                            <strong>⚖️ JUROS DE MORA CALCULADOS V11.2 (RGRC 4%)</strong>
                             <p>Juros civis acumulados sobre valor em dívida: <span id="jurosValue">0,00€</span></p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Consola de Auditoria ISO/NIST -->
+                <!-- Consola de Auditoria ISO/NIST V11.2 -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA (ISO/IEC 27037)</h3>
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA V11.2 (ISO/IEC 27037)</h3>
                         <div class="console-controls">
                             <button id="clearConsoleBtn" class="icon-btn" title="Limpar consola">
                                 <i class="fas fa-broom"></i>
@@ -461,21 +461,21 @@
                         </div>
                     </div>
                     <div id="auditOutput" class="console-output">
-                        <!-- Logs serão inseridos aqui -->
+                        <!-- Logs serão inseridos aqui V11.2 -->
                     </div>
                 </section>
             </main>
         </div>
 
-        <!-- Rodapé ISO/NIST Compliance -->
+        <!-- Rodapé ISO/NIST Compliance V11.2 -->
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AUDITORIA FISCAL BIG DATA</strong>
-                    <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE V11.2: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AUDITORIA FISCAL BIG DATA | ZERO ERROR POLICY</strong>
+                    <span id="masterHashValue">AGUARDANDO GERAÇÃO V11.2...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.1 - Auditoria Fiscal Big Data | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.2 - Auditoria Fiscal Big Data | ZERO ERROR POLICY | © 2024
                 </div>
             </div>
         </footer>
