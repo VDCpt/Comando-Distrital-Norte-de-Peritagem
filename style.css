@@ -157,7 +157,7 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    box-sizing: border-box; /* BOX-MODEL INTEGRITY */
 }
 
 body {
@@ -184,10 +184,10 @@ body {
     width: 100%;
 }
 
-/* FIX LAYOUT WRAPPER WITH CSS GRID */
-.main-grid {
+/* LAYOUT REFACTORING: Substituir flex por grid */
+.app-container {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px 1fr; /* LAYOUT REFACTORING */
     flex: 1;
     min-height: calc(100vh - 120px);
     gap: 0;
@@ -204,7 +204,7 @@ body {
     padding: 0 var(--spacing-md);
 }
 
-/* IMPLEMENT FLEX-CENTER FOR DASHBOARD GRID */
+/* DASHBOARD CENTERING COM GRID */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -220,6 +220,7 @@ body {
     align-content: start;
     width: 100%;
     max-width: 100%;
+    margin: 0 auto; /* DASHBOARD CENTERING */
 }
 
 @media (max-width: 1400px) {
@@ -355,7 +356,7 @@ body {
 
 /* 6. GRID PRINCIPAL - JÁ CORRIGIDO ACIMA */
 @media (max-width: 1200px) {
-    .main-grid {
+    .app-container {
         grid-template-columns: 1fr;
     }
 }
@@ -891,6 +892,7 @@ body {
     padding-bottom: 0.5rem;
 }
 
+/* DASHBOARD GRID CENTERING */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -900,6 +902,7 @@ body {
     align-items: start;
     width: 100%;
     max-width: 100%;
+    margin: 0 auto; /* DASHBOARD CENTERING */
 }
 
 @media (min-width: 1400px) {
@@ -1668,7 +1671,7 @@ body {
 
 /* 24. RESPONSIVIDADE ISO/NIST */
 @media (max-width: 1024px) {
-    .main-grid {
+    .app-container {
         grid-template-columns: 1fr;
     }
     
