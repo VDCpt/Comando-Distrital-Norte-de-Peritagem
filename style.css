@@ -154,10 +154,17 @@
 }
 
 /* 2. RESET E BASE ISO/NIST - COM BOX-SIZING GLOBAL */
-* {
+/* CORREÇÃO CRÍTICA IMPLEMENTADA: BOX-SIZING BORDER-BOX GLOBAL */
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box; /* BOX-MODEL INTEGRITY - CORREÇÃO IMPLEMENTADA */
+}
+
+html {
+    box-sizing: border-box;
 }
 
 body {
@@ -169,9 +176,11 @@ body {
     overflow-x: hidden;
     font-size: 14px;
     max-width: 100vw;
+    box-sizing: border-box;
 }
 
 /* 3. LAYOUT PRINCIPAL - CSS GRID CORRIGIDO */
+/* CORREÇÃO CRÍTICA IMPLEMENTADA: MAX-WIDTH + MARGIN AUTO */
 .main-container {
     display: flex;
     flex-direction: column;
@@ -182,6 +191,7 @@ body {
     transition: opacity 0.3s ease;
     overflow-x: hidden;
     width: 100%;
+    box-sizing: border-box;
 }
 
 /* LAYOUT REFACTORING: Substituir flex por grid */
@@ -194,6 +204,7 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* CORREÇÃO: Garantir que o conteúdo não transborda */
@@ -202,9 +213,10 @@ body {
     max-width: 100%;
     overflow-x: hidden;
     padding: 0 var(--spacing-md);
+    box-sizing: border-box;
 }
 
-/* DASHBOARD CENTERING COM GRID - CORREÇÃO COMPLETA */
+/* DASHBOARD CENTERING COM GRID - CORREÇÃO COMPLETA IMPLEMENTADA */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* AUTO-FIT IMPLEMENTADO */
@@ -220,7 +232,23 @@ body {
     align-content: start;
     width: 100%;
     max-width: 1400px; /* LIMITADOR DE LARGURA */
-    margin: 0 auto 20px auto; /* CENTRALIZAÇÃO PERFEITA */
+    margin: 0 auto var(--spacing-md) auto; /* CENTRALIZAÇÃO PERFEITA - CORREÇÃO IMPLEMENTADA */
+    box-sizing: border-box;
+}
+
+@media (max-width: 1400px) {
+    .dashboard-fixed {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-fixed {
+        grid-template-columns: 1fr;
+        position: static;
+        max-width: 100%;
+    }
 }
 
 /* 4. CABEÇALHO ISO/NIST COMPLIANCE */
@@ -233,6 +261,7 @@ body {
     z-index: 100;
     box-shadow: var(--shadow-md);
     width: 100%;
+    box-sizing: border-box;
 }
 
 .header-content {
@@ -243,6 +272,7 @@ body {
     margin: 0 auto;
     gap: var(--spacing-md);
     flex-wrap: wrap;
+    box-sizing: border-box;
 }
 
 .logo-section {
@@ -251,6 +281,7 @@ body {
     gap: var(--spacing-sm);
     flex: 1;
     min-width: 250px;
+    box-sizing: border-box;
 }
 
 .logo-section i {
@@ -289,6 +320,7 @@ body {
 /* Botão MODO DEMO FORENSE na navbar */
 .demo-section {
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .btn-demo-nav {
@@ -307,6 +339,7 @@ body {
     font-family: var(--font-mono);
     letter-spacing: 0.5px;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .btn-demo-nav:hover {
@@ -327,6 +360,7 @@ body {
     border-radius: var(--border-radius);
     border: 1px solid rgba(0, 168, 255, 0.2);
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .timestamp-fbi strong {
@@ -342,7 +376,14 @@ body {
     color: var(--success-primary);
 }
 
-/* 6. SIDEBAR COM LARGURA FIXA E STICKY - CORREÇÃO IMPLEMENTADA */
+/* 6. GRID PRINCIPAL - JÁ CORRIGIDO ACIMA */
+@media (max-width: 1200px) {
+    .app-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 7. SIDEBAR COM LARGURA FIXA E STICKY - CORREÇÃO IMPLEMENTADA */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
@@ -355,12 +396,356 @@ body {
     min-width: 280px;
     max-width: 280px;
     flex-shrink: 0;
-    position: sticky; /* STICKY IMPLEMENTADO */
+    position: sticky; /* STICKY IMPLEMENTADO - CORREÇÃO IMPLEMENTADA */
     top: 120px;
     height: calc(100vh - 120px);
+    box-sizing: border-box;
 }
 
-/* 7. CONTADORES ISO/NIST */
+.client-identification {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(0, 168, 255, 0.3);
+    box-shadow: var(--shadow-sm);
+    box-sizing: border-box;
+}
+
+.client-identification h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.client-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    box-sizing: border-box;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    box-sizing: border-box;
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 0.6rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(20, 30, 48, 0.8);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--iso-blue);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    background: rgba(30, 42, 68, 0.9);
+}
+
+.form-group input.success {
+    border-color: var(--success-primary);
+    background: rgba(68, 189, 50, 0.05);
+}
+
+.form-group input.error {
+    border-color: var(--warn-primary);
+    background: rgba(232, 65, 24, 0.05);
+}
+
+.form-group input.readonly {
+    background: rgba(30, 42, 68, 0.6);
+    border-color: var(--text-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    box-sizing: border-box;
+}
+
+.btn-primary, .btn-secondary, .btn-edit {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    box-sizing: border-box;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(30, 42, 68, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 168, 255, 0.1);
+    border-color: var(--iso-blue);
+}
+
+.btn-edit {
+    background: linear-gradient(90deg, var(--warn-secondary) 0%, #ffaf40 100%);
+    color: #0a0f1d;
+}
+
+.btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 159, 26, 0.3);
+}
+
+.client-status {
+    background: rgba(68, 189, 50, 0.1);
+    border: 1px solid var(--success-primary);
+    border-radius: var(--border-radius-sm);
+    padding: 0.6rem;
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+/* 8. CONTROLES DO SISTEMA ISO/NIST */
+.system-controls {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    box-sizing: border-box;
+}
+
+.control-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.year-select, .platform-select {
+    padding: 0.6rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(20, 30, 48, 0.8);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    width: 100%;
+    font-weight: 500;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.year-select:focus, .platform-select:focus {
+    outline: none;
+    border-color: var(--iso-blue);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+/* 9. UPLOAD DE FICHEIROS ISO/NIST - BIG DATA ILIMITADO */
+.upload-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.upload-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.upload-group {
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.upload-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.upload-btn {
+    width: 100%;
+    padding: 0.6rem;
+    background: rgba(20, 30, 48, 0.8);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.upload-btn:hover {
+    border-color: var(--iso-blue);
+    background: rgba(0, 102, 204, 0.05);
+}
+
+.upload-btn.multi {
+    border-style: solid;
+    border-color: var(--accent-secondary);
+}
+
+.upload-btn.processing {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    color: white;
+    border-color: var(--iso-blue);
+}
+
+.upload-btn.processing i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.file-list {
+    background: rgba(20, 30, 48, 0.5);
+    border-radius: var(--border-radius-sm);
+    padding: 0.6rem;
+    margin-top: 0.4rem;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.file-list.visible {
+    display: block;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    box-sizing: border-box;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item i.fa-check-circle {
+    color: var(--nist-green);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.file-item i.fa-spinner {
+    color: var(--iso-blue);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    animation: spin 1s linear infinite;
+}
+
+.file-name {
+    color: var(--text-secondary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.file-status {
+    color: var(--nist-green);
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+}
+
+/* 10. CONTADORES ISO/NIST */
 .counters {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -369,9 +754,173 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
+    box-sizing: border-box;
 }
 
-/* 8. DASHBOARD KPI ISO/NIST - ALINHAMENTO CORRIGIDO */
+.counter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6rem;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    box-sizing: border-box;
+}
+
+.counter-label {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+}
+
+.counter-value {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+/* 11. BARRA DE FERRAMENTAS ISO/NIST */
+.toolbar-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.btn-forensic {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.btn-forensic:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 102, 204, 0.4);
+}
+
+.btn-forensic:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--border-color);
+}
+
+.btn-tool {
+    background: rgba(20, 30, 48, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+}
+
+.btn-tool:hover {
+    background: rgba(0, 102, 204, 0.1);
+    border-color: var(--iso-blue);
+}
+
+/* 12. DASHBOARD FIXO ISO/NIST - JÁ CORRIGIDO ACIMA */
+.stat-card {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--iso-blue);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.stat-card:hover {
+    transform: translateY(-1px);
+}
+
+.stat-card.alert {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.stat-card p {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+}
+
+.alert-text {
+    color: var(--warn-primary) !important;
+    animation: pulse 2s infinite;
+    font-weight: 800;
+}
+
+.regulatory-text {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.stat-card small {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    display: block;
+    font-weight: 500;
+}
+
+/* 13. DASHBOARD KPI ISO/NIST - ALINHAMENTO CORRIGIDO */
 .kpi-section {
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
@@ -379,9 +928,23 @@ body {
     border: 1px solid var(--border-color);
     margin-bottom: var(--spacing-md);
     overflow: hidden;
+    box-sizing: border-box;
 }
 
-/* DASHBOARD GRID CENTERING - CORREÇÃO COMPLETA */
+.kpi-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* DASHBOARD GRID CENTERING - CORREÇÃO COMPLETA IMPLEMENTADA */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* AUTO-FIT IMPLEMENTADO */
@@ -390,8 +953,38 @@ body {
     justify-content: center;
     align-items: start;
     width: 100%;
-    max-width: 1400px; /* LIMITADOR DE LARGURA */
-    margin: 0 auto; /* CENTRALIZAÇÃO PERFEITA */
+    max-width: 1400px; /* LIMITADOR DE LARGURA - CORREÇÃO IMPLEMENTADA */
+    margin: 0 auto; /* CENTRALIZAÇÃO PERFEITA - CORREÇÃO IMPLEMENTADA */
+    box-sizing: border-box;
+}
+
+@media (min-width: 1400px) {
+    .kpi-grid {
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 1400px;
+    }
+}
+
+@media (max-width: 1399px) and (min-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1200px;
+    }
+    
+    #diferencialCard {
+        grid-column: span 3;
+    }
+}
+
+@media (max-width: 767px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+    
+    #diferencialCard {
+        grid-column: span 1;
+    }
 }
 
 .kpi-card {
@@ -407,21 +1000,770 @@ body {
     max-width: 100%;
     word-break: break-word;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
-/* 9. RESPONSIVIDADE ISO/NIST - OTIMIZADA */
-@media (max-width: 1400px) {
-    .main-container {
-        max-width: 1200px;
+.kpi-card:hover {
+    transform: translateY(-1px);
+}
+
+.kpi-card.highlight {
+    border-left-color: var(--nist-green);
+    background: linear-gradient(135deg, rgba(0, 204, 136, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.danger {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.alert {
+    border-left-color: var(--warn-secondary);
+    background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+/* 14. ANIMAÇÃO BLINK-ALERT ISO/NIST (VERMELHO/AMARELO) */
+.blink-alert {
+    animation: blinkAlert 1.5s infinite;
+}
+
+@keyframes blinkAlert {
+    0%, 100% {
+        border-left-color: var(--warn-primary);
+        box-shadow: 0 0 10px rgba(232, 65, 24, 0.3);
+        color: var(--warn-primary);
+        font-weight: 800;
     }
-    
-    .dashboard-fixed,
-    .kpi-grid {
-        max-width: 1200px;
+    50% {
+        border-left-color: var(--warn-secondary);
+        box-shadow: 0 0 15px rgba(255, 159, 26, 0.4);
+        color: var(--warn-secondary);
+        font-weight: 800;
     }
+}
+
+#diferencialVal {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    color: var(--warn-secondary);
+    font-family: var(--font-mono);
+}
+
+#regulatoryVal {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    color: var(--regulatory-orange);
+    font-family: var(--font-mono);
+}
+
+.kpi-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.kpi-card p {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+    word-break: break-all;
+}
+
+.kpi-card small {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    display: block;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.secondary-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    box-sizing: border-box;
+}
+
+.secondary-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+}
+
+.secondary-stats b {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+/* 15. GRÁFICO VERTICAL COMPACTO ISO/NIST */
+.chart-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    height: 380px;
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.chart-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.chart-container {
+    height: 280px;
+    width: 100%;
+    position: relative;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+/* 16. RESULTADOS DA ANÁLISE ISO/NIST */
+.analysis-results {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.analysis-results h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* AUTO-FIT IMPLEMENTADO */
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 1400px; /* LIMITADOR DE LARGURA */
+    margin: 0 auto; /* CENTRALIZAÇÃO */
+    box-sizing: border-box;
 }
 
 @media (max-width: 1200px) {
+    .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+}
+
+.result-item {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    min-width: 200px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.result-item h5 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.result-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.75rem;
+}
+
+.result-bar {
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+}
+
+.bar-fill {
+    height: 100%;
+    background: var(--iso-blue);
+    width: 0%;
+    transition: width 1s ease;
+    box-sizing: border-box;
+}
+
+/* 17. ALERTAS ISO/NIST */
+.omission-alert {
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
+    border: 1px solid var(--warn-primary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.omission-alert i {
+    color: var(--warn-primary);
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.omission-alert strong {
+    color: var(--warn-primary);
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+}
+
+.omission-alert p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#omissionValue {
+    color: var(--warn-primary);
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+.bigdata-alert {
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
+    border: 2px solid var(--warn-primary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.bigdata-alert i {
+    color: var(--warn-primary);
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.bigdata-alert strong {
+    color: var(--warn-primary);
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+}
+
+.bigdata-alert p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#alertInvoiceVal, #alertCommVal, #alertDeltaVal {
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+#alertInvoiceVal { color: var(--iso-blue); }
+#alertCommVal { color: var(--warn-primary); }
+#alertDeltaVal { color: var(--warn-secondary); }
+
+.diferencial-alert {
+    border-color: var(--warn-secondary) !important;
+    background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(255, 159, 26, 0.05) 100%) !important;
+}
+
+.diferencial-alert i.fa-balance-scale {
+    color: var(--warn-secondary) !important;
+    font-size: 1.8rem;
+}
+
+.diferencial-alert strong {
+    color: var(--warn-secondary) !important;
+    font-weight: 800;
+}
+
+.regulatory-alert {
+    border-color: var(--regulatory-orange) !important;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%) !important;
+}
+
+.regulatory-alert i.fa-gavel {
+    color: var(--regulatory-orange) !important;
+    font-size: 1.8rem;
+}
+
+.regulatory-alert strong {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
+/* 18. CONSOLA DE AUDITORIA ISO/NIST */
+.console-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.console-header {
+    background: rgba(20, 30, 48, 0.9);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.console-header h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+}
+
+.console-controls {
+    display: flex;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-tertiary);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 102, 204, 0.1);
+    border-color: var(--iso-blue);
+    color: var(--text-primary);
+}
+
+.console-output {
+    height: 120px;
+    background: rgba(10, 15, 29, 0.95);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    overflow-x: hidden;
+    line-height: 1.4;
+    border-top: 1px solid var(--border-color);
+    transition: height 0.3s ease;
+    box-sizing: border-box;
+}
+
+.console-output::-webkit-scrollbar {
+    width: 6px;
+}
+
+.console-output::-webkit-scrollbar-track {
+    background: rgba(30, 42, 68, 0.5);
+}
+
+.console-output::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.console-output::-webkit-scrollbar-thumb:hover {
+    background: var(--iso-blue);
+}
+
+.log-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.01);
+    margin: 1px 0;
+    padding: 3px 5px;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+
+.log-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
+    white-space: normal;
+    overflow: visible;
+}
+
+.log-info { 
+    color: var(--iso-blue); 
+    border-left: 2px solid var(--iso-blue);
+}
+.log-success { 
+    color: var(--nist-green); 
+    border-left: 2px solid var(--nist-green);
+}
+.log-warn { 
+    color: var(--warn-secondary); 
+    border-left: 2px solid var(--warn-secondary);
+}
+.log-error { 
+    color: var(--warn-primary); 
+    border-left: 2px solid var(--warn-primary);
+}
+.log-regulatory { 
+    color: var(--regulatory-orange); 
+    border-left: 2px solid var(--regulatory-orange);
+}
+
+/* 19. RODAPÉ ISO/NIST COMPLIANCE */
+.action-footer {
+    background: rgba(30, 42, 68, 0.5);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md);
+    margin-top: auto;
+    position: relative;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.system-info {
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.master-hash {
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    word-break: break-all;
+    line-height: 1.4;
+    border: 1px solid rgba(0, 102, 204, 0.3);
+    box-shadow: var(--shadow-inset);
+    box-sizing: border-box;
+}
+
+.master-hash strong {
+    color: var(--iso-blue);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.master-hash span {
+    color: #00d1ff;
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+}
+
+.copyright {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* 20. OVERLAY DE CARREGAMENTO ISO/NIST */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    box-sizing: border-box;
+}
+
+.loading-content {
+    text-align: center;
+    max-width: 600px;
+    box-sizing: border-box;
+}
+
+.loading-spinner {
+    font-size: 3.5rem;
+    color: var(--iso-blue);
+    margin-bottom: var(--spacing-lg);
+}
+
+.loading-progress {
+    width: 400px;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: var(--spacing-lg) auto;
+    box-sizing: border-box;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* 21. TOAST NOTIFICATION */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 9997;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards;
+    max-width: 350px;
+    box-sizing: border-box;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+}
+
+.toast-notification i {
+    font-size: 1.2rem;
+}
+
+.toast-notification p {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.toast-notification.error {
+    background: linear-gradient(90deg, var(--warn-primary) 0%, #e84118 100%);
+}
+
+.toast-notification.warning {
+    background: linear-gradient(90deg, var(--warn-secondary) 0%, #ff9f1a 100%);
+}
+
+/* 22. STICKY HEADER PARA TABELAS DE BIG DATA */
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: rgba(20, 30, 48, 0.8);
+    margin: var(--spacing-md) 0;
+    box-sizing: border-box;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    box-sizing: border-box;
+}
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(30, 42, 68, 0.95);
+    backdrop-filter: blur(10px);
+    box-sizing: border-box;
+}
+
+.data-table th {
+    padding: 0.75rem;
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.data-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    box-sizing: border-box;
+}
+
+.data-table tr:hover {
+    background: rgba(0, 102, 204, 0.05);
+}
+
+/* 23. Z-INDEX MANAGEMENT */
+.splash-screen {
+    z-index: 9999;
+}
+
+.loading-overlay {
+    z-index: 9998;
+}
+
+.toast-notification {
+    z-index: 9997;
+}
+
+.main-header {
+    z-index: 100;
+}
+
+.dashboard-fixed {
+    z-index: 50;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 15, 29, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 2px solid var(--iso-blue);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* 24. RESPONSIVIDADE ISO/NIST */
+@media (max-width: 1024px) {
     .app-container {
         grid-template-columns: 1fr;
     }
@@ -436,53 +1778,199 @@ body {
         position: static;
         height: auto;
     }
+    
+    .analysis-area {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .chart-section {
+        height: auto;
+        min-height: 350px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .toolbar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard-fixed {
+        position: static;
+    }
+    
+    .header-content {
+        flex-wrap: wrap;
+    }
+    
+    .demo-section {
+        order: 3;
+        width: 100%;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .btn-demo-nav {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
-    .main-container {
-        max-width: 100%;
-    }
-    
-    .dashboard-fixed,
-    .kpi-grid {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-    }
-    
     .header-content {
         flex-direction: column;
         text-align: center;
         gap: var(--spacing-sm);
     }
+    
+    .logo-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .timestamp-fbi {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .demo-section {
+        order: 0;
+        width: auto;
+        margin-top: 0;
+    }
+    
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .toolbar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bigdata-alert {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .chart-legend {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .loading-progress {
+        width: 300px;
+    }
+    
+    .counters {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .secondary-stats {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .splash-content {
+        padding: 2rem;
+        margin: 1rem;
+    }
+    
+    .splash-logo {
+        font-size: 3.5rem;
+    }
+    
+    .splash-screen h1 {
+        font-size: 1.8rem;
+    }
+    
+    .splash-screen h2 {
+        font-size: 1.3rem;
+    }
+    
+    .splash-btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
 }
 
-/* 10. CORREÇÕES DE OVERFLOW */
-.console-output,
-.file-list,
-.table-container {
-    overflow-x: hidden;
-    overflow-y: auto;
+/* 25. ANIMAÇÕES ADICIONAIS ISO/NIST */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* 11. ANIMAÇÕES E TRANSITIONS SUAVES */
-.kpi-card, .stat-card, .result-item {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.stat-card, .kpi-card, .result-item {
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* 12. UTILITÁRIOS DE CENTRALIZAÇÃO */
-.grid-center {
-    display: grid;
-    place-items: center;
+/* 26. ESTADOS DE FOCO E HOVER ISO/NIST */
+input:focus, select:focus, button:focus {
+    outline: 2px solid var(--iso-blue);
+    outline-offset: 2px;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* 27. UTILITÁRIOS ISO/NIST */
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}
+
+.text-mono {
+    font-family: var(--font-mono) !important;
 }
 
 .text-center {
     text-align: center !important;
 }
 
-.margin-auto {
-    margin: 0 auto !important;
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.align-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-center {
+    display: grid;
+    place-items: center;
+}
+
+/* 28. ANIMAÇÕES DE TRANSITION SUAVES */
+.kpi-card, .stat-card, .result-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================
-   FIM DO CSS VDC v10.9 - LAYOUT CORRIGIDO E CENTRALIZADO
+   FIM DO CSS VDC v10.9 - FINAL STABLE RELEASE
+   LAYOUT CORRIGIDO E ESTABILIZADO
    ============================================ */
