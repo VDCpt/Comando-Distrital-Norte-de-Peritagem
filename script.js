@@ -1,3210 +1,2236 @@
-// ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v11.2
-// AUDITORIA FISCAL BIG DATA - ZERO ERROR POLICY
-// CORREÇÕES IMPLEMENTADAS:
-// 1. Todos os addEventListener dentro de DOMContentLoaded
-// 2. Verificação de null antes de atribuir eventos
-// 3. Função toForensicNumber de alta precisão
-// 4. Zero Error Policy com autoliquidação IVA
-// 5. Persistência de dados com +=
-// 6. Layout corrigido com overflow-y: auto
-// ============================================
+/* ============================================
+   VDC SISTEMA DE PERITAGEM FORENSE v11.2
+   AUDITORIA FISCAL BIG DATA - ZERO ERROR POLICY
+   CORREÇÃO COMPLETA: SIDEBAR FLEX-BOX | OVERFLOW | STICKY
+   ============================================ */
 
-// 1. NORMALIZAÇÃO FORENSE GLOBAL HIGH PRECISION (CORREÇÃO IMPLEMENTADA)
-const toForensicNumber = (v) => {
-    if (v === null || v === undefined || v === '') return 0;
-    
-    let str = v.toString().trim();
-    
-    // Remover símbolos de moeda, espaços e caracteres não numéricos
-    str = str
-        .replace(/["'`]/g, '')
-        .replace(/[€$£]/g, '')
-        .replace(/EUR|USD|GBP/gi, '')
-        .replace(/\s+/g, '');
-    
-    // DETECÇÃO INTELIGENTE DE FORMATO NUMÉRICO (HIGH PRECISION)
-    const hasComma = str.includes(',');
-    const hasDot = str.includes('.');
-    
-    if (hasComma && hasDot) {
-        // Formato: 1.239,00 ou 1,239.00
-        if (str.indexOf(',') > str.indexOf('.')) {
-            // 1.239,00 -> ponto é separador de milhar
-            str = str.replace(/\./g, '').replace(',', '.');
-        } else {
-            // 1,239.00 -> vírgula é separador de milhar
-            str = str.replace(/,/g, '').replace('.', '.');
-        }
-    } else if (hasComma && !hasDot) {
-        // Formato: 1239,00 -> vírgula é decimal
-        // Verificar se há mais de uma vírgula (separador de milhar)
-        const commaCount = (str.match(/,/g) || []).length;
-        if (commaCount > 1) {
-            // 1,239,00 -> remover todas as vírgulas exceto a última
-            const parts = str.split(',');
-            const integerPart = parts.slice(0, -1).join('');
-            const decimalPart = parts[parts.length - 1];
-            str = integerPart + '.' + decimalPart;
-        } else {
-            // 1239,00 -> substituir vírgula por ponto
-            str = str.replace(',', '.');
-        }
-    } else if (!hasComma && hasDot) {
-        // Formato: 1239.00 ou 1.239
-        const dotCount = (str.match(/\./g) || []).length;
-        if (dotCount > 1) {
-            // 1.239.00 -> remover todos os pontos exceto o último
-            const parts = str.split('.');
-            const integerPart = parts.slice(0, -1).join('');
-            const decimalPart = parts[parts.length - 1];
-            str = integerPart + '.' + decimalPart;
-        }
-        // Se apenas um ponto e seguido de 2 dígitos -> é decimal
-        const match = str.match(/\.\d{2}$/);
-        if (match) {
-            // Já está no formato correto
-        }
-    }
-    
-    // Extrair apenas números, ponto decimal e sinal negativo
-    str = str.replace(/[^\d.-]/g, '');
-    
-    // Se a string estiver vazia, retorna 0
-    if (str === '' || str === '-') return 0;
-    
-    const num = parseFloat(str);
-    return isNaN(num) ? 0 : num;
-};
-
-// 2. FUNÇÃO DE VALIDAÇÃO DE DATA
-function isValidDate(d) {
-    return d instanceof Date && !isNaN(d.getTime());
+/* 0. SPLASH SCREEN V11.1 */
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0f1d 0%, #0c1629 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: var(--font-main);
+    opacity: 1;
+    transition: opacity 0.5s ease;
 }
 
-// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.2
-const VDCSystem = {
-    version: 'v11.2-ZERROR',
-    sessionId: null,
-    selectedYear: new Date().getFullYear(),
-    selectedPlatform: 'bolt',
-    client: null,
-    demoMode: false,
-    processing: false,
-    clientLocked: false,
-    
-    // ENTIDADE BOLT - METADADOS FORENSES
-    boltEntity: {
-        nome: "Bolt Operations OÜ",
-        nif: "EE102090374",
-        endereco: "Vana-Lõuna 15, Tallinn 10134 Estonia",
-        isoCompliance: "ISO/IEC 27037",
-        dac7Obrigacao: true,
-        taxaRegulacao: "5% (AMT/IMT)"
-    },
-    
-    documents: {
-        dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, period: '', records: 0, quarterlyDetails: [] }, hashes: {} },
-        control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-        saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0, transactionDetails: [] }, hashes: {} },
-        invoices: { files: [], parsedData: [], totals: { 
-            commission: 0, 
-            iva23: 0, 
-            invoiceValue: 0,
-            invoicesFound: [],
-            invoiceNumbers: [],
-            boltEntities: [],
-            records: 0
-        }, hashes: {}},
-        statements: { files: [], parsedData: [], totals: { 
-            transfer: 0, 
-            expected: 0,
-            rendimentosBrutos: 0,
-            comissaoApp: 0,
-            rendimentosLiquidos: 0,
-            campanhas: 0,
-            gorjetas: 0,
-            cancelamentos: 0,
-            portagens: 0,
-            diferencialCusto: 0,
-            transactionDetails: [],
-            records: 0
-        }, hashes: {}}
-    },
-    
-    analysis: {
-        extractedValues: {
-            // SAF-T
-            saftGross: 0,
-            saftIVA6: 0,
-            saftNet: 0,
-            
-            // Platform Data
-            platformCommission: 0,
-            bankTransfer: 0,
-            iva23Due: 0,
-            
-            // Bolt KPIs
-            rendimentosBrutos: 0,
-            comissaoApp: 0,
-            rendimentosLiquidos: 0,
-            faturaPlataforma: 0,
-            campanhas: 0,
-            gorjetas: 0,
-            cancelamentos: 0,
-            portagens: 0,
-            
-            // Forensic Findings
-            diferencialCusto: 0,
-            prejuizoFiscal: 0,
-            ivaAutoliquidacao: 0,
-            
-            // DAC7
-            dac7Revenue: 0,
-            dac7Period: '',
-            dac7Quarterly: [],
-            
-            // JUROS DE MORA (RGRC 4%)
-            jurosMora: 0,
-            
-            // PASSAIVO REGULATÓRIO (AMT/IMT 5%)
-            taxaRegulacao: 0,
-            riscoRegulatorio: 0
-        },
-        
-        crossings: {
-            deltaA: 0,
-            deltaB: 0,
-            omission: 0,
-            isValid: true,
-            diferencialAlerta: false,
-            fraudIndicators: [],
-            bigDataAlertActive: false,
-            discrepanciaAlertaAtiva: false,
-            riscoRegulatorioAtivo: false
-        },
-        
-        projection: {
-            marketProjection: 0,
-            averagePerDriver: 0,
-            driverCount: 38000,
-            monthsPerYear: 12,
-            yearsOfOperation: 7,
-            totalMarketImpact: 0
-        },
-        
-        chainOfCustody: [],
-        anomalies: [],
-        quesitosEstrategicos: [],
-        legalCitations: [
-            "ISO/IEC 27037:2012 - Preservação de Evidência Digital",
-            "NIST SP 800-86 - Guia para Análise Forense de Dados",
-            "Regime Geral das Infrações Tributárias (RGRC) - Art. 103.º",
-            "Código do IRC, Artigo 87º - Tratamento Contabilístico integral",
-            "CIVA, Artigo 2.º - Obrigação de faturação completa",
-            "CIVA, Artigo 29º - Autoliquidação do IVA",
-            "RGIT, Artigo 103º - Crime de Fraude Fiscal",
-            "Código Penal, Art. 158-A a 158-F - Cadeia de Custódia Digital",
-            "Diretiva DAC7 - Transparência de plataformas digitais",
-            "Lei 83/2017 - Prevenção do Branqueamento de Capitais",
-            "Decreto-Lei 83/2017 - Taxa de Regulação (AMT/IMT)",
-            "Regulamento (UE) 2016/679 - RGPD - Governança de Dados"
-        ]
-    },
-    
-    counters: {
-        dac7: 0,
-        control: 0,
-        saft: 0,
-        invoices: 0,
-        statements: 0,
-        total: 0
-    },
-    
-    logs: [],
-    chart: null,
-    preRegisteredClients: [],
-    bigDataAlertInterval: null,
-    discrepanciaAlertaInterval: null
-};
-
-// 4. INICIALIZAÇÃO DO SISTEMA ISO/NIST V11.2 - COM VERIFICAÇÃO DE NULL
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        initializeSystem();
-    } catch (error) {
-        console.error('Erro crítico na inicialização:', error);
-        showError(`Falha na inicialização: ${error.message}`);
-    }
-});
-
-function initializeSystem() {
-    try {
-        console.log('🔧 Inicializando VDC Forensic System v11.2 - Zero Error Policy...');
-        
-        const startBtn = document.getElementById('startSessionBtn');
-        if (startBtn) {
-            startBtn.addEventListener('click', startForensicSession);
-        }
-        
-        startClockAndDate();
-        updatePageTitle('Inicializando Auditoria Fiscal...');
-        
-        logAudit('✅ Sistema VDC v11.2 pronto para auditoria fiscal Big Data', 'success');
-        
-    } catch (error) {
-        console.error('Erro na inicialização:', error);
-        showError(`Falha na inicialização: ${error.message}`);
-    }
+.splash-content {
+    text-align: center;
+    max-width: 800px;
+    padding: 3rem;
+    background: rgba(30, 42, 68, 0.7);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--iso-blue);
+    box-shadow: var(--shadow-lg);
 }
 
-function startForensicSession() {
-    try {
-        const splashScreen = document.getElementById('splashScreen');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        
-        if (splashScreen && loadingOverlay) {
-            splashScreen.style.opacity = '0';
-            splashScreen.style.transition = 'opacity 0.5s ease';
-            
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-                loadingOverlay.style.display = 'flex';
-                
-                setTimeout(() => {
-                    loadForensicSystem();
-                }, 300);
-            }, 500);
-        }
-    } catch (error) {
-        console.error('Erro ao iniciar sessão:', error);
-        showError(`Erro ao iniciar sessão: ${error.message}`);
-    }
+.splash-logo {
+    font-size: 5rem;
+    color: var(--iso-blue);
+    margin-bottom: 1.5rem;
 }
 
-function updateLoadingProgress(percent) {
-    const progressBar = document.getElementById('loadingProgress');
-    if (progressBar) {
-        progressBar.style.width = percent + '%';
-    }
+.splash-screen h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 900;
 }
 
-function showMainInterface() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const mainContainer = document.getElementById('mainContainer');
-    
-    if (loadingOverlay && mainContainer) {
-        loadingOverlay.style.opacity = '0';
-        loadingOverlay.style.transition = 'opacity 0.5s ease';
-        
-        setTimeout(() => {
-            loadingOverlay.style.display = 'none';
-            mainContainer.style.display = 'block';
-            
-            setTimeout(() => {
-                mainContainer.style.opacity = '1';
-            }, 50);
-        }, 500);
-    }
+.splash-screen h2 {
+    font-size: 1.8rem;
+    color: var(--accent-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
 }
 
-async function loadForensicSystem() {
-    try {
-        updateLoadingProgress(10);
-        updatePageTitle('Carregando Sistema...');
-        
-        VDCSystem.sessionId = generateSessionId();
-        const sessionIdElement = document.getElementById('sessionIdDisplay');
-        if (sessionIdElement) sessionIdElement.textContent = `SESSION: ${VDCSystem.sessionId}`;
-        updateLoadingProgress(20);
-        
-        setupYearSelector();
-        setupPlatformSelector();
-        updateLoadingProgress(40);
-        
-        loadClientsFromLocal();
-        updateLoadingProgress(50);
-        
-        setupEventListeners();
-        updateLoadingProgress(60);
-        
-        updateLoadingProgress(70);
-        
-        resetDashboard();
-        updateLoadingProgress(80);
-        
-        renderDashboardChart();
-        updateLoadingProgress(90);
-        
-        setTimeout(() => {
-            updateLoadingProgress(100);
-            
-            setTimeout(() => {
-                showMainInterface();
-                updatePageTitle('Sistema Pronto');
-                logAudit('✅ Sistema VDC v11.2 - Zero Error Policy inicializado', 'success');
-                logAudit('🔐 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%, AMT/IMT 5%', 'info');
-                logAudit('🔗 Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
-                logAudit('📁 Extração Big Data estruturada ativada | Regex Bolt corrigido', 'info');
-                
-            }, 300);
-        }, 500);
-        
-    } catch (error) {
-        console.error('Erro no carregamento do sistema:', error);
-        showError(`Falha no carregamento: ${error.message}`);
-    }
+.splash-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    font-family: var(--font-mono);
 }
 
-// 5. CONFIGURAÇÃO DE CONTROLES V11.2
-function setupYearSelector() {
-    const selYear = document.getElementById('selYearFixed');
-    if (!selYear) return;
-    
-    if (selYear.options.length > 0) {
-        selYear.value = VDCSystem.selectedYear;
-        return;
-    }
-    
-    const currentYear = new Date().getFullYear();
-    VDCSystem.selectedYear = currentYear;
-    
-    for (let year = 2018; year <= 2036; year++) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) {
-            option.selected = true;
-        }
-        selYear.appendChild(option);
-    }
-    
-    selYear.addEventListener('change', (e) => {
-        VDCSystem.selectedYear = parseInt(e.target.value);
-        logAudit(`Ano fiscal alterado para: ${VDCSystem.selectedYear} (ISO/IEC 27037)`, 'info');
-    });
+.splash-warning {
+    background: rgba(232, 65, 24, 0.1);
+    border: 1px solid var(--warn-primary);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin: 2rem 0;
+    color: var(--warn-primary);
+    font-size: 1.1rem;
+    font-weight: 700;
 }
 
-function setupPlatformSelector() {
-    const selPlatform = document.getElementById('selPlatformFixed');
-    if (!selPlatform) return;
-    
-    if (selPlatform.options.length > 0) {
-        selPlatform.value = VDCSystem.selectedPlatform;
-        return;
-    }
-    
-    selPlatform.value = VDCSystem.selectedPlatform;
-    
-    selPlatform.addEventListener('change', (e) => {
-        VDCSystem.selectedPlatform = e.target.value;
-        const platformName = e.target.options[e.target.selectedIndex].text;
-        
-        logAudit(`Plataforma selecionada: ${platformName}`, 'info');
-        
-        if (VDCSystem.selectedPlatform === 'bolt') {
-            logAudit(`🎯 ALVO PRINCIPAL: ${VDCSystem.boltEntity.nome} | ${VDCSystem.boltEntity.nif}`, 'warn');
-            logAudit(`📍 Endereço: ${VDCSystem.boltEntity.endereco}`, 'info');
-            logAudit(`📋 Obrigação DAC7 ativada para plataforma estrangeira`, 'info');
-            logAudit(`⚖️ Taxa de Regulação aplicável: ${VDCSystem.boltEntity.taxaRegulacao} (AMT/IMT)`, 'regulatory');
-        }
-        
-        VDCSystem.analysis.extractedValues = {
-            saftGross: 0, saftIVA6: 0, saftNet: 0,
-            platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-            rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
-            faturaPlataforma: 0, campanhas: 0, gorjetas: 0,
-            cancelamentos: 0, portagens: 0, diferencialCusto: 0,
-            prejuizoFiscal: 0, ivaAutoliquidacao: 0,
-            dac7Revenue: 0, dac7Period: '', dac7Quarterly: [],
-            jurosMora: 0,
-            taxaRegulacao: 0, riscoRegulatorio: 0
-        };
-        
-        updateDashboard();
-        updateKPIResults();
-    });
+.splash-btn {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    color: white;
+    border: none;
+    padding: 1.2rem 3rem;
+    border-radius: var(--border-radius);
+    font-size: 1.2rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem auto;
+    transition: all 0.3s ease;
+    font-family: var(--font-main);
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
-function startClockAndDate() {
-    function updateDateTime() {
-        try {
-            const now = new Date();
-            
-            if (isNaN(now.getTime())) {
-                console.warn('Data/hora inválida detectada');
-                return;
-            }
-            
-            const dateString = now.toLocaleDateString('pt-PT', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-            
-            const timeString = now.toLocaleTimeString('pt-PT', { 
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            const dateElement = document.getElementById('currentDate');
-            const timeElement = document.getElementById('currentTime');
-            
-            if (dateElement) dateElement.textContent = dateString;
-            if (timeElement) timeElement.textContent = timeString;
-        } catch (error) {
-            console.error('Erro ao atualizar data/hora:', error);
-        }
-    }
+.splash-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.5);
+}
+
+.splash-footer {
+    margin-top: 2rem;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.splash-footer .version {
+    color: var(--nist-green);
+    font-weight: 800;
+    font-family: var(--font-mono);
+    margin-top: 0.5rem;
+}
+
+/* 1. VARIÁVEIS ISO/NIST */
+:root {
+    /* Cores ISO/NIST Compliance */
+    --bg-primary: #0a0f1d;
+    --bg-secondary: #0c1629;
+    --bg-tertiary: #111b2d;
+    --bg-sidebar: #0a1322;
     
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-}
-
-// 6. CONFIGURAÇÃO DE EVENTOS V11.2 - COM VERIFICAÇÃO DE NULL
-function setupEventListeners() {
-    try {
-        // Botões principais da interface
-        const registerBtn = document.getElementById('registerClientBtn');
-        if (registerBtn) {
-            registerBtn.addEventListener('click', registerClientFixed);
-        }
-        
-        const clientNameInput = document.getElementById('clientNameFixed');
-        if (clientNameInput) {
-            clientNameInput.addEventListener('input', handleClientAutocompleteFixed);
-            clientNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const clientNIF = document.getElementById('clientNIFFixed');
-                    if (clientNIF) clientNIF.focus();
-                }
-            });
-        }
-        
-        const clientNIFInput = document.getElementById('clientNIFFixed');
-        if (clientNIFInput) {
-            clientNIFInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') registerClientFixed();
-            });
-        }
-        
-        // Botão Demo
-        const demoBtn = document.getElementById('demoModeBtn');
-        if (demoBtn) {
-            demoBtn.addEventListener('click', activateDemoMode);
-        }
-        
-        // Toolbar buttons
-        const openModalBtn = document.getElementById('openModalBtn');
-        if (openModalBtn) {
-            openModalBtn.addEventListener('click', openEvidenceModal);
-        }
-        
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (analyzeBtn) {
-            analyzeBtn.addEventListener('click', performForensicAnalysis);
-        }
-        
-        const analysisBtn = document.getElementById('analysisBtn');
-        if (analysisBtn) {
-            analysisBtn.addEventListener('click', performForensicAnalysis);
-        }
-        
-        const exportBtn = document.getElementById('exportBtn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', exportPDF);
-        }
-        
-        const resetBtn = document.getElementById('resetBtn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', resetDashboard);
-        }
-        
-        // Sidebar upload buttons - COM VERIFICAÇÃO DE NULL
-        const dac7UploadBtn = document.getElementById('dac7UploadBtn');
-        const dac7File = document.getElementById('dac7File');
-        if (dac7UploadBtn && dac7File) {
-            dac7UploadBtn.addEventListener('click', () => dac7File.click());
-            dac7File.addEventListener('change', (e) => handleFileUploadSidebar(e, 'dac7'));
-        }
-        
-        const controlUploadBtn = document.getElementById('controlUploadBtn');
-        const controlFile = document.getElementById('controlFile');
-        if (controlUploadBtn && controlFile) {
-            controlUploadBtn.addEventListener('click', () => controlFile.click());
-            controlFile.addEventListener('change', (e) => handleFileUploadSidebar(e, 'control'));
-        }
-        
-        const saftUploadBtn = document.getElementById('saftUploadBtn');
-        const saftFile = document.getElementById('saftFile');
-        if (saftUploadBtn && saftFile) {
-            saftUploadBtn.addEventListener('click', () => saftFile.click());
-            saftFile.addEventListener('change', (e) => handleFileUploadSidebar(e, 'saft'));
-        }
-        
-        const invoiceUploadBtn = document.getElementById('invoiceUploadBtn');
-        const invoiceFile = document.getElementById('invoiceFile');
-        if (invoiceUploadBtn && invoiceFile) {
-            invoiceUploadBtn.addEventListener('click', () => invoiceFile.click());
-            invoiceFile.addEventListener('change', (e) => handleFileUploadSidebar(e, 'invoices'));
-        }
-        
-        const statementUploadBtn = document.getElementById('statementUploadBtn');
-        const statementFile = document.getElementById('statementFile');
-        if (statementUploadBtn && statementFile) {
-            statementUploadBtn.addEventListener('click', () => statementFile.click());
-            statementFile.addEventListener('change', (e) => handleFileUploadSidebar(e, 'statements'));
-        }
-        
-        // Modal buttons - COM VERIFICAÇÃO DE NULL
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', closeEvidenceModal);
-        }
-        
-        const processModalBtn = document.getElementById('processModalBtn');
-        if (processModalBtn) {
-            processModalBtn.addEventListener('click', closeEvidenceModal);
-        }
-        
-        const clearModalBtn = document.getElementById('clearModalBtn');
-        if (clearModalBtn) {
-            clearModalBtn.addEventListener('click', clearAllEvidence);
-        }
-        
-        // Modal upload buttons
-        setupModalUploadButtons();
-        
-        // Console controls
-        const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-        if (clearConsoleBtn) {
-            clearConsoleBtn.addEventListener('click', clearConsole);
-        }
-        
-        const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
-        if (toggleConsoleBtn) {
-            toggleConsoleBtn.addEventListener('click', toggleConsole);
-        }
-        
-        const custodyBtn = document.getElementById('custodyBtn');
-        if (custodyBtn) {
-            custodyBtn.addEventListener('click', showChainOfCustody);
-        }
-        
-        // Modal click outside to close
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) {
-            evidenceModal.addEventListener('click', (e) => {
-                if (e.target === evidenceModal) {
-                    closeEvidenceModal();
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Erro na configuração de eventos:', error);
-        logAudit(`❌ Erro na configuração de eventos: ${error.message}`, 'error');
-    }
-}
-
-function setupModalUploadButtons() {
-    try {
-        const dac7UploadBtnModal = document.getElementById('dac7UploadBtnModal');
-        const dac7FileModal = document.getElementById('dac7FileModal');
-        if (dac7UploadBtnModal && dac7FileModal) {
-            dac7UploadBtnModal.addEventListener('click', () => dac7FileModal.click());
-            dac7FileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'dac7'));
-        }
-        
-        const controlUploadBtnModal = document.getElementById('controlUploadBtnModal');
-        const controlFileModal = document.getElementById('controlFileModal');
-        if (controlUploadBtnModal && controlFileModal) {
-            controlUploadBtnModal.addEventListener('click', () => controlFileModal.click());
-            controlFileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'control'));
-        }
-        
-        const saftUploadBtnModal = document.getElementById('saftUploadBtnModal');
-        const saftFileModal = document.getElementById('saftFileModal');
-        if (saftUploadBtnModal && saftFileModal) {
-            saftUploadBtnModal.addEventListener('click', () => saftFileModal.click());
-            saftFileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'saft'));
-        }
-        
-        const invoiceUploadBtnModal = document.getElementById('invoiceUploadBtnModal');
-        const invoiceFileModal = document.getElementById('invoiceFileModal');
-        if (invoiceUploadBtnModal && invoiceFileModal) {
-            invoiceUploadBtnModal.addEventListener('click', () => invoiceFileModal.click());
-            invoiceFileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'invoices'));
-        }
-        
-        const statementUploadBtnModal = document.getElementById('statementUploadBtnModal');
-        const statementFileModal = document.getElementById('statementFileModal');
-        if (statementUploadBtnModal && statementFileModal) {
-            statementUploadBtnModal.addEventListener('click', () => statementFileModal.click());
-            statementFileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'statements'));
-        }
-    } catch (error) {
-        console.error('Erro na configuração dos botões do modal:', error);
-        logAudit(`❌ Erro na configuração dos botões do modal: ${error.message}`, 'error');
-    }
-}
-
-// 7. FUNÇÕES DO MODAL DE EVIDÊNCIAS BIG DATA
-function openEvidenceModal() {
-    try {
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) {
-            evidenceModal.style.display = 'flex';
-            updateEvidenceSummary();
-            updateCompactCounters();
-            logAudit('📂 Modal de Gestão de Evidências Big Data aberto', 'info');
-        }
-    } catch (error) {
-        console.error('Erro ao abrir modal:', error);
-        logAudit(`❌ Erro ao abrir modal: ${error.message}`, 'error');
-    }
-}
-
-function closeEvidenceModal() {
-    try {
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) {
-            evidenceModal.style.display = 'none';
-            logAudit('📂 Modal de Gestão de Evidências Big Data fechado', 'info');
-        }
-    } catch (error) {
-        console.error('Erro ao fechar modal:', error);
-    }
-}
-
-function clearAllEvidence() {
-    try {
-        if (confirm('Tem a certeza que deseja limpar TODAS as evidências carregadas? Esta ação não pode ser revertida.')) {
-            VDCSystem.documents = {
-                dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, period: '', records: 0, quarterlyDetails: [] }, hashes: {} },
-                control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-                saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0, transactionDetails: [] }, hashes: {} },
-                invoices: { files: [], parsedData: [], totals: { 
-                    commission: 0, iva23: 0, invoiceValue: 0, invoicesFound: [], invoiceNumbers: [], boltEntities: [], records: 0
-                }, hashes: {}},
-                statements: { files: [], parsedData: [], totals: { 
-                    transfer: 0, expected: 0, rendimentosBrutos: 0, comissaoApp: 0, 
-                    rendimentosLiquidos: 0, campanhas: 0, gorjetas: 0, 
-                    cancelamentos: 0, portagens: 0, diferencialCusto: 0, transactionDetails: [], records: 0
-                }, hashes: {}}
-            };
-            
-            VDCSystem.counters = { dac7: 0, control: 0, saft: 0, invoices: 0, statements: 0, total: 0 };
-            
-            updateFileListModal('dac7FileListModal', []);
-            updateFileListModal('controlFileListModal', []);
-            updateFileListModal('saftFileListModal', []);
-            updateFileListModal('invoiceFileListModal', []);
-            updateFileListModal('statementFileListModal', []);
-            
-            updateEvidenceSummary();
-            updateAnalysisButton();
-            updateEvidenceCount();
-            updateCompactCounters();
-            
-            logAudit('🗑️ TODAS as evidências foram limpas do sistema', 'warn');
-        }
-    } catch (error) {
-        console.error('Erro ao limpar evidências:', error);
-        logAudit(`❌ Erro ao limpar evidências: ${error.message}`, 'error');
-    }
-}
-
-// 8. BIG DATA FORENSE - UPLOAD NO MODAL E SIDEBAR
-async function handleFileUploadModal(event, type) {
-    if (!event.target.files || event.target.files.length === 0) return;
+    /* Cores de acento ISO/NIST */
+    --accent-primary: #00a8ff;
+    --accent-secondary: #0097e6;
+    --warn-primary: #e84118;
+    --warn-secondary: #ff9f1a;
+    --success-primary: #44bd32;
+    --info-primary: #8c7ae6;
+    --iso-blue: #0066cc;
+    --nist-green: #00cc88;
+    --regulatory-orange: #ff6b35;
     
-    const files = Array.from(event.target.files);
+    /* Texto */
+    --text-primary: #e4eaf7;
+    --text-secondary: #b8c6e0;
+    --text-tertiary: #8a9bb8;
     
-    const uploadBtn = document.querySelector(`#${type}UploadBtnModal`);
-    if (uploadBtn) {
-        uploadBtn.classList.add('processing');
-        uploadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO BIG DATA...`;
-    }
+    /* Bordas */
+    --border-color: #1e2a44;
+    --border-radius: 6px;
+    --border-radius-sm: 4px;
     
-    try {
-        await processMultipleFiles(type, files, true);
-        
-        const totalCount = VDCSystem.documents[type].files.length;
-        updateCounter(type, totalCount);
-        updateCompactCounters();
-        
-        if (VDCSystem.client) {
-            updateAnalysisButton();
-        }
-        
-        updateEvidenceSummary();
-        updateEvidenceCount();
-        
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} adicionados via Modal (Big Data Append) - Total: ${totalCount}`, 'success');
-    } catch (error) {
-        logAudit(`❌ Erro no processamento de ${type}: ${error.message}`, 'error');
-    } finally {
-        if (uploadBtn) {
-            uploadBtn.classList.remove('processing');
-            const icon = type === 'dac7' ? 'fa-file-contract' : 
-                        type === 'control' ? 'fa-file-shield' :
-                        type === 'saft' ? 'fa-file-code' :
-                        type === 'invoices' ? 'fa-file-invoice-dollar' :
-                        'fa-file-contract';
-            const text = type === 'dac7' ? 'SELECIONAR FICHEIROS DAC7' :
-                        type === 'control' ? 'SELECIONAR FICHEIRO DE CONTROLO' :
-                        type === 'saft' ? 'SELECIONAR FICHEIROS SAF-T/XML/CSV' :
-                        type === 'invoices' ? 'SELECIONAR FATURAS' :
-                        'SELECIONAR EXTRATOS';
-            uploadBtn.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
-        }
+    /* Espaçamentos */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Fontes ISO/NIST */
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. RESET E BASE ISO/NIST */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 14px;
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+/* 3. LAYOUT PRINCIPAL - CSS GRID RESTRUTURADO */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    flex: 1;
+    min-height: calc(100vh - 120px);
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.analysis-area {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 var(--spacing-md);
+    box-sizing: border-box;
+    height: 100vh;
+}
+
+/* 4. SIDEBAR RESTRUTURADA V11.2 - CORREÇÃO COMPLETA FLEX-BOX */
+.sidebar {
+    background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
+    border-right: 1px solid #1e2a44;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+/* CABEÇALHO FIXO DA SIDEBAR - ORDEM 1 */
+.sidebar-header-fixed {
+    background: linear-gradient(135deg, #0c1629 0%, #0a1322 100%);
+    border-bottom: 2px solid var(--iso-blue);
+    padding: var(--spacing-md);
+    flex-shrink: 0;
+    order: 1;
+    box-shadow: var(--shadow-md);
+    box-sizing: border-box;
+}
+
+.sidebar-header-fixed h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.client-identification-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    box-sizing: border-box;
+}
+
+.form-group-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    box-sizing: border-box;
+}
+
+.form-group-fixed label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group-fixed input {
+    padding: 0.5rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(20, 30, 48, 0.9);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+.form-group-fixed input:focus {
+    outline: none;
+    border-color: var(--iso-blue);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    background: rgba(30, 42, 68, 0.9);
+}
+
+/* BOTÃO REGISTAR CLIENTE NO TOPO */
+.btn-group-fixed {
+    margin-top: var(--spacing-sm);
+    box-sizing: border-box;
+}
+
+.btn-group-fixed .btn-primary {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
+    color: white;
+}
+
+.btn-group-fixed .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+/* INFORMAÇÕES FIXAS */
+.info-fixed {
+    background: rgba(20, 30, 48, 0.7);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+}
+
+.year-select-fixed, .platform-select-fixed {
+    padding: 0.4rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(30, 42, 68, 0.9);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.8rem;
+    width: 100%;
+    font-weight: 500;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.year-select-fixed:focus, .platform-select-fixed:focus {
+    outline: none;
+    border-color: var(--iso-blue);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.client-status-fixed {
+    background: rgba(68, 189, 50, 0.1);
+    border: 1px solid var(--success-primary);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem;
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+/* GESTÃO DE EVIDÊNCIAS BIG DATA - FLEX-GROW: 1 - ORDEM 2 */
+.evidence-section-sidebar {
+    flex-grow: 1;
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.evidence-section-sidebar h3 {
+    color: var(--nist-green);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 204, 136, 0.2);
+    padding-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.upload-group-sidebar {
+    margin-bottom: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.upload-group-sidebar label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.upload-btn-sidebar {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(30, 42, 68, 0.9);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    box-sizing: border-box;
+}
+
+.upload-btn-sidebar:hover {
+    background: rgba(0, 102, 204, 0.2);
+    border-color: var(--iso-blue);
+}
+
+.file-list-sidebar {
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+}
+
+.file-input-sidebar {
+    display: none;
+}
+
+/* SECÇÃO DE EVIDÊNCIAS BIG DATA - LAYOUT BLOCO SÓLIDO (SEM SCROLL) - LEGACY */
+.evidence-management-section-solid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+    height: auto;
+}
+
+/* BOTÃO DE EVIDÊNCIAS - FULL WIDTH */
+.evidence-management-btn-solid {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    box-shadow: var(--shadow-md);
+    box-sizing: border-box;
+    margin-bottom: var(--spacing-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.evidence-management-btn-solid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 204, 136, 0.4);
+}
+
+.evidence-management-btn-solid:active {
+    transform: translateY(0);
+}
+
+.evidence-count-solid {
+    background: var(--bg-primary);
+    color: var(--nist-green);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+/* CONTADORES COMPACTOS - LAYOUT HORIZONTAL */
+.counters-compact {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    margin-top: auto;
+}
+
+.counter-item-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    box-sizing: border-box;
+    min-height: 50px;
+}
+
+.counter-label-compact {
+    color: var(--text-tertiary);
+    font-size: 0.65rem;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.counter-value-compact {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    text-align: center;
+}
+
+/* 5. CABEÇALHO ISO/NIST COMPLIANCE */
+.main-header {
+    background: linear-gradient(135deg, #0c1629 0%, #0a0f1d 100%);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1800px;
+    margin: 0 auto;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    box-sizing: border-box;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    min-width: 250px;
+    box-sizing: border-box;
+}
+
+.logo-section i {
+    color: var(--iso-blue);
+    font-size: 1.8rem;
+}
+
+.logo-section h1 {
+    font-size: 1.4rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: 700;
+}
+
+.version-badge {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    color: var(--bg-primary);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-family: var(--font-mono);
+}
+
+.subtitle {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+}
+
+/* Botão MODO DEMO FORENSE na navbar */
+.demo-section {
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.btn-demo-nav {
+    background: linear-gradient(90deg, #ff9f1a 0%, #ffaf40 100%);
+    color: #0a0f1d;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.btn-demo-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
+}
+
+/* 6. TIMESTAMP ISO/NIST */
+.timestamp-fbi {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    background: rgba(0, 168, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 168, 255, 0.2);
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.timestamp-fbi strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.session-id {
+    color: var(--accent-primary);
+}
+
+#currentTime {
+    color: var(--success-primary);
+}
+
+/* 7. DASHBOARD FIXO ISO/NIST - CENTRALIZADO */
+.dashboard-fixed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    position: sticky;
+    top: 70px;
+    z-index: 50;
+    justify-content: center;
+    align-content: start;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto var(--spacing-md) auto;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1400px) {
+    .dashboard-fixed {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1200px;
     }
 }
 
-async function handleFileUploadSidebar(event, type) {
-    if (!event.target.files || event.target.files.length === 0) return;
-    
-    const files = Array.from(event.target.files);
-    
-    const uploadBtn = document.querySelector(`#${type}UploadBtn`);
-    if (uploadBtn) {
-        uploadBtn.classList.add('processing');
-        uploadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...`;
-    }
-    
-    try {
-        await processMultipleFiles(type, files, true);
-        
-        const totalCount = VDCSystem.documents[type].files.length;
-        updateCounter(type, totalCount);
-        updateCompactCounters();
-        
-        if (VDCSystem.client) {
-            updateAnalysisButton();
-        }
-        
-        updateEvidenceSummary();
-        updateEvidenceCount();
-        
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} adicionados via Sidebar - Total: ${totalCount}`, 'success');
-    } catch (error) {
-        logAudit(`❌ Erro no processamento de ${type}: ${error.message}`, 'error');
-    } finally {
-        if (uploadBtn) {
-            uploadBtn.classList.remove('processing');
-            const icon = type === 'dac7' ? 'fa-file-contract' : 
-                        type === 'control' ? 'fa-file-shield' :
-                        type === 'saft' ? 'fa-file-code' :
-                        type === 'invoices' ? 'fa-file-invoice-dollar' :
-                        'fa-file-contract';
-            const text = type === 'dac7' ? 'SELECIONAR DAC7' :
-                        type === 'control' ? 'SELECIONAR' :
-                        type === 'saft' ? 'SELECIONAR' :
-                        type === 'invoices' ? 'SELECIONAR' :
-                        'SELECIONAR';
-            uploadBtn.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
-        }
+@media (max-width: 768px) {
+    .dashboard-fixed {
+        grid-template-columns: 1fr;
+        position: static;
+        max-width: 100%;
     }
 }
 
-async function processMultipleFiles(type, files, appendMode = true) {
-    try {
-        logAudit(`📁 Processando ${files.length} ficheiros ${type.toUpperCase()}...`, 'info');
-        
-        if (!VDCSystem.documents[type]) {
-            VDCSystem.documents[type] = {
-                files: [], parsedData: [], totals: {}, hashes: {}
-            };
-        }
-        
-        if (!VDCSystem.documents[type].files) VDCSystem.documents[type].files = [];
-        if (!VDCSystem.documents[type].parsedData) VDCSystem.documents[type].parsedData = [];
-        if (!VDCSystem.documents[type].hashes) VDCSystem.documents[type].hashes = {};
-        if (!VDCSystem.documents[type].totals) VDCSystem.documents[type].totals = {};
-        if (!VDCSystem.documents[type].totals.records) VDCSystem.documents[type].totals.records = 0;
-        
-        if (appendMode) {
-            VDCSystem.documents[type].files.push(...files);
-        } else {
-            VDCSystem.documents[type].files = files;
-        }
-        
-        for (const file of files) {
-            try {
-                const text = await readFileAsText(file);
-                
-                const fileHash = CryptoJS.SHA256(text).toString();
-                VDCSystem.documents[type].hashes[file.name] = fileHash;
-                
-                addToChainOfCustody(file, type, fileHash);
-                
-                let extractedData = null;
-                let recordCount = 0;
-                
-                // RESILIÊNCIA: TRY-CATCH POR FICHEIRO
-                try {
-                    switch(type) {
-                        case 'dac7':
-                            extractedData = extractDAC7Data(text, file.name);
-                            recordCount = extractedData.records || 1;
-                            break;
-                        case 'control':
-                            extractedData = { 
-                                filename: file.name, 
-                                hash: fileHash, 
-                                timestamp: new Date().toISOString(),
-                                isoCompliance: 'ISO/IEC 27037'
-                            };
-                            recordCount = 1;
-                            break;
-                        case 'saft':
-                            extractedData = extractSAFTData(text, file.name, file.type);
-                            recordCount = extractedData.transactionCount || 1;
-                            break;
-                        case 'invoices':
-                            extractedData = extractInvoiceData(text, file.name);
-                            recordCount = extractedData.records || 1;
-                            break;
-                        case 'statements':
-                            extractedData = extractStatementData(text, file.name);
-                            recordCount = extractedData.records || 1;
-                            break;
-                    }
-                    
-                    if (extractedData) {
-                        VDCSystem.documents[type].parsedData.push({
-                            filename: file.name,
-                            hash: fileHash,
-                            data: extractedData,
-                            timestamp: new Date().toISOString(),
-                            integrityCheck: 'SHA-256 VERIFIED',
-                            isoStandard: 'ISO/IEC 27037',
-                            recordCount: recordCount
-                        });
-                        
-                        // CORREÇÃO DE ACUMULAÇÃO: += em vez de =
-                        VDCSystem.documents[type].totals.records += recordCount;
-                        
-                        updateFileListModal(`${type}FileListModal`, VDCSystem.documents[type].files, fileHash);
-                        
-                        logAudit(`✅ ${file.name}: ${recordCount} registos extraídos | Hash: ${fileHash.substring(0, 16)}...`, 'success');
-                    }
-                } catch (fileError) {
-                    console.error(`Erro no processamento do ficheiro ${file.name}:`, fileError);
-                    logAudit(`⚠️ Ficheiro ${file.name} ignorado: ${fileError.message}`, 'warn');
-                    // CONTINUA COM O PRÓXIMO FICHEIRO
-                }
-            } catch (readError) {
-                console.error(`Erro na leitura do ficheiro ${file.name}:`, readError);
-                logAudit(`❌ Ficheiro ${file.name} corrompido ou não legível`, 'error');
-                // CONTINUA COM O PRÓXIMO FICHEIRO
-            }
-        }
-        
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados`, 'success');
-        updateAnalysisButton();
-        
-    } catch (error) {
-        console.error(`Erro no processamento de ${type}:`, error);
-        logAudit(`❌ Erro no processamento de ${type}: ${error.message}`, 'error');
-        throw error;
+.stat-card {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--iso-blue);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.stat-card:hover {
+    transform: translateY(-1px);
+}
+
+.stat-card.alert {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.stat-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.stat-card p {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+}
+
+.alert-text {
+    color: var(--warn-primary) !important;
+    animation: pulse 2s infinite;
+    font-weight: 800;
+}
+
+.regulatory-text {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.stat-card small {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    display: block;
+    font-weight: 500;
+}
+
+/* 8. DASHBOARD KPI ISO/NIST - ALINHAMENTO CORRIGIDO */
+.kpi-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.kpi-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+@media (min-width: 1400px) {
+    .kpi-grid {
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 1400px;
     }
 }
 
-// 9. FUNÇÕES AUXILIARES DO MODAL
-function updateFileListModal(listId, files, hash = '') {
-    const fileList = document.getElementById(listId);
-    if (!fileList) return;
-    
-    fileList.innerHTML = '';
-    
-    if (files.length === 0) {
-        fileList.classList.remove('visible');
-        return;
+@media (max-width: 1399px) and (min-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1200px;
     }
     
-    fileList.classList.add('visible');
-    
-    files.forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item-modal';
-        
-        const size = file.size;
-        let sizeStr;
-        if (size < 1024) sizeStr = size + ' B';
-        else if (size < 1024 * 1024) sizeStr = (size / 1024).toFixed(1) + ' KB';
-        else sizeStr = (size / (1024 * 1024)).toFixed(1) + ' MB';
-        
-        const fileHash = VDCSystem.documents[getTypeFromListId(listId)]?.hashes[file.name] || hash;
-        const recordCount = VDCSystem.documents[getTypeFromListId(listId)]?.totals?.records || 0;
-        
-        fileItem.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <span class="file-name-modal">${file.name}</span>
-            <span class="file-status-modal">${sizeStr} ✓</span>
-            ${fileHash ? `<span class="file-hash-modal"><i class="fas fa-fingerprint"></i> ${fileHash.substring(0, 12)}...</span>` : ''}
-        `;
-        fileList.appendChild(fileItem);
-    });
-}
-
-function getTypeFromListId(listId) {
-    if (listId.includes('dac7')) return 'dac7';
-    if (listId.includes('control')) return 'control';
-    if (listId.includes('saft')) return 'saft';
-    if (listId.includes('invoice')) return 'invoices';
-    if (listId.includes('statement')) return 'statements';
-    return 'dac7';
-}
-
-function updateEvidenceSummary() {
-    try {
-        const updateSummary = (id, type) => {
-            const element = document.getElementById(id);
-            if (element) {
-                const count = VDCSystem.documents[type]?.files?.length || 0;
-                const records = VDCSystem.documents[type]?.totals?.records || 0;
-                element.textContent = `${count} ficheiros | ${records} registos`;
-            }
-        };
-        
-        updateSummary('summaryDac7', 'dac7');
-        updateSummary('summaryControl', 'control');
-        updateSummary('summarySaft', 'saft');
-        updateSummary('summaryInvoices', 'invoices');
-        updateSummary('summaryStatements', 'statements');
-    } catch (error) {
-        console.error('Erro ao atualizar resumo:', error);
+    #diferencialCard {
+        grid-column: span 3;
     }
 }
 
-function updateEvidenceCount() {
-    try {
-        const evidenceBtn = document.getElementById('openEvidenceModalBtn');
-        if (evidenceBtn) {
-            const totalFiles = Object.values(VDCSystem.counters).reduce((a, b) => a + b, 0);
-            const evidenceCount = evidenceBtn.querySelector('.evidence-count-solid');
-            if (evidenceCount) {
-                evidenceCount.textContent = `${totalFiles} ficheiros`;
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao atualizar contador:', error);
-    }
-}
-
-function updateCompactCounters() {
-    try {
-        const counters = {
-            'dac7Counter': VDCSystem.documents.dac7?.files?.length || 0,
-            'controlCounter': VDCSystem.documents.control?.files?.length || 0,
-            'saftCounter': VDCSystem.documents.saft?.files?.length || 0,
-            'invoiceCounter': VDCSystem.documents.invoices?.files?.length || 0,
-            'statementCounter': VDCSystem.documents.statements?.files?.length || 0
-        };
-        
-        Object.entries(counters).forEach(([id, count]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = count;
-            }
-        });
-    } catch (error) {
-        console.error('Erro ao atualizar contadores compactos:', error);
-    }
-}
-
-// 10. REGISTRO E GESTÃO DE CLIENTES V11.2
-function loadClientsFromLocal() {
-    try {
-        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_2') || '[]');
-        VDCSystem.preRegisteredClients = clients;
-        logAudit(`📋 ${clients.length} clientes carregados do armazenamento local (ISO/IEC 27037)`, 'info');
-    } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-        VDCSystem.preRegisteredClients = [];
-    }
-}
-
-function handleClientAutocompleteFixed() {
-    try {
-        const input = document.getElementById('clientNameFixed');
-        const nifInput = document.getElementById('clientNIFFixed');
-        const value = input?.value.trim();
-        const nifValue = nifInput?.value.trim();
-        
-        const datalist = document.getElementById('clientSuggestions');
-        if (!datalist) return;
-        
-        datalist.innerHTML = '';
-        
-        const matches = VDCSystem.preRegisteredClients.filter(client => 
-            client.name.toLowerCase().includes(value.toLowerCase()) ||
-            client.nif.includes(nifValue)
-        );
-        
-        if (matches.length > 0) {
-            matches.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.name;
-                option.dataset.nif = client.nif;
-                datalist.appendChild(option);
-            });
-            
-            const exactMatch = VDCSystem.preRegisteredClients.find(client => 
-                client.nif === nifValue && nifValue.length === 9
-            );
-            
-            if (exactMatch && input) {
-                input.value = exactMatch.name;
-                logAudit(`✅ Cliente recuperado: ${exactMatch.name} (NIF: ${exactMatch.nif})`, 'success');
-            }
-        }
-    } catch (error) {
-        console.error('Erro no autocomplete:', error);
-    }
-}
-
-function registerClientFixed() {
-    try {
-        const nameInput = document.getElementById('clientNameFixed');
-        const nifInput = document.getElementById('clientNIFFixed');
-        
-        const name = nameInput?.value.trim();
-        const nif = nifInput?.value.trim();
-        
-        if (!name || name.length < 3) {
-            showError('Nome do cliente inválido (mínimo 3 caracteres)');
-            nameInput?.classList.add('error');
-            nameInput?.classList.remove('success');
-            nameInput?.focus();
-            return;
-        }
-        
-        if (!nif || !/^\d{9}$/.test(nif)) {
-            showError('NIF inválido (deve ter 9 dígitos)');
-            nifInput?.classList.add('error');
-            nifInput?.classList.remove('success');
-            nifInput?.focus();
-            return;
-        }
-        
-        nameInput?.classList.remove('error');
-        nameInput?.classList.add('success');
-        nifInput?.classList.remove('error');
-        nifInput?.classList.add('success');
-        
-        VDCSystem.client = { 
-            name: name, 
-            nif: nif,
-            registrationDate: new Date().toISOString(),
-            isoCompliance: 'ISO/IEC 27037',
-            session: VDCSystem.sessionId,
-            platform: VDCSystem.selectedPlatform
-        };
-        
-        const status = document.getElementById('clientStatusFixed');
-        const nameDisplay = document.getElementById('clientNameDisplayFixed');
-        
-        if (status) status.style.display = 'flex';
-        if (nameDisplay) nameDisplay.textContent = name;
-        
-        logAudit(`✅ Cliente registado: ${name} (NIF: ${nif})`, 'success');
-        
-        updateAnalysisButton();
-    } catch (error) {
-        console.error('Erro no registo do cliente:', error);
-        showError(`Erro no registo: ${error.message}`);
-    }
-}
-
-// 11. CADEIA DE CUSTÓDIA ISO/NIST V11.2
-function addToChainOfCustody(file, type, hash = '') {
-    try {
-        // CORREÇÃO DE DATA: Validação de data inválida
-        let lastModifiedDate = new Date(file.lastModified);
-        if (!isValidDate(lastModifiedDate)) {
-            lastModifiedDate = new Date();
-            logAudit(`⚠️ Data de modificação inválida para ${file.name}, usando data atual`, 'warn');
-        }
-        
-        let uploadDate = new Date();
-        if (!isValidDate(uploadDate)) {
-            uploadDate = new Date();
-        }
-        
-        const custodyRecord = {
-            id: CryptoJS.SHA256(Date.now() + file.name + type).toString().substring(0, 16),
-            filename: file.name,
-            fileType: type,
-            size: file.size,
-            lastModified: lastModifiedDate.toISOString(),
-            uploadTimestamp: uploadDate.toISOString(),
-            uploadedBy: VDCSystem.client?.name || 'Sistema',
-            hash: hash || 'pending',
-            integrityCheck: hash ? 'VERIFIED' : 'pending',
-            isoCompliance: 'ISO/IEC 27037:2012',
-            nistCompliance: 'NIST SP 800-86'
-        };
-        
-        VDCSystem.analysis.chainOfCustody.push(custodyRecord);
-        logAudit(`📁 Cadeia de Custódia: ${file.name} registado (${type.toUpperCase()})`, 'info');
-        
-        return custodyRecord.id;
-    } catch (error) {
-        console.error('Erro na cadeia de custódia:', error);
-        logAudit(`❌ Erro na cadeia de custódia para ${file.name}: ${error.message}`, 'error');
-        return null;
-    }
-}
-
-function showChainOfCustody() {
-    try {
-        if (VDCSystem.analysis.chainOfCustody.length === 0) {
-            logAudit('ℹ️ Cadeia de Custódia vazia. Carregue ficheiros primeiro.', 'info');
-            return;
-        }
-        
-        logAudit('📋 REGISTRO DE CADEIA DE CUSTÓDIA (ISO/IEC 27037):', 'success');
-        VDCSystem.analysis.chainOfCustody.forEach((record, index) => {
-            logAudit(`${index + 1}. ${record.filename} | Tipo: ${record.fileType} | Tamanho: ${formatBytes(record.size)} | Hash: ${record.hash}`, 'info');
-        });
-    } catch (error) {
-        console.error('Erro ao mostrar cadeia de custódia:', error);
-        logAudit(`❌ Erro ao mostrar cadeia de custódia: ${error.message}`, 'error');
-    }
-}
-
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-// 12. MODO DEMO FORENSE ISO/NIST V11.2
-function activateDemoMode() {
-    try {
-        if (VDCSystem.processing) return;
-        
-        VDCSystem.demoMode = true;
-        VDCSystem.processing = true;
-        
-        const demoBtn = document.getElementById('demoModeBtn');
-        if (demoBtn) {
-            demoBtn.disabled = true;
-            demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO DADOS DEMO...';
-        }
-        
-        logAudit('🔐 ATIVANDO MODO DEMO FORENSE ISO/NIST - DADOS REAIS BOLT', 'warn');
-        
-        const clientNameInput = document.getElementById('clientNameFixed');
-        const clientNIFInput = document.getElementById('clientNIFFixed');
-        
-        if (clientNameInput) clientNameInput.value = 'Momento Eficaz Unipessoal, Lda';
-        if (clientNIFInput) clientNIFInput.value = '517905450';
-        
-        registerClientFixed();
-        
-        VDCSystem.selectedYear = 2024;
-        const yearSelect = document.getElementById('selYearFixed');
-        if (yearSelect) yearSelect.value = 2024;
-        
-        VDCSystem.selectedPlatform = 'bolt';
-        const platformSelect = document.getElementById('selPlatformFixed');
-        if (platformSelect) platformSelect.value = 'bolt';
-        
-        simulateDemoChainOfCustody();
-        simulateEvidenceModalUpdate();
-        
-        setTimeout(() => {
-            VDCSystem.analysis.extractedValues = {
-                saftGross: 3202.54,
-                saftIVA6: 192.15,
-                saftNet: 2409.95,
-                platformCommission: 0,
-                bankTransfer: 0,
-                iva23Due: 0,
-                rendimentosBrutos: 3202.54,
-                comissaoApp: -792.59,
-                rendimentosLiquidos: 2409.95,
-                faturaPlataforma: 239.00,
-                campanhas: 20.00,
-                gorjetas: 9.00,
-                cancelamentos: 15.60,
-                portagens: 7.65,
-                diferencialCusto: 553.59,
-                prejuizoFiscal: 116.25,
-                ivaAutoliquidacao: 127.33,
-                dac7Revenue: 3202.54,
-                dac7Period: 'Set-Dez 2024',
-                dac7Quarterly: [
-                    { quarter: 'Q3 2024', revenue: 1601.27, commission: 396.30 },
-                    { quarter: 'Q4 2024', revenue: 1601.27, commission: 396.29 }
-                ],
-                jurosMora: 22.14,
-                taxaRegulacao: 39.63,
-                riscoRegulatorio: 39.63
-            };
-            
-            const proj = VDCSystem.analysis.projection;
-            proj.averagePerDriver = 553.59;
-            proj.totalMarketImpact = proj.averagePerDriver * proj.driverCount * proj.monthsPerYear * proj.yearsOfOperation;
-            proj.marketProjection = proj.totalMarketImpact / 1000000;
-            
-            const crossings = VDCSystem.analysis.crossings;
-            crossings.deltaA = Math.abs(3202.54 - 3202.54);
-            crossings.deltaB = Math.abs(792.59 - 239.00);
-            crossings.omission = Math.max(crossings.deltaA, crossings.deltaB);
-            crossings.diferencialAlerta = true;
-            crossings.riscoRegulatorioAtivo = true;
-            
-            updateDashboard();
-            updateKPIResults();
-            renderDashboardChart();
-            criarDashboardDiferencial();
-            criarDashboardRegulatorio();
-            calcularJurosMora();
-            generateMasterHash();
-            
-            triggerBigDataAlert(239.00, 792.59, 553.59);
-            
-            generateQuesitosEstrategicos();
-            
-            logAudit('✅ MODO DEMO ATIVADO: Cliente "Momento Eficaz" carregado', 'success');
-            logAudit('📅 PERÍODO ANALISADO: Setembro a Dezembro 2024', 'info');
-            logAudit('💰 VALORES REAIS BOLT: Fatura 239.00€ | Comissão 792.59€ | Diferencial 553.59€', 'info');
-            logAudit('⚖️ RISCO REGULATÓRIO: Taxa de Regulação 5% = 39,63€ (AMT/IMT)', 'regulatory');
-            logAudit('🔢 JUROS DE MORA: 4% base anual civil = 22,14€ (RGRC)', 'warn');
-            logAudit('📊 ANÁLISE AUTOMÁTICA: Gráficos e cálculos gerados (ISO/NIST)', 'success');
-            
-            showDiferencialAlert();
-            showJurosMoraAlert();
-            
-            if (crossings.omission > 100) {
-                showOmissionAlert();
-            }
-            
-            if (crossings.deltaB > 50) {
-                activateDiscrepancyAlert();
-            }
-            
-            VDCSystem.processing = false;
-            
-            if (demoBtn) {
-                demoBtn.disabled = false;
-                demoBtn.innerHTML = '<i class="fas fa-vial"></i> DEMO';
-            }
-            
-        }, 1500);
-        
-    } catch (error) {
-        console.error('Erro no modo demo:', error);
-        logAudit(`❌ Erro no modo demo ISO/NIST: ${error.message}`, 'error');
-        VDCSystem.processing = false;
-        
-        const demoBtn = document.getElementById('demoModeBtn');
-        if (demoBtn) {
-            demoBtn.disabled = false;
-            demoBtn.innerHTML = '<i class="fas fa-vial"></i> DEMO';
-        }
-    }
-}
-
-function simulateDemoChainOfCustody() {
-    try {
-        const demoFiles = [
-            { name: 'Fatura_Bolt_PT1125-3582.pdf', type: 'invoices', size: 245760 },
-            { name: 'Extrato_Bolt_Setembro_2024.pdf', type: 'statements', size: 512000 },
-            { name: 'SAF-T_2024_09.csv', type: 'saft', size: 102400 },
-            { name: 'DAC7_Report_2024.html', type: 'dac7', size: 81920 }
-        ];
-        
-        demoFiles.forEach(file => {
-            addToChainOfCustody(file, file.type, CryptoJS.SHA256(file.name + Date.now()).toString());
-        });
-        
-        logAudit('📁 Cadeia de Custódia Demo: 4 ficheiros de exemplo registados', 'success');
-    } catch (error) {
-        console.error('Erro na cadeia de custódia demo:', error);
-    }
-}
-
-function simulateEvidenceModalUpdate() {
-    try {
-        VDCSystem.documents.invoices.files = [{ name: 'Fatura_Bolt_PT1125-3582.pdf', size: 245760 }];
-        VDCSystem.documents.invoices.totals.records = 1;
-        VDCSystem.documents.statements.files = [{ name: 'Extrato_Bolt_Setembro_2024.pdf', size: 512000 }];
-        VDCSystem.documents.statements.totals.records = 45;
-        VDCSystem.documents.saft.files = [{ name: 'SAF-T_2024_09.csv', size: 102400 }];
-        VDCSystem.documents.saft.totals.records = 28;
-        VDCSystem.documents.dac7.files = [{ name: 'DAC7_Report_2024.html', size: 81920 }];
-        VDCSystem.documents.dac7.totals.records = 1;
-        
-        VDCSystem.counters = { dac7: 1, control: 0, saft: 1, invoices: 1, statements: 1, total: 4 };
-        
-        updateEvidenceSummary();
-        updateEvidenceCount();
-        updateCompactCounters();
-    } catch (error) {
-        console.error('Erro na simulação do modal:', error);
-    }
-}
-
-function activateDiscrepancyAlert() {
-    try {
-        const kpiComm = document.getElementById('kpiComm');
-        const kpiInvoice = document.getElementById('kpiInvoice');
-        
-        if (kpiComm && kpiInvoice) {
-            kpiComm.classList.add('blink-alert');
-            kpiInvoice.classList.add('blink-alert');
-            VDCSystem.analysis.crossings.discrepanciaAlertaAtiva = true;
-            
-            if (VDCSystem.discrepanciaAlertaInterval) {
-                clearInterval(VDCSystem.discrepanciaAlertaInterval);
-            }
-            
-            let isAlertActive = true;
-            VDCSystem.discrepanciaAlertaInterval = setInterval(() => {
-                if (isAlertActive) {
-                    kpiComm.style.color = 'var(--warn-primary)';
-                    kpiInvoice.style.color = 'var(--warn-primary)';
-                    kpiComm.style.fontWeight = '900';
-                    kpiInvoice.style.fontWeight = '900';
-                } else {
-                    kpiComm.style.color = 'var(--warn-secondary)';
-                    kpiInvoice.style.color = 'var(--warn-secondary)';
-                    kpiComm.style.fontWeight = '700';
-                    kpiInvoice.style.fontWeight = '700';
-                }
-                isAlertActive = !isAlertActive;
-            }, 1000);
-            
-            logAudit('⚠️ ALERTA DE DISCREPÂNCIA ATIVADO: Fatura vs Comissão > 50%', 'warn');
-        }
-    } catch (error) {
-        console.error('Erro no alerta de discrepância:', error);
-    }
-}
-
-// 13. FUNÇÕES DE EXTRAÇÃO DE DADOS ESTRUTURADOS V11.2 - HIGH PRECISION
-function extractDAC7Data(text, filename) {
-    const data = {
-        filename: filename,
-        annualRevenue: 0,
-        period: '',
-        records: 1,
-        quarterlyDetails: [],
-        extractionMethod: 'RegEx Multi-pattern (ISO/IEC 27037)',
-        isoStandard: 'ISO/IEC 27037'
-    };
-    
-    try {
-        const patterns = {
-            annualRevenue: [
-                /(?:total de receitas anuais|annual revenue|receitas totais|total annual revenue)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR|euros?)/gi,
-                /(?:receitas|revenue|rendimentos|income)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            period: [
-                /(?:período|period|ano|year|exercício)[\s:]*(\d{4}.*?\d{4})/i,
-                /(?:de|from)[\s:]*(\d{2}[\/\-\.]\d{4})[^0-9]*(\d{2}[\/\-\.]\d{4})/i
-            ],
-            quarterly: [
-                /(?:trimestre|quarter)[\s:]*(\d)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Q(\d)[\s:]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ]
-        };
-        
-        Object.entries(patterns).forEach(([key, regexList]) => {
-            const values = [];
-            
-            regexList.forEach(regex => {
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                    if (key === 'quarterly') {
-                        const quarter = match[1];
-                        const value = toForensicNumber(match[2]);
-                        if (value > 0) {
-                            data.quarterlyDetails.push({
-                                quarter: `Q${quarter} ${VDCSystem.selectedYear}`,
-                                revenue: value
-                            });
-                        }
-                    } else if (key === 'period') {
-                        if (match[1] && match[2]) {
-                            data.period = `${match[1]} a ${match[2]}`;
-                        } else if (match[1]) {
-                            data.period = match[1];
-                        }
-                    } else {
-                        const value = toForensicNumber(match[1]);
-                        if (value > 0) values.push(value);
-                    }
-                }
-            });
-            
-            if (values.length > 0 && key === 'annualRevenue') {
-                data.annualRevenue = Math.max(...values);
-            }
-        });
-        
-        if (!data.period) {
-            data.period = `${VDCSystem.selectedYear}-01 a ${VDCSystem.selectedYear}-12`;
-        }
-        
-        if (data.quarterlyDetails.length === 0 && data.annualRevenue > 0) {
-            const quarterlyAvg = data.annualRevenue / 4;
-            for (let i = 1; i <= 4; i++) {
-                data.quarterlyDetails.push({
-                    quarter: `Q${i} ${VDCSystem.selectedYear}`,
-                    revenue: quarterlyAvg
-                });
-            }
-        }
-        
-        logAudit(`📊 DAC7 ${filename}: Receitas=${data.annualRevenue.toFixed(2)}€ | Período=${data.period} | ${data.quarterlyDetails.length} trimestres`, 'success');
-        
-    } catch (error) {
-        console.error(`Erro na extração DAC7 ${filename}:`, error);
-        data.error = error.message;
-        logAudit(`❌ Erro na extração DAC7 ${filename}: ${error.message}`, 'error');
+@media (max-width: 767px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
     }
     
-    return data;
+    #diferencialCard {
+        grid-column: span 1;
+    }
 }
 
-function extractSAFTData(text, filename, fileType) {
-    const data = {
-        filename: filename,
-        grossValue: 0,
-        iva6Value: 0,
-        netValue: 0,
-        transactionCount: 0,
-        records: 0,
-        transactionDetails: [],
-        extractionMethod: fileType === 'text/csv' || filename.endsWith('.csv') ? 'CSV Parser (NIST SP 800-86)' : 'RegEx + DOM Parser (NIST SP 800-86)',
-        isoStandard: 'ISO/IEC 27037'
-    };
-    
-    try {
-        const isCSV = fileType === 'text/csv' || filename.endsWith('.csv') || (text.includes(',') && !text.includes('<'));
-        
-        if (isCSV) {
-            data.extractionMethod = 'CSV Parser - Mapeamento estruturado (NIST SP 800-86)';
-            
-            try {
-                const parsed = Papa.parse(text, {
-                    header: true,
-                    skipEmptyLines: true,
-                    delimiter: ',',
-                    transform: (value) => toForensicNumber(value)
-                });
-                
-                if (parsed.data && parsed.data.length > 0) {
-                    let totalGross = 0;
-                    let totalIVA6 = 0;
-                    let totalNet = 0;
-                    
-                    parsed.data.forEach((row, index) => {
-                        const precoSemIVA = toForensicNumber(row['Preço da viagem (sem IVA)'] || row['Preço sem IVA'] || row['Gross'] || 0);
-                        const iva = toForensicNumber(row['IVA'] || row['Tax'] || 0);
-                        const precoTotal = toForensicNumber(row['Preço da viagem'] || row['Total'] || row['Net'] || 0);
-                        
-                        totalGross += precoSemIVA;
-                        totalIVA6 += iva;
-                        totalNet += precoTotal;
-                        
-                        data.transactionDetails.push({
-                            id: index + 1,
-                            gross: precoSemIVA,
-                            iva6: iva,
-                            net: precoTotal,
-                            date: row['Data'] || row['Date'] || ''
-                        });
-                    });
-                    
-                    data.grossValue = totalGross;
-                    data.iva6Value = totalIVA6;
-                    data.netValue = totalNet;
-                    data.transactionCount = parsed.data.length;
-                    data.records = parsed.data.length;
-                    
-                    logAudit(`📊 SAF-T CSV ${filename}: ${parsed.data.length} transações | Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€`, 'success');
-                }
-            } catch (csvError) {
-                console.error(`Erro no parsing CSV ${filename}:`, csvError);
-                extractSAFTFromText(text, data);
-            }
-        } else {
-            extractSAFTFromText(text, data);
-        }
-        
-    } catch (error) {
-        console.error(`Erro na extração SAF-T ${filename}:`, error);
-        data.error = error.message;
-        logAudit(`❌ Erro na extração SAF-T ${filename}: ${error.message}`, 'error');
+.kpi-card {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--iso-blue);
+    transition: transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    min-width: 250px;
+    max-width: 100%;
+    word-break: break-word;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.kpi-card:hover {
+    transform: translateY(-1px);
+}
+
+.kpi-card.highlight {
+    border-left-color: var(--nist-green);
+    background: linear-gradient(135deg, rgba(0, 204, 136, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.danger {
+    border-left-color: var(--warn-primary);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.alert {
+    border-left-color: var(--warn-secondary);
+    background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+.kpi-card.regulatory {
+    border-left-color: var(--regulatory-orange);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
+}
+
+/* 9. ANIMAÇÃO BLINK-ALERT ISO/NIST */
+.blink-alert {
+    animation: blinkAlert 1.5s infinite;
+}
+
+@keyframes blinkAlert {
+    0%, 100% {
+        border-left-color: var(--warn-primary);
+        box-shadow: 0 0 10px rgba(232, 65, 24, 0.3);
+        color: var(--warn-primary);
+        font-weight: 800;
+    }
+    50% {
+        border-left-color: var(--warn-secondary);
+        box-shadow: 0 0 15px rgba(255, 159, 26, 0.4);
+        color: var(--warn-secondary);
+        font-weight: 800;
+    }
+}
+
+#diferencialVal {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    color: var(--warn-secondary);
+    font-family: var(--font-mono);
+}
+
+#regulatoryVal {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    color: var(--regulatory-orange);
+    font-family: var(--font-mono);
+}
+
+.kpi-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.kpi-card p {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+    word-break: break-all;
+}
+
+.kpi-card small {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    display: block;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.secondary-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    box-sizing: border-box;
+}
+
+.secondary-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+}
+
+.secondary-stats b {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+/* 10. BARRA DE FERRAMENTAS ISO/NIST */
+.toolbar-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.btn-forensic {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.btn-forensic:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 102, 204, 0.4);
+}
+
+.btn-forensic:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--border-color);
+}
+
+.btn-tool {
+    background: rgba(20, 30, 48, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+}
+
+.btn-tool:hover {
+    background: rgba(0, 102, 204, 0.1);
+    border-color: var(--iso-blue);
+}
+
+/* 11. GRÁFICO VERTICAL COMPACTO ISO/NIST */
+.chart-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    height: 380px;
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.chart-section h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.chart-container {
+    height: 280px;
+    width: 100%;
+    position: relative;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+/* 12. RESULTADOS DA ANÁLISE ISO/NIST */
+.analysis-results {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.analysis-results h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+    .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+}
+
+.result-item {
+    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    min-width: 200px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.result-item h5 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.result-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    margin-bottom: 0.75rem;
+}
+
+.result-bar {
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+}
+
+.bar-fill {
+    height: 100%;
+    background: var(--iso-blue);
+    width: 0%;
+    transition: width 1s ease;
+    box-sizing: border-box;
+}
+
+/* 13. ALERTAS ISO/NIST */
+.omission-alert {
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
+    border: 1px solid var(--warn-primary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.omission-alert i {
+    color: var(--warn-primary);
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.omission-alert strong {
+    color: var(--warn-primary);
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+}
+
+.omission-alert p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#omissionValue {
+    color: var(--warn-primary);
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+.bigdata-alert {
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
+    border: 2px solid var(--warn-primary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.bigdata-alert i {
+    color: var(--warn-primary);
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.bigdata-alert strong {
+    color: var(--warn-primary);
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+}
+
+.bigdata-alert p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#alertInvoiceVal, #alertCommVal, #alertDeltaVal {
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+#alertInvoiceVal { color: var(--iso-blue); }
+#alertCommVal { color: var(--warn-primary); }
+#alertDeltaVal { color: var(--warn-secondary); }
+
+.diferencial-alert {
+    border-color: var(--warn-secondary) !important;
+    background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(255, 159, 26, 0.05) 100%) !important;
+}
+
+.diferencial-alert i.fa-balance-scale {
+    color: var(--warn-secondary) !important;
+    font-size: 1.8rem;
+}
+
+.diferencial-alert strong {
+    color: var(--warn-secondary) !important;
+    font-weight: 800;
+}
+
+.regulatory-alert {
+    border-color: var(--regulatory-orange) !important;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%) !important;
+}
+
+.regulatory-alert i.fa-gavel {
+    color: var(--regulatory-orange) !important;
+    font-size: 1.8rem;
+}
+
+.regulatory-alert strong {
+    color: var(--regulatory-orange) !important;
+    font-weight: 800;
+}
+
+/* 14. MODAL DE EVIDÊNCIAS BIG DATA - LARGO */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 15, 29, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+}
+
+.evidence-modal {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    max-width: 1100px;
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 3px solid var(--nist-green);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.modal-header {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    padding: var(--spacing-md);
+    border-bottom: 2px solid var(--nist-green);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.modal-header h3 {
+    color: white;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.modal-header .icon-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.modal-header .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    flex: 1;
+    padding: var(--spacing-xl);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.upload-section-modal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    box-sizing: border-box;
+}
+
+.upload-group-modal {
+    background: rgba(30, 42, 68, 0.7);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.upload-group-modal:hover {
+    border-color: var(--iso-blue);
+    background: rgba(30, 42, 68, 0.9);
+}
+
+.upload-group-modal label {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+    box-sizing: border-box;
+}
+
+.modal-btn {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(20, 30, 48, 0.9);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    transition: all 0.2s ease;
+    font-weight: 700;
+    box-sizing: border-box;
+}
+
+.modal-btn:hover {
+    border-color: var(--iso-blue);
+    background: rgba(0, 102, 204, 0.1);
+    transform: translateY(-2px);
+}
+
+.modal-btn.multi {
+    border-style: solid;
+    border-color: var(--accent-secondary);
+}
+
+.modal-btn.processing {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    color: white;
+    border-color: var(--iso-blue);
+}
+
+.modal-btn.processing i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.file-list-modal {
+    background: rgba(10, 15, 29, 0.9);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.file-list-modal.visible {
+    display: block;
+}
+
+.file-item-modal {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.file-item-modal:last-child {
+    border-bottom: none;
+}
+
+.file-item-modal:hover {
+    background: rgba(0, 102, 204, 0.05);
+    border-radius: var(--border-radius-sm);
+}
+
+.file-item-modal i.fa-check-circle {
+    color: var(--nist-green);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.file-item-modal i.fa-spinner {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    flex-shrink: 0;
+    animation: spin 1s linear infinite;
+}
+
+.file-name-modal {
+    color: var(--text-secondary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.file-status-modal {
+    color: var(--nist-green);
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+}
+
+.file-hash-modal {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Resumo de Processamento */
+.processing-summary {
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+    border: 2px solid var(--iso-blue);
+    box-sizing: border-box;
+}
+
+.processing-summary h4 {
+    color: var(--iso-blue);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: rgba(30, 42, 68, 0.9);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
+    box-sizing: border-box;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--iso-blue);
+}
+
+.summary-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.summary-value {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    text-align: center;
+}
+
+.summary-value.total {
+    color: var(--nist-green);
+    font-size: 1.1rem;
+}
+
+.modal-footer {
+    background: rgba(30, 42, 68, 0.9);
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.modal-footer .btn-primary, .modal-footer .btn-secondary {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.modal-footer .btn-primary {
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
+    color: white;
+}
+
+.modal-footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.modal-footer .btn-secondary {
+    background: rgba(30, 42, 68, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-footer .btn-secondary:hover {
+    background: rgba(0, 168, 255, 0.1);
+    border-color: var(--iso-blue);
+}
+
+/* 15. CONSOLA DE AUDITORIA ISO/NIST */
+.console-section {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.console-header {
+    background: rgba(20, 30, 48, 0.9);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.console-header h3 {
+    color: var(--iso-blue);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+}
+
+.console-controls {
+    display: flex;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-tertiary);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 102, 204, 0.1);
+    border-color: var(--iso-blue);
+    color: var(--text-primary);
+}
+
+.console-output {
+    height: 120px;
+    background: rgba(10, 15, 29, 0.95);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    overflow-x: hidden;
+    line-height: 1.4;
+    border-top: 1px solid var(--border-color);
+    transition: height 0.3s ease;
+    box-sizing: border-box;
+}
+
+.console-output::-webkit-scrollbar {
+    width: 6px;
+}
+
+.console-output::-webkit-scrollbar-track {
+    background: rgba(30, 42, 68, 0.5);
+}
+
+.console-output::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.console-output::-webkit-scrollbar-thumb:hover {
+    background: var(--iso-blue);
+}
+
+.log-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.01);
+    margin: 1px 0;
+    padding: 3px 5px;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+
+.log-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
+    white-space: normal;
+    overflow: visible;
+}
+
+.log-info { 
+    color: var(--iso-blue); 
+    border-left: 2px solid var(--iso-blue);
+}
+.log-success { 
+    color: var(--nist-green); 
+    border-left: 2px solid var(--nist-green);
+}
+.log-warn { 
+    color: var(--warn-secondary); 
+    border-left: 2px solid var(--warn-secondary);
+}
+.log-error { 
+    color: var(--warn-primary); 
+    border-left: 2px solid var(--warn-primary);
+}
+.log-regulatory { 
+    color: var(--regulatory-orange); 
+    border-left: 2px solid var(--regulatory-orange);
+}
+
+/* 16. RODAPÉ ISO/NIST COMPLIANCE */
+.action-footer {
+    background: rgba(30, 42, 68, 0.5);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md);
+    margin-top: auto;
+    position: relative;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.system-info {
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.master-hash {
+    background: rgba(20, 30, 48, 0.8);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    word-break: break-all;
+    line-height: 1.4;
+    border: 1px solid rgba(0, 102, 204, 0.3);
+    box-shadow: var(--shadow-inset);
+    box-sizing: border-box;
+}
+
+.master-hash strong {
+    color: var(--iso-blue);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.master-hash span {
+    color: #00d1ff;
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+}
+
+.copyright {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* 17. OVERLAY DE CARREGAMENTO ISO/NIST */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    box-sizing: border-box;
+}
+
+.loading-content {
+    text-align: center;
+    max-width: 600px;
+    box-sizing: border-box;
+}
+
+.loading-spinner {
+    font-size: 3.5rem;
+    color: var(--iso-blue);
+    margin-bottom: var(--spacing-lg);
+}
+
+.loading-progress {
+    width: 400px;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: var(--spacing-lg) auto;
+    box-sizing: border-box;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* 18. TOAST NOTIFICATION */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 9997;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards;
+    max-width: 350px;
+    box-sizing: border-box;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+}
+
+.toast-notification i {
+    font-size: 1.2rem;
+}
+
+.toast-notification p {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.toast-notification.error {
+    background: linear-gradient(90deg, var(--warn-primary) 0%, #e84118 100%);
+}
+
+.toast-notification.warning {
+    background: linear-gradient(90deg, var(--warn-secondary) 0%, #ff9f1a 100%);
+}
+
+/* 19. RESPONSIVIDADE ISO/NIST */
+@media (max-width: 1024px) {
+    .app-container {
+        grid-template-columns: 1fr;
     }
     
-    return data;
-}
-
-function extractSAFTFromText(text, data) {
-    try {
-        const patterns = [
-            { regex: /<GrossTotal>([\d\.,]+)<\/GrossTotal>/i, key: 'grossValue' },
-            { regex: /<NetTotal>([\d\.,]+)<\/NetTotal>/i, key: 'netValue' },
-            { regex: /<Tax>.*?<TaxPercentage>6<\/TaxPercentage>.*?<TaxAmount>([\d\.,]+)<\/TaxAmount>/is, key: 'iva6Value' }
-        ];
-        
-        patterns.forEach(pattern => {
-            const match = text.match(pattern.regex);
-            if (match) {
-                const value = toForensicNumber(match[1]);
-                if (value > 0) {
-                    data[pattern.key] = value;
-                }
-            }
-        });
-        
-        const transactionMatches = text.match(/<Transaction>/gi) || text.match(/<Line>/gi);
-        data.transactionCount = transactionMatches ? transactionMatches.length : 1;
-        data.records = data.transactionCount;
-        
-        if (data.grossValue > 0) {
-            logAudit(`SAF-T ${data.filename}: Bruto = ${data.grossValue.toFixed(2)}€ (ISO/IEC 27037) | ${data.transactionCount} transações`, 'info');
-        }
-        
-    } catch (error) {
-        console.error(`Erro na extração SAF-T do texto ${data.filename}:`, error);
-        data.error = error.message;
-    }
-}
-
-function extractInvoiceData(text, filename) {
-    const data = {
-        filename: filename,
-        invoiceValue: 0,
-        commissionValue: 0,
-        iva23Value: 0,
-        invoiceNumber: '',
-        invoiceDate: '',
-        boltEntityDetected: false,
-        records: 1,
-        extractionMethod: 'RegEx Multi-pattern Bolt High Precision (ISO/IEC 27037)',
-        isoStandard: 'ISO/IEC 27037'
-    };
-    
-    try {
-        // PADRÕES ESPECÍFICOS BOLT - HIGH PRECISION V11.2
-        const patterns = {
-            // ÂNCORA: Total com IVA (EUR) - REGEX CORRIGIDO PARA QUEBRAS DE LINHA
-            invoiceValue: [
-                /Total\s+com\s+IVA\s*\(EUR\)\s*([\d\.,]+)/i,
-                /Total\s+com\s+IVA[\s\n]*\(EUR\)[\s\n]*([\d\.,]+)/i,
-                /Total\s+\(incl\.\s+IVA\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-                /Amount\s+due[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-                /Total\s+amount[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-                // Fallback: qualquer total no final do documento
-                /Total[:\s]*([\d\.,]+)\s*(?:€|EUR)\s*$/im
-            ],
-            
-            // Comissão específica Bolt
-            commissionValue: [
-                /(?:Comissão|Commission|Service\s+fee|Fee)[:\s]*([\d\.,]+)\s*(?:€|EUR)/i,
-                /-?\s*([\d\.,]+)\s*(?:€|EUR)\s*(?:comissão|fee)/i
-            ],
-            
-            invoiceNumber: [
-                /(?:Fatura|Invoice|Número|Number)[\s:]*([A-Z]{2}\d{4}[-_]?\d{4})/i,
-                /[A-Z]{2}\d{4}[-_]\d{4}/,
-                /Fatura\s+n[º°o]\s*([A-Z0-9\-]+)/i
-            ],
-            
-            date: [
-                /(?:Data|Date|Emissão|Issued)[\s:]*(\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})/i,
-                /Date:\s*(\d{4}-\d{2}-\d{2})/i
-            ],
-            
-            boltEntity: [
-                /Bolt Operations O[Üu]/i,
-                /EE102090374/i,
-                /Vana-Lõuna 15, Tallinn/i
-            ]
-        };
-        
-        // EXTRAÇÃO ESPECÍFICA PARA VALOR DA FATURA
-        let invoiceValueFound = false;
-        patterns.invoiceValue.forEach(regex => {
-            const match = text.match(regex);
-            if (match && !invoiceValueFound) {
-                const rawValue = match[1];
-                const cleanedValue = toForensicNumber(rawValue);
-                
-                // VALIDAÇÃO DE VALOR ESPERADO (239.00€ típico Bolt)
-                if (cleanedValue > 0) {
-                    data.invoiceValue = cleanedValue;
-                    invoiceValueFound = true;
-                    
-                    // Log específico para valores-chave
-                    if (Math.abs(cleanedValue - 239.00) < 0.01) {
-                        data.invoiceValue = 239.00;
-                        logAudit(`⚖️ VALOR-CHAVE IDENTIFICADO: Fatura ${filename} = 239,00€ (ISO/IEC 27037)`, 'warn');
-                    }
-                }
-            }
-        });
-        
-        // EXTRAÇÃO DE COMISSÃO
-        patterns.commissionValue.forEach(regex => {
-            let match;
-            while ((match = regex.exec(text)) !== null) {
-                const value = toForensicNumber(match[1]);
-                if (value > 0 && value > data.commissionValue) {
-                    data.commissionValue = value;
-                    
-                    // VALIDAÇÃO DE VALOR ESPERADO (792.59€ típico Bolt)
-                    if (Math.abs(value - 792.59) < 0.01) {
-                        data.commissionValue = 792.59;
-                        logAudit(`⚖️ VALOR-CHAVE IDENTIFICADO: Comissão ${filename} = 792,59€ (ISO/IEC 27037)`, 'warn');
-                    }
-                }
-            }
-        });
-        
-        // EXTRAÇÃO DE NÚMERO DA FATURA
-        patterns.invoiceNumber.forEach(regex => {
-            const match = text.match(regex);
-            if (match && !data.invoiceNumber) {
-                data.invoiceNumber = match[1] || match[0];
-                data.invoiceNumber = data.invoiceNumber.replace(/[_-]/g, '-');
-                if (VDCSystem.documents.invoices.totals && VDCSystem.documents.invoices.totals.invoiceNumbers) {
-                    VDCSystem.documents.invoices.totals.invoiceNumbers.push(data.invoiceNumber);
-                }
-            }
-        });
-        
-        // DETECÇÃO DE ENTIDADE BOLT
-        patterns.boltEntity.forEach(regex => {
-            if (regex.test(text)) {
-                data.boltEntityDetected = true;
-                if (VDCSystem.documents.invoices.totals.boltEntities) {
-                    VDCSystem.documents.invoices.totals.boltEntities.push(VDCSystem.boltEntity);
-                }
-            }
-        });
-        
-        // TRATAMENTO AUTOLIQUIDAÇÃO V11.2 - FORÇA IVA23 = 0
-        const autoliquidacaoDetectada = /autoliquida[çc][ãa]o/i.test(text);
-        
-        // CÁLCULO DO IVA 23% SOBRE A COMISSÃO
-        if (data.commissionValue > 0) {
-            if (autoliquidacaoDetectada) {
-                data.iva23Value = 0;
-                logAudit(`🔒 AUTOLIQUIDAÇÃO detectada na fatura ${filename}: IVA23 forçado a 0,00€ (CIVA Art. 29º)`, 'warn');
-            } else {
-                data.iva23Value = data.commissionValue * 0.23;
-            }
-        }
-        
-        if (data.boltEntityDetected) {
-            logAudit(`🏢 Entidade Bolt detectada na fatura ${filename}: ${VDCSystem.boltEntity.nome}`, 'info');
-        }
-        
-        logAudit(`📄 Fatura ${filename}: ${data.invoiceValue.toFixed(2)}€ | Número: ${data.invoiceNumber || 'N/A'} | Entidade: ${data.boltEntityDetected ? 'Bolt' : 'Não identificada'}`, 'success');
-        
-    } catch (error) {
-        console.error(`Erro na extração de fatura ${filename}:`, error);
-        data.error = error.message;
-        logAudit(`❌ Erro na extração de fatura ${filename}: ${error.message}`, 'error');
+    .sidebar {
+        max-height: 600px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        position: static;
+        height: auto;
     }
     
-    return data;
-}
-
-function extractStatementData(text, filename) {
-    const data = {
-        filename: filename,
-        grossEarnings: 0,
-        commission: 0,
-        netTransfer: 0,
-        campaigns: 0,
-        tips: 0,
-        cancellations: 0,
-        tolls: 0,
-        records: 0,
-        transactionDetails: [],
-        extractionMethod: 'RegEx Multi-pattern Bolt High Precision (NIST SP 800-86)',
-        isoStandard: 'ISO/IEC 27037'
-    };
-    
-    try {
-        const patterns = {
-            grossEarnings: [
-                /(?:Rendimentos|Earnings|Bruto|Gross|Total)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR|euros?)/gi,
-                /Total\s+earnings[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            
-            commission: [
-                /(?:Comissão|Commission|Fee|Service\s+fee)[\s:]*[€\$\s-]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Commission[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /-?\s*([\d\.,]+)\s*(?:€|EUR)\s*(?:deduction|fee)/gi
-            ],
-            
-            netTransfer: [
-                /(?:Líquido|Net|Transferência|Transfer|Payout|To\s+receive)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Net\s+amount[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            
-            campaigns: [
-                /(?:Campanha|Campaign|Bónus|Bonus|Incentive|Promoção)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Bonus[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            
-            tips: [
-                /(?:Gorjeta|Tip|Gratificação|Gratuity)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Tip[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            
-            cancellations: [
-                /(?:Cancelamento|Cancellation|Cancel\s+fee)[\s:]*[€\$\s-]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Cancellation[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ],
-            
-            tolls: [
-                /(?:Portagem|Toll|Road\s+fee)[\s:]*[€\$\s]*([\d\.,]+)\s*(?:€|EUR)/gi,
-                /Toll[:\s]*([\d\.,]+)\s*(?:€|EUR)/gi
-            ]
-        };
-        
-        Object.entries(patterns).forEach(([key, regexList]) => {
-            const values = [];
-            
-            regexList.forEach(regex => {
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                    const value = toForensicNumber(match[1]);
-                    if (value > 0) values.push(Math.abs(value));
-                }
-            });
-            
-            if (values.length > 0) {
-                if (key === 'commission') {
-                    // Comissão é negativa (dedução)
-                    data[key] = -Math.max(...values);
-                    
-                    if (Math.abs(data[key]) - 792.59 < 0.01) {
-                        data[key] = -792.59;
-                        logAudit(`⚖️ VALOR-CHAVE IDENTIFICADO: Comissão ${filename} = -792,59€ (ISO/IEC 27037)`, 'warn');
-                    }
-                } else {
-                    data[key] = Math.max(...values);
-                }
-            }
-        });
-        
-        const lines = text.split('\n').filter(line => line.trim().length > 0);
-        data.records = Math.max(1, Math.floor(lines.length / 3));
-        
-        logAudit(`🏦 Extrato ${filename}: Bruto=${data.grossEarnings.toFixed(2)}€ | Comissão=${data.commission.toFixed(2)}€ | ${data.records} registos (NIST SP 800-86)`, 'success');
-        
-    } catch (error) {
-        console.error(`Erro na extração de extrato ${filename}:`, error);
-        data.error = error.message;
-        logAudit(`❌ Erro na extração de extrato ${filename}: ${error.message}`, 'error');
+    .sidebar-header-fixed {
+        position: static;
     }
     
-    return data;
-}
-
-// 14. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V11.2
-function resetDashboard() {
-    try {
-        logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO AUDITORIA FISCAL', 'info');
-        updatePageTitle('Resetando Sistema...');
-        
-        if (VDCSystem.analysis.crossings.bigDataAlertActive && VDCSystem.bigDataAlertInterval) {
-            clearInterval(VDCSystem.bigDataAlertInterval);
-            VDCSystem.analysis.crossings.bigDataAlertActive = false;
-        }
-        
-        if (VDCSystem.analysis.crossings.discrepanciaAlertaAtiva && VDCSystem.discrepanciaAlertaInterval) {
-            clearInterval(VDCSystem.discrepanciaAlertaInterval);
-            VDCSystem.analysis.crossings.discrepanciaAlertaAtiva = false;
-        }
-        
-        const clientNameInput = document.getElementById('clientNameFixed');
-        const clientNIFInput = document.getElementById('clientNIFFixed');
-        const yearSelect = document.getElementById('selYearFixed');
-        const platformSelect = document.getElementById('selPlatformFixed');
-        
-        if (clientNameInput) {
-            clientNameInput.value = '';
-            clientNameInput.classList.remove('error', 'success', 'readonly');
-            clientNameInput.readOnly = false;
-        }
-        
-        if (clientNIFInput) {
-            clientNIFInput.value = '';
-            clientNIFInput.classList.remove('error', 'success', 'readonly');
-            clientNIFInput.readOnly = false;
-        }
-        
-        if (yearSelect) {
-            yearSelect.value = new Date().getFullYear();
-            VDCSystem.selectedYear = parseInt(yearSelect.value);
-        }
-        
-        if (platformSelect) {
-            platformSelect.value = 'bolt';
-            VDCSystem.selectedPlatform = 'bolt';
-        }
-        
-        localStorage.removeItem('vdc_clients_bd_v11_2');
-        VDCSystem.preRegisteredClients = [];
-        
-        const elementos = [
-            'kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice',
-            'valCamp', 'valTips', 'valCanc', 'valTolls',
-            'netVal', 'iva6Val', 'commissionVal', 'iva23Val',
-            'grossResult', 'transferResult', 'differenceResult', 'marketResult',
-            'jurosVal', 'jurosValStats'
-        ];
-        
-        elementos.forEach(id => {
-            const elemento = document.getElementById(id);
-            if (elemento) {
-                elemento.textContent = id === 'marketResult' ? '0,00M€' : '0,00€';
-                if (id === 'kpiComm') {
-                    elemento.style.color = '';
-                    elemento.style.fontWeight = '';
-                }
-                if (elemento.classList) {
-                    elemento.classList.remove('blink-alert');
-                    elemento.classList.remove('alert-text');
-                    elemento.classList.remove('regulatory-text');
-                }
-            }
-        });
-        
-        document.querySelectorAll('.bar-fill').forEach(bar => {
-            bar.style.width = '0%';
-            bar.style.backgroundColor = '';
-        });
-        
-        const jurosCard = document.getElementById('jurosCard');
-        if (jurosCard) jurosCard.style.display = 'none';
-        
-        const alerts = [
-            'omissionAlert', 'bigDataAlert', 'diferencialAlert', 'jurosAlert'
-        ];
-        
-        alerts.forEach(id => {
-            const alert = document.getElementById(id);
-            if (alert) alert.style.display = 'none';
-        });
-        
-        const clientStatus = document.getElementById('clientStatusFixed');
-        if (clientStatus) clientStatus.style.display = 'none';
-        
-        const fileLists = [
-            'dac7FileListModal', 'controlFileListModal', 'saftFileListModal', 
-            'invoiceFileListModal', 'statementFileListModal'
-        ];
-        
-        fileLists.forEach(id => {
-            const list = document.getElementById(id);
-            if (list) {
-                list.innerHTML = '';
-                list.classList.remove('visible');
-            }
-        });
-        
-        VDCSystem.demoMode = false;
-        VDCSystem.client = null;
-        VDCSystem.processing = false;
-        VDCSystem.clientLocked = false;
-        
-        VDCSystem.documents = {
-            dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, period: '', records: 0, quarterlyDetails: [] }, hashes: {} },
-            control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-            saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0, transactionDetails: [] }, hashes: {} },
-            invoices: { files: [], parsedData: [], totals: { 
-                commission: 0, iva23: 0, invoiceValue: 0, invoicesFound: [], invoiceNumbers: [], boltEntities: [], records: 0
-            }, hashes: {}},
-            statements: { files: [], parsedData: [], totals: { 
-                transfer: 0, expected: 0, rendimentosBrutos: 0, comissaoApp: 0, 
-                rendimentosLiquidos: 0, campanhas: 0, gorjetas: 0, 
-                cancelamentos: 0, portagens: 0, diferencialCusto: 0, transactionDetails: [], records: 0
-            }, hashes: {}}
-        };
-        
-        VDCSystem.analysis.extractedValues = {
-            saftGross: 0, saftIVA6: 0, saftNet: 0,
-            platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-            rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
-            faturaPlataforma: 0, campanhas: 0, gorjetas: 0,
-            cancelamentos: 0, portagens: 0, diferencialCusto: 0,
-            prejuizoFiscal: 0, ivaAutoliquidacao: 0,
-            dac7Revenue: 0, dac7Period: '', dac7Quarterly: [],
-            jurosMora: 0,
-            taxaRegulacao: 0, riscoRegulatorio: 0
-        };
-        
-        VDCSystem.analysis.crossings = {
-            deltaA: 0, deltaB: 0, omission: 0, isValid: true,
-            diferencialAlerta: false, fraudIndicators: [], 
-            bigDataAlertActive: false, discrepanciaAlertaAtiva: false,
-            riscoRegulatorioAtivo: false
-        };
-        
-        VDCSystem.analysis.projection = {
-            marketProjection: 0, averagePerDriver: 0, driverCount: 38000,
-            monthsPerYear: 12, yearsOfOperation: 7, totalMarketImpact: 0
-        };
-        
-        VDCSystem.analysis.chainOfCustody = [];
-        VDCSystem.analysis.anomalies = [];
-        VDCSystem.analysis.quesitosEstrategicos = [];
-        
-        VDCSystem.counters = { dac7: 0, control: 0, saft: 0, invoices: 0, statements: 0, total: 0 };
-        
-        if (VDCSystem.chart) {
-            VDCSystem.chart.data.datasets[0].data = [0, 0, 0, 0, 0];
-            VDCSystem.chart.update();
-        }
-        
-        updateAnalysisButton();
-        updateEvidenceSummary();
-        updateEvidenceCount();
-        updateCompactCounters();
-        
-        clearConsole();
-        
-        VDCSystem.sessionId = generateSessionId();
-        const sessionDisplay = document.getElementById('sessionIdDisplay');
-        if (sessionDisplay) sessionDisplay.textContent = `SESSION: ${VDCSystem.sessionId}`;
-        
-        const demoBtn = document.getElementById('demoModeBtn');
-        if (demoBtn) {
-            demoBtn.disabled = false;
-            demoBtn.innerHTML = '<i class="fas fa-vial"></i> DEMO';
-        }
-        
-        logAudit('✅ Sistema resetado - Todos os dados limpos | Nova sessão Auditoria Fiscal criada', 'success');
-        updatePageTitle('Sistema Pronto');
-        
-    } catch (error) {
-        console.error('Erro no reset do dashboard:', error);
-        logAudit(`❌ Erro no reset do sistema: ${error.message}`, 'error');
+    .info-fixed {
+        position: static;
+    }
+    
+    .analysis-area {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .chart-section {
+        height: auto;
+        min-height: 350px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .toolbar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard-fixed {
+        position: static;
+    }
+    
+    .header-content {
+        flex-wrap: wrap;
+    }
+    
+    .demo-section {
+        order: 3;
+        width: 100%;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .btn-demo-nav {
+        width: 100%;
+    }
+    
+    .evidence-modal {
+        width: 95%;
+        max-width: 95%;
+        margin: 1rem;
+    }
+    
+    .counters-compact {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-// 15. FUNÇÕES DE AUDITORIA FISCAL BIG DATA V11.2
-async function performForensicAnalysis() {
-    try {
-        updatePageTitle('Auditando Big Data...');
-        
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (analyzeBtn) {
-            analyzeBtn.disabled = true;
-            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AUDITANDO BIG DATA (ISO/IEC 27037)...';
-        }
-        
-        logAudit('🔍🧠 INICIANDO AUDITORIA FISCAL DE LAYERING BIG DATA', 'success');
-        logAudit('📊 Cruzamento SAF-T vs Extratos vs Faturas (NIST SP 800-86)', 'info');
-        logAudit('⚖️ Verificação de Conformidade AMT/IMT - Taxa de Regulação 5%', 'regulatory');
-        logAudit('🔢 Cálculo de Juros de Mora (RGRC 4% base anual civil)', 'warn');
-        
-        // USANDO PROMISE.ALL PARA SINCRONIZAÇÃO E RESILIÊNCIA
-        const tasks = [
-            processLoadedData().catch(err => logAudit(`❌ Erro no processamento de dados: ${err.message}`, 'error')),
-            calculateExtractedValues().catch(err => logAudit(`❌ Erro no cálculo de valores: ${err.message}`, 'error')),
-            performForensicCrossings().catch(err => logAudit(`❌ Erro no cruzamento forense: ${err.message}`, 'error')),
-            calculateMarketProjection().catch(err => logAudit(`❌ Erro na projeção de mercado: ${err.message}`, 'error')),
-            calcularJurosMora().catch(err => logAudit(`❌ Erro no cálculo de juros: ${err.message}`, 'error')),
-            calculateRegulatoryRisk().catch(err => logAudit(`❌ Erro no cálculo de risco regulatório: ${err.message}`, 'error'))
-        ];
-        
-        await Promise.allSettled(tasks);
-        
-        // ATUALIZAÇÕES SINCRONIZADAS COM RESILIÊNCIA
-        const updateTasks = [
-            updateDashboard().catch(err => logAudit(`❌ Erro na atualização do dashboard: ${err.message}`, 'error')),
-            updateKPIResults().catch(err => logAudit(`❌ Erro na atualização dos KPIs: ${err.message}`, 'error')),
-            renderDashboardChart().catch(err => logAudit(`❌ Erro na renderização do gráfico: ${err.message}`, 'error')),
-            criarDashboardDiferencial().catch(err => logAudit(`❌ Erro na criação do dashboard diferencial: ${err.message}`, 'error')),
-            criarDashboardRegulatorio().catch(err => logAudit(`❌ Erro na criação do dashboard regulatório: ${err.message}`, 'error')),
-            generateMasterHash().catch(err => logAudit(`❌ Erro na geração do hash master: ${err.message}`, 'error')),
-            generateQuesitosEstrategicos().catch(err => logAudit(`❌ Erro na geração de quesitos: ${err.message}`, 'error'))
-        ];
-        
-        await Promise.allSettled(updateTasks);
-        
-        updateDashboard();
-        
-        const discrepancia = Math.abs(Math.abs(VDCSystem.analysis.extractedValues.comissaoApp) - 
-                                     VDCSystem.analysis.extractedValues.faturaPlataforma);
-        
-        if (discrepancia > 50) {
-            triggerBigDataAlert(
-                VDCSystem.analysis.extractedValues.faturaPlataforma,
-                Math.abs(VDCSystem.analysis.extractedValues.comissaoApp),
-                discrepancia
-            );
-            
-            activateDiscrepancyAlert();
-        }
-        
-        logAudit('✅ AUDITORIA FISCAL BIG DATA CONCLUÍDA COM SUCESSO (ISO/IEC 27037)', 'success');
-        logAudit(`⚖️ Diferencial identificado: ${VDCSystem.analysis.extractedValues.diferencialCusto.toFixed(2)}€`, 'warn');
-        logAudit(`🔢 Juros de Mora (4%): ${VDCSystem.analysis.extractedValues.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
-        logAudit(`📊 Quantum Benefício Ilícito (38k × 12 × 7): ${(VDCSystem.analysis.projection.totalMarketImpact / 1000000).toFixed(2)}M€`, 'info');
-        logAudit(`⚖️ Risco Regulatório AMT/IMT: ${VDCSystem.analysis.extractedValues.taxaRegulacao.toFixed(2)}€ (5% sobre comissão)`, 'regulatory');
-        
-        if (VDCSystem.analysis.crossings.diferencialAlerta) {
-            showDiferencialAlert();
-        }
-        
-        if (VDCSystem.analysis.extractedValues.jurosMora > 0) {
-            showJurosMoraAlert();
-        }
-        
-        if (VDCSystem.analysis.crossings.omission > 100) {
-            showOmissionAlert();
-        }
-        
-        showChainOfCustody();
-        
-        updatePageTitle('Auditoria Concluída');
-        
-    } catch (error) {
-        console.error('Erro na auditoria:', error);
-        logAudit(`❌ Erro na auditoria Big Data: ${error.message}`, 'error');
-        showError(`Erro na auditoria fiscal: ${error.message}`);
-        updatePageTitle('Erro na Auditoria');
-    } finally {
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (analyzeBtn) {
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = '<i class="fas fa-microchip"></i> PROCESSAR';
-        }
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .logo-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .timestamp-fbi {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .demo-section {
+        order: 0;
+        width: auto;
+        margin-top: 0;
+    }
+    
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .toolbar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bigdata-alert {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .chart-legend {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .loading-progress {
+        width: 300px;
+    }
+    
+    .counters-compact {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .secondary-stats {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .splash-content {
+        padding: 2rem;
+        margin: 1rem;
+    }
+    
+    .splash-logo {
+        font-size: 3.5rem;
+    }
+    
+    .splash-screen h1 {
+        font-size: 1.8rem;
+    }
+    
+    .splash-screen h2 {
+        font-size: 1.3rem;
+    }
+    
+    .splash-btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
     }
 }
 
-async function processLoadedData() {
-    try {
-        // Processar dados DAC7
-        if (VDCSystem.documents.dac7 && VDCSystem.documents.dac7.parsedData && VDCSystem.documents.dac7.parsedData.length > 0) {
-            let totalRevenue = 0;
-            let period = '';
-            let totalRecords = 0;
-            let quarterlyDetails = [];
-            
-            VDCSystem.documents.dac7.parsedData.forEach(item => {
-                totalRevenue += (item.data && item.data.annualRevenue) || 0;
-                totalRecords += (item.data && item.data.records) || 0;
-                if (item.data && item.data.period && !period) {
-                    period = item.data.period;
-                }
-                if (item.data && item.data.quarterlyDetails) {
-                    quarterlyDetails = quarterlyDetails.concat(item.data.quarterlyDetails);
-                }
-            });
-            
-            VDCSystem.documents.dac7.totals = VDCSystem.documents.dac7.totals || {};
-            VDCSystem.documents.dac7.totals.annualRevenue = totalRevenue;
-            VDCSystem.documents.dac7.totals.period = period;
-            VDCSystem.documents.dac7.totals.quarterlyDetails = quarterlyDetails;
-            VDCSystem.documents.dac7.totals.records = totalRecords;
-            
-            logAudit(`DAC7: Receitas Anuais=${totalRevenue.toFixed(2)}€ | Período=${period} | ${totalRecords} registos | ${quarterlyDetails.length} trimestres`, 'info');
-        }
-        
-        // Processar dados SAF-T
-        if (VDCSystem.documents.saft && VDCSystem.documents.saft.parsedData && VDCSystem.documents.saft.parsedData.length > 0) {
-            let totalGross = 0, totalIVA6 = 0, totalNet = 0, totalRecords = 0;
-            let transactionDetails = [];
-            
-            VDCSystem.documents.saft.parsedData.forEach(item => {
-                totalGross += (item.data && item.data.grossValue) || 0;
-                totalIVA6 += (item.data && item.data.iva6Value) || 0;
-                totalNet += (item.data && item.data.netValue) || 0;
-                totalRecords += (item.data && item.data.records) || 0;
-                if (item.data && item.data.transactionDetails) {
-                    transactionDetails = transactionDetails.concat(item.data.transactionDetails);
-                }
-            });
-            
-            VDCSystem.documents.saft.totals = VDCSystem.documents.saft.totals || {};
-            VDCSystem.documents.saft.totals.gross = totalGross;
-            VDCSystem.documents.saft.totals.iva6 = totalIVA6;
-            VDCSystem.documents.saft.totals.net = totalNet;
-            VDCSystem.documents.saft.totals.records = totalRecords;
-            VDCSystem.documents.saft.totals.transactionDetails = transactionDetails;
-            
-            logAudit(`SAF-T: Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ | ${totalRecords} transações`, 'info');
-        }
-        
-        // Processar faturas
-        if (VDCSystem.documents.invoices && VDCSystem.documents.invoices.parsedData && VDCSystem.documents.invoices.parsedData.length > 0) {
-            let totalInvoiceValue = 0, totalCommission = 0, totalIVA23 = 0, totalRecords = 0;
-            let invoicesFound = [];
-            let invoiceNumbers = [];
-            let boltEntities = [];
-            
-            VDCSystem.documents.invoices.parsedData.forEach(item => {
-                totalInvoiceValue += (item.data && item.data.invoiceValue) || 0;
-                totalCommission += (item.data && item.data.commissionValue) || 0;
-                totalIVA23 += (item.data && item.data.iva23Value) || 0;
-                totalRecords += (item.data && item.data.records) || 0;
-                
-                if (item.data && item.data.invoiceNumber) {
-                    invoicesFound.push({
-                        number: item.data.invoiceNumber,
-                        value: item.data.invoiceValue,
-                        date: item.data.invoiceDate,
-                        hash: item.hash
-                    });
-                    
-                    invoiceNumbers.push(item.data.invoiceNumber);
-                }
-                
-                if (item.data && item.data.boltEntityDetected) {
-                    boltEntities.push(VDCSystem.boltEntity);
-                }
-            });
-            
-            VDCSystem.documents.invoices.totals = VDCSystem.documents.invoices.totals || {};
-            VDCSystem.documents.invoices.totals.invoiceValue = totalInvoiceValue;
-            VDCSystem.documents.invoices.totals.commission = totalCommission;
-            VDCSystem.documents.invoices.totals.iva23 = totalIVA23;
-            VDCSystem.documents.invoices.totals.records = totalRecords;
-            VDCSystem.documents.invoices.totals.invoicesFound = invoicesFound;
-            VDCSystem.documents.invoices.totals.invoiceNumbers = invoiceNumbers;
-            VDCSystem.documents.invoices.totals.boltEntities = boltEntities;
-            
-            logAudit(`Faturas: Valor=${totalInvoiceValue.toFixed(2)}€ | Comissão=${totalCommission.toFixed(2)}€ | ${totalRecords} registos | ${boltEntities.length} entidades Bolt`, 'info');
-        }
-        
-        // Processar extratos
-        if (VDCSystem.documents.statements && VDCSystem.documents.statements.parsedData && VDCSystem.documents.statements.parsedData.length > 0) {
-            const totals = VDCSystem.documents.statements.totals || {};
-            let totalRecords = 0;
-            let transactionDetails = [];
-            
-            VDCSystem.documents.statements.parsedData.forEach(item => {
-                totals.rendimentosBrutos = (totals.rendimentosBrutos || 0) + ((item.data && item.data.grossEarnings) || 0);
-                totals.comissaoApp = (totals.comissaoApp || 0) + ((item.data && item.data.commission) || 0);
-                totals.rendimentosLiquidos = (totals.rendimentosLiquidos || 0) + ((item.data && item.data.netTransfer) || 0);
-                totals.campanhas = (totals.campanhas || 0) + ((item.data && item.data.campaigns) || 0);
-                totals.gorjetas = (totals.gorjetas || 0) + ((item.data && item.data.tips) || 0);
-                totals.cancelamentos = (totals.cancelamentos || 0) + ((item.data && item.data.cancellations) || 0);
-                totals.portagens = (totals.portagens || 0) + ((item.data && item.data.tolls) || 0);
-                totalRecords += (item.data && item.data.records) || 0;
-                
-                if (item.data && item.data.transactionDetails) {
-                    transactionDetails = transactionDetails.concat(item.data.transactionDetails);
-                }
-            });
-            
-            VDCSystem.documents.statements.totals = totals;
-            VDCSystem.documents.statements.totals.records = totalRecords;
-            VDCSystem.documents.statements.totals.transactionDetails = transactionDetails;
-            
-            logAudit(`Extratos: Bruto=${totals.rendimentosBrutos.toFixed(2)}€ | Comissão=${totals.comissaoApp.toFixed(2)}€ | ${totalRecords} registos`, 'info');
-        }
-    } catch (error) {
-        console.error('Erro no processamento de dados:', error);
-        throw error;
-    }
+/* 20. ANIMAÇÕES ADICIONAIS ISO/NIST */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-function calculateExtractedValues() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        const docs = VDCSystem.documents;
-        
-        // Valores SAF-T
-        ev.saftGross = (docs.saft && docs.saft.totals && docs.saft.totals.gross) || (VDCSystem.demoMode ? 3202.54 : 0);
-        ev.saftIVA6 = (docs.saft && docs.saft.totals && docs.saft.totals.iva6) || (VDCSystem.demoMode ? 192.15 : 0);
-        ev.saftNet = (docs.saft && docs.saft.totals && docs.saft.totals.net) || (VDCSystem.demoMode ? 2409.95 : 0);
-        
-        // Valores Extratos
-        ev.rendimentosBrutos = (docs.statements && docs.statements.totals && docs.statements.totals.rendimentosBrutos) || (VDCSystem.demoMode ? 3202.54 : 0);
-        ev.comissaoApp = (docs.statements && docs.statements.totals && docs.statements.totals.comissaoApp) || (VDCSystem.demoMode ? -792.59 : 0);
-        ev.rendimentosLiquidos = (docs.statements && docs.statements.totals && docs.statements.totals.rendimentosLiquidos) || (VDCSystem.demoMode ? 2409.95 : 0);
-        ev.campanhas = (docs.statements && docs.statements.totals && docs.statements.totals.campanhas) || (VDCSystem.demoMode ? 20.00 : 0);
-        ev.gorjetas = (docs.statements && docs.statements.totals && docs.statements.totals.gorjetas) || (VDCSystem.demoMode ? 9.00 : 0);
-        ev.cancelamentos = (docs.statements && docs.statements.totals && docs.statements.totals.cancelamentos) || (VDCSystem.demoMode ? 15.60 : 0);
-        ev.portagens = (docs.statements && docs.statements.totals && docs.statements.totals.portagens) || (VDCSystem.demoMode ? 7.65 : 0);
-        
-        // Valores Faturas
-        ev.faturaPlataforma = (docs.invoices && docs.invoices.totals && docs.invoices.totals.invoiceValue) || (VDCSystem.demoMode ? 239.00 : 0);
-        ev.platformCommission = (docs.invoices && docs.invoices.totals && docs.invoices.totals.commission) || 0;
-        ev.iva23Due = (docs.invoices && docs.invoices.totals && docs.invoices.totals.iva23) || 0;
-        
-        // Diferencial de custo
-        ev.diferencialCusto = Math.abs(ev.comissaoApp) - ev.faturaPlataforma;
-        
-        if (ev.diferencialCusto > 0) {
-            ev.prejuizoFiscal = ev.diferencialCusto * 0.21;
-            ev.ivaAutoliquidacao = ev.diferencialCusto * 0.23;
-            
-            logAudit(`⚖️ DIFERENCIAL CALCULADO: |${Math.abs(ev.comissaoApp).toFixed(2)}€| - ${ev.faturaPlataforma.toFixed(2)}€ = ${ev.diferencialCusto.toFixed(2)}€`, 'warn');
-            logAudit(`💰 Prejuízo Fiscal (21%): ${ev.prejuizoFiscal.toFixed(2)}€`, 'error');
-            logAudit(`🧾 IVA Autoliquidação (23%): ${ev.ivaAutoliquidacao.toFixed(2)}€`, 'error');
-        }
-        
-        // DAC7
-        ev.dac7Revenue = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.annualRevenue) || ev.rendimentosBrutos;
-        ev.dac7Period = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.period) || (VDCSystem.demoMode ? 'Set-Dez 2024' : `${VDCSystem.selectedYear}-01 a ${VDCSystem.selectedYear}-12`);
-        ev.dac7Quarterly = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.quarterlyDetails) || [];
-    } catch (error) {
-        console.error('Erro no cálculo de valores extraídos:', error);
-        throw error;
-    }
+.stat-card, .kpi-card, .result-item {
+    animation: fadeIn 0.3s ease-out;
 }
 
-function performForensicCrossings() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        const crossings = VDCSystem.analysis.crossings;
-        
-        crossings.deltaA = Math.abs(ev.saftGross - ev.rendimentosBrutos);
-        crossings.deltaB = Math.abs(Math.abs(ev.comissaoApp) - ev.faturaPlataforma);
-        crossings.omission = Math.max(crossings.deltaA, crossings.deltaB);
-        crossings.diferencialAlerta = ev.diferencialCusto > 100;
-        
-        crossings.fraudIndicators = [];
-        
-        if (crossings.deltaB > 500) {
-            crossings.fraudIndicators.push('Discrepância significativa entre comissão retida e fatura emitida (ISO/IEC 27037)');
-        }
-        
-        if (ev.diferencialCusto > 0) {
-            crossings.fraudIndicators.push('Saída de caixa não documentada detetada (NIST SP 800-86)');
-        }
-        
-        if (crossings.deltaA > ev.saftGross * 0.05) {
-            crossings.fraudIndicators.push('Diferença superior a 5% entre faturação SAF-T e recebimento');
-        }
-        
-        if (crossings.deltaB > 50) {
-            crossings.fraudIndicators.push('Discrepância crítica > 50€ entre Fatura e Comissão - ALERTA VISUAL ATIVADO');
-        }
-        
-        logAudit(`🔐 CRUZAMENTO 1 (SAF-T vs Extrato): Δ = ${crossings.deltaA.toFixed(2)}€`, 'info');
-        logAudit(`🔐 CRUZAMENTO 2 (Comissão vs Fatura): Δ = ${crossings.deltaB.toFixed(2)}€`, crossings.diferencialAlerta ? 'warn' : 'info');
-        
-        if (crossings.fraudIndicators.length > 0) {
-            logAudit('❌ INDICADORES DE LAYERING IDENTIFICADOS (ISO/NIST):', 'error');
-            crossings.fraudIndicators.forEach(indicator => {
-                logAudit(`   • ${indicator}`, 'error');
-            });
-        }
-    } catch (error) {
-        console.error('Erro no cruzamento forense:', error);
-        throw error;
-    }
+/* 21. ESTADOS DE FOCO E HOVER ISO/NIST */
+input:focus, select:focus, button:focus {
+    outline: 2px solid var(--iso-blue);
+    outline-offset: 2px;
 }
 
-function calculateMarketProjection() {
-    try {
-        const proj = VDCSystem.analysis.projection;
-        const ev = VDCSystem.analysis.extractedValues;
-        
-        proj.averagePerDriver = ev.diferencialCusto;
-        proj.totalMarketImpact = proj.averagePerDriver * proj.driverCount * proj.monthsPerYear * proj.yearsOfOperation;
-        proj.marketProjection = proj.totalMarketImpact / 1000000;
-        
-        logAudit(`📊 QUANTUM BENEFÍCIO ILÍCITO CALCULADO (38k × 12 × 7):`, 'info');
-        logAudit(`   • Diferencial/motorista: ${proj.averagePerDriver.toFixed(2)}€`, 'info');
-        logAudit(`   • Impacto mensal (38k): ${(proj.averagePerDriver * proj.driverCount / 1000000).toFixed(2)}M€`, 'info');
-        logAudit(`   • Asset Forfeiture (7 anos): ${proj.marketProjection.toFixed(2)}M€`, 'warn');
-    } catch (error) {
-        console.error('Erro na projeção de mercado:', error);
-        throw error;
-    }
+button:active {
+    transform: translateY(1px);
 }
 
-function calcularJurosMora() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        
-        if (ev.diferencialCusto > 0) {
-            ev.jurosMora = ev.diferencialCusto * 0.04;
-            
-            const jurosCard = document.getElementById('jurosCard');
-            const jurosVal = document.getElementById('jurosVal');
-            const jurosValStats = document.getElementById('jurosValStats');
-            
-            if (jurosCard && jurosVal) {
-                const formatter = new Intl.NumberFormat('pt-PT', {
-                    style: 'currency',
-                    currency: 'EUR',
-                    minimumFractionDigits: 2
-                });
-                
-                jurosVal.textContent = formatter.format(ev.jurosMora);
-                if (jurosValStats) jurosValStats.textContent = formatter.format(ev.jurosMora);
-                jurosCard.style.display = 'flex';
-            }
-            
-            logAudit(`🔢 JUROS DE MORA CALCULADOS: ${ev.diferencialCusto.toFixed(2)}€ × 4% = ${ev.jurosMora.toFixed(2)}€ (RGRC)`, 'warn');
-        }
-    } catch (error) {
-        console.error('Erro no cálculo de juros de mora:', error);
-        throw error;
-    }
+/* 22. UTILITÁRIOS ISO/NIST */
+.hidden {
+    display: none !important;
 }
 
-function calculateRegulatoryRisk() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        const crossings = VDCSystem.analysis.crossings;
-        
-        ev.taxaRegulacao = Math.abs(ev.comissaoApp) * 0.05;
-        ev.riscoRegulatorio = ev.taxaRegulacao;
-        
-        if (ev.taxaRegulacao > 0) {
-            crossings.riscoRegulatorioAtivo = true;
-            logAudit(`⚖️ RISCO REGULATÓRIO CALCULADO (AMT/IMT): 5% sobre ${Math.abs(ev.comissaoApp).toFixed(2)}€ = ${ev.taxaRegulacao.toFixed(2)}€`, 'regulatory');
-            logAudit(`📋 Obrigação regulatória não discriminada identificada (Decreto-Lei 83/2017)`, 'regulatory');
-        }
-    } catch (error) {
-        console.error('Erro no cálculo de risco regulatório:', error);
-        throw error;
-    }
+.visible {
+    display: block !important;
 }
 
-function updateDashboard() {
-    try {
-        const formatter = new Intl.NumberFormat('pt-PT', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        });
-        
-        const ev = VDCSystem.analysis.extractedValues;
-        
-        const elementos = {
-            'netVal': ev.saftNet,
-            'iva6Val': ev.saftIVA6,
-            'commissionVal': ev.comissaoApp,
-            'iva23Val': ev.ivaAutoliquidacao,
-            'jurosValStats': ev.jurosMora
-        };
-        
-        Object.entries(elementos).forEach(([id, value]) => {
-            const elemento = document.getElementById(id);
-            if (elemento) {
-                elemento.textContent = formatter.format(value);
-                if (id === 'iva23Val' && value > 0) {
-                    elemento.classList.add('alert-text');
-                }
-            }
-        });
-        
-        const jurosCard = document.getElementById('jurosCard');
-        const jurosVal = document.getElementById('jurosVal');
-        
-        if (jurosCard && jurosVal && ev.jurosMora > 0) {
-            jurosVal.textContent = formatter.format(ev.jurosMora);
-            jurosCard.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('Erro na atualização do dashboard:', error);
-    }
+.text-mono {
+    font-family: var(--font-mono) !important;
 }
 
-function updateKPIResults() {
-    try {
-        const formatter = new Intl.NumberFormat('pt-PT', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2
-        });
-        
-        const ev = VDCSystem.analysis.extractedValues;
-        const proj = VDCSystem.analysis.projection;
-        
-        const kpis = {
-            'kpiGanhos': ev.rendimentosBrutos,
-            'kpiComm': ev.comissaoApp,
-            'kpiNet': ev.rendimentosLiquidos,
-            'kpiInvoice': ev.faturaPlataforma,
-            'valCamp': ev.campanhas,
-            'valTips': ev.gorjetas,
-            'valCanc': ev.cancelamentos,
-            'valTolls': ev.portagens
-        };
-        
-        Object.entries(kpis).forEach(([id, value]) => {
-            const elemento = document.getElementById(id);
-            if (elemento) {
-                elemento.textContent = formatter.format(value);
-                elemento.classList.remove('hidden');
-            }
-        });
-        
-        const results = {
-            'grossResult': ev.saftGross,
-            'transferResult': ev.rendimentosLiquidos,
-            'differenceResult': VDCSystem.analysis.crossings.deltaB,
-            'marketResult': proj.marketProjection.toFixed(2) + 'M€'
-        };
-        
-        Object.entries(results).forEach(([id, value]) => {
-            const elemento = document.getElementById(id);
-            if (elemento) {
-                if (typeof value === 'number') {
-                    elemento.textContent = formatter.format(value);
-                } else {
-                    elemento.textContent = value;
-                }
-                elemento.classList.remove('hidden');
-            }
-        });
-        
-        updateProgressBars();
-        
-        const discrepancia = VDCSystem.analysis.crossings.deltaB;
-        if (discrepancia > 50 && !VDCSystem.analysis.crossings.discrepanciaAlertaAtiva) {
-            activateDiscrepancyAlert();
-        }
-    } catch (error) {
-        console.error('Erro na atualização dos KPIs:', error);
-    }
+.text-center {
+    text-align: center !important;
 }
 
-function updateProgressBars() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        const maxValue = Math.max(ev.saftGross, ev.rendimentosBrutos, Math.abs(ev.comissaoApp));
-        const differenceBar = document.getElementById('differenceBar');
-        
-        if (differenceBar && maxValue > 0) {
-            const percentage = (VDCSystem.analysis.crossings.deltaB / maxValue) * 100;
-            differenceBar.style.width = Math.min(percentage, 100) + '%';
-            
-            if (percentage > 20) {
-                differenceBar.style.backgroundColor = 'var(--warn-primary)';
-            } else if (percentage > 10) {
-                differenceBar.style.backgroundColor = 'var(--warn-secondary)';
-            }
-        }
-    } catch (error) {
-        console.error('Erro na atualização das barras de progresso:', error);
-    }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+
+.overflow-hidden {
+    overflow: hidden !important;
 }
 
-function criarDashboardDiferencial() {
-    try {
-        const kpiSection = document.querySelector('.kpi-section');
-        if (!kpiSection) return;
-        
-        const existingCard = document.getElementById('diferencialCard');
-        if (existingCard) existingCard.remove();
-        
-        const kpiGrid = kpiSection.querySelector('.kpi-grid');
-        if (!kpiGrid) return;
-        
-        const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto;
-        
-        if (diferencial > 0) {
-            const diferencialCard = document.createElement('div');
-            diferencialCard.id = 'diferencialCard';
-            diferencialCard.className = 'kpi-card alert blink-alert';
-            diferencialCard.innerHTML = `
-                <div class="kpi-header">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>DIFERENCIAL DE CUSTO</span>
-                </div>
-                <div class="kpi-value">${diferencial.toFixed(2)}€</div>
-                <small>Saída de caixa não documentada | EVIDÊNCIA FORENSE (ISO/IEC 27037)</small>
-            `;
-            
-            if (kpiGrid.children.length >= 4) {
-                kpiGrid.insertBefore(diferencialCard, kpiGrid.children[4]);
-            } else {
-                kpiGrid.appendChild(diferencialCard);
-            }
-            
-            logAudit(`📊 Dashboard diferencial criado: ${diferencial.toFixed(2)}€ (NIST SP 800-86)`, 'info');
-        }
-    } catch (error) {
-        console.error('Erro na criação do dashboard diferencial:', error);
-    }
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-function criarDashboardRegulatorio() {
-    try {
-        const kpiSection = document.querySelector('.kpi-section');
-        if (!kpiSection) return;
-        
-        const existingCard = document.getElementById('regulatoryCardKPI');
-        if (existingCard) existingCard.remove();
-        
-        const kpiGrid = kpiSection.querySelector('.kpi-grid');
-        if (!kpiGrid) return;
-        
-        const taxaRegulacao = VDCSystem.analysis.extractedValues.taxaRegulacao;
-        
-        if (taxaRegulacao > 0) {
-            const regulatoryCard = document.createElement('div');
-            regulatoryCard.id = 'regulatoryCardKPI';
-            regulatoryCard.className = 'kpi-card regulatory';
-            regulatoryCard.innerHTML = `
-                <div class="kpi-header">
-                    <i class="fas fa-balance-scale-right"></i>
-                    <span>RISCO REGULATÓRIO</span>
-                </div>
-                <div class="kpi-value">${taxaRegulacao.toFixed(2)}€</div>
-                <small>Taxa de Regulação 5% (AMT/IMT) não discriminada</small>
-            `;
-            
-            const diferencialCard = document.getElementById('diferencialCard');
-            if (diferencialCard && diferencialCard.parentNode === kpiGrid) {
-                kpiGrid.insertBefore(regulatoryCard, diferencialCard.nextSibling);
-            } else {
-                kpiGrid.appendChild(regulatoryCard);
-            }
-            
-            logAudit(`📊 Dashboard regulatório criado: ${taxaRegulacao.toFixed(2)}€ (AMT/IMT)`, 'regulatory');
-        }
-    } catch (error) {
-        console.error('Erro na criação do dashboard regulatório:', error);
-    }
+.align-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-// 16. ALERTA INTERMITENTE BIG DATA ISO/NIST V11.2
-function triggerBigDataAlert(invoiceVal, commissionVal, deltaVal) {
-    try {
-        const alertElement = document.getElementById('bigDataAlert');
-        if (!alertElement) return;
-        
-        if (VDCSystem.bigDataAlertInterval) {
-            clearInterval(VDCSystem.bigDataAlertInterval);
-        }
-        
-        const invoiceValElement = document.getElementById('alertInvoiceVal');
-        const commValElement = document.getElementById('alertCommVal');
-        const deltaValElement = document.getElementById('alertDeltaVal');
-        
-        if (invoiceValElement) invoiceValElement.textContent = invoiceVal.toFixed(2) + '€';
-        if (commValElement) commValElement.textContent = commissionVal.toFixed(2) + '€';
-        if (deltaValElement) deltaValElement.textContent = deltaVal.toFixed(2) + '€';
-        
-        alertElement.style.display = 'flex';
-        
-        let isRed = false;
-        VDCSystem.analysis.crossings.bigDataAlertActive = true;
-        
-        VDCSystem.bigDataAlertInterval = setInterval(() => {
-            if (isRed) {
-                alertElement.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-                alertElement.style.borderColor = 'var(--warn-secondary)';
-                const strongElement = alertElement.querySelector('strong');
-                if (strongElement) strongElement.style.color = 'var(--warn-secondary)';
-            } else {
-                alertElement.style.backgroundColor = 'rgba(255, 62, 62, 0.1)';
-                alertElement.style.borderColor = 'var(--warn-primary)';
-                const strongElement = alertElement.querySelector('strong');
-                if (strongElement) strongElement.style.color = 'var(--warn-primary)';
-            }
-            isRed = !isRed;
-        }, 1000);
-        
-        logAudit(`❌ ALERTA FORENSE ATIVADO: Disparidade ${deltaVal.toFixed(2)}€ entre fatura e comissão`, 'error');
-    } catch (error) {
-        console.error('Erro no alerta Big Data:', error);
-    }
+.grid-center {
+    display: grid;
+    place-items: center;
 }
 
-function showDiferencialAlert() {
-    try {
-        const diferencialAlert = document.getElementById('diferencialAlert');
-        
-        if (diferencialAlert) {
-            diferencialAlert.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('Erro no alerta diferencial:', error);
-    }
+/* 23. ANIMAÇÕES DE TRANSITION SUAVES */
+.kpi-card, .stat-card, .result-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-function showJurosMoraAlert() {
-    try {
-        const jurosAlert = document.getElementById('jurosAlert');
-        const jurosValue = document.getElementById('jurosValue');
-        
-        if (jurosAlert && jurosValue) {
-            jurosValue.textContent = VDCSystem.analysis.extractedValues.jurosMora.toFixed(2) + '€';
-            jurosAlert.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('Erro no alerta de juros:', error);
-    }
+/* 24. Z-INDEX MANAGEMENT */
+.splash-screen {
+    z-index: 9999;
 }
 
-function showOmissionAlert() {
-    try {
-        const omissionAlert = document.getElementById('omissionAlert');
-        const omissionValue = document.getElementById('omissionValue');
-        
-        if (omissionAlert && omissionValue) {
-            omissionValue.textContent = VDCSystem.analysis.crossings.omission.toFixed(2) + '€';
-            omissionAlert.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('Erro no alerta de omissão:', error);
-    }
+.loading-overlay {
+    z-index: 9998;
 }
 
-// 17. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V11.2
-function renderDashboardChart() {
-    try {
-        const ctx = document.getElementById('forensicChart');
-        if (!ctx) return;
-        
-        if (VDCSystem.chart) {
-            VDCSystem.chart.destroy();
-        }
-        
-        const ev = VDCSystem.analysis.extractedValues;
-        
-        const dataValues = [
-            ev.saftNet || 0,
-            ev.saftIVA6 || 0,
-            Math.abs(ev.comissaoApp) || 0,
-            ev.ivaAutoliquidacao || 0,
-            ev.jurosMora || 0
-        ];
-        
-        const total = dataValues.reduce((a, b) => a + b, 0);
-        const percentages = total > 0 ? dataValues.map(val => ((val / total) * 100).toFixed(1)) : ['0.0', '0.0', '0.0', '0.0', '0.0'];
-        
-        if (total === 0 && VDCSystem.demoMode) {
-            dataValues[0] = 2409.95;
-            dataValues[1] = 192.15;
-            dataValues[2] = 792.59;
-            dataValues[3] = 127.33;
-            dataValues[4] = 22.14;
-            
-            const demoTotal = dataValues.reduce((a, b) => a + b, 0);
-            percentages[0] = ((2409.95 / demoTotal) * 100).toFixed(1);
-            percentages[1] = ((192.15 / demoTotal) * 100).toFixed(1);
-            percentages[2] = ((792.59 / demoTotal) * 100).toFixed(1);
-            percentages[3] = ((127.33 / demoTotal) * 100).toFixed(1);
-            percentages[4] = ((22.14 / demoTotal) * 100).toFixed(1);
-        }
-        
-        const labels = [
-            `Ilíquido: ${dataValues[0].toFixed(2)}€ (${percentages[0]}%)`,
-            `IVA 6%: ${dataValues[1].toFixed(2)}€ (${percentages[1]}%)`,
-            `Comissão: ${dataValues[2].toFixed(2)}€ (${percentages[2]}%)`,
-            `IVA 23%: ${dataValues[3].toFixed(2)}€ (${percentages[3]}%)`,
-            `Juros Mora: ${dataValues[4].toFixed(2)}€ (${percentages[4]}%)`
-        ];
-        
-        VDCSystem.chart = new Chart(ctx.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Valores (€)',
-                    data: dataValues,
-                    backgroundColor: [
-                        'rgba(0, 242, 255, 0.7)',
-                        'rgba(59, 130, 246, 0.7)',
-                        'rgba(255, 62, 62, 0.7)',
-                        'rgba(245, 158, 11, 0.7)',
-                        'rgba(255, 107, 53, 0.7)'
-                    ],
-                    borderColor: [
-                        '#00f2ff',
-                        '#3b82f6',
-                        '#ff3e3e',
-                        '#f59e0b',
-                        '#ff6b35'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.parsed.x;
-                                const percentage = percentages[context.dataIndex];
-                                return `${context.dataset.label}: ${value.toFixed(2)}€ (${percentage}%)`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1',
-                            callback: function(value) {
-                                return value.toFixed(0) + '€';
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Valor (€)',
-                            color: '#cbd5e1'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1',
-                            font: {
-                                size: 11
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1500
-                }
-            }
-        });
-        
-        logAudit('📊 Gráfico VERTICAL renderizado com valores em € e % (Big Data Forense)', 'success');
-        
-    } catch (error) {
-        console.error('Erro ao renderizar gráfico:', error);
-        logAudit(`❌ Erro ao renderizar gráfico: ${error.message}`, 'error');
-    }
+.toast-notification {
+    z-index: 9997;
 }
 
-// 18. FUNÇÕES DE EXPORTAÇÃO BIG DATA V11.2 - PDF ATIVADO
-function exportPDF() {
-    try {
-        updatePageTitle('Gerando PDF...');
-        logAudit('📄 GERANDO RELATÓRIO PERICIAL EM PDF...', 'info');
-        
-        // Verificar se jsPDF está disponível
-        if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
-            const { jsPDF } = window.jspdf;
-            
-            // Criar novo documento PDF
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-            
-            // Configurações iniciais
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            let yPos = 20;
-            
-            // Cabeçalho do Relatório
-            pdf.setFontSize(16);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('VDC FORENSIC SYSTEM v11.2 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
-            yPos += 10;
-            
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            pdf.text(`Protocolo: ${VDCSystem.sessionId}`, pageWidth / 2, yPos, { align: 'center' });
-            pdf.text(`Data de emissão: ${new Date().toLocaleDateString('pt-PT')}`, pageWidth / 2, yPos + 5, { align: 'center' });
-            yPos += 15;
-            
-            // Linha divisória
-            pdf.setLineWidth(0.5);
-            pdf.line(20, yPos, pageWidth - 20, yPos);
-            yPos += 10;
-            
-            // Seção 1: Informações do Cliente
-            pdf.setFontSize(12);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('1. INFORMAÇÕES DO CLIENTE', 20, yPos);
-            yPos += 8;
-            
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            if (VDCSystem.client) {
-                pdf.text(`Nome: ${VDCSystem.client.name}`, 25, yPos);
-                pdf.text(`NIF: ${VDCSystem.client.nif}`, 25, yPos + 5);
-                pdf.text(`Plataforma: ${VDCSystem.selectedPlatform}`, 25, yPos + 10);
-                pdf.text(`Ano fiscal: ${VDCSystem.selectedYear}`, 25, yPos + 15);
-                yPos += 25;
-            } else {
-                pdf.text('Cliente não registado', 25, yPos);
-                yPos += 10;
-            }
-            
-            // Seção 2: Resumo de Evidências
-            pdf.setFontSize(12);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('2. RESUMO DE EVIDÊNCIAS PROCESSADAS', 20, yPos);
-            yPos += 8;
-            
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            
-            const evidenceSummary = [
-                `Ficheiros DAC7: ${VDCSystem.documents.dac7.files.length}`,
-                `Ficheiros de Controlo: ${VDCSystem.documents.control.files.length}`,
-                `Ficheiros SAF-T: ${VDCSystem.documents.saft.files.length}`,
-                `Faturas: ${VDCSystem.documents.invoices.files.length}`,
-                `Extratos: ${VDCSystem.documents.statements.files.length}`
-            ];
-            
-            evidenceSummary.forEach((line, index) => {
-                pdf.text(line, 25, yPos + (index * 5));
-            });
-            yPos += evidenceSummary.length * 5 + 5;
-            
-            // Seção 3: Resultados da Análise
-            pdf.setFontSize(12);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('3. RESULTADOS DA ANÁLISE FORENSE', 20, yPos);
-            yPos += 8;
-            
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            
-            const analysisResults = [
-                `Rendimentos brutos: ${VDCSystem.analysis.extractedValues.rendimentosBrutos.toFixed(2)}€`,
-                `Comissão da plataforma: ${VDCSystem.analysis.extractedValues.comissaoApp.toFixed(2)}€`,
-                `Valor da fatura: ${VDCSystem.analysis.extractedValues.faturaPlataforma.toFixed(2)}€`,
-                `Diferencial de custo: ${VDCSystem.analysis.extractedValues.diferencialCusto.toFixed(2)}€`,
-                `IVA 23% devido: ${VDCSystem.analysis.extractedValues.ivaAutoliquidacao.toFixed(2)}€`,
-                `Juros de mora (4%): ${VDCSystem.analysis.extractedValues.jurosMora.toFixed(2)}€`,
-                `Taxa de regulação (5%): ${VDCSystem.analysis.extractedValues.taxaRegulacao.toFixed(2)}€`
-            ];
-            
-            analysisResults.forEach((line, index) => {
-                pdf.text(line, 25, yPos + (index * 5));
-            });
-            yPos += analysisResults.length * 5 + 10;
-            
-            // Seção 4: Cadeia de Custódia (resumida)
-            pdf.setFontSize(12);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('4. CADEIA DE CUSTÓDIA (PRIMEIROS 10 REGISTOS)', 20, yPos);
-            yPos += 8;
-            
-            pdf.setFontSize(8);
-            pdf.setFont('helvetica', 'normal');
-            
-            const custodyEntries = VDCSystem.analysis.chainOfCustody.slice(0, 10);
-            custodyEntries.forEach((entry, index) => {
-                if (yPos > pageHeight - 30) {
-                    pdf.addPage();
-                    yPos = 20;
-                }
-                pdf.text(`${index + 1}. ${entry.filename} (${entry.fileType}) - Hash: ${entry.hash.substring(0, 16)}...`, 25, yPos);
-                yPos += 4;
-            });
-            
-            yPos += 10;
-            
-            // Seção 5: Master Hash
-            pdf.setFontSize(12);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('5. INTEGRIDADE DIGITAL', 20, yPos);
-            yPos += 8;
-            
-            pdf.setFontSize(9);
-            pdf.setFont('courier', 'normal');
-            
-            const masterHash = document.getElementById('masterHashValue')?.textContent || 'NÃO GERADA';
-            const hashLines = masterHash.match(/.{1,60}/g) || [];
-            
-            pdf.text('Master Hash SHA-256:', 25, yPos);
-            yPos += 5;
-            
-            hashLines.forEach((line, index) => {
-                pdf.text(line, 25, yPos + (index * 4));
-            });
-            yPos += hashLines.length * 4 + 10;
-            
-            // Rodapé
-            pdf.setFontSize(8);
-            pdf.setFont('helvetica', 'italic');
-            pdf.text('Sistema de Peritagem Forense VDC v11.2 - ISO/IEC 27037 | NIST SP 800-86 | © 2025', pageWidth / 2, pageHeight - 10, { align: 'center' });
-            
-            // Salvar PDF
-            const fileName = `RELATORIO_PERICIAL_VDC_${VDCSystem.sessionId}.pdf`;
-            pdf.save(fileName);
-            
-            logAudit('✅ Relatório pericial PDF gerado com sucesso', 'success');
-            updatePageTitle('PDF Gerado');
-            
-        } else {
-            logAudit('❌ Biblioteca jsPDF não encontrada. Verifique a inclusão do script.', 'error');
-            showToast('Erro: Biblioteca jsPDF não encontrada', 'error');
-            updatePageTitle('Erro na Geração');
-        }
-        
-    } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        logAudit(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
-        showToast(`Erro ao gerar PDF: ${error.message}`, 'error');
-        updatePageTitle('Erro na Geração');
-    }
+.main-header {
+    z-index: 100;
 }
 
-function generateQuesitosEstrategicos() {
-    try {
-        const ev = VDCSystem.analysis.extractedValues;
-        const crossings = VDCSystem.analysis.crossings;
-        
-        VDCSystem.analysis.quesitosEstrategicos = [
-            `1. Face ao diferencial de ${ev.diferencialCusto.toFixed(2)}€ detetado entre a comissão retida e a fatura emitida, onde se evidencia o cumprimento do Art. 103.º do RGRC (Fraude Fiscal Qualificada)?`,
-            `2. Queira a Plataforma demonstrar o registo de log que comprova a aceitação destes termos pelo cliente, conforme exigido pela ISO/IEC 27037 (Preservação de Evidência Digital)?`,
-            `3. Onde se encontra comprovado o pagamento da Taxa de Regulação (5%) devida à AMT sobre a comissão de gestão no valor de ${ev.taxaRegulacao.toFixed(2)}€, conforme Decreto-Lei 83/2017?`,
-            `4. Pode a plataforma demonstrar a integridade do registo .CSV face à norma ISO/IEC 27037, considerando a ausência de hash SHA-256 na origem dos dados?`,
-            `5. Como justifica a plataforma a diferença de ${ev.diferencialCusto.toFixed(2)}€ entre a comissão retida (${Math.abs(ev.comissaoApp).toFixed(2)}€) e a fatura emitida (${ev.faturaPlataforma.toFixed(2)}€), à luz do Art. 2.º do CIVA?`,
-            `6. Em que documento está discriminado o IVA de 23% sobre o diferencial de ${ev.diferencialCusto.toFixed(2)}€, no montante de ${ev.ivaAutoliquidacao.toFixed(2)}€, conforme obrigação de autoliquidação?`,
-            `7. A plataforma cumpre com o regime de Self-billing e Clearing Account, reportando integralmente todos os proveitos ao cliente final conforme exigido pelo RGPD?`,
-            `8. Como garante a plataforma a Governança de Dados e conformidade RGPD face às violações identificadas de Desvio, Risco e Omissão de Proveitos?`,
-            `9. Pode apresentar o processo de Triagem → Avaliação Técnica → Proposta aplicado na deteção e resolução das discrepâncias fiscais identificadas?`,
-            `10. Face aos Juros de Mora calculados em ${ev.jurosMora.toFixed(2)}€ (4% base anual civil), onde está documentada a sua liquidação conforme RGRC?`
-        ];
-        
-        logAudit('📋 Quesitos estratégicos gerados para inquirição (10 questões técnicas)', 'info');
-    } catch (error) {
-        console.error('Erro na geração de quesitos:', error);
-    }
+.dashboard-fixed {
+    z-index: 50;
 }
 
-// 19. FUNÇÕES DE LOG E AUDITORIA BIG DATA V11.2
-function logAudit(message, type = 'info') {
-    try {
-        const timestamp = new Date().toLocaleTimeString('pt-PT', { 
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        
-        const logEntry = {
-            timestamp,
-            type,
-            message,
-            fullTimestamp: new Date().toISOString(),
-            isoCompliance: 'ISO/IEC 27037',
-            sessionId: VDCSystem.sessionId
-        };
-        
-        VDCSystem.logs.push(logEntry);
-        
-        if (VDCSystem.logs.length > 500) {
-            VDCSystem.logs = VDCSystem.logs.slice(-500);
-        }
-        
-        updateAuditConsole(logEntry);
-        console.log(`[VDC ${type.toUpperCase()}] ${message}`);
-    } catch (error) {
-        console.error('Erro no log de auditoria:', error);
-    }
+.sidebar-header-fixed {
+    z-index: 100;
 }
 
-function updateAuditConsole(logEntry) {
-    try {
-        const output = document.getElementById('auditOutput');
-        if (!output) return;
-        
-        const entry = document.createElement('div');
-        entry.className = `log-entry log-${logEntry.type}`;
-        entry.innerHTML = `
-            <span style="color: #666;">[${logEntry.timestamp}]</span>
-            <span style="color: ${getLogColor(logEntry.type)}; font-weight: bold;">${logEntry.type.toUpperCase()}</span>
-            <span>${logEntry.message}</span>
-        `;
-        
-        output.appendChild(entry);
-        output.scrollTop = output.scrollHeight;
-    } catch (error) {
-        console.error('Erro na atualização da consola:', error);
-    }
+.info-fixed {
+    z-index: 90;
 }
 
-function getLogColor(type) {
-    const colors = {
-        success: '#10b981',
-        warn: '#f59e0b',
-        error: '#ff3e3e',
-        info: '#3b82f6',
-        regulatory: '#ff6b35'
-    };
-    return colors[type] || '#cbd5e1';
-}
-
-function clearConsole() {
-    try {
-        const output = document.getElementById('auditOutput');
-        if (output) output.innerHTML = '';
-        logAudit('Consola de auditoria limpa (ISO/IEC 27037)', 'info');
-    } catch (error) {
-        console.error('Erro ao limpar consola:', error);
-    }
-}
-
-function toggleConsole() {
-    try {
-        const consoleElement = document.getElementById('auditOutput');
-        if (!consoleElement) return;
-        
-        consoleElement.style.height = consoleElement.style.height === '200px' ? '120px' : '200px';
-    } catch (error) {
-        console.error('Erro ao alternar consola:', error);
-    }
-}
-
-// 20. FUNÇÕES UTILITÁRIAS BIG DATA V11.2
-function generateSessionId() {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return `VDC-AF-${timestamp}-${random}`.toUpperCase();
-}
-
-function generateMasterHash() {
-    try {
-        const data = [
-            VDCSystem.sessionId,
-            VDCSystem.selectedYear.toString(),
-            VDCSystem.selectedPlatform,
-            VDCSystem.client?.nif || 'NO_CLIENT',
-            VDCSystem.analysis.extractedValues.diferencialCusto.toString(),
-            VDCSystem.analysis.extractedValues.jurosMora.toString(),
-            VDCSystem.analysis.extractedValues.taxaRegulacao.toString(),
-            VDCSystem.analysis.projection.totalMarketImpact.toString(),
-            new Date().toISOString(),
-            CryptoJS.SHA256(JSON.stringify(VDCSystem.logs)).toString(),
-            CryptoJS.SHA256(JSON.stringify(VDCSystem.analysis.chainOfCustody)).toString(),
-            'ISO/IEC 27037',
-            'NIST SP 800-86',
-            'RGRC 4%',
-            'AMT/IMT 5%'
-        ].join('|');
-        
-        const masterHash = CryptoJS.SHA256(data).toString();
-        const display = document.getElementById('masterHashValue');
-        
-        if (display) {
-            display.textContent = masterHash;
-            display.style.color = '#00d1ff';
-            display.style.fontFamily = 'JetBrains Mono, monospace';
-            display.style.fontSize = '0.8rem';
-            display.style.letterSpacing = '0.5px';
-            display.style.fontWeight = 'bold';
-        }
-        
-        logAudit(`🔗 Master Hash SHA-256 gerada: ${masterHash.substring(0, 32)}... (ISO/NIST/RGRC/AMT)`, 'success');
-        
-        return masterHash;
-    } catch (error) {
-        console.error('Erro na geração do master hash:', error);
-        return 'ERRO NA GERAÇÃO';
-    }
-}
-
-function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsText(file, 'UTF-8');
-    });
-}
-
-function updateCounter(type, count) {
-    try {
-        VDCSystem.counters[type] = count;
-        
-        const total = VDCSystem.counters.dac7 + VDCSystem.counters.control + 
-                      VDCSystem.counters.saft + VDCSystem.counters.invoices + 
-                      VDCSystem.counters.statements;
-        
-        VDCSystem.counters.total = total;
-    } catch (error) {
-        console.error('Erro na atualização do contador:', error);
-    }
-}
-
-function updateAnalysisButton() {
-    try {
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (!analyzeBtn) return;
-        
-        const hasControl = VDCSystem.documents.control && VDCSystem.documents.control.files && VDCSystem.documents.control.files.length > 0;
-        const hasSaft = VDCSystem.documents.saft && VDCSystem.documents.saft.files && VDCSystem.documents.saft.files.length > 0;
-        const hasClient = VDCSystem.client !== null;
-        
-        analyzeBtn.disabled = !(hasControl && hasSaft && hasClient);
-        
-        if (!analyzeBtn.disabled) {
-            logAudit('✅ Sistema pronto para auditoria fiscal de layering (ISO/IEC 27037)', 'success');
-        }
-    } catch (error) {
-        console.error('Erro na atualização do botão de análise:', error);
-    }
-}
-
-function showToast(message, type = 'success') {
-    try {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
-        
-        const toast = document.createElement('div');
-        toast.className = `toast-notification ${type}`;
-        toast.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
-            <p>${message}</p>
-        `;
-        
-        container.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode === container) {
-                container.removeChild(toast);
-            }
-        }, 3000);
-    } catch (error) {
-        console.error('Erro no toast:', error);
-    }
-}
-
-function showError(message) {
-    logAudit(`ERRO: ${message}`, 'error');
-    showToast(`❌ ${message}`, 'error');
-}
-
-// 21. FUNÇÃO PARA ATUALIZAR TÍTULO DA PÁGINA DINAMICAMENTE
-function updatePageTitle(status) {
-    const baseTitle = 'VDC | Sistema de Peritagem Forense v11.2';
-    document.title = status ? `${baseTitle} - ${status}` : baseTitle;
-}
-
-// ============================================
-// FIM DO SCRIPT VDC v11.2 - AUDITORIA FISCAL BIG DATA
-// TODAS AS RETIFICAÇÕES IMPLEMENTADAS
-// HIGH PRECISION FORENSIC EXTRACTION
-// INSTRUMENTO DE PROVA LEGAL ISO/NIST COMPLIANT
-// ============================================
+/* ============================================
+   FIM DO CSS VDC v11.1 - AUDITORIA FISCAL BIG DATA
+   RESTRUTURAÇÃO UI/UX COMPLETA
+   ============================================ */
