@@ -1,6 +1,13 @@
 // ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v11.1
-// AUDITORIA FISCAL BIG DATA - EXTRUÇÃO ESTRUTURADA HIGH PRECISION
+// VDC SISTEMA DE PERITAGEM FORENSE v11.2
+// AUDITORIA FISCAL BIG DATA - ZERO ERROR POLICY
+// CORREÇÕES IMPLEMENTADAS:
+// - Regex Bolt corrigido: /Total\s+com\s+IVA\s*\(EUR\)\s*([\d.,]+)/i
+// - Autoliquidação: força IVA23 = 0 quando detectada
+// - Persistência: VDCSystem.documents.*.totals usa +=
+// - PDF Multi-página: doc.addPage() automático
+// - Event Listeners: verificação null antes de addEventListener
+// - MasterHash: await Promise.all para sincronização
 // ============================================
 
 // 1. NORMALIZAÇÃO FORENSE GLOBAL HIGH PRECISION (CORREÇÃO IMPLEMENTADA)
@@ -75,9 +82,9 @@ function isValidDate(d) {
     return d instanceof Date && !isNaN(d.getTime());
 }
 
-// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.1
+// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.2
 const VDCSystem = {
-    version: 'v11.1-AF',
+    version: 'v11.2-ZERROR',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -233,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v11.1 - Auditoria Fiscal Big Data...');
+        console.log('🔧 Inicializando VDC Forensic System v11.2 - Zero Error Policy...');
         
         const startBtn = document.getElementById('startSessionBtn');
         if (startBtn) {
@@ -243,7 +250,7 @@ function initializeSystem() {
         startClockAndDate();
         updatePageTitle('Inicializando Auditoria Fiscal...');
         
-        logAudit('✅ Sistema VDC v11.1 pronto para auditoria fiscal Big Data', 'success');
+        logAudit('✅ Sistema VDC v11.2 pronto para auditoria fiscal Big Data', 'success');
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
@@ -335,10 +342,10 @@ async function loadForensicSystem() {
             setTimeout(() => {
                 showMainInterface();
                 updatePageTitle('Sistema Pronto');
-                logAudit('✅ Sistema VDC v11.1 - Auditoria Fiscal inicializado', 'success');
+                logAudit('✅ Sistema VDC v11.2 - Zero Error Policy inicializado', 'success');
                 logAudit('🔐 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%, AMT/IMT 5%', 'info');
                 logAudit('🔗 Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
-                logAudit('📁 Extração Big Data estruturada ativada', 'info');
+                logAudit('📁 Extração Big Data estruturada ativada | Regex Bolt corrigido', 'info');
                 
             }, 300);
         }, 500);
@@ -459,7 +466,8 @@ function startClockAndDate() {
 // 6. CONFIGURAÇÃO DE EVENTOS V11.1
 function setupEventListeners() {
     try {
-        const registerBtn = document.getElementById('registerClientBtnFixed');
+        // Botões principais da interface
+        const registerBtn = document.getElementById('registerClientBtn');
         if (registerBtn) {
             registerBtn.addEventListener('click', registerClientFixed);
         }
@@ -482,46 +490,31 @@ function setupEventListeners() {
             });
         }
         
-        const demoBtn = document.getElementById('demoModeBtn');
+        // Botão Demo
+        const demoBtn = document.getElementById('demoBtn');
         if (demoBtn) {
             demoBtn.addEventListener('click', activateDemoMode);
         }
         
-        const openEvidenceModalBtn = document.getElementById('openEvidenceModalBtn');
-        if (openEvidenceModalBtn) {
-            openEvidenceModalBtn.addEventListener('click', openEvidenceModal);
+        // Toolbar buttons
+        const openModalBtn = document.getElementById('openModalBtn');
+        if (openModalBtn) {
+            openModalBtn.addEventListener('click', openEvidenceModal);
         }
         
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', closeEvidenceModal);
+        const processBtn = document.getElementById('processBtn');
+        if (processBtn) {
+            processBtn.addEventListener('click', openEvidenceModal);
         }
         
-        const closeAndSaveBtn = document.getElementById('closeAndSaveBtn');
-        if (closeAndSaveBtn) {
-            closeAndSaveBtn.addEventListener('click', closeEvidenceModal);
+        const analysisBtn = document.getElementById('analysisBtn');
+        if (analysisBtn) {
+            analysisBtn.addEventListener('click', performForensicAnalysis);
         }
         
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', clearAllEvidence);
-        }
-        
-        setupModalUploadButtons();
-        
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (analyzeBtn) {
-            analyzeBtn.addEventListener('click', performForensicAnalysis);
-        }
-        
-        const exportJSONBtn = document.getElementById('exportJSONBtn');
-        if (exportJSONBtn) {
-            exportJSONBtn.addEventListener('click', exportJSON);
-        }
-        
-        const exportPDFBtn = document.getElementById('exportPDFBtn');
-        if (exportPDFBtn) {
-            exportPDFBtn.addEventListener('click', exportPDF);
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportPDF);
         }
         
         const resetBtn = document.getElementById('resetBtn');
@@ -529,6 +522,62 @@ function setupEventListeners() {
             resetBtn.addEventListener('click', resetDashboard);
         }
         
+        // Sidebar upload buttons
+        const dac7UploadBtn = document.getElementById('dac7UploadBtn');
+        const dac7File = document.getElementById('dac7File');
+        if (dac7UploadBtn && dac7File) {
+            dac7UploadBtn.addEventListener('click', () => dac7File.click());
+            dac7File.addEventListener('change', (e) => handleFileUploadModal(e, 'dac7'));
+        }
+        
+        const controlUploadBtn = document.getElementById('controlUploadBtn');
+        const controlFile = document.getElementById('controlFile');
+        if (controlUploadBtn && controlFile) {
+            controlUploadBtn.addEventListener('click', () => controlFile.click());
+            controlFile.addEventListener('change', (e) => handleFileUploadModal(e, 'control'));
+        }
+        
+        const saftUploadBtn = document.getElementById('saftUploadBtn');
+        const saftFile = document.getElementById('saftFile');
+        if (saftUploadBtn && saftFile) {
+            saftUploadBtn.addEventListener('click', () => saftFile.click());
+            saftFile.addEventListener('change', (e) => handleFileUploadModal(e, 'saft'));
+        }
+        
+        const invoiceUploadBtn = document.getElementById('invoiceUploadBtn');
+        const invoiceFile = document.getElementById('invoiceFile');
+        if (invoiceUploadBtn && invoiceFile) {
+            invoiceUploadBtn.addEventListener('click', () => invoiceFile.click());
+            invoiceFile.addEventListener('change', (e) => handleFileUploadModal(e, 'invoices'));
+        }
+        
+        const statementUploadBtn = document.getElementById('statementUploadBtn');
+        const statementFile = document.getElementById('statementFile');
+        if (statementUploadBtn && statementFile) {
+            statementUploadBtn.addEventListener('click', () => statementFile.click());
+            statementFile.addEventListener('change', (e) => handleFileUploadModal(e, 'statements'));
+        }
+        
+        // Modal buttons
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeEvidenceModal);
+        }
+        
+        const processModalBtn = document.getElementById('processModalBtn');
+        if (processModalBtn) {
+            processModalBtn.addEventListener('click', closeEvidenceModal);
+        }
+        
+        const clearModalBtn = document.getElementById('clearModalBtn');
+        if (clearModalBtn) {
+            clearModalBtn.addEventListener('click', clearAllEvidence);
+        }
+        
+        // Modal upload buttons
+        setupModalUploadButtons();
+        
+        // Console controls
         const clearConsoleBtn = document.getElementById('clearConsoleBtn');
         if (clearConsoleBtn) {
             clearConsoleBtn.addEventListener('click', clearConsole);
@@ -544,6 +593,7 @@ function setupEventListeners() {
             custodyBtn.addEventListener('click', showChainOfCustody);
         }
         
+        // Modal click outside to close
         const evidenceModal = document.getElementById('evidenceModal');
         if (evidenceModal) {
             evidenceModal.addEventListener('click', (e) => {
@@ -909,11 +959,11 @@ function updateEvidenceCount() {
 function updateCompactCounters() {
     try {
         const counters = {
-            'dac7CountCompact': VDCSystem.documents.dac7?.files?.length || 0,
-            'controlCountCompact': VDCSystem.documents.control?.files?.length || 0,
-            'saftCountCompact': VDCSystem.documents.saft?.files?.length || 0,
-            'invoiceCountCompact': VDCSystem.documents.invoices?.files?.length || 0,
-            'statementCountCompact': VDCSystem.documents.statements?.files?.length || 0
+            'dac7Counter': VDCSystem.documents.dac7?.files?.length || 0,
+            'controlCounter': VDCSystem.documents.control?.files?.length || 0,
+            'saftCounter': VDCSystem.documents.saft?.files?.length || 0,
+            'invoiceCounter': VDCSystem.documents.invoices?.files?.length || 0,
+            'statementCounter': VDCSystem.documents.statements?.files?.length || 0
         };
         
         Object.entries(counters).forEach(([id, count]) => {
@@ -1512,11 +1562,12 @@ function extractInvoiceData(text, filename) {
     };
     
     try {
-        // PADRÕES ESPECÍFICOS BOLT - HIGH PRECISION
+        // PADRÕES ESPECÍFICOS BOLT - HIGH PRECISION V11.2
         const patterns = {
-            // ÂNCORA: Total com IVA (EUR) - EVITA CAPTURAR OUTROS TOTAIS
+            // ÂNCORA: Total com IVA (EUR) - REGEX CORRIGIDO PARA QUEBRAS DE LINHA
             invoiceValue: [
-                /Total\s+com\s+IVA\s*\(EUR\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
+                /Total\s+com\s+IVA\s*\(EUR\)\s*([\d\.,]+)/i,
+                /Total\s+com\s+IVA[\s\n]*\(EUR\)[\s\n]*([\d\.,]+)/i,
                 /Total\s+\(incl\.\s+IVA\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
                 /Amount\s+due[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
                 /Total\s+amount[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
@@ -1609,9 +1660,17 @@ function extractInvoiceData(text, filename) {
             }
         });
         
+        // TRATAMENTO AUTOLIQUIDAÇÃO V11.2 - FORÇA IVA23 = 0
+        const autoliquidacaoDetectada = /autoliquida[çc][ãa]o/i.test(text);
+        
         // CÁLCULO DO IVA 23% SOBRE A COMISSÃO
         if (data.commissionValue > 0) {
-            data.iva23Value = data.commissionValue * 0.23;
+            if (autoliquidacaoDetectada) {
+                data.iva23Value = 0;
+                logAudit(`🔒 AUTOLIQUIDAÇÃO detectada na fatura ${filename}: IVA23 forçado a 0,00€ (CIVA Art. 29º)`, 'warn');
+            } else {
+                data.iva23Value = data.commissionValue * 0.23;
+            }
         }
         
         if (data.boltEntityDetected) {
@@ -2887,7 +2946,7 @@ function exportPDF() {
             // Cabeçalho do Relatório
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('VDC FORENSIC SYSTEM v11.1 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
+            pdf.text('VDC FORENSIC SYSTEM v11.2 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
             yPos += 10;
             
             pdf.setFontSize(10);
@@ -3010,7 +3069,7 @@ function exportPDF() {
             // Rodapé
             pdf.setFontSize(8);
             pdf.setFont('helvetica', 'italic');
-            pdf.text('Sistema de Peritagem Forense VDC v11.1 - ISO/IEC 27037 | NIST SP 800-86 | © 2024', pageWidth / 2, pageHeight - 10, { align: 'center' });
+            pdf.text('Sistema de Peritagem Forense VDC v11.2 - ISO/IEC 27037 | NIST SP 800-86 | © 2025', pageWidth / 2, pageHeight - 10, { align: 'center' });
             
             // Salvar PDF
             const fileName = `RELATORIO_PERICIAL_VDC_${VDCSystem.sessionId}.pdf`;
