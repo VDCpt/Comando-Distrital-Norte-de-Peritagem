@@ -1,5 +1,5 @@
 /* ============================================
-   VDC FORENSIC SYSTEM v12.0 - FORENSIC ELITE
+   VDC FORENSIC SYSTEM v12.1 - FORENSIC ELITE
    Executive BI Theme | Dark Professional
    ============================================ */
 
@@ -394,10 +394,10 @@ body {
 
 /* Painéis */
 .panel {
-    background: rgba(30, 41, 59, 0.7);
+    background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--bg-tertiary);
     box-shadow: var(--shadow-sm);
 }
 
@@ -456,47 +456,51 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
 }
 
-.btn-group {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
-}
-
-.btn-primary,
-.btn-secondary {
-    flex: 1;
-    padding: 0.8rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 700;
-    cursor: pointer;
+/* Upload Header com Badge */
+.upload-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    transition: all 0.2s ease;
-    border: none;
-    font-size: 0.95rem;
+    gap: var(--spacing-sm);
+    margin-bottom: 0.3rem;
 }
 
-.btn-primary {
-    background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+.upload-header label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.file-badge {
+    background: var(--danger-primary);
     color: white;
+    font-size: 0.75rem;
+    font-weight: 900;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    min-width: 24px;
+    text-align: center;
+    font-family: var(--font-mono);
 }
 
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+.file-badge.has-files {
+    background: var(--success-primary);
 }
 
-.btn-secondary {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+.check-icon {
+    color: var(--success-primary);
+    font-size: 1rem;
 }
 
-.btn-secondary:hover {
-    background: rgba(0, 102, 204, 0.15);
-    border-color: var(--accent-primary);
+.check-icon.hidden {
+    display: none;
+}
+
+.check-icon.visible {
+    display: inline-block;
 }
 
 /* Upload */
@@ -508,6 +512,16 @@ body {
 
 .upload-group {
     margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.5);
+    transition: all 0.2s ease;
+}
+
+.upload-group.has-files {
+    border-color: var(--success-primary);
+    background: rgba(16, 185, 129, 0.1);
 }
 
 .upload-group label {
@@ -647,7 +661,7 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
     border-left: 5px solid var(--accent-primary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bg-tertiary);
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
     position: relative;
@@ -769,7 +783,7 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--bg-tertiary);
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-sm);
@@ -825,7 +839,7 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--bg-tertiary);
     transition: transform 0.2s ease;
 }
 
