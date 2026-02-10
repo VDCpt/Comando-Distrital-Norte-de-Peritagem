@@ -53,6 +53,110 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
 
+    <!-- Modal de GESTÃO DE EVIDÊNCIAS -->
+    <div id="evidenceModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content evidence-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (ILIMITADO)</h3>
+                <button id="closeModalBtn" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-section-modal">
+                    <!-- DAC7 ISO/NIST -->
+                    <div class="upload-group-modal">
+                        <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
+                        <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
+                            <i class="fas fa-file-contract"></i> SELECIONAR FICHEIROS DAC7
+                        </button>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
+                        <div id="dac7FileListModal" class="file-list-modal"></div>
+                    </div>
+
+                    <!-- Control File (ISO/IEC 27037) -->
+                    <div class="upload-group-modal">
+                        <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
+                        <button id="controlUploadBtnModal" class="upload-btn modal-btn">
+                            <i class="fas fa-file-shield"></i> SELECIONAR FICHEIRO DE CONTROLO
+                        </button>
+                        <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.xml,.pdf,.txt" hidden>
+                        <div id="controlFileListModal" class="file-list-modal"></div>
+                    </div>
+
+                    <!-- SAF-T Files (XML + CSV) -->
+                    <div class="upload-group-modal">
+                        <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)</label>
+                        <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-code"></i> SELECIONAR FICHEIROS SAF-T/XML/CSV
+                        </button>
+                        <input type="file" id="saftFileModal" class="file-input-modal" multiple accept=".xml,.csv" hidden>
+                        <div id="saftFileListModal" class="file-list-modal"></div>
+                    </div>
+
+                    <!-- Platform Invoices -->
+                    <div class="upload-group-modal">
+                        <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
+                        <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
+                        </button>
+                        <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
+                        <div id="invoiceFileListModal" class="file-list-modal"></div>
+                    </div>
+
+                    <!-- Bank Statements -->
+                    <div class="upload-group-modal">
+                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS</label>
+                        <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
+                        </button>
+                        <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
+                        <div id="statementFileListModal" class="file-list-modal"></div>
+                    </div>
+                </div>
+
+                <!-- Resumo de Processamento -->
+                <div class="processing-summary">
+                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">DAC7</span>
+                            <span id="summaryDac7" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">CONTROLO</span>
+                            <span id="summaryControl" class="summary-value">0 ficheiros</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">SAF-T</span>
+                            <span id="summarySaft" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">FATURAS</span>
+                            <span id="summaryInvoices" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">EXTRATOS</span>
+                            <span id="summaryStatements" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">TOTAL</span>
+                            <span id="summaryTotal" class="summary-value total">0 ficheiros | 0 registos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeAndSaveBtn" class="btn-primary">
+                    <i class="fas fa-save"></i> FECHAR E GUARDAR EVIDÊNCIAS
+                </button>
+                <button id="clearAllBtn" class="btn-secondary">
+                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
@@ -88,129 +192,98 @@
         <div class="app-container">
             <!-- Sidebar com Identificação e Uploads -->
             <aside class="sidebar">
-                <!-- Identificação do Cliente -->
-                <div class="client-identification">
+                <!-- CABEÇALHO FIXO DA SIDEBAR -->
+                <div class="sidebar-header-fixed">
                     <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
-                    <div class="client-form">
-                        <div class="form-group">
-                            <label for="clientName"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
-                            <input type="text" id="clientName" placeholder="Ex: Momento Eficaz Unipessoal, Lda" list="clientSuggestions">
-                            <datalist id="clientSuggestions"></datalist>
+                    
+                    <div class="client-identification-fixed">
+                        <div class="form-group-fixed">
+                            <label for="clientNameFixed"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
+                            <input type="text" id="clientNameFixed" placeholder="Ex: Momento Eficaz Unipessoal, Lda" list="clientSuggestions">
                         </div>
-                        <div class="form-group">
-                            <label for="clientNIF"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
-                            <input type="text" id="clientNIF" placeholder="Ex: 517905450" maxlength="9">
+                        <div class="form-group-fixed">
+                            <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
+                            <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
                         </div>
-                        <div class="btn-group">
-                            <button id="registerClientBtn" class="btn-primary">
+                        
+                        <!-- Botão Registar Cliente no TOPO -->
+                        <div class="btn-group-fixed">
+                            <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> REGISTAR CLIENTE
                             </button>
-                            <button id="saveClientBtn" class="btn-secondary">
-                                <i class="fas fa-database"></i> GUARDAR NA SESSÃO
-                            </button>
+                        </div>
+                        
+                        <!-- Informações Fixas -->
+                        <div class="info-fixed">
+                            <div class="info-item">
+                                <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
+                                <select id="selYearFixed" class="year-select-fixed">
+                                    <!-- Preenchido dinamicamente -->
+                                </select>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
+                                <select id="selPlatformFixed" class="platform-select-fixed">
+                                    <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
+                                    <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
+                                    <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
+                                    <option value="other">Outra Plataforma - Investigação</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Status do Cliente Fixo -->
+                        <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong></span>
                         </div>
                     </div>
-                    <div id="clientStatus" class="client-status" style="display: none;">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
-                    </div>
                 </div>
 
-                <!-- Controles do Sistema -->
-                <div class="system-controls">
-                    <div class="control-group">
-                        <label for="selYear"><i class="fas fa-calendar-check"></i> Ano Fiscal</label>
-                        <select id="selYear" class="year-select">
-                            <!-- Preenchido dinamicamente -->
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="selPlatform"><i class="fas fa-server"></i> Plataforma</label>
-                        <select id="selPlatform" class="platform-select">
-                            <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
-                            <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
-                            <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
-                            <option value="other">Outra Plataforma - Investigação</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Upload de Ficheiros - BIG DATA ILIMITADO -->
-                <div class="upload-section">
-                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO BIG DATA (ILIMITADO)</h3>
-                    
-                    <!-- Campo DAC7 ISO/NIST -->
-                    <div class="upload-group">
-                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
-                        <button id="dac7UploadBtn" class="upload-btn">
-                            <i class="fas fa-file-contract"></i> UPLOAD DAC7
+                <!-- Conteúdo Rolável da Sidebar -->
+                <div class="sidebar-scrollable">
+                    <!-- Botão de GESTÃO DE EVIDÊNCIAS BIG DATA -->
+                    <div class="evidence-management-section">
+                        <button id="openEvidenceModalBtn" class="evidence-management-btn">
+                            <i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
+                            <span class="evidence-count">0 ficheiros</span>
                         </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
-                        <div id="dac7FileList" class="file-list"></div>
                     </div>
 
-                    <!-- Control File (ISO/IEC 27037) -->
-                    <div class="upload-group">
-                        <button id="controlUploadBtn" class="upload-btn">
-                            <i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO
+                    <!-- Contadores -->
+                    <div class="counters">
+                        <div class="counter-item">
+                            <span class="counter-label">CONTROLO</span>
+                            <span id="controlCount" class="counter-value">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span class="counter-label">SAF-T</span>
+                            <span id="saftCount" class="counter-value">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span class="counter-label">FATURAS</span>
+                            <span id="invoiceCount" class="counter-value">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span class="counter-label">EXTRATOS</span>
+                            <span id="statementCount" class="counter-value">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span class="counter-label">DAC7</span>
+                            <span id="dac7Count" class="counter-value">0</span>
+                        </div>
+                        <div class="counter-item">
+                            <span class="counter-label">TOTAL</span>
+                            <span id="totalCount" class="counter-value">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Botão GUARDAR CLIENTE no FINAL -->
+                    <div class="save-client-section">
+                        <button id="saveClientBtnFixed" class="btn-save-client">
+                            <i class="fas fa-database"></i> GUARDAR CLIENTE
                         </button>
-                        <input type="file" id="controlFile" class="file-input" multiple accept=".csv,.xml,.pdf,.txt" hidden>
-                        <div id="controlFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- SAF-T Files (XML + CSV) -->
-                    <div class="upload-group">
-                        <button id="saftUploadBtn" class="upload-btn multi">
-                            <i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)
-                        </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
-                        <div id="saftFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Platform Invoices -->
-                    <div class="upload-group">
-                        <button id="invoiceUploadBtn" class="upload-btn multi">
-                            <i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA
-                        </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
-                        <div id="invoiceFileList" class="file-list"></div>
-                    </div>
-
-                    <!-- Bank Statements -->
-                    <div class="upload-group">
-                        <button id="statementUploadBtn" class="upload-btn multi">
-                            <i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS
-                        </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
-                        <div id="statementFileList" class="file-list"></div>
-                    </div>
-                </div>
-
-                <!-- Contadores -->
-                <div class="counters">
-                    <div class="counter-item">
-                        <span class="counter-label">CONTROLO</span>
-                        <span id="controlCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">SAF-T</span>
-                        <span id="saftCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">FATURAS</span>
-                        <span id="invoiceCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">EXTRATOS</span>
-                        <span id="statementCount" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">DAC7</span>
-                        <span id="dac7Count" class="counter-value">0</span>
-                    </div>
-                    <div class="counter-item">
-                        <span class="counter-label">TOTAL</span>
-                        <span id="totalCount" class="counter-value">0</span>
+                        <small class="save-client-note">File System Access API ativado para C:\Peritagens\CLIENTES_VDC</small>
                     </div>
                 </div>
             </aside>
