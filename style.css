@@ -213,6 +213,7 @@ body {
     box-sizing: border-box;
     overflow-y: auto;
     height: calc(100vh - 120px);
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 4. SIDEBAR RESTRUTURADA - LAYOUT FLEX CORRIGIDO V11.2 */
@@ -470,6 +471,7 @@ body {
     box-sizing: border-box;
     margin-top: auto;
     flex-shrink: 0;
+    order: 3;
 }
 
 .counter-item-compact {
