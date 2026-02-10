@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v10.9 - Final Stable Release</title>
+    <title>VDC | Sistema de Peritagem Forense v11.0 - Auditoria Fiscal Big Data</title>
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,24 +14,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V10.9 -->
+    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V11.0 -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v10.9</h1>
-            <h2>FINAL STABLE RELEASE</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Análise Massiva de Dados</p>
+            <h1>VDC FORENSIC SYSTEM v11.0</h1>
+            <h2>BIG DATA AUDITORIA FISCAL</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
             <p class="splash-warning">
-                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Dados Reais
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
             </p>
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO BIG DATA
+                <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA
             </button>
             <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Upload Ilimitado | Análise Forense em Tempo Real</p>
-                <p class="version">v10.9 - Final Stable Release</p>
+                <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
+                <p class="version">v11.0 - Auditoria Fiscal Big Data</p>
             </div>
         </div>
     </div>
@@ -42,8 +42,8 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v10.9 - FINAL STABLE RELEASE</h2>
-            <p>ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Processamento Massivo de Dados</p>
+            <h2>VDC FORENSIC SYSTEM v11.0 - AUDITORIA FISCAL</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação AMT/IMT</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -53,11 +53,11 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
 
-    <!-- Modal de GESTÃO DE EVIDÊNCIAS -->
+    <!-- Modal de GESTÃO DE EVIDÊNCIAS BIG DATA -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (ILIMITADO)</h3>
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (EXTRUÇÃO ESTRUTURADA)</h3>
                 <button id="closeModalBtn" class="icon-btn">
                     <i class="fas fa-times"></i>
                 </button>
@@ -117,7 +117,7 @@
 
                 <!-- Resumo de Processamento -->
                 <div class="processing-summary">
-                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO</h4>
+                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
                     <div class="summary-grid">
                         <div class="summary-item">
                             <span class="summary-label">DAC7</span>
@@ -166,8 +166,8 @@
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v10.9 FS</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Upload Ilimitado | Big Data Forense</p>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.0 AF</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
                     </div>
                 </div>
                 
@@ -206,14 +206,14 @@
                             <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
                         </div>
                         
-                        <!-- Botão Registar Cliente no TOPO -->
+                        <!-- Botão Registar Cliente no TOPO (POSIÇÃO ABSOLUTA) -->
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> REGISTAR CLIENTE
                             </button>
                         </div>
                         
-                        <!-- Informações Fixas -->
+                        <!-- Informações Fixas (STICKY TOP) -->
                         <div class="info-fixed">
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
@@ -294,7 +294,7 @@
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search"></i> EXECUTAR ANÁLISE BIG DATA
+                            <i class="fas fa-search"></i> EXECUTAR AUDITORIA BIG DATA
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
                             <i class="fas fa-file-code"></i> EXPORTAR JSON
@@ -330,7 +330,7 @@
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
-                    <!-- Novo Card: JUROS DE MORA -->
+                    <!-- Card: JUROS DE MORA -->
                     <div class="stat-card regulatory" id="jurosCard" style="display: none;">
                         <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
                         <p id="jurosVal" class="regulatory-text">0,00€</p>
@@ -390,7 +390,7 @@
 
                 <!-- Resultados da Análise Forense -->
                 <section class="analysis-results">
-                    <h3><i class="fas fa-search-dollar"></i> ANÁLISE BIG DATA DE LAYERING</h3>
+                    <h3><i class="fas fa-search-dollar"></i> AUDITORIA BIG DATA DE LAYERING</h3>
                     <div class="results-grid">
                         <div class="result-item">
                             <h5>BRUTO SAF-T</h5>
@@ -486,11 +486,11 @@
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | BIG DATA FORENSE</strong>
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AUDITORIA FISCAL BIG DATA</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v10.9 - Final Stable Release | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.0 - Auditoria Fiscal Big Data | © 2024
                 </div>
             </div>
         </footer>
