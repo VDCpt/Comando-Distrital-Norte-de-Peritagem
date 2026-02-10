@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Forensic System v11.7 - Architect Gold</title>
+    <title>VDC | Forensic System v11.8 - Big Data Unleashed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -12,48 +12,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN (Camada de Acesso) -->
+    <!-- SPLASH SCREEN MINIMALISTA (Barra Superior) -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
-                <i class="fas fa-shield-alt"></i>
+                <i class="fas fa-database"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.7</h1>
-            <h2>ARCHITECT GOLD EDITION</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Instrumento de Prova Legal</p>
-            
-            <div class="splash-form">
-                <div class="form-group">
-                    <label for="expertName"><i class="fas fa-user-tie"></i> Nome do Perito</label>
-                    <input type="text" id="expertName" placeholder="Ex: Dr. Eduardo, Perito Fiscal">
-                </div>
-                <div class="form-group">
-                    <label for="clientNIF"><i class="fas fa-id-badge"></i> NIF do Cliente (9 dígitos)</label>
-                    <input type="text" id="clientNIF" placeholder="Ex: 517905450" maxlength="9">
-                </div>
-                <div class="form-group">
-                    <label for="expertiseYear"><i class="fas fa-calendar-alt"></i> Ano da Peritagem</label>
-                    <select id="expertiseYear" class="year-select">
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                        <option value="2022">2022</option>
-                        <option value="2021">2021</option>
-                        <option value="2020">2020</option>
-                    </select>
-                </div>
-                
-                <button id="startSessionBtn" class="splash-btn" onclick="iniciarSessao()">
-                    <i class="fas fa-fingerprint"></i> INICIAR SESSÃO DE PERITAGEM
-                </button>
-                
-                <div class="splash-warning">
-                    <i class="fas fa-lock"></i> Acesso restrito a peritos autorizados. Todos os acessos são registados na cadeia de custódia.
-                </div>
-            </div>
-            
-            <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Certificação ISO/NIST | Instrumento de Prova Legal</p>
-                <p class="version">v11.7 - Architect Gold</p>
+            <h1>VDC FORENSIC SYSTEM v11.8</h1>
+            <p class="splash-subtitle">BIG DATA UNLEASHED EDITION | PROCESSAMENTO ILIMITADO</p>
+            <button id="accessDashboardBtn" class="splash-btn" onclick="acessarDashboard()">
+                <i class="fas fa-rocket"></i> ACEDER AO DASHBOARD
+            </button>
+            <div class="splash-info">
+                <i class="fas fa-info-circle"></i> Modo Big Data ativo: Processamento acumulativo ilimitado
             </div>
         </div>
     </div>
@@ -62,41 +33,60 @@
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
-                <i class="fas fa-fingerprint fa-spin"></i>
+                <i class="fas fa-database fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v11.7</h2>
-            <p>Architect Gold Edition | Inicializando motores de análise forense...</p>
+            <h2>INICIALIZANDO MOTOR BIG DATA</h2>
+            <p>Processamento acumulativo ilimitado | Modo APPEND ativo</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
         </div>
     </div>
 
-    <!-- Conteúdo Principal (Dashboard) -->
+    <!-- Dashboard Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
-        <!-- Cabeçalho Executive BI -->
+        <!-- Header Professional BI -->
         <header class="main-header">
             <div class="header-left">
-                <i class="fas fa-shield-alt"></i>
+                <i class="fas fa-database"></i>
                 <div>
-                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.7 GOLD</span></h1>
-                    <p class="subtitle">Architect Gold Edition | Perito: <span id="expertNameDisplay">--</span> | Cliente NIF: <span id="clientNIFDisplay">--</span></p>
+                    <h1>VDC FORENSIC <span class="version-badge">v11.8 BIG DATA</span></h1>
+                    <p class="subtitle">Big Data Unleashed Edition | Processamento Acumulativo Ilimitado</p>
                 </div>
             </div>
+            
+            <!-- Identificação do Processo (Discreta no Header) -->
+            <div class="process-identification">
+                <div class="id-field">
+                    <label><i class="fas fa-user-tie"></i> Perito</label>
+                    <input type="text" id="expertName" placeholder="Nome do Perito" value="Dr. Eduardo">
+                </div>
+                <div class="id-field">
+                    <label><i class="fas fa-id-badge"></i> NIF Cliente</label>
+                    <input type="text" id="clientNIF" placeholder="NIF (9 dígitos)" value="517905450" maxlength="9">
+                </div>
+                <div class="id-field">
+                    <label><i class="fas fa-calendar-alt"></i> Ano Peritagem</label>
+                    <select id="expertiseYear" class="year-select">
+                        <!-- Preenchido dinamicamente de 2018 a 2036 -->
+                    </select>
+                </div>
+            </div>
+            
             <div class="header-right">
                 <div class="timestamp">
                     <span id="currentDate">--/--/----</span> | 
                     <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
                 </div>
                 <button class="btn-header" onclick="exportPDF()">
-                    <i class="fas fa-file-pdf"></i> RELATÓRIO PDF
+                    <i class="fas fa-file-pdf"></i> PDF
                 </button>
                 <button class="btn-header" onclick="exportJSON()">
-                    <i class="fas fa-file-code"></i> EXPORTAR JSON
+                    <i class="fas fa-file-code"></i> JSON
                 </button>
-                <button class="btn-header btn-warn" onclick="resetDashboard()">
-                    <i class="fas fa-redo"></i> NOVA SESSÃO
+                <button class="btn-header btn-warn" onclick="limparSessao()">
+                    <i class="fas fa-broom"></i> LIMPAR
                 </button>
             </div>
         </header>
@@ -104,163 +94,124 @@
         <!-- Grid Principal -->
         <div class="main-grid">
             
-            <!-- Sidebar de Uploads -->
+            <!-- Sidebar de Uploads (Big Data) -->
             <aside class="sidebar">
-                <!-- Identificação do Cliente -->
                 <div class="panel">
-                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO COMPLETA</h3>
-                    <div class="form-group">
-                        <label for="clientName"><i class="fas fa-building"></i> Nome Completo do Cliente</label>
-                        <input type="text" id="clientName" placeholder="Ex: Momento Eficaz Unipessoal, Lda">
-                    </div>
-                    <div class="btn-group">
-                        <button id="registerClientBtn" class="btn-primary" onclick="registarCliente()">
-                            <i class="fas fa-user-check"></i> REGISTAR CLIENTE
-                        </button>
-                    </div>
-                    <div id="clientStatus" class="client-status" style="display: none;">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Cliente registado: <strong id="clientNameDisplay"></strong></span>
-                    </div>
+                    <h3><i class="fas fa-server"></i> PLATAFORMA ANALISADA</h3>
+                    <select id="selPlatform" class="form-select">
+                        <option value="bolt">Bolt Operations OÜ (Estónia)</option>
+                        <option value="uber">Uber B.V. (Holanda)</option>
+                        <option value="freenow">FREE NOW (Alemanha)</option>
+                        <option value="glovo">Glovo Portugal</option>
+                        <option value="other">Outra Plataforma</option>
+                    </select>
                 </div>
 
-                <!-- Controles do Sistema -->
-                <div class="panel">
-                    <div class="form-group">
-                        <label for="selPlatform"><i class="fas fa-server"></i> Plataforma Analisada</label>
-                        <select id="selPlatform" class="form-select">
-                            <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
-                            <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
-                            <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
-                            <option value="glovo">Glovo Portugal - Análise Complementar</option>
-                            <option value="other">Outra Plataforma - Investigação</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="selPeriod"><i class="fas fa-calendar-check"></i> Período Analisado</label>
-                        <select id="selPeriod" class="form-select">
-                            <option value="annual">Ano Completo</option>
-                            <option value="q1">1º Trimestre</option>
-                            <option value="q2">2º Trimestre</option>
-                            <option value="q3">3º Trimestre</option>
-                            <option value="q4">4º Trimestre</option>
-                            <option value="custom">Personalizado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Upload de Ficheiros -->
+                <!-- Upload de Ficheiros (MODO APPEND) -->
                 <div class="panel upload-panel">
-                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO DE DOCUMENTOS</h3>
+                    <h3><i class="fas fa-cloud-upload-alt"></i> CARREGAMENTO BIG DATA</h3>
+                    <p class="upload-info">Modo APPEND: Os ficheiros são somados aos já existentes</p>
                     
                     <div class="upload-group">
-                        <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
-                        <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
-                            <i class="fas fa-file-contract"></i> UPLOAD DAC7
-                        </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.pdf,.xml,.eml" hidden
-                               onchange="validarQuantidadeFicheiros(this, 'dac7', 12)">
-                    </div>
-
-                    <div class="upload-group">
-                        <label for="saftFile"><i class="fas fa-file-code"></i> SAF-T / XML Fiscal</label>
                         <button class="upload-btn" onclick="document.getElementById('saftFile').click()">
-                            <i class="fas fa-file-code"></i> UPLOAD SAF-T
+                            <i class="fas fa-file-code"></i> SAF-T / XML
                         </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden
-                               onchange="validarQuantidadeFicheiros(this, 'saft', 12)">
+                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
+                        <div class="file-counter" id="saftCounter">0 ficheiros</div>
                     </div>
 
                     <div class="upload-group">
-                        <label for="invoiceFile"><i class="fas fa-file-invoice-dollar"></i> Faturas da Plataforma</label>
                         <button class="upload-btn" onclick="document.getElementById('invoiceFile').click()">
-                            <i class="fas fa-file-invoice"></i> UPLOAD FATURAS
+                            <i class="fas fa-file-invoice-dollar"></i> FATURAS
                         </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.jpg,.png" hidden
-                               onchange="validarQuantidadeFicheiros(this, 'invoices', 12)">
+                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.jpg,.png" hidden>
+                        <div class="file-counter" id="invoiceCounter">0 ficheiros</div>
                     </div>
 
                     <div class="upload-group">
-                        <label for="statementFile"><i class="fas fa-file-contract"></i> Extratos Bancários</label>
                         <button class="upload-btn" onclick="document.getElementById('statementFile').click()">
-                            <i class="fas fa-file-contract"></i> UPLOAD EXTRATOS
+                            <i class="fas fa-file-contract"></i> EXTRATOS
                         </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.ofx,.mt940" hidden
-                               onchange="validarQuantidadeFicheiros(this, 'statements', 12)">
+                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.ofx,.mt940" hidden>
+                        <div class="file-counter" id="statementCounter">0 ficheiros</div>
                     </div>
 
-                    <!-- Contadores -->
+                    <div class="upload-group">
+                        <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
+                            <i class="fas fa-passport"></i> DAC7
+                        </button>
+                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.pdf,.xml,.eml" hidden>
+                        <div class="file-counter" id="dac7Counter">0 ficheiros</div>
+                    </div>
+
+                    <!-- Contadores Acumulativos -->
                     <div class="counters">
-                        <div class="counter-item">
-                            <span class="counter-label">DAC7</span>
-                            <span id="dac7Count" class="counter-value">0</span>
+                        <div class="counter-item total-files">
+                            <span class="counter-label">TOTAL FICHEIROS</span>
+                            <span id="totalCount" class="counter-value">0</span>
                         </div>
                         <div class="counter-item">
-                            <span class="counter-label">SAF-T</span>
-                            <span id="saftCount" class="counter-value">0</span>
-                        </div>
-                        <div class="counter-item">
-                            <span class="counter-label">FATURAS</span>
-                            <span id="invoiceCount" class="counter-value">0</span>
-                        </div>
-                        <div class="counter-item">
-                            <span class="counter-label">EXTRATOS</span>
-                            <span id="statementCount" class="counter-value">0</span>
+                            <span class="counter-label">TAMANHO TOTAL</span>
+                            <span id="totalSize" class="counter-value">0 MB</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Botão de Análise -->
-                <button id="analyzeBtn" class="btn-analyze" onclick="executarAnaliseForense()" disabled>
-                    <i class="fas fa-search"></i> EXECUTAR ANÁLISE FORENSE
+                <button id="analyzeBtn" class="btn-analyze" onclick="executarAnaliseBigData()">
+                    <i class="fas fa-bolt"></i> EXECUTAR ANÁLISE BIG DATA
                 </button>
+                
+                <div class="bigdata-info">
+                    <i class="fas fa-info-circle"></i> Modo APPEND ativo: Os ficheiros são acumulados
+                </div>
             </aside>
 
-            <!-- Área Principal -->
+            <!-- Área Principal de Visualização -->
             <main class="main-content">
                 
-                <!-- KPIs de Topo (Os 4 Grandes) -->
+                <!-- KPIs de Topo -->
                 <section class="kpi-top">
                     <div class="kpi-card kpi-primary">
                         <h4><i class="fas fa-balance-scale"></i> DIVERGÊNCIA TOTAL</h4>
                         <p id="kpiDivergencia">0,00€</p>
-                        <small>BTOR vs BRF | SAF-T vs Extrato</small>
+                        <small>Valor acumulado | Big Data</small>
                     </div>
                     <div class="kpi-card kpi-warning">
-                        <h4><i class="fas fa-exclamation-triangle"></i> RISCO RGRC</h4>
-                        <p id="kpiRisco">0,00€</p>
-                        <small>Juros de Mora 4% + Penalidades</small>
+                        <h4><i class="fas fa-percentage"></i> JUROS RGRC</h4>
+                        <p id="kpiJuros">0,00€</p>
+                        <small>4% dinâmico | Ano <span id="currentYearDisplay">2024</span></small>
                     </div>
                     <div class="kpi-card kpi-info">
-                        <h4><i class="fas fa-file-invoice"></i> FATURAS ANALISADAS</h4>
+                        <h4><i class="fas fa-file-invoice"></i> FATURAS</h4>
                         <p id="kpiFaturas">0</p>
-                        <small>Documentos processados</small>
+                        <small>Processadas acumulativamente</small>
                     </div>
                     <div class="kpi-card kpi-success">
-                        <h4><i class="fas fa-link"></i> CADEIA DE CUSTÓDIA</h4>
-                        <p id="kpiCustodia">0</p>
-                        <small>Ficheiros com Hash SHA-256</small>
+                        <h4><i class="fas fa-database"></i> DADOS PROCESSADOS</h4>
+                        <p id="kpiProcessados">0 MB</p>
+                        <small>Volume Big Data</small>
                     </div>
                 </section>
 
                 <!-- Área de Gráficos -->
                 <section class="charts-section">
                     <div class="chart-container">
-                        <h3><i class="fas fa-chart-bar"></i> ANÁLISE COMPARATIVA (€)</h3>
-                        <canvas id="comparisonChart"></canvas>
+                        <h3><i class="fas fa-chart-line"></i> EVOLUÇÃO DO DIFERENCIAL (€)</h3>
+                        <canvas id="evolutionChart"></canvas>
                     </div>
                     <div class="chart-container">
-                        <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FISCAL</h3>
-                        <canvas id="taxChart"></canvas>
+                        <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO POR TIPO</h3>
+                        <canvas id="distributionChart"></canvas>
                     </div>
                 </section>
 
-                <!-- Resultados Detalhados -->
+                <!-- Resultados em Tempo Real -->
                 <section class="results-section">
-                    <h3><i class="fas fa-search-dollar"></i> RESULTADOS DA ANÁLISE FORENSE</h3>
+                    <h3><i class="fas fa-bolt"></i> RESULTADOS BIG DATA</h3>
                     <div class="results-grid">
                         <div class="result-card">
-                            <h5>RENDIMENTOS BRUTOS (SAF-T)</h5>
+                            <h5>RENDIMENTOS BRUTOS</h5>
                             <p id="resultBruto">0,00€</p>
                             <div class="progress-bar">
                                 <div class="progress-fill" id="barBruto" style="width: 0%"></div>
@@ -281,7 +232,7 @@
                             </div>
                         </div>
                         <div class="result-card result-alert">
-                            <h5>DIFERENCIAL IDENTIFICADO</h5>
+                            <h5>DIFERENCIAL ACUMULADO</h5>
                             <p id="resultDiferencial">0,00€</p>
                             <div class="progress-bar">
                                 <div class="progress-fill" id="barDiferencial" style="width: 0%"></div>
@@ -289,28 +240,38 @@
                         </div>
                     </div>
 
-                    <!-- Alertas Forenses -->
-                    <div id="alertDivergencia" class="alert-card alert-warning" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <!-- Alertas Dinâmicos -->
+                    <div id="alertBigData" class="alert-card alert-info" style="display: none;">
+                        <i class="fas fa-database"></i>
                         <div>
-                            <strong>DIVERGÊNCIA FISCAL DETETADA (ISO/IEC 27037)</strong>
-                            <p>Diferença significativa entre valores declarados e recebidos. Valor: <span id="valorDivergencia">0,00€</span></p>
+                            <strong>MODO BIG DATA ATIVO</strong>
+                            <p>Processamento acumulativo ilimitado | Modo APPEND</p>
                         </div>
                     </div>
                     <div id="alertRisco" class="alert-card alert-danger" style="display: none;">
-                        <i class="fas fa-gavel"></i>
+                        <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>RISCO REGULATÓRIO RGRC ATIVO</strong>
-                            <p>Juros de mora 4% aplicáveis sobre valor divergente. Total: <span id="valorRisco">0,00€</span></p>
+                            <strong>RISCO ACUMULADO DETETADO</strong>
+                            <p>Juros RGRC aplicáveis: <span id="valorRisco">0,00€</span></p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Consola de Auditoria (Base - Horizontal) -->
+                <!-- Consola Big Data -->
                 <section class="console-section">
-                    <div class="console-header" onclick="alternarConsola()">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA FORENSE</h3>
-                        <i class="fas fa-chevron-down" id="consoleToggleIcon"></i>
+                    <div class="console-header">
+                        <h3><i class="fas fa-terminal"></i> CONSOLA BIG DATA</h3>
+                        <div class="console-controls">
+                            <button class="icon-btn" onclick="limparConsola()" title="Limpar Histórico">
+                                <i class="fas fa-broom"></i>
+                            </button>
+                            <button class="icon-btn" onclick="alternarConsola()" title="Alternar Tamanho">
+                                <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button class="icon-btn" onclick="verCadeiaCustodia()" title="Ver Cadeia de Custódia">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="auditConsole" class="console-output">
                         <!-- Logs serão inseridos aqui -->
@@ -323,13 +284,13 @@
         <footer class="main-footer">
             <div class="footer-content">
                 <div class="hash-display">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH SHA-256:</strong>
-                    <span id="masterHashValue">AGUARDANDO GERAÇÃO DO PROTOCOLO DE INTEGRIDADE...</span>
+                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH BIG DATA:</strong>
+                    <span id="masterHashValue">AGUARDANDO PROCESSAMENTO...</span>
                 </div>
                 <div class="footer-info">
-                    <span>Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span> |
-                    <span>Perito: <strong id="expertNameFooter">--</strong></span> |
-                    <span>VDC Forensic System v11.7 Architect Gold | © 2024</span>
+                    <span>Sessão: <strong id="sessionIdDisplay">VDC-BIGDATA-XXXX</strong></span> |
+                    <span>Processados: <strong id="filesProcessed">0</strong> ficheiros</span> |
+                    <span>VDC v11.8 Big Data Unleashed</span>
                 </div>
             </div>
         </footer>
