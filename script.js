@@ -200,6 +200,9 @@ function initializeSystem() {
         // Inicializar relógio e data mesmo na splash screen
         startClockAndDate();
         
+        // Atualizar título da página
+        updatePageTitle('Inicializando...');
+        
         logAudit('✅ Sistema VDC v10.9 pronto para iniciar sessão de peritagem Big Data', 'success');
         
     } catch (error) {
@@ -262,6 +265,7 @@ function showMainInterface() {
 async function loadForensicSystem() {
     try {
         updateLoadingProgress(10);
+        updatePageTitle('Carregando Sistema...');
         
         VDCSystem.sessionId = generateSessionId();
         const sessionIdElement = document.getElementById('sessionIdDisplay');
@@ -291,6 +295,7 @@ async function loadForensicSystem() {
             
             setTimeout(() => {
                 showMainInterface();
+                updatePageTitle('Sistema Pronto');
                 logAudit('✅ Sistema VDC v10.9 - Final Stable Release inicializado', 'success');
                 logAudit('🔍 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%', 'info');
                 logAudit('⚖️ Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
@@ -1485,6 +1490,7 @@ function parseBigDataNumber(numberStr) {
 function resetDashboard() {
     try {
         logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO FORENSE BIG DATA', 'info');
+        updatePageTitle('Resetando Sistema...');
         
         // Parar alertas intermitentes se estiverem ativos
         if (VDCSystem.analysis.crossings.bigDataAlertActive && VDCSystem.bigDataAlertInterval) {
@@ -1700,6 +1706,7 @@ function resetDashboard() {
         }
         
         logAudit('✅ Sistema resetado - Todos os dados limpos | Nova sessão Big Data criada', 'success');
+        updatePageTitle('Sistema Pronto');
         
     } catch (error) {
         console.error('Erro no reset do dashboard:', error);
@@ -1710,6 +1717,8 @@ function resetDashboard() {
 // 12. FUNÇÕES DE ANÁLISE FORENSE BIG DATA V10.9
 async function performForensicAnalysis() {
     try {
+        updatePageTitle('Analisando Big Data...');
+        
         const analyzeBtn = document.getElementById('analyzeBtn');
         if (analyzeBtn) {
             analyzeBtn.disabled = true;
@@ -1779,10 +1788,13 @@ async function performForensicAnalysis() {
         // Mostrar cadeia de custódia
         showChainOfCustody();
         
+        updatePageTitle('Análise Concluída');
+        
     } catch (error) {
         console.error('Erro na análise:', error);
         logAudit(`❌ Erro na análise Big Data: ${error.message}`, 'error');
         showError(`Erro na análise forense: ${error.message}`);
+        updatePageTitle('Erro na Análise');
     } finally {
         const analyzeBtn = document.getElementById('analyzeBtn');
         if (analyzeBtn) {
@@ -2423,6 +2435,7 @@ function checkPageBreak(doc, currentY, marginBottom = 30) {
 // 15. FUNÇÕES DE EXPORTAÇÃO BIG DATA V10.9 (PDF COM PAGINAÇÃO DINÂMICA - CORREÇÃO 4)
 async function exportJSON() {
     try {
+        updatePageTitle('Exportando JSON...');
         logAudit('💾 PREPARANDO EVIDÊNCIA DIGITAL BIG DATA (JSON)...', 'info');
         
         // ESTRUTURA COMPLETA DA EVIDÊNCIA FORENSE BIG DATA
@@ -2519,12 +2532,14 @@ async function exportJSON() {
                 await writable.close();
                 
                 logAudit('✅ Evidência digital Big Data exportada (File System Access API)', 'success');
+                updatePageTitle('JSON Exportado');
                 
             } catch (fsError) {
                 if (fsError.name !== 'AbortError') {
                     throw fsError;
                 }
                 logAudit('📝 Exportação cancelada pelo utilizador', 'info');
+                updatePageTitle('Exportação Cancelada');
             }
         } else {
             // FALLBACK
@@ -2544,12 +2559,14 @@ async function exportJSON() {
             setTimeout(() => URL.revokeObjectURL(url), 100);
             
             logAudit('✅ Evidência digital Big Data exportada (download automático)', 'success');
+            updatePageTitle('JSON Exportado');
         }
         
     } catch (error) {
         console.error('Erro ao exportar JSON:', error);
         logAudit(`❌ Erro ao exportar JSON Big Data: ${error.message}`, 'error');
         alert('Erro ao exportar JSON: ' + error.message);
+        updatePageTitle('Erro na Exportação');
     }
 }
 
@@ -2575,6 +2592,7 @@ function generateQuesitosEstrategicos() {
 
 async function exportPDF() {
     try {
+        updatePageTitle('Gerando PDF...');
         logAudit('📄 GERANDO RELATÓRIO PERICIAL BIG DATA (ANÁLISE DE LAYERING)...', 'info');
         
         const { jsPDF } = window.jspdf;
@@ -2986,23 +3004,27 @@ FUNDAMENTAÇÃO LEGAL APLICÁVEL:
                 await writable.close();
                 
                 logAudit(`✅ Relatório pericial Big Data exportado (${totalPages} páginas) - COMPLETO`, 'success');
+                updatePageTitle('PDF Exportado');
                 
             } catch (fsError) {
                 if (fsError.name !== 'AbortError') {
                     doc.save(nomeFicheiro);
                 } else {
                     logAudit('📝 Exportação PDF cancelada pelo utilizador', 'info');
+                    updatePageTitle('Exportação Cancelada');
                 }
             }
         } else {
             doc.save(nomeFicheiro);
             logAudit(`✅ Relatório pericial Big Data exportado (${totalPages} páginas) - Download automático`, 'success');
+            updatePageTitle('PDF Exportado');
         }
         
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
         logAudit(`❌ Erro ao gerar PDF Big Data: ${error.message}`, 'error');
         alert('Erro ao gerar PDF: ' + error.message);
+        updatePageTitle('Erro no PDF');
     }
 }
 
@@ -3105,7 +3127,7 @@ function generateMasterHash() {
     
     if (display) {
         display.textContent = masterHash;
-        display.style.color = '#00f2ff';
+        display.style.color = '#00d1ff';
         display.style.fontFamily = 'JetBrains Mono, monospace';
         display.style.fontSize = '0.8rem';
         display.style.letterSpacing = '0.5px';
@@ -3233,7 +3255,24 @@ function showError(message) {
     showToast(`❌ ${message}`, 'error');
 }
 
-// 18. FUNÇÕES GLOBAIS PARA HTML
+// 18. FUNÇÃO PARA SCROLL SUAVE
+function smoothScrollTo(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }
+}
+
+// 19. FUNÇÃO PARA ATUALIZAR TÍTULO DA PÁGINA DINAMICAMENTE
+function updatePageTitle(status) {
+    const baseTitle = 'VDC | Sistema de Peritagem Forense v10.9';
+    document.title = status ? `${baseTitle} - ${status}` : baseTitle;
+}
+
+// 20. FUNÇÕES GLOBAIS PARA HTML
 window.clearConsole = clearConsole;
 window.toggleConsole = toggleConsole;
 window.exportJSON = exportJSON;
@@ -3242,6 +3281,7 @@ window.resetDashboard = resetDashboard;
 window.performForensicAnalysis = performForensicAnalysis;
 window.activateDemoMode = activateDemoMode;
 window.showChainOfCustody = showChainOfCustody;
+window.smoothScrollTo = smoothScrollTo;
 
 // ============================================
 // FIM DO SCRIPT VDC v10.9 - FINAL STABLE RELEASE
