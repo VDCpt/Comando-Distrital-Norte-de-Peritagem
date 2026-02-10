@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Forensic System v11.8 - Big Data Unleashed</title>
+    <title>VDC | Forensic System v12.0 - Forensic Elite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -12,27 +12,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN MINIMALISTA (Acesso Direto) -->
+    <!-- SPLASH SCREEN HORIZONTAL (Terminal de Segurança) -->
     <div id="splashScreen" class="splash-screen">
-        <div class="splash-content">
+        <div class="splash-container">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
+                <span class="splash-version">v12.0</span>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.8</h1>
-            <h2>BIG DATA UNLEASHED</h2>
-            <p class="splash-subtitle">Motor Acumulativo Ilimitado | ISO/IEC 27037 | NIST SP 800-86</p>
-            
-            <button id="accessDashboardBtn" class="splash-btn">
-                <i class="fas fa-rocket"></i> ACEDER AO DASHBOARD
+            <div class="splash-title">
+                <h1>VDC FORENSIC SYSTEM</h1>
+                <h2>FORENSIC ELITE EDITION</h2>
+                <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Motor Big Data Acumulativo</p>
+            </div>
+            <button id="initProtocolBtn" class="splash-btn">
+                <i class="fas fa-fingerprint"></i> INICIALIZAR PROTOCOLO VDC
             </button>
-            
-            <div class="splash-warning">
-                <i class="fas fa-database"></i> Modo Big Data Ativo: Processamento ilimitado em tempo real
-            </div>
-            
-            <div class="splash-footer">
-                <p>Protocolo de Integridade Digital | Instrumento de Prova Legal | Motor Acumulativo</p>
-                <p class="version">v11.8 - Big Data Unleashed</p>
+            <div class="splash-security">
+                <i class="fas fa-lock"></i> SISTEMA DE SEGURANÇA FORENSE ATIVO
             </div>
         </div>
     </div>
@@ -43,15 +39,15 @@
             <div class="loading-spinner">
                 <i class="fas fa-database fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v11.8</h2>
-            <p>Big Data Unleashed | Inicializando motor acumulativo...</p>
+            <h2>VDC FORENSIC SYSTEM v12.0</h2>
+            <p>Forensic Elite | Inicializando motor Big Data acumulativo...</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
         </div>
     </div>
 
-    <!-- Conteúdo Principal (Dashboard) -->
+    <!-- Conteúdo Principal (Dashboard Executive BI) -->
     <div id="mainContainer" class="main-container" style="display: none;">
         
         <!-- Cabeçalho Executive BI -->
@@ -59,16 +55,17 @@
             <div class="header-left">
                 <i class="fas fa-database"></i>
                 <div>
-                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.8 BIG DATA</span></h1>
-                    <!-- Identificação do Processo (Opcional) -->
+                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v12.0 ELITE</span></h1>
+                    <!-- Identificação do Processo -->
                     <div class="process-id">
-                        <input type="text" id="expertNameInput" placeholder="Nome do Perito" class="id-input">
-                        <input type="text" id="clientNIFInput" placeholder="NIF Cliente (9 dígitos)" class="id-input" maxlength="9">
+                        <input type="text" id="expertNameInput" placeholder="Perito" class="id-input">
+                        <input type="text" id="clientNameInput" placeholder="Cliente" class="id-input">
+                        <input type="text" id="clientNIFInput" placeholder="NIF (9 dígitos)" class="id-input" maxlength="9">
                         <select id="expertiseYearSelect" class="id-input">
                             <option value="">Ano Peritagem</option>
                         </select>
                         <button class="btn-header btn-save-id" onclick="salvarIdentificacao()">
-                            <i class="fas fa-save"></i> SALVAR
+                            <i class="fas fa-save"></i> REGISTAR
                         </button>
                     </div>
                 </div>
@@ -205,7 +202,7 @@
                         <p id="kpiDivergencia">0,00€</p>
                         <small>BTOR vs BRF | SAF-T vs Extrato</small>
                     </div>
-                    <div class="kpi-card kpi-warning">
+                    <div class="kpi-card kpi-warning" id="riscoCard">
                         <h4><i class="fas fa-exclamation-triangle"></i> RISCO RGRC</h4>
                         <p id="kpiRisco">0,00€</p>
                         <small id="jurosYearLabel">Juros 4% Ano Atual</small>
@@ -276,16 +273,16 @@
                             <p>Diferença significativa entre valores declarados e recebidos. Valor: <span id="valorDivergencia">0,00€</span></p>
                         </div>
                     </div>
-                    <div id="alertRisco" class="alert-card alert-danger" style="display: none;">
-                        <i class="fas fa-gavel"></i>
+                    <div id="alertEvasao" class="alert-card alert-evasao" style="display: none;">
+                        <i class="fas fa-radiation"></i>
                         <div>
-                            <strong>RISCO REGULATÓRIO RGRC ATIVO</strong>
-                            <p>Juros de mora 4% aplicáveis sobre valor divergente. Total: <span id="valorRisco">0,00€</span></p>
+                            <strong>ALERTA DE EVASÃO FISCAL</strong>
+                            <p>Divergência superior a 10% identificada. Procedimento de investigação ativado.</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Consola de Auditoria (Base - Horizontal) -->
+                <!-- Consola de Auditoria -->
                 <section class="console-section">
                     <div class="console-header">
                         <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA</h3>
@@ -313,9 +310,9 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO DO PROTOCOLO DE INTEGRIDADE...</span>
                 </div>
                 <div class="footer-info">
-                    <span>Sessão: <strong id="sessionIdDisplay">VDC-BIGDATA-XXXXXX</strong></span> |
+                    <span>Sessão: <strong id="sessionIdDisplay">VDC-ELITE-XXXXXX</strong></span> |
                     <span>Ficheiros: <strong id="totalFilesDisplay">0</strong></span> |
-                    <span>VDC Forensic System v11.8 Big Data Unleashed | © 2024</span>
+                    <span>VDC Forensic System v12.0 Forensic Elite | © 2024</span>
                 </div>
             </div>
         </footer>
