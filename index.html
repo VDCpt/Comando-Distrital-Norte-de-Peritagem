@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN HORIZONTAL (Terminal de Segurança) -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-container">
             <div class="splash-logo">
@@ -21,340 +20,104 @@
             </div>
             <div class="splash-title">
                 <h1>VDC FORENSIC SYSTEM</h1>
-                <h2>FORENSIC ELITE EDITION</h2>
-                <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Motor Big Data Acumulativo</p>
+                <h2>Big Data Forensic Intelligence</h2>
             </div>
-            <button id="initProtocolBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIALIZAR PROTOCOLO VDC
+            <button class="splash-btn" onclick="VDCSystem.inicializarProtocoloVDC()">
+                <i class="fas fa-unlock-alt"></i> ACEDER AO TERMINAL
             </button>
-            <div class="splash-security">
-                <i class="fas fa-lock"></i> SISTEMA DE SEGURANÇA FORENSE ATIVO
-            </div>
         </div>
     </div>
 
-    <!-- Overlay de Carregamento -->
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-content">
-            <div class="loading-spinner">
-                <i class="fas fa-database fa-spin"></i>
-            </div>
-            <h2>VDC FORENSIC SYSTEM v12.1</h2>
-            <p>Forensic Elite | Inicializando motor Big Data acumulativo...</p>
-            <div class="loading-progress">
-                <div class="loading-progress-bar" id="loadingProgress"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Conteúdo Principal (Dashboard Executive BI) -->
-    <div id="mainContainer" class="main-container" style="display: none;">
-        
-        <!-- Cabeçalho Executive BI -->
+    <div class="forensic-container">
         <header class="main-header">
             <div class="header-left">
-                <i class="fas fa-database"></i>
-                <div>
-                    <h1>VDC FORENSIC SYSTEM <span class="version-badge">v12.1 ELITE</span></h1>
-                    <!-- Identificação do Processo -->
-                    <div class="process-id">
-                        <input type="text" id="expertNameInput" placeholder="Perito" class="id-input">
-                        <input type="text" id="analystNameInput" placeholder="Analista" class="id-input">
-                        <input type="text" id="clientNameInput" placeholder="Cliente" class="id-input">
-                        <input type="text" id="clientNIFInput" placeholder="NIF (9 dígitos)" class="id-input" maxlength="9">
-                        <select id="expertiseYearSelect" class="id-input">
-                            <option value="">Ano Peritagem</option>
-                        </select>
-                        <button class="btn-header btn-save-id" onclick="salvarIdentificacao()">
-                            <i class="fas fa-save"></i> REGISTAR
-                        </button>
-                    </div>
+                <div class="logo-area">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>VDC <strong>ELITE</strong></span>
+                </div>
+                <div class="process-id">
+                    <input type="text" id="expertName" placeholder="Perito" class="id-input">
+                    <input type="text" id="clientName" placeholder="Cliente" class="id-input">
+                    <button class="btn-save-id" onclick="salvarIdentificacao()"><i class="fas fa-check"></i></button>
                 </div>
             </div>
             <div class="header-right">
-                <div class="timestamp">
-                    <span id="currentDate">--/--/----</span> | 
-                    <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
-                </div>
-                <button class="btn-header" onclick="exportPDF()">
-                    <i class="fas fa-file-pdf"></i> RELATÓRIO PDF
-                </button>
-                <button class="btn-header" onclick="exportJSON()">
-                    <i class="fas fa-file-code"></i> EXPORTAR JSON
-                </button>
-                <button class="btn-header btn-warn" onclick="resetDashboard()">
-                    <i class="fas fa-redo"></i> NOVA SESSÃO
-                </button>
+                <select id="expertiseYear" class="header-select">
+                    <option value="2024">Ano Fiscal: 2024</option>
+                    <option value="2025">Ano Fiscal: 2025</option>
+                </select>
+                <button class="btn-header btn-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> RELATÓRIO</button>
+                <button class="btn-header btn-reset" onclick="resetDashboard()"><i class="fas fa-sync"></i> RESET</button>
             </div>
         </header>
 
-        <!-- Grid Principal -->
-        <div class="main-grid">
-            
-            <!-- Sidebar de Uploads -->
+        <div class="workspace">
             <aside class="sidebar">
-                <!-- Controles do Sistema -->
-                <div class="panel">
-                    <div class="form-group">
-                        <label for="selPlatform"><i class="fas fa-server"></i> Plataforma Analisada</label>
-                        <select id="selPlatform" class="form-select">
-                            <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
-                            <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
-                            <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
-                            <option value="glovo">Glovo Portugal - Análise Complementar</option>
-                            <option value="other">Outra Plataforma - Investigação</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="selPeriod"><i class="fas fa-calendar-check"></i> Período Analisado</label>
-                        <select id="selPeriod" class="form-select">
-                            <option value="annual">Ano Completo</option>
-                            <option value="q1">1º Trimestre</option>
-                            <option value="q2">2º Trimestre</option>
-                            <option value="q3">3º Trimestre</option>
-                            <option value="q4">4º Trimestre</option>
-                            <option value="custom">Personalizado</option>
-                        </select>
-                    </div>
-                    <!-- Data Personalizada (escondido por defeito) -->
-                    <div id="customDateRange" class="form-group hidden">
-                        <label for="dateStart"><i class="fas fa-calendar"></i> Data Início</label>
-                        <input type="date" id="dateStart" class="form-select">
-                        <label for="dateEnd"><i class="fas fa-calendar"></i> Data Fim</label>
-                        <input type="date" id="dateEnd" class="form-select">
-                    </div>
-                    <div class="form-group">
-                        <label for="selYear"><i class="fas fa-calendar-alt"></i> Ano Fiscal (RGRC 4%)</label>
-                        <select id="selYear" class="form-select">
-                            <!-- Anos serão carregados via JavaScript -->
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Upload de Ficheiros (Big Data Mode) -->
-                <div class="panel upload-panel">
-                    <h3><i class="fas fa-file-upload"></i> CARREGAMENTO BIG DATA</h3>
-                    <p class="upload-info">Modo Acumulativo: Ficheiros são adicionados sem limpar dados anteriores</p>
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-folder-open"></i> RECOLHA DE PROVA</h3>
                     
-                    <div class="upload-group" id="uploadGroup-dac7">
-                        <div class="upload-header">
-                            <label for="dac7File"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
-                            <div class="file-badge" id="count-dac7">0</div>
-                            <i class="fas fa-check-circle check-icon hidden" id="check-dac7"></i>
-                        </div>
-                        <button class="upload-btn" onclick="document.getElementById('dac7File').click()">
-                            <i class="fas fa-file-contract"></i> ADICIONAR DAC7
-                        </button>
-                        <input type="file" id="dac7File" class="file-input" multiple accept=".html,.pdf,.xml,.eml" hidden>
+                    <div class="upload-group">
+                        <label>DAC7 (XML/CSV)</label>
+                        <input type="file" id="fileDAC7" multiple onchange="validarQuantidadeFicheiros(this, 'dac7', 5)">
                     </div>
 
-                    <div class="upload-group" id="uploadGroup-saft">
-                        <div class="upload-header">
-                            <label for="saftFile"><i class="fas fa-file-code"></i> SAF-T / XML Fiscal</label>
-                            <div class="file-badge" id="count-saft">0</div>
-                            <i class="fas fa-check-circle check-icon hidden" id="check-saft"></i>
-                        </div>
-                        <button class="upload-btn" onclick="document.getElementById('saftFile').click()">
-                            <i class="fas fa-file-code"></i> ADICIONAR SAF-T
-                        </button>
-                        <input type="file" id="saftFile" class="file-input" multiple accept=".xml,.csv" hidden>
+                    <div class="upload-group">
+                        <label>SAF-T PT (XML)</label>
+                        <input type="file" id="fileSAFT" multiple onchange="validarQuantidadeFicheiros(this, 'saft', 12)">
                     </div>
 
-                    <div class="upload-group" id="uploadGroup-invoices">
-                        <div class="upload-header">
-                            <label for="invoiceFile"><i class="fas fa-file-invoice-dollar"></i> Faturas da Plataforma</label>
-                            <div class="file-badge" id="count-invoices">0</div>
-                            <i class="fas fa-check-circle check-icon hidden" id="check-invoices"></i>
-                        </div>
-                        <button class="upload-btn" onclick="document.getElementById('invoiceFile').click()">
-                            <i class="fas fa-file-invoice"></i> ADICIONAR FATURAS
-                        </button>
-                        <input type="file" id="invoiceFile" class="file-input" multiple accept=".pdf,.csv,.jpg,.png" hidden>
+                    <div class="upload-group">
+                        <label>EXTRATOS / FATURAS</label>
+                        <input type="file" id="fileEvidence" multiple onchange="validarQuantidadeFicheiros(this, 'evidence', 50)">
                     </div>
 
-                    <div class="upload-group" id="uploadGroup-statements">
-                        <div class="upload-header">
-                            <label for="statementFile"><i class="fas fa-file-contract"></i> Extratos Bancários</label>
-                            <div class="file-badge" id="count-statements">0</div>
-                            <i class="fas fa-check-circle check-icon hidden" id="check-statements"></i>
-                        </div>
-                        <button class="upload-btn" onclick="document.getElementById('statementFile').click()">
-                            <i class="fas fa-file-contract"></i> ADICIONAR EXTRATOS
-                        </button>
-                        <input type="file" id="statementFile" class="file-input" multiple accept=".pdf,.csv,.ofx,.mt940" hidden>
-                    </div>
-
-                    <!-- Ficheiros de Controle/Autenticidade (ESSENCIAL para a perícia) -->
-                    <div class="upload-group" id="uploadGroup-control">
-                        <div class="upload-header">
-                            <label for="controlFile"><i class="fas fa-file-shield"></i> Ficheiros de Controle/Autenticidade</label>
-                            <div class="file-badge" id="count-control">0</div>
-                            <i class="fas fa-check-circle check-icon hidden" id="check-control"></i>
-                        </div>
-                        <button class="upload-btn" onclick="document.getElementById('controlFile').click()">
-                            <i class="fas fa-file-shield"></i> ADICIONAR CONTROLES
-                        </button>
-                        <input type="file" id="controlFile" class="file-input" multiple accept=".pdf,.txt,.xml,.json,.eml,.msg,.p7s" hidden>
-                    </div>
-
-                    <!-- Contadores -->
-                    <div class="counters">
-                        <div class="counter-item">
-                            <span class="counter-label">DAC7</span>
-                            <span id="dac7Count" class="counter-value">0</span>
-                        </div>
-                        <div class="counter-item">
-                            <span class="counter-label">SAF-T</span>
-                            <span id="saftCount" class="counter-value">0</span>
-                        </div>
-                        <div class="counter-item">
-                            <span class="counter-label">FATURAS</span>
-                            <span id="invoiceCount" class="counter-value">0</span>
-                        </div>
-                        <div class="counter-item">
-                            <span class="counter-label">EXTRATOS</span>
-                            <span id="statementCount" class="counter-value">0</span>
-                        </div>
-                    </div>
+                    <button class="btn-analyze" onclick="executarAnaliseForense()">
+                        <i class="fas fa-microchip"></i> EXECUTAR PERÍCIA
+                    </button>
                 </div>
-
-                <!-- Botão de Análise -->
-                <button id="analyzeBtn" class="btn-analyze" onclick="executarAnaliseForense()">
-                    <i class="fas fa-bolt"></i> EXECUTAR ANÁLISE EM TEMPO REAL
-                </button>
-
-                <!-- Botão de Limpar Dados -->
-                <button class="btn-header mt-3" onclick="limparDadosCarregados()" style="width: 100%;">
-                    <i class="fas fa-trash-alt"></i> LIMPAR TODOS OS DADOS
-                </button>
             </aside>
 
-            <!-- Área Principal -->
             <main class="main-content">
-                
-                <!-- KPIs de Topo (Os 4 Grandes) -->
-                <section class="kpi-top">
-                    <div class="kpi-card kpi-primary">
-                        <h4><i class="fas fa-balance-scale"></i> DIVERGÊNCIA TOTAL</h4>
-                        <p id="kpiDivergencia">0,00€</p>
-                        <small>BTOR vs BRF | SAF-T vs Extrato</small>
+                <div class="dashboard-grid">
+                    <div class="stat-card gold">
+                        <label>RENDIMENTO BRUTO (PLATAFORMA)</label>
+                        <div class="value" id="valBruto">0.00€</div>
                     </div>
-                    <div class="kpi-card kpi-warning" id="riscoCard">
-                        <h4><i class="fas fa-exclamation-triangle"></i> RISCO RGRC</h4>
-                        <p id="kpiRisco">0,00€</p>
-                        <small id="jurosYearLabel">Juros 4% Ano Atual</small>
+                    <div class="stat-card blue">
+                        <label>TOTAL FATURADO (SAF-T)</label>
+                        <div class="value" id="valSaft">0.00€</div>
                     </div>
-                    <div class="kpi-card kpi-info">
-                        <h4><i class="fas fa-file-invoice"></i> FATURAS ANALISADAS</h4>
-                        <p id="kpiFaturas">0</p>
-                        <small>Documentos acumulados</small>
+                    <div class="stat-card orange">
+                        <label>DIVERGÊNCIA IDENTIFICADA</label>
+                        <div class="value" id="valDivergencia">0.00€</div>
                     </div>
-                    <div class="kpi-card kpi-success">
-                        <h4><i class="fas fa-database"></i> TOTAL FICHEIROS</h4>
-                        <p id="kpiTotalFiles">0</p>
-                        <small>Processamento Big Data</small>
+                    <div class="stat-card red">
+                        <label>RISCO RGRC (4%) + TAXA (5%)</label>
+                        <div class="value" id="valRisco">0.00€</div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Área de Gráficos -->
-                <section class="charts-section">
-                    <div class="chart-container">
-                        <h3><i class="fas fa-chart-bar"></i> ANÁLISE COMPARATIVA (€)</h3>
-                        <canvas id="comparisonChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO FISCAL</h3>
-                        <canvas id="taxChart"></canvas>
-                    </div>
-                </section>
+                <div class="charts-container">
+                    <canvas id="forensicChart"></canvas>
+                </div>
 
-                <!-- Resultados Detalhados -->
-                <section class="results-section">
-                    <h3><i class="fas fa-search-dollar"></i> RESULTADOS DA ANÁLISE BIG DATA</h3>
-                    <div class="results-grid">
-                        <div class="result-card">
-                            <h5>RENDIMENTOS BRUTOS (SAF-T)</h5>
-                            <p id="resultBruto">0,00€</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="barBruto" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-card">
-                            <h5>COMISSÃO RETIDA</h5>
-                            <p id="resultComissao">0,00€</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="barComissao" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-card">
-                            <h5>FATURA EMITIDA</h5>
-                            <p id="resultFatura">0,00€</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="barFatura" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="result-card result-alert">
-                            <h5>DIFERENCIAL IDENTIFICADO</h5>
-                            <p id="resultDiferencial">0,00€</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="barDiferencial" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Alertas Forenses -->
-                    <div id="alertDivergencia" class="alert-card alert-warning" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>DIVERGÊNCIA FISCAL DETETADA (ISO/IEC 27037)</strong>
-                            <p>Diferença significativa entre valores declarados e recebidos. Valor: <span id="valorDivergencia">0,00€</span></p>
-                        </div>
-                    </div>
-                    <div id="alertEvasao" class="alert-card alert-evasao" style="display: none;">
-                        <i class="fas fa-radiation"></i>
-                        <div>
-                            <strong>ALERTA DE EVASÃO FISCAL</strong>
-                            <p>Divergência superior a 10% identificada. Procedimento de investigação ativado.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Consola de Auditoria -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA</h3>
-                        <div class="console-controls">
-                            <button class="btn-console" onclick="alternarConsola()" title="Expandir/Recolher">
-                                <i class="fas fa-chevron-down" id="consoleToggleIcon"></i>
-                            </button>
-                            <button class="btn-console" onclick="limparConsola()" title="Limpar Histórico">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <span><i class="fas fa-terminal"></i> AUDIT LOG</span>
+                        <button onclick="limparConsola()"><i class="fas fa-trash"></i></button>
                     </div>
-                    <div id="auditConsole" class="console-output">
-                        <!-- Logs serão inseridos aqui -->
-                    </div>
+                    <div id="auditConsole" class="console-output"></div>
                 </section>
             </main>
         </div>
 
-        <!-- Rodapé -->
         <footer class="main-footer">
-            <div class="footer-content">
-                <div class="hash-display">
-                    <strong><i class="fas fa-fingerprint"></i> MASTER HASH SHA-256:</strong>
-                    <span id="masterHashValue">AGUARDANDO GERAÇÃO DO PROTOCOLO DE INTEGRIDADE...</span>
-                </div>
-                <div class="footer-info">
-                    <span>Sessão: <strong id="sessionIdDisplay">VDC-ELITE-XXXXXX</strong></span> |
-                    <span>Ficheiros: <strong id="totalFilesDisplay">0</strong></span> |
-                    <span>VDC Forensic System v12.1 Forensic Elite | © 2024</span>
-                </div>
+            <div class="hash-display">
+                <strong>SHA-256:</strong> <span id="masterHashValue">PENDENTE</span>
             </div>
+            <div class="footer-info">VDC v12.1 Forensic Elite | ISO 27037 Compliant</div>
         </footer>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
