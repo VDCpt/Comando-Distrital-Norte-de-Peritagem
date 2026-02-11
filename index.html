@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- TELA DE INICIALIZAÇÃO (SPLASH SCREEN) V11.2 -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
@@ -36,7 +35,6 @@
         </div>
     </div>
 
-    <!-- Overlay de Carregamento ISO/NIST -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
@@ -50,10 +48,8 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
 
-    <!-- Modal de GESTÃO DE EVIDÊNCIAS BIG DATA -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
@@ -64,7 +60,6 @@
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
-                    <!-- DAC7 ISO/NIST -->
                     <div class="upload-group-modal">
                         <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
@@ -74,7 +69,6 @@
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Control File (ISO/IEC 27037) -->
                     <div class="upload-group-modal">
                         <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
                         <button id="controlUploadBtnModal" class="upload-btn modal-btn">
@@ -84,7 +78,6 @@
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- SAF-T Files (XML + CSV) -->
                     <div class="upload-group-modal">
                         <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)</label>
                         <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
@@ -94,7 +87,6 @@
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Platform Invoices -->
                     <div class="upload-group-modal">
                         <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
@@ -104,7 +96,6 @@
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- EXTRATOS BANCÁRIOS -->
                     <div class="upload-group-modal">
                         <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
@@ -115,7 +106,6 @@
                     </div>
                 </div>
 
-                <!-- Resumo de Processamento -->
                 <div class="processing-summary">
                     <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
                     <div class="summary-grid">
@@ -157,10 +147,7 @@
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
     <div id="mainContainer" class="main-container" style="display: none;">
-        
-        <!-- Cabeçalho ISO/NIST Compliance -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
@@ -171,7 +158,6 @@
                     </div>
                 </div>
                 
-                <!-- Botão MODO DEMO FORENSE na Navbar -->
                 <div class="demo-section">
                     <button id="demoModeBtn" class="btn-demo-nav">
                         <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
@@ -188,11 +174,8 @@
             </div>
         </header>
 
-        <!-- Grid Principal com CSS Grid Corrigido -->
         <div class="app-container">
-            <!-- Sidebar reestruturada - Hierarquia corrigida -->
             <aside class="sidebar">
-                <!-- CABEÇALHO FIXO DA SIDEBAR - IDENTIFICAÇÃO DO CLIENTE NO TOPO -->
                 <div class="sidebar-header-fixed">
                     <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
                     
@@ -206,14 +189,12 @@
                             <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
                         </div>
                         
-                        <!-- Botão Registar Cliente no TOPO -->
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> REGISTAR CLIENTE
                             </button>
                         </div>
                         
-                        <!-- Informações Fixas (STICKY TOP) -->
                         <div class="info-fixed">
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
@@ -232,7 +213,6 @@
                             </div>
                         </div>
                         
-                        <!-- Status do Cliente Fixo -->
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
                             <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong></span>
@@ -240,14 +220,12 @@
                     </div>
                 </div>
 
-                <!-- SECÇÃO DE EVIDÊNCIAS BIG DATA - SEM SCROLL, LAYOUT BLOCO SÓLIDO -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
                         <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
                         <span class="evidence-count-solid">0 ficheiros</span>
                     </button>
                     
-                    <!-- Contadores Compactos -->
                     <div class="counters-compact">
                         <div class="counter-item-compact">
                             <span class="counter-label-compact">CONTROLO</span>
@@ -273,9 +251,7 @@
                 </div>
             </aside>
 
-            <!-- Área Principal de Análise -->
             <main class="analysis-area">
-                <!-- Barra de Ferramentas -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>
@@ -293,7 +269,6 @@
                     </div>
                 </section>
 
-                <!-- Dashboard Fixo ISO/NIST -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
                         <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
@@ -315,7 +290,6 @@
                         <p id="iva23Val" class="alert-text">0,00€</p>
                         <small>Dívida ao Estado Português</small>
                     </div>
-                    <!-- Card: JUROS DE MORA -->
                     <div class="stat-card regulatory" id="jurosCard" style="display: none;">
                         <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
                         <p id="jurosVal" class="regulatory-text">0,00€</p>
@@ -323,7 +297,6 @@
                     </div>
                 </section>
 
-                <!-- Dashboard KPI com Dados Reais -->
                 <section class="kpi-section">
                     <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA</h3>
                     <div class="kpi-grid">
@@ -347,8 +320,6 @@
                             <p id="kpiInvoice">0,00€</p>
                             <small>Valor faturado (documento)</small>
                         </div>
-                        <!-- Card de Diferencial será adicionado dinamicamente -->
-                        <!-- Card de Risco Regulatório será adicionado dinamicamente -->
                     </div>
                     <div class="secondary-stats">
                         <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
@@ -358,7 +329,6 @@
                     </div>
                 </section>
 
-                <!-- Gráfico Vertical Compacto ISO/NIST -->
                 <section class="chart-section">
                     <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
                     <div class="chart-container">
@@ -373,7 +343,6 @@
                     </div>
                 </section>
 
-                <!-- Resultados da Análise Forense -->
                 <section class="analysis-results">
                     <h3><i class="fas fa-search-dollar"></i> AUDITORIA BIG DATA DE LAYERING</h3>
                     <div class="results-grid">
@@ -407,7 +376,6 @@
                         </div>
                     </div>
 
-                    <!-- Alerta de Omissão ISO/NIST -->
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
@@ -416,7 +384,6 @@
                         </div>
                     </div>
 
-                    <!-- Alerta Intermitente BigData -->
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation-alt"></i>
                         <div>
@@ -425,7 +392,6 @@
                         </div>
                     </div>
                     
-                    <!-- Alerta Diferencial ISO/NIST -->
                     <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
                         <i class="fas fa-balance-scale"></i>
                         <div>
@@ -434,7 +400,6 @@
                         </div>
                     </div>
 
-                    <!-- Novo Alerta: JUROS DE MORA -->
                     <div id="jurosAlert" class="regulatory-alert" style="display: none;">
                         <i class="fas fa-percent"></i>
                         <div>
@@ -444,7 +409,6 @@
                     </div>
                 </section>
 
-                <!-- Consola de Auditoria ISO/NIST -->
                 <section class="console-section">
                     <div class="console-header">
                         <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA (ISO/IEC 27037)</h3>
@@ -461,13 +425,11 @@
                         </div>
                     </div>
                     <div id="auditOutput" class="console-output">
-                        <!-- Logs serão inseridos aqui -->
                     </div>
                 </section>
             </main>
         </div>
 
-        <!-- Rodapé ISO/NIST Compliance -->
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
