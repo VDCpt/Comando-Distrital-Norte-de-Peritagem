@@ -194,7 +194,7 @@ body {
 
 .app-container {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 350px 1fr; /* AUMENTADO de 320px para 350px */
     flex: 1;
     min-height: calc(100vh - 120px);
     gap: 0;
@@ -219,14 +219,15 @@ body {
     border-right: 1px solid #1e2a44;
     display: flex;
     flex-direction: column;
-    width: 320px;
-    min-width: 320px;
-    max-width: 320px;
+    width: 350px; /* AUMENTADO de 320px para 350px */
+    min-width: 350px; /* AUMENTADO de 320px para 350px */
+    max-width: 350px; /* AUMENTADO de 320px para 350px */
     flex-shrink: 0;
     position: sticky;
     top: 120px;
     height: calc(100vh - 120px);
     box-sizing: border-box;
+    overflow-y: auto; /* ADICIONADO: permite scroll na sidebar */
 }
 
 /* CABEÇALHO FIXO DA SIDEBAR - POSIÇÃO STICKY TOP */
@@ -405,6 +406,7 @@ body {
     padding: var(--spacing-md);
     box-sizing: border-box;
     height: auto;
+    min-height: 200px; /* GARANTIR altura mínima */
 }
 
 /* BOTÃO DE EVIDÊNCIAS - FULL WIDTH */
@@ -417,7 +419,7 @@ body {
     border-radius: var(--border-radius);
     font-weight: 800;
     cursor: pointer;
-    display: flex;
+    display: flex !important; /* FORÇAR display */
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
