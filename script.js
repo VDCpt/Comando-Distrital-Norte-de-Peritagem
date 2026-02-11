@@ -1,7 +1,6 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v11.2
-// AUDITORIA FISCAL BIG DATA - RETIFICAÇÃO FORENSE COMPLETA
-// HIGH PRECISION EXTRACTION + ZERO ERROR POLICY
+// AUDITORIA FISCAL BIG DATA - EXTRUÇÃO ESTRUTURADA HIGH PRECISION
 // ============================================
 
 // 1. NORMALIZAÇÃO FORENSE GLOBAL HIGH PRECISION (CORREÇÃO IMPLEMENTADA)
@@ -76,9 +75,9 @@ function isValidDate(d) {
     return d instanceof Date && !isNaN(d.getTime());
 }
 
-// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.1
+// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.2
 const VDCSystem = {
-    version: 'v11.2-RF',
+    version: 'v11.2-AF',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -222,9 +221,10 @@ const VDCSystem = {
     discrepanciaAlertaInterval: null
 };
 
-// 4. INICIALIZAÇÃO DO SISTEMA ISO/NIST V11.1
+// 4. INICIALIZAÇÃO DO SISTEMA ISO/NIST V11.2 - CORREÇÃO: DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        console.log('🔧 Inicializando VDC Forensic System v11.2 - Auditoria Fiscal Big Data...');
         initializeSystem();
     } catch (error) {
         console.error('Erro crítico na inicialização:', error);
@@ -234,11 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeSystem() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v11.2 - Retificação Forense Completa...');
-        
         const startBtn = document.getElementById('startSessionBtn');
         if (startBtn) {
             startBtn.addEventListener('click', startForensicSession);
+        } else {
+            console.warn('Botão startSessionBtn não encontrado');
         }
         
         startClockAndDate();
@@ -336,10 +336,10 @@ async function loadForensicSystem() {
             setTimeout(() => {
                 showMainInterface();
                 updatePageTitle('Sistema Pronto');
-                logAudit('✅ Sistema VDC v11.2 - Retificação Forense inicializado', 'success');
+                logAudit('✅ Sistema VDC v11.2 - Auditoria Fiscal inicializado', 'success');
                 logAudit('🔐 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%, AMT/IMT 5%', 'info');
                 logAudit('🔗 Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
-                logAudit('📁 Extração Big Data estruturada ativada | Zero Error Policy', 'info');
+                logAudit('📁 Extração Big Data estruturada ativada', 'info');
                 
             }, 300);
         }, 500);
@@ -350,7 +350,7 @@ async function loadForensicSystem() {
     }
 }
 
-// 5. CONFIGURAÇÃO DE CONTROLES V11.1
+// 5. CONFIGURAÇÃO DE CONTROLES V11.2
 function setupYearSelector() {
     const selYear = document.getElementById('selYearFixed');
     if (!selYear) return;
@@ -457,12 +457,14 @@ function startClockAndDate() {
     setInterval(updateDateTime, 1000);
 }
 
-// 6. CONFIGURAÇÃO DE EVENTOS V11.1
+// 6. CONFIGURAÇÃO DE EVENTOS V11.2 - CORREÇÃO: Verificação de existência antes de addEventListener
 function setupEventListeners() {
     try {
         const registerBtn = document.getElementById('registerClientBtnFixed');
         if (registerBtn) {
             registerBtn.addEventListener('click', registerClientFixed);
+        } else {
+            console.warn('Botão registerClientBtnFixed não encontrado');
         }
         
         const clientNameInput = document.getElementById('clientNameFixed');
@@ -566,6 +568,8 @@ function setupModalUploadButtons() {
         if (dac7UploadBtnModal && dac7FileModal) {
             dac7UploadBtnModal.addEventListener('click', () => dac7FileModal.click());
             dac7FileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'dac7'));
+        } else {
+            console.warn('Elementos DAC7 não encontrados');
         }
         
         const controlUploadBtnModal = document.getElementById('controlUploadBtnModal');
@@ -928,10 +932,10 @@ function updateCompactCounters() {
     }
 }
 
-// 10. REGISTRO E GESTÃO DE CLIENTES V11.1
+// 10. REGISTRO E GESTÃO DE CLIENTES V11.2
 function loadClientsFromLocal() {
     try {
-        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_1') || '[]');
+        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_2') || '[]');
         VDCSystem.preRegisteredClients = clients;
         logAudit(`📋 ${clients.length} clientes carregados do armazenamento local (ISO/IEC 27037)`, 'info');
     } catch (error) {
@@ -1032,7 +1036,7 @@ function registerClientFixed() {
     }
 }
 
-// 11. CADEIA DE CUSTÓDIA ISO/NIST V11.1 (COM CORREÇÃO DE DATA)
+// 11. CADEIA DE CUSTÓDIA ISO/NIST V11.2 (COM CORREÇÃO DE DATA)
 function addToChainOfCustody(file, type, hash = '') {
     try {
         // CORREÇÃO DE DATA: Validação de data inválida
@@ -1098,7 +1102,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// 12. MODO DEMO FORENSE ISO/NIST V11.1
+// 12. MODO DEMO FORENSE ISO/NIST V11.2
 function activateDemoMode() {
     try {
         if (VDCSystem.processing) return;
@@ -1305,7 +1309,7 @@ function activateDiscrepancyAlert() {
     }
 }
 
-// 13. FUNÇÕES DE EXTRAÇÃO DE DADOS ESTRUTURADOS V11.1 - HIGH PRECISION
+// 13. FUNÇÕES DE EXTRAÇÃO DE DADOS ESTRUTURADOS V11.2 - HIGH PRECISION
 function extractDAC7Data(text, filename) {
     const data = {
         filename: filename,
@@ -1725,7 +1729,7 @@ function extractStatementData(text, filename) {
     return data;
 }
 
-// 14. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V11.1
+// 14. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V11.2
 function resetDashboard() {
     try {
         logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO AUDITORIA FISCAL', 'info');
@@ -1768,7 +1772,7 @@ function resetDashboard() {
             VDCSystem.selectedPlatform = 'bolt';
         }
         
-        localStorage.removeItem('vdc_clients_bd_v11_1');
+        localStorage.removeItem('vdc_clients_bd_v11_2');
         VDCSystem.preRegisteredClients = [];
         
         const elementos = [
@@ -1924,7 +1928,7 @@ function resetDashboard() {
     }
 }
 
-// 15. FUNÇÕES DE AUDITORIA FISCAL BIG DATA V11.1 (COM PROMISE.ALL E RESILIÊNCIA)
+// 15. FUNÇÕES DE AUDITORIA FISCAL BIG DATA V11.2 (COM PROMISE.ALL E RESILIÊNCIA)
 async function performForensicAnalysis() {
     try {
         updatePageTitle('Auditando Big Data...');
@@ -2497,7 +2501,7 @@ function criarDashboardRegulatorio() {
     }
 }
 
-// 16. ALERTA INTERMITENTE BIG DATA ISO/NIST V11.1
+// 16. ALERTA INTERMITENTE BIG DATA ISO/NIST V11.2
 function triggerBigDataAlert(invoiceVal, commissionVal, deltaVal) {
     try {
         const alertElement = document.getElementById('bigDataAlert');
@@ -2595,7 +2599,7 @@ function showOmissionAlert() {
     }
 }
 
-// 17. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V11.1
+// 17. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V11.2
 function renderDashboardChart() {
     try {
         const ctx = document.getElementById('forensicChart');
@@ -2727,14 +2731,14 @@ function renderDashboardChart() {
     }
 }
 
-// 18. FUNÇÕES DE EXPORTAÇÃO BIG DATA V11.1 - PDF ATIVADO
+// 18. FUNÇÕES DE EXPORTAÇÃO BIG DATA V11.2 - PDF ATIVADO
 async function exportJSON() {
     try {
         updatePageTitle('Exportando JSON...');
         logAudit('💾 PREPARANDO EVIDÊNCIA DIGITAL BIG DATA (JSON)...', 'info');
         
         const evidenceData = {
-            sistema: "VDC Forensic System v11.1 - Auditoria Fiscal Big Data",
+            sistema: "VDC Forensic System v11.2 - Auditoria Fiscal Big Data",
             versao: VDCSystem.version,
             sessao: VDCSystem.sessionId,
             dataGeracao: new Date().toISOString(),
@@ -2888,7 +2892,7 @@ function exportPDF() {
             // Cabeçalho do Relatório
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('VDC FORENSIC SYSTEM v11.1 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
+            pdf.text('VDC FORENSIC SYSTEM v11.2 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
             yPos += 10;
             
             pdf.setFontSize(10);
@@ -3011,7 +3015,7 @@ function exportPDF() {
             // Rodapé
             pdf.setFontSize(8);
             pdf.setFont('helvetica', 'italic');
-            pdf.text('Sistema de Peritagem Forense VDC v11.1 - ISO/IEC 27037 | NIST SP 800-86 | © 2024', pageWidth / 2, pageHeight - 10, { align: 'center' });
+            pdf.text('Sistema de Peritagem Forense VDC v11.2 - ISO/IEC 27037 | NIST SP 800-86 | © 2024', pageWidth / 2, pageHeight - 10, { align: 'center' });
             
             // Salvar PDF
             const fileName = `RELATORIO_PERICIAL_VDC_${VDCSystem.sessionId}.pdf`;
@@ -3058,7 +3062,7 @@ function generateQuesitosEstrategicos() {
     }
 }
 
-// 19. FUNÇÕES DE LOG E AUDITORIA BIG DATA V11.1
+// 19. FUNÇÕES DE LOG E AUDITORIA BIG DATA V11.2
 function logAudit(message, type = 'info') {
     try {
         const timestamp = new Date().toLocaleTimeString('pt-PT', { 
@@ -3142,7 +3146,7 @@ function toggleConsole() {
     }
 }
 
-// 20. FUNÇÕES UTILITÁRIAS BIG DATA V11.1
+// 20. FUNÇÕES UTILITÁRIAS BIG DATA V11.2
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -3318,8 +3322,7 @@ window.openEvidenceModal = openEvidenceModal;
 
 // ============================================
 // FIM DO SCRIPT VDC v11.2 - AUDITORIA FISCAL BIG DATA
-// RETIFICAÇÃO FORENSE COMPLETA
+// TODAS AS RETIFICAÇÕES IMPLEMENTADAS
 // HIGH PRECISION FORENSIC EXTRACTION
-// ZERO ERROR POLICY IMPLEMENTED
 // INSTRUMENTO DE PROVA LEGAL ISO/NIST COMPLIANT
 // ============================================
