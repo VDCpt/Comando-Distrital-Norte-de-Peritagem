@@ -3,79 +3,65 @@
 // AUDITORIA FISCAL BIG DATA - EXTRUÇÃO ESTRUTURADA HIGH PRECISION
 // ============================================
 
-// 1. NORMALIZAÇÃO FORENSE GLOBAL HIGH PRECISION (CORREÇÃO IMPLEMENTADA)
 const toForensicNumber = (v) => {
     if (v === null || v === undefined || v === '') return 0;
     
     let str = v.toString().trim();
     
-    // Remover símbolos de moeda, espaços e caracteres não numéricos
     str = str
         .replace(/["'`]/g, '')
         .replace(/[€$£]/g, '')
         .replace(/EUR|USD|GBP/gi, '')
         .replace(/\s+/g, '');
     
-    // DETECÇÃO INTELIGENTE DE FORMATO NUMÉRICO (HIGH PRECISION)
     const hasComma = str.includes(',');
     const hasDot = str.includes('.');
     
     if (hasComma && hasDot) {
-        // Formato: 1.239,00 ou 1,239.00
         if (str.indexOf(',') > str.indexOf('.')) {
-            // 1.239,00 -> ponto é separador de milhar
             str = str.replace(/\./g, '').replace(',', '.');
         } else {
-            // 1,239.00 -> vírgula é separador de milhar
             str = str.replace(/,/g, '').replace('.', '.');
         }
     } else if (hasComma && !hasDot) {
-        // Formato: 1239,00 -> vírgula é decimal
-        // Verificar se há mais de uma vírgula (separador de milhar)
         const commaCount = (str.match(/,/g) || []).length;
         if (commaCount > 1) {
-            // 1,239,00 -> remover todas as vírgulas exceto a última
             const parts = str.split(',');
             const integerPart = parts.slice(0, -1).join('');
             const decimalPart = parts[parts.length - 1];
             str = integerPart + '.' + decimalPart;
         } else {
-            // 1239,00 -> substituir vírgula por ponto
             str = str.replace(',', '.');
         }
     } else if (!hasComma && hasDot) {
-        // Formato: 1239.00 ou 1.239
         const dotCount = (str.match(/\./g) || []).length;
         if (dotCount > 1) {
-            // 1.239.00 -> remover todos os pontos exceto o último
             const parts = str.split('.');
             const integerPart = parts.slice(0, -1).join('');
             const decimalPart = parts[parts.length - 1];
             str = integerPart + '.' + decimalPart;
         }
-        // Se apenas um ponto e seguido de 2 dígitos -> é decimal
         const match = str.match(/\.\d{2}$/);
         if (match) {
-            // Já está no formato correto
         }
     }
     
-    // Extrair apenas números, ponto decimal e sinal negativo
     str = str.replace(/[^\d.-]/g, '');
     
-    // Se a string estiver vazia, retorna 0
     if (str === '' || str === '-') return 0;
     
     const num = parseFloat(str);
-    return isNaN(num) ? 0 : num;
+    const resultado = isNaN(num) ? 0 : num;
+    
+    if (isNaN(resultado)) return 0;
+    
+    return resultado;
 };
 
-// 2. FUNÇÃO DE VALIDAÇÃO DE DATA (CORREÇÃO IMPLEMENTADA)
 function isValidDate(d) {
     return d instanceof Date && !isNaN(d.getTime());
 }
 
-// 3. ESTADO DO SISTEMA - ESTRUTURA FORENSE ISO/NIST V11.2
 const VDCSystem = {
     version: 'v11.2-AF',
     sessionId: null,
@@ -86,7 +72,6 @@ const VDCSystem = {
     processing: false,
     clientLocked: false,
     
-    // ENTIDADE BOLT - METADADOS FORENSES
     boltEntity: {
         nome: "Bolt Operations OÜ",
         nif: "EE102090374",
@@ -127,17 +112,12 @@ const VDCSystem = {
     
     analysis: {
         extractedValues: {
-            // SAF-T
             saftGross: 0,
             saftIVA6: 0,
             saftNet: 0,
-            
-            // Platform Data
             platformCommission: 0,
             bankTransfer: 0,
             iva23Due: 0,
-            
-            // Bolt KPIs
             rendimentosBrutos: 0,
             comissaoApp: 0,
             rendimentosLiquidos: 0,
@@ -146,21 +126,13 @@ const VDCSystem = {
             gorjetas: 0,
             cancelamentos: 0,
             portagens: 0,
-            
-            // Forensic Findings
             diferencialCusto: 0,
             prejuizoFiscal: 0,
             ivaAutoliquidacao: 0,
-            
-            // DAC7
             dac7Revenue: 0,
             dac7Period: '',
             dac7Quarterly: [],
-            
-            // JUROS DE MORA (RGRC 4%)
             jurosMora: 0,
-            
-            // PASSAIVO REGULATÓRIO (AMT/IMT 5%)
             taxaRegulacao: 0,
             riscoRegulatorio: 0
         },
@@ -221,24 +193,30 @@ const VDCSystem = {
     discrepanciaAlertaInterval: null
 };
 
-// 4. INICIALIZAÇÃO DO SISTEMA ISO/NIST V11.2 - CORREÇÃO: DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = async function() {
     try {
-        console.log('🔧 Inicializando VDC Forensic System v11.2 - Auditoria Fiscal Big Data...');
-        initializeSystem();
-    } catch (error) {
-        console.error('Erro crítico na inicialização:', error);
-        showError(`Falha na inicialização: ${error.message}`);
-    }
-});
-
-function initializeSystem() {
-    try {
+        console.log('🔧 Inicializando VDC Forensic System v11.2...');
+        
+        const checkLibs = [
+            new Promise((resolve) => {
+                if (typeof CryptoJS !== 'undefined') resolve();
+                else reject(new Error('CryptoJS não carregado'));
+            }),
+            new Promise((resolve) => {
+                if (typeof Papa !== 'undefined') resolve();
+                else reject(new Error('PapaParse não carregado'));
+            }),
+            new Promise((resolve) => {
+                if (typeof Chart !== 'undefined') resolve();
+                else reject(new Error('Chart.js não carregado'));
+            })
+        ];
+        
+        await Promise.allSettled(checkLibs);
+        
         const startBtn = document.getElementById('startSessionBtn');
         if (startBtn) {
             startBtn.addEventListener('click', startForensicSession);
-        } else {
-            console.warn('Botão startSessionBtn não encontrado');
         }
         
         startClockAndDate();
@@ -247,10 +225,22 @@ function initializeSystem() {
         logAudit('✅ Sistema VDC v11.2 pronto para auditoria fiscal Big Data', 'success');
         
     } catch (error) {
-        console.error('Erro na inicialização:', error);
-        showError(`Falha na inicialização: ${error.message}`);
+        console.error('Erro crítico na inicialização:', error);
+        const splashScreen = document.getElementById('splashScreen');
+        if (splashScreen) {
+            splashScreen.style.opacity = '0';
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+                const mainContainer = document.getElementById('mainContainer');
+                if (mainContainer) {
+                    mainContainer.style.display = 'block';
+                    mainContainer.style.opacity = '1';
+                }
+            }, 500);
+        }
+        logAudit(`❌ Erro crítico: ${error.message}`, 'error');
     }
-}
+};
 
 function startForensicSession() {
     try {
@@ -350,7 +340,6 @@ async function loadForensicSystem() {
     }
 }
 
-// 5. CONFIGURAÇÃO DE CONTROLES V11.2
 function setupYearSelector() {
     const selYear = document.getElementById('selYearFixed');
     if (!selYear) return;
@@ -457,14 +446,11 @@ function startClockAndDate() {
     setInterval(updateDateTime, 1000);
 }
 
-// 6. CONFIGURAÇÃO DE EVENTOS V11.2 - CORREÇÃO: Verificação de existência antes de addEventListener
 function setupEventListeners() {
     try {
         const registerBtn = document.getElementById('registerClientBtnFixed');
         if (registerBtn) {
             registerBtn.addEventListener('click', registerClientFixed);
-        } else {
-            console.warn('Botão registerClientBtnFixed não encontrado');
         }
         
         const clientNameInput = document.getElementById('clientNameFixed');
@@ -568,8 +554,6 @@ function setupModalUploadButtons() {
         if (dac7UploadBtnModal && dac7FileModal) {
             dac7UploadBtnModal.addEventListener('click', () => dac7FileModal.click());
             dac7FileModal.addEventListener('change', (e) => handleFileUploadModal(e, 'dac7'));
-        } else {
-            console.warn('Elementos DAC7 não encontrados');
         }
         
         const controlUploadBtnModal = document.getElementById('controlUploadBtnModal');
@@ -605,7 +589,6 @@ function setupModalUploadButtons() {
     }
 }
 
-// 7. FUNÇÕES DO MODAL DE EVIDÊNCIAS BIG DATA
 function openEvidenceModal() {
     try {
         const evidenceModal = document.getElementById('evidenceModal');
@@ -671,7 +654,6 @@ function clearAllEvidence() {
     }
 }
 
-// 8. BIG DATA FORENSE - UPLOAD NO MODAL COM RESILIÊNCIA
 async function handleFileUploadModal(event, type) {
     if (!event.target.files || event.target.files.length === 0) return;
     
@@ -752,7 +734,6 @@ async function processMultipleFilesModal(type, files, appendMode = true) {
                 let extractedData = null;
                 let recordCount = 0;
                 
-                // RESILIÊNCIA: TRY-CATCH POR FICHEIRO
                 try {
                     switch(type) {
                         case 'dac7':
@@ -793,7 +774,6 @@ async function processMultipleFilesModal(type, files, appendMode = true) {
                             recordCount: recordCount
                         });
                         
-                        // CORREÇÃO DE ACUMULAÇÃO: += em vez de =
                         VDCSystem.documents[type].totals.records += recordCount;
                         
                         updateFileListModal(`${type}FileListModal`, VDCSystem.documents[type].files, fileHash);
@@ -803,12 +783,10 @@ async function processMultipleFilesModal(type, files, appendMode = true) {
                 } catch (fileError) {
                     console.error(`Erro no processamento do ficheiro ${file.name}:`, fileError);
                     logAudit(`⚠️ Ficheiro ${file.name} ignorado: ${fileError.message}`, 'warn');
-                    // CONTINUA COM O PRÓXIMO FICHEIRO
                 }
             } catch (readError) {
                 console.error(`Erro na leitura do ficheiro ${file.name}:`, readError);
                 logAudit(`❌ Ficheiro ${file.name} corrompido ou não legível`, 'error');
-                // CONTINUA COM O PRÓXIMO FICHEIRO
             }
         }
         
@@ -822,7 +800,6 @@ async function processMultipleFilesModal(type, files, appendMode = true) {
     }
 }
 
-// 9. FUNÇÕES AUXILIARES DO MODAL
 function updateFileListModal(listId, files, hash = '') {
     const fileList = document.getElementById(listId);
     if (!fileList) return;
@@ -932,7 +909,6 @@ function updateCompactCounters() {
     }
 }
 
-// 10. REGISTRO E GESTÃO DE CLIENTES V11.2 - CORREÇÃO IMPLEMENTADA
 function loadClientsFromLocal() {
     try {
         const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_2') || '[]');
@@ -1026,12 +1002,12 @@ function registerClientFixed() {
         
         if (status) {
             status.style.display = 'flex';
-            // CORREÇÃO: Usar textContent em vez de innerHTML
-            status.querySelector('strong').textContent = name;
+            const strongElement = status.querySelector('strong');
+            if (strongElement) strongElement.textContent = name;
         }
         
         if (nameDisplay) {
-            nameDisplay.textContent = name; // CORREÇÃO: textContent em vez de innerHTML
+            nameDisplay.textContent = name;
         }
         
         logAudit(`✅ Cliente registado: ${name} (NIF: ${nif})`, 'success');
@@ -1043,10 +1019,8 @@ function registerClientFixed() {
     }
 }
 
-// 11. CADEIA DE CUSTÓDIA ISO/NIST V11.2 (COM CORREÇÃO DE DATA)
 function addToChainOfCustody(file, type, hash = '') {
     try {
-        // CORREÇÃO DE DATA: Validação de data inválida
         let lastModifiedDate = new Date(file.lastModified);
         if (!isValidDate(lastModifiedDate)) {
             lastModifiedDate = new Date();
@@ -1109,7 +1083,6 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// 12. MODO DEMO FORENSE ISO/NIST V11.2
 function activateDemoMode() {
     try {
         if (VDCSystem.processing) return;
@@ -1316,7 +1289,6 @@ function activateDiscrepancyAlert() {
     }
 }
 
-// 13. FUNÇÕES DE EXTRAÇÃO DE DADOS ESTRUTURADOS V11.2 - HIGH PRECISION
 function extractDAC7Data(text, filename) {
     const data = {
         filename: filename,
@@ -1524,19 +1496,15 @@ function extractInvoiceData(text, filename) {
     };
     
     try {
-        // PADRÕES ESPECÍFICOS BOLT - HIGH PRECISION
         const patterns = {
-            // ÂNCORA: Total com IVA (EUR) - EVITA CAPTURAR OUTROS TOTAIS
             invoiceValue: [
                 /Total\s+com\s+IVA\s*\(EUR\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
                 /Total\s+\(incl\.\s+IVA\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
                 /Amount\s+due[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
                 /Total\s+amount[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-                // Fallback: qualquer total no final do documento
                 /Total[:\s]*([\d\.,]+)\s*(?:€|EUR)\s*$/im
             ],
             
-            // Comissão específica Bolt
             commissionValue: [
                 /(?:Comissão|Commission|Service\s+fee|Fee)[:\s]*([\d\.,]+)\s*(?:€|EUR)/i,
                 /-?\s*([\d\.,]+)\s*(?:€|EUR)\s*(?:comissão|fee)/i
@@ -1560,7 +1528,6 @@ function extractInvoiceData(text, filename) {
             ]
         };
         
-        // EXTRAÇÃO ESPECÍFICA PARA VALOR DA FATURA
         let invoiceValueFound = false;
         patterns.invoiceValue.forEach(regex => {
             const match = text.match(regex);
@@ -1568,12 +1535,10 @@ function extractInvoiceData(text, filename) {
                 const rawValue = match[1];
                 const cleanedValue = toForensicNumber(rawValue);
                 
-                // VALIDAÇÃO DE VALOR ESPERADO (239.00€ típico Bolt)
                 if (cleanedValue > 0) {
                     data.invoiceValue = cleanedValue;
                     invoiceValueFound = true;
                     
-                    // Log específico para valores-chave
                     if (Math.abs(cleanedValue - 239.00) < 0.01) {
                         data.invoiceValue = 239.00;
                         logAudit(`⚖️ VALOR-CHAVE IDENTIFICADO: Fatura ${filename} = 239,00€ (ISO/IEC 27037)`, 'warn');
@@ -1582,7 +1547,6 @@ function extractInvoiceData(text, filename) {
             }
         });
         
-        // EXTRAÇÃO DE COMISSÃO
         patterns.commissionValue.forEach(regex => {
             let match;
             while ((match = regex.exec(text)) !== null) {
@@ -1590,7 +1554,6 @@ function extractInvoiceData(text, filename) {
                 if (value > 0 && value > data.commissionValue) {
                     data.commissionValue = value;
                     
-                    // VALIDAÇÃO DE VALOR ESPERADO (792.59€ típico Bolt)
                     if (Math.abs(value - 792.59) < 0.01) {
                         data.commissionValue = 792.59;
                         logAudit(`⚖️ VALOR-CHAVE IDENTIFICADO: Comissão ${filename} = 792,59€ (ISO/IEC 27037)`, 'warn');
@@ -1599,7 +1562,6 @@ function extractInvoiceData(text, filename) {
             }
         });
         
-        // EXTRAÇÃO DE NÚMERO DA FATURA
         patterns.invoiceNumber.forEach(regex => {
             const match = text.match(regex);
             if (match && !data.invoiceNumber) {
@@ -1611,7 +1573,6 @@ function extractInvoiceData(text, filename) {
             }
         });
         
-        // DETECÇÃO DE ENTIDADE BOLT
         patterns.boltEntity.forEach(regex => {
             if (regex.test(text)) {
                 data.boltEntityDetected = true;
@@ -1621,7 +1582,6 @@ function extractInvoiceData(text, filename) {
             }
         });
         
-        // CÁLCULO DO IVA 23% SOBRE A COMISSÃO
         if (data.commissionValue > 0) {
             data.iva23Value = data.commissionValue * 0.23;
         }
@@ -1709,7 +1669,6 @@ function extractStatementData(text, filename) {
             
             if (values.length > 0) {
                 if (key === 'commission') {
-                    // Comissão é negativa (dedução)
                     data[key] = -Math.max(...values);
                     
                     if (Math.abs(data[key]) - 792.59 < 0.01) {
@@ -1736,7 +1695,6 @@ function extractStatementData(text, filename) {
     return data;
 }
 
-// 14. FUNÇÃO DE RESET COMPLETO DO DASHBOARD V11.2
 function resetDashboard() {
     try {
         logAudit('🔄 RESET COMPLETO DO SISTEMA - NOVA SESSÃO AUDITORIA FISCAL', 'info');
@@ -1935,7 +1893,6 @@ function resetDashboard() {
     }
 }
 
-// 15. FUNÇÕES DE AUDITORIA FISCAL BIG DATA V11.2 (COM PROMISE.ALL E RESILIÊNCIA)
 async function performForensicAnalysis() {
     try {
         updatePageTitle('Auditando Big Data...');
@@ -1951,7 +1908,6 @@ async function performForensicAnalysis() {
         logAudit('⚖️ Verificação de Conformidade AMT/IMT - Taxa de Regulação 5%', 'regulatory');
         logAudit('🔢 Cálculo de Juros de Mora (RGRC 4% base anual civil)', 'warn');
         
-        // USANDO PROMISE.ALL PARA SINCRONIZAÇÃO E RESILIÊNCIA
         const tasks = [
             processLoadedData().catch(err => logAudit(`❌ Erro no processamento de dados: ${err.message}`, 'error')),
             calculateExtractedValues().catch(err => logAudit(`❌ Erro no cálculo de valores: ${err.message}`, 'error')),
@@ -1963,7 +1919,6 @@ async function performForensicAnalysis() {
         
         await Promise.allSettled(tasks);
         
-        // ATUALIZAÇÕES SINCRONIZADAS COM RESILIÊNCIA
         const updateTasks = [
             updateDashboard().catch(err => logAudit(`❌ Erro na atualização do dashboard: ${err.message}`, 'error')),
             updateKPIResults().catch(err => logAudit(`❌ Erro na atualização dos KPIs: ${err.message}`, 'error')),
@@ -2033,7 +1988,6 @@ async function performForensicAnalysis() {
 
 async function processLoadedData() {
     try {
-        // Processar dados DAC7
         if (VDCSystem.documents.dac7 && VDCSystem.documents.dac7.parsedData && VDCSystem.documents.dac7.parsedData.length > 0) {
             let totalRevenue = 0;
             let period = '';
@@ -2060,7 +2014,6 @@ async function processLoadedData() {
             logAudit(`DAC7: Receitas Anuais=${totalRevenue.toFixed(2)}€ | Período=${period} | ${totalRecords} registos | ${quarterlyDetails.length} trimestres`, 'info');
         }
         
-        // Processar dados SAF-T
         if (VDCSystem.documents.saft && VDCSystem.documents.saft.parsedData && VDCSystem.documents.saft.parsedData.length > 0) {
             let totalGross = 0, totalIVA6 = 0, totalNet = 0, totalRecords = 0;
             let transactionDetails = [];
@@ -2085,7 +2038,6 @@ async function processLoadedData() {
             logAudit(`SAF-T: Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ | ${totalRecords} transações`, 'info');
         }
         
-        // Processar faturas
         if (VDCSystem.documents.invoices && VDCSystem.documents.invoices.parsedData && VDCSystem.documents.invoices.parsedData.length > 0) {
             let totalInvoiceValue = 0, totalCommission = 0, totalIVA23 = 0, totalRecords = 0;
             let invoicesFound = [];
@@ -2126,7 +2078,6 @@ async function processLoadedData() {
             logAudit(`Faturas: Valor=${totalInvoiceValue.toFixed(2)}€ | Comissão=${totalCommission.toFixed(2)}€ | ${totalRecords} registos | ${boltEntities.length} entidades Bolt`, 'info');
         }
         
-        // Processar extratos
         if (VDCSystem.documents.statements && VDCSystem.documents.statements.parsedData && VDCSystem.documents.statements.parsedData.length > 0) {
             const totals = VDCSystem.documents.statements.totals || {};
             let totalRecords = 0;
@@ -2164,12 +2115,10 @@ function calculateExtractedValues() {
         const ev = VDCSystem.analysis.extractedValues;
         const docs = VDCSystem.documents;
         
-        // Valores SAF-T
         ev.saftGross = (docs.saft && docs.saft.totals && docs.saft.totals.gross) || (VDCSystem.demoMode ? 3202.54 : 0);
         ev.saftIVA6 = (docs.saft && docs.saft.totals && docs.saft.totals.iva6) || (VDCSystem.demoMode ? 192.15 : 0);
         ev.saftNet = (docs.saft && docs.saft.totals && docs.saft.totals.net) || (VDCSystem.demoMode ? 2409.95 : 0);
         
-        // Valores Extratos
         ev.rendimentosBrutos = (docs.statements && docs.statements.totals && docs.statements.totals.rendimentosBrutos) || (VDCSystem.demoMode ? 3202.54 : 0);
         ev.comissaoApp = (docs.statements && docs.statements.totals && docs.statements.totals.comissaoApp) || (VDCSystem.demoMode ? -792.59 : 0);
         ev.rendimentosLiquidos = (docs.statements && docs.statements.totals && docs.statements.totals.rendimentosLiquidos) || (VDCSystem.demoMode ? 2409.95 : 0);
@@ -2178,12 +2127,10 @@ function calculateExtractedValues() {
         ev.cancelamentos = (docs.statements && docs.statements.totals && docs.statements.totals.cancelamentos) || (VDCSystem.demoMode ? 15.60 : 0);
         ev.portagens = (docs.statements && docs.statements.totals && docs.statements.totals.portagens) || (VDCSystem.demoMode ? 7.65 : 0);
         
-        // Valores Faturas
         ev.faturaPlataforma = (docs.invoices && docs.invoices.totals && docs.invoices.totals.invoiceValue) || (VDCSystem.demoMode ? 239.00 : 0);
         ev.platformCommission = (docs.invoices && docs.invoices.totals && docs.invoices.totals.commission) || 0;
         ev.iva23Due = (docs.invoices && docs.invoices.totals && docs.invoices.totals.iva23) || 0;
         
-        // Diferencial de custo
         ev.diferencialCusto = Math.abs(ev.comissaoApp) - ev.faturaPlataforma;
         
         if (ev.diferencialCusto > 0) {
@@ -2195,7 +2142,6 @@ function calculateExtractedValues() {
             logAudit(`🧾 IVA Autoliquidação (23%): ${ev.ivaAutoliquidacao.toFixed(2)}€`, 'error');
         }
         
-        // DAC7
         ev.dac7Revenue = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.annualRevenue) || ev.rendimentosBrutos;
         ev.dac7Period = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.period) || (VDCSystem.demoMode ? 'Set-Dez 2024' : `${VDCSystem.selectedYear}-01 a ${VDCSystem.selectedYear}-12`);
         ev.dac7Quarterly = (docs.dac7 && docs.dac7.totals && docs.dac7.totals.quarterlyDetails) || [];
@@ -2508,7 +2454,6 @@ function criarDashboardRegulatorio() {
     }
 }
 
-// 16. ALERTA INTERMITENTE BIG DATA ISO/NIST V11.2
 function triggerBigDataAlert(invoiceVal, commissionVal, deltaVal) {
     try {
         const alertElement = document.getElementById('bigDataAlert');
@@ -2606,7 +2551,6 @@ function showOmissionAlert() {
     }
 }
 
-// 17. FUNÇÃO DO GRÁFICO VERTICAL COMPACTO BIG DATA V11.2
 function renderDashboardChart() {
     try {
         const ctx = document.getElementById('forensicChart');
@@ -2738,7 +2682,6 @@ function renderDashboardChart() {
     }
 }
 
-// 18. FUNÇÕES DE EXPORTAÇÃO BIG DATA V11.2 - PDF ATIVADO
 async function exportJSON() {
     try {
         updatePageTitle('Exportando JSON...');
@@ -2880,23 +2823,19 @@ function exportPDF() {
         updatePageTitle('Gerando PDF...');
         logAudit('📄 GERANDO RELATÓRIO PERICIAL EM PDF...', 'info');
         
-        // Verificar se jsPDF está disponível
         if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
             const { jsPDF } = window.jspdf;
             
-            // Criar novo documento PDF
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
                 format: 'a4'
             });
             
-            // Configurações iniciais
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
             let yPos = 20;
             
-            // Cabeçalho do Relatório
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
             pdf.text('VDC FORENSIC SYSTEM v11.2 - RELATÓRIO PERICIAL', pageWidth / 2, yPos, { align: 'center' });
@@ -2908,12 +2847,10 @@ function exportPDF() {
             pdf.text(`Data de emissão: ${new Date().toLocaleDateString('pt-PT')}`, pageWidth / 2, yPos + 5, { align: 'center' });
             yPos += 15;
             
-            // Linha divisória
             pdf.setLineWidth(0.5);
             pdf.line(20, yPos, pageWidth - 20, yPos);
             yPos += 10;
             
-            // Seção 1: Informações do Cliente
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.text('1. INFORMAÇÕES DO CLIENTE', 20, yPos);
@@ -2932,7 +2869,6 @@ function exportPDF() {
                 yPos += 10;
             }
             
-            // Seção 2: Resumo de Evidências
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.text('2. RESUMO DE EVIDÊNCIAS PROCESSADAS', 20, yPos);
@@ -2954,7 +2890,6 @@ function exportPDF() {
             });
             yPos += evidenceSummary.length * 5 + 5;
             
-            // Seção 3: Resultados da Análise
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.text('3. RESULTADOS DA ANÁLISE FORENSE', 20, yPos);
@@ -2978,7 +2913,6 @@ function exportPDF() {
             });
             yPos += analysisResults.length * 5 + 10;
             
-            // Seção 4: Cadeia de Custódia (resumida)
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.text('4. CADEIA DE CUSTÓDIA (PRIMEIROS 10 REGISTOS)', 20, yPos);
@@ -2999,7 +2933,6 @@ function exportPDF() {
             
             yPos += 10;
             
-            // Seção 5: Master Hash
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.text('5. INTEGRIDADE DIGITAL', 20, yPos);
@@ -3019,12 +2952,10 @@ function exportPDF() {
             });
             yPos += hashLines.length * 4 + 10;
             
-            // Rodapé
             pdf.setFontSize(8);
             pdf.setFont('helvetica', 'italic');
             pdf.text('Sistema de Peritagem Forense VDC v11.2 - ISO/IEC 27037 | NIST SP 800-86 | © 2024', pageWidth / 2, pageHeight - 10, { align: 'center' });
             
-            // Salvar PDF
             const fileName = `RELATORIO_PERICIAL_VDC_${VDCSystem.sessionId}.pdf`;
             pdf.save(fileName);
             
@@ -3069,7 +3000,6 @@ function generateQuesitosEstrategicos() {
     }
 }
 
-// 19. FUNÇÕES DE LOG E AUDITORIA BIG DATA V11.2
 function logAudit(message, type = 'info') {
     try {
         const timestamp = new Date().toLocaleTimeString('pt-PT', { 
@@ -3153,7 +3083,6 @@ function toggleConsole() {
     }
 }
 
-// 20. FUNÇÕES UTILITÁRIAS BIG DATA V11.2
 function generateSessionId() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
@@ -3294,7 +3223,6 @@ function showError(message) {
     showToast(`❌ ${message}`, 'error');
 }
 
-// 21. FUNÇÃO PARA SCROLL SUAVE
 function smoothScrollTo(elementId) {
     try {
         const element = document.getElementById(elementId);
@@ -3309,13 +3237,11 @@ function smoothScrollTo(elementId) {
     }
 }
 
-// 22. FUNÇÃO PARA ATUALIZAR TÍTULO DA PÁGINA DINAMICAMENTE
 function updatePageTitle(status) {
     const baseTitle = 'VDC | Sistema de Peritagem Forense v11.2';
     document.title = status ? `${baseTitle} - ${status}` : baseTitle;
 }
 
-// 23. FUNÇÕES GLOBAIS PARA HTML
 window.clearConsole = clearConsole;
 window.toggleConsole = toggleConsole;
 window.exportJSON = exportJSON;
@@ -3326,10 +3252,3 @@ window.activateDemoMode = activateDemoMode;
 window.showChainOfCustody = showChainOfCustody;
 window.smoothScrollTo = smoothScrollTo;
 window.openEvidenceModal = openEvidenceModal;
-
-// ============================================
-// FIM DO SCRIPT VDC v11.2 - AUDITORIA FISCAL BIG DATA
-// TODAS AS RETIFICAÇÕES IMPLEMENTADAS
-// HIGH PRECISION FORENSIC EXTRACTION
-// INSTRUMENTO DE PROVA LEGAL ISO/NIST COMPLIANT
-// ============================================
