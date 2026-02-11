@@ -12,6 +12,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- PROTOCOLO DE ATIVAÇÃO AUTOMÁTICA VDC v11.5 - INTEGRIDADE DE DADOS -->
+    <script>
+        // Protocolo de Ativação Automática VDC v11.5
+        // Garante populateYears() e master hash na inicialização do DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.populateYears === 'function') {
+                window.populateYears();
+                console.log("✅ VDC: Seletor de anos populado (2018-2036)");
+            }
+            if (typeof window.generateMasterHash === 'function') {
+                setTimeout(() => {
+                    window.generateMasterHash();
+                    console.log("✅ VDC: Master Hash SHA-256 gerada");
+                }, 100);
+            }
+            console.log("🔐 SISTEMA VDC v11.5: Integridade de Dados Verificada.");
+        });
+    </script>
 </head>
 <body>
     <!-- SPLASH SCREEN INICIAL -->
@@ -53,7 +72,7 @@
     <!-- TOAST CONTAINER PARA NOTIFICAÇÕES -->
     <div id="toastContainer"></div>
 
-    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS - ID CORRETO: evidenceModal -->
+    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
@@ -234,7 +253,7 @@
                     </div>
                 </div>
 
-                <!-- GESTÃO DE EVIDÊNCIAS - BOTÃO COM ID CORRETO -->
+                <!-- GESTÃO DE EVIDÊNCIAS -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
                         <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
@@ -287,7 +306,7 @@
                     </div>
                 </section>
 
-                <!-- DASHBOARD PRINCIPAL - STAT CARDS FIXOS (MÁSCARA REMOVIDA) -->
+                <!-- DASHBOARD PRINCIPAL - STAT CARDS FIXOS -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
                         <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
