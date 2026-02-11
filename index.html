@@ -14,15 +14,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN INICIAL - GATEKEEPER: NUNCA DESAPARECE AUTOMATICAMENTE -->
+    <!-- SPLASH SCREEN INICIAL - CONTROLO MANUAL v11.6 GATEKEEPER -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
             <h1>VDC FORENSIC SYSTEM v11.6</h1>
-            <h2>BIG DATA AUDITORIA FISCAL - GATEKEEPER EDITION</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado PT-PT | Taxa Regulação 5%</p>
+            <h2>BIG DATA AUDITORIA FISCAL - THE CHECKMATE</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
             <p class="splash-warning">
                 <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
             </p>
@@ -31,7 +31,7 @@
             </button>
             <div class="splash-footer">
                 <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
-                <p class="version">v11.6 - Auditoria Fiscal Big Data "GATEKEEPER"</p>
+                <p class="version">v11.6 GATEKEEPER - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
             </div>
         </div>
     </div>
@@ -141,127 +141,124 @@
                             <span class="summary-label">EXTRATOS</span>
                             <span id="summaryStatements" class="summary-value">0 ficheiros | 0 registos</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="summary-label">TOTAL</span>
-                            <span id="summaryTotal" class="summary-value total">0 ficheiros | 0 registos</span>
-                        </div>
                     </div>
                 </div>
             </div>
+
             <div class="modal-footer">
-                <button id="closeAndSaveBtn" class="btn-primary">
-                    <i class="fas fa-save"></i> FECHAR E GUARDAR EVIDÊNCIAS
-                </button>
-                <button id="clearAllBtn" class="btn-secondary">
-                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS
+                <button id="closeModalFooterBtn" class="btn-secondary">
+                    <i class="fas fa-times"></i> FECHAR
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN CONTAINER - INTERFACE PRINCIPAL (OCULTO ATÉ CLIQUE NO GATEKEEPER) -->
-    <div id="mainContainer" class="main-container">
+    <!-- MAIN CONTAINER (inicialmente oculto) -->
+    <div id="mainContainer" class="main-container" style="display: none;">
+        <!-- CABEÇALHO PRINCIPAL -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
-                    <i class="fas fa-shield-alt"></i>
-                    <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.6 AF</span></h1>
-                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
+                    <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="logo-text">
+                        <h1>VDC FORENSIC SYSTEM</h1>
+                        <p>v11.6 GATEKEEPER - Auditoria Fiscal Big Data</p>
                     </div>
                 </div>
-                
+                <div class="timestamp-fbi">
+                    <div class="timestamp-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span id="currentDate"></span>
+                    </div>
+                    <div class="timestamp-item">
+                        <i class="fas fa-clock"></i>
+                        <span id="currentTime"></span>
+                    </div>
+                </div>
                 <div class="demo-section">
                     <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
+                        <i class="fas fa-vial"></i> MODO DEMO
                     </button>
-                </div>
-                
-                <div class="session-info">
-                    <div class="timestamp-fbi">
-                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span> | 
-                        <span>Data: <strong id="currentDate">DD/MM/AAAA</strong></span> | 
-                        <span><i class="fas fa-clock"></i> <strong id="currentTime">00:00:00</strong></span>
-                    </div>
                 </div>
             </div>
         </header>
 
         <div class="app-container">
-            <!-- SIDEBAR ESQUERDA - FIXA -->
+            <!-- SIDEBAR FIXA -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
-                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
-                    
+                    <h3><i class="fas fa-user-shield"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
-                            <label for="clientNameFixed"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
-                            <input type="text" id="clientNameFixed" placeholder="Ex: Momento Eficaz Unipessoal, Lda" list="clientSuggestions">
+                            <label for="clientName"><i class="fas fa-user"></i> Nome do Cliente</label>
+                            <input type="text" id="clientName" placeholder="Nome completo">
                         </div>
                         <div class="form-group-fixed">
-                            <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
-                            <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
+                            <label for="clientNif"><i class="fas fa-id-card"></i> NIF</label>
+                            <input type="text" id="clientNif" placeholder="000000000" maxlength="9">
                         </div>
-                        
-                        <datalist id="clientSuggestions"></datalist>
-                        
-                        <div class="btn-group-fixed">
-                            <button id="registerClientBtnFixed" class="btn-primary">
-                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE
-                            </button>
+                        <div class="form-group-fixed">
+                            <label for="auditYear"><i class="fas fa-calendar"></i> Ano de Auditoria</label>
+                            <select id="auditYear"></select>
                         </div>
-                        
-                        <div class="info-fixed">
-                            <div class="info-item">
-                                <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
-                                <select id="selYearFixed" class="year-select-fixed"></select>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
-                                <select id="selPlatformFixed" class="platform-select-fixed">
-                                    <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
-                                    <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
-                                    <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
-                                    <option value="other">Outra Plataforma - Investigação</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong> (NIF: <span id="clientNifDisplayFixed"></span>)</span>
-                        </div>
+                    </div>
+                    <div class="btn-group-fixed">
+                        <button id="uploadBtn" class="btn-primary">
+                            <i class="fas fa-upload"></i> UPLOAD DE EVIDÊNCIAS
+                        </button>
+                    </div>
+                    <div class="info-fixed">
+                        <p><i class="fas fa-info-circle"></i> <strong>PROTOCOLO ISO/IEC 27037</strong></p>
+                        <p style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--text-tertiary);">
+                            Sistema de extração forense com parsing estruturado e integridade SHA-256
+                        </p>
                     </div>
                 </div>
 
-                <!-- GESTÃO DE EVIDÊNCIAS -->
-                <div class="evidence-management-section-solid">
-                    <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
-                        <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
-                        <span class="evidence-count-solid">0 ficheiros</span>
-                    </button>
-                    
-                    <!-- CONTADORES COMPACTOS -->
-                    <div class="counters-compact">
-                        <div class="counter-item-compact">
-                            <span class="counter-label-compact">CONTROLO</span>
-                            <span id="controlCountCompact" class="counter-value-compact">0</span>
+                <!-- DASHBOARD COM MÉTRICAS -->
+                <div class="dashboard-fixed">
+                    <div class="dashboard-header-fixed">
+                        <h4><i class="fas fa-chart-line"></i> DASHBOARD BIG DATA</h4>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon"><i class="fas fa-passport"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">DAC7</span>
+                                <span id="dac7Count" class="kpi-value">0</span>
+                            </div>
                         </div>
-                        <div class="counter-item-compact">
-                            <span class="counter-label-compact">SAF-T</span>
-                            <span id="saftCountCompact" class="counter-value-compact">0</span>
+                        <div class="kpi-card">
+                            <div class="kpi-icon"><i class="fas fa-file-code"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">SAF-T</span>
+                                <span id="saftCount" class="kpi-value">0</span>
+                            </div>
                         </div>
-                        <div class="counter-item-compact">
-                            <span class="counter-label-compact">FATURAS</span>
-                            <span id="invoiceCountCompact" class="counter-value-compact">0</span>
+                        <div class="kpi-card">
+                            <div class="kpi-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Faturas</span>
+                                <span id="invoicesCount" class="kpi-value">0</span>
+                            </div>
                         </div>
-                        <div class="counter-item-compact">
-                            <span class="counter-label-compact">EXTRATOS</span>
-                            <span id="statementCountCompact" class="counter-value-compact">0</span>
+                        <div class="kpi-card">
+                            <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Extratos</span>
+                                <span id="statementsCount" class="kpi-value">0</span>
+                            </div>
                         </div>
-                        <div class="counter-item-compact">
-                            <span class="counter-label-compact">DAC7</span>
-                            <span id="dac7CountCompact" class="counter-value-compact">0</span>
+                    </div>
+
+                    <div class="secondary-stats">
+                        <div class="stat-card">
+                            <strong><i class="fas fa-database"></i> Registos Totais</strong>
+                            <span id="totalRecords">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <strong><i class="fas fa-fingerprint"></i> Hash Integrity</strong>
+                            <span id="hashStatus">AGUARDANDO</span>
                         </div>
                     </div>
                 </div>
@@ -269,89 +266,27 @@
 
             <!-- ÁREA PRINCIPAL DE ANÁLISE -->
             <main class="analysis-area">
-                <!-- BARRA DE FERRAMENTAS -->
+                <!-- TOOLBAR DE AÇÕES -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
-                        <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search"></i> EXECUTAR AUDITORIA BIG DATA
+                        <button id="analyzeBtn" class="toolbar-btn">
+                            <i class="fas fa-microscope"></i> EXECUTAR AUDITORIA
                         </button>
-                        <button id="exportJSONBtn" class="btn-tool">
-                            <i class="fas fa-file-code"></i> EXPORTAR JSON
+                        <button id="reportBtn" class="toolbar-btn">
+                            <i class="fas fa-file-pdf"></i> GERAR RELATÓRIO
                         </button>
-                        <button id="exportPDFBtn" class="btn-tool">
-                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL
+                        <button id="exportBtn" class="toolbar-btn">
+                            <i class="fas fa-file-export"></i> EXPORTAR DADOS
                         </button>
-                        <button id="resetBtn" class="btn-tool">
-                            <i class="fas fa-redo"></i> NOVA SESSÃO
+                        <button id="resetBtn" class="toolbar-btn warn">
+                            <i class="fas fa-redo-alt"></i> RESET SISTEMA
                         </button>
                     </div>
                 </section>
 
-                <!-- DASHBOARD PRINCIPAL - STAT CARDS FIXOS -->
-                <section class="dashboard-fixed">
-                    <div class="stat-card">
-                        <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
-                        <p id="netVal">0,00€</p>
-                        <small>Base tributável SAF-T</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
-                        <p id="iva6Val">0,00€</p>
-                        <small>Taxa reduzida Portugal</small>
-                    </div>
-                    <div class="stat-card">
-                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA</h4>
-                        <p id="commissionVal">0,00€</p>
-                        <small>Serviço de intermediação</small>
-                    </div>
-                    <div class="stat-card alert">
-                        <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
-                        <p id="iva23Val" class="alert-text">0,00€</p>
-                        <small>Dívida ao Estado Português</small>
-                    </div>
-                    <div class="stat-card regulatory" id="jurosCard" style="display: none;">
-                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
-                        <p id="jurosVal" class="regulatory-text">0,00€</p>
-                        <small>Base anual civil (RGRC)</small>
-                    </div>
-                </section>
-
-                <!-- PARECER TÉCNICO-FORENSE BIG DATA -->
-                <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA</h3>
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS</h4>
-                            <p id="kpiGanhos">0,00€</p>
-                            <small>Valor real do extrato</small>
-                        </div>
-                        <div class="kpi-card">
-                            <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
-                            <p id="kpiComm">0,00€</p>
-                            <small>Taxa retida pela plataforma</small>
-                        </div>
-                        <div class="kpi-card highlight">
-                            <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
-                            <p id="kpiNet">0,00€</p>
-                            <small>Transferência bancária real</small>
-                        </div>
-                        <div class="kpi-card danger">
-                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA</h4>
-                            <p id="kpiInvoice">0,00€</p>
-                            <small>Valor faturado (documento)</small>
-                        </div>
-                    </div>
-                    <div class="secondary-stats">
-                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
-                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
-                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span> |
-                        <span><i class="fas fa-road"></i> Portagens: <b id="valTolls">0,00€</b></span>
-                    </div>
-                </section>
-
-                <!-- GRÁFICO DE DISTRIBUIÇÃO FINANCEIRA -->
+                <!-- GRÁFICO FORENSE -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
+                    <h3><i class="fas fa-chart-pie"></i> ANÁLISE GRÁFICA BIG DATA (ISO/IEC 27037)</h3>
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
@@ -461,13 +396,13 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.6 - Auditoria Fiscal Big Data "GATEKEEPER" | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.6 GATEKEEPER - Auditoria Fiscal Big Data "THE CHECKMATE" | © 2024-2026
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- SCRIPT PRINCIPAL - ÚNICO PONTO DE INICIALIZAÇÃO -->
+    <!-- SCRIPT PRINCIPAL -->
     <script src="script.js"></script>
 </body>
 </html>
