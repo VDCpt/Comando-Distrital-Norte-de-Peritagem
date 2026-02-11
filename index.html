@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>VDC | Sistema de Peritagem Forense v11.5 - Auditoria Fiscal Big Data</title>
+    <title>VDC | Sistema de Peritagem Forense v11.6 - Auditoria Fiscal Big Data</title>
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -11,27 +11,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="deepseek_css_20260211_3eafe7.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN INICIAL -->
+    <!-- SPLASH SCREEN INICIAL - GATEKEEPER: SÓ DESAPARECE POR AÇÃO DO PERITO -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.5</h1>
-            <h2>BIG DATA AUDITORIA FISCAL - THE CHECKMATE</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
+            <h1>VDC FORENSIC SYSTEM v11.6</h1>
+            <h2>BIG DATA AUDITORIA FISCAL - GATEKEEPER</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado PT | Taxa Regulação 5%</p>
             <p class="splash-warning">
-                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Acesso Restrito a Peritos
             </p>
+            <!-- ÚNICO GATEKEEPER: BOTÃO QUE ATIVA O SISTEMA -->
             <button id="startSessionBtn" class="splash-btn">
                 <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA
             </button>
             <div class="splash-footer">
                 <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
-                <p class="version">v11.5 - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
+                <p class="version">v11.6 - GATEKEEPER - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
             </div>
         </div>
     </div>
@@ -42,7 +43,7 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v11.5 - AUDITORIA FISCAL</h2>
+            <h2>VDC FORENSIC SYSTEM v11.6 - AUDITORIA FISCAL</h2>
             <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação AMT/IMT</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
@@ -166,7 +167,7 @@
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.5 AF</span></h1>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.6 AF</span></h1>
                         <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
                     </div>
                 </div>
@@ -461,36 +462,13 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.5 - Auditoria Fiscal Big Data "THE CHECKMATE" | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.6 - Auditoria Fiscal Big Data "GATEKEEPER" | © 2025
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- SCRIPT PRINCIPAL -->
-    <script src="script.js"></script>
-    
-    <!-- PROTOCOLO DE ATIVAÇÃO AUTOMÁTICA VDC v11.5 - PERFEIÇÃO DE EXECUÇÃO -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Verifica se as funções do script.js estão disponíveis e executa-as
-            if (typeof window.populateYears === 'function') window.populateYears();
-            if (typeof window.generateMasterHash === 'function') window.generateMasterHash();
-            
-            // Log de Integridade Inicial
-            if (typeof window.logAudit === 'function') {
-                window.logAudit("SISTEMA VDC v11.5: Protocolo de Integridade Ativo.", "success");
-            }
-
-            // Gestão da Splash Screen
-            setTimeout(() => {
-                const splash = document.getElementById('splashScreen');
-                if (splash) {
-                    splash.style.opacity = '0';
-                    setTimeout(() => splash.style.display = 'none', 500);
-                }
-            }, 2000);
-        });
-    </script>
+    <!-- SCRIPT PRINCIPAL - ÚNICO PONTO DE ENTRADA -->
+    <script src="deepseek_javascript_20260211_97d27c.js"></script>
 </body>
 </html>
