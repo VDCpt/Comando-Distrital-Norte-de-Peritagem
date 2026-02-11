@@ -1,9 +1,42 @@
 // ============================================
 // VDC SISTEMA DE PERITAGEM FORENSE v11.4
 // AUDITORIA FISCAL BIG DATA - EXTRUÇÃO ESTRUTURADA HIGH PRECISION
-// CORREÇÃO: BLINDAGEM SIDEBAR, SAFE DOM UPDATE, FUZZY MAPPING, MASTER HASH AUTOMÁTICO
+// CORREÇÃO: Sincronização Runtime, Parsing Regional, Desbloqueio Interface
 // VERSÃO: "THE CHECKMATE" - COMPLETO E FUNCIONAL
 // ============================================
+
+// ===== DESBLOQUEIO DE INTERFACE - EXECUÇÃO IMEDIATA =====
+(function removeSplashScreen() {
+    try {
+        setTimeout(() => {
+            const splashScreen = document.getElementById('splashScreen');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const mainContainer = document.getElementById('mainContainer');
+            
+            if (splashScreen) {
+                splashScreen.style.opacity = '0';
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'flex';
+                        setTimeout(() => {
+                            loadingOverlay.style.display = 'none';
+                            if (mainContainer) {
+                                mainContainer.style.display = 'block';
+                                mainContainer.style.opacity = '1';
+                            }
+                        }, 1500);
+                    }
+                }, 500);
+            }
+        }, 2000);
+    } catch (error) {
+        console.error('Erro no removeSplashScreen:', error);
+        // Fallback: forçar exibição
+        document.getElementById('splashScreen').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+    }
+})();
 
 // ===== NORMALIZADOR NUMÉRICO DE ALTA PRECISÃO =====
 const toForensicNumber = (v) => {
@@ -125,7 +158,7 @@ window.onload = async function() {
     try {
         console.log('🔧 Inicializando VDC Forensic System v11.4 "THE CHECKMATE"...');
         
-        // CORREÇÃO: Usar throw new Error() em vez de reject()
+        // Verificação de bibliotecas
         const checkLibs = [
             new Promise((resolve) => {
                 if (typeof CryptoJS !== 'undefined') resolve();
@@ -151,21 +184,6 @@ window.onload = async function() {
         logAudit('✅ Sistema VDC v11.4 "THE CHECKMATE" pronto para auditoria fiscal Big Data', 'success');
     } catch (error) {
         console.error('Erro crítico na inicialização:', error);
-        // Fallback: mostrar interface mesmo com erro
-        const splashScreen = document.getElementById('splashScreen');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (splashScreen) {
-            splashScreen.style.opacity = '0';
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                const mainContainer = document.getElementById('mainContainer');
-                if (mainContainer) {
-                    mainContainer.style.display = 'block';
-                    mainContainer.style.opacity = '1';
-                }
-            }, 500);
-        }
         logAudit(`❌ Erro crítico: ${error.message}`, 'error');
     }
 };
@@ -188,11 +206,6 @@ function startForensicSession() {
         }
     } catch (error) {
         console.error('Erro ao iniciar sessão:', error);
-        // Fallback direto
-        document.getElementById('splashScreen').style.display = 'none';
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        document.getElementById('mainContainer').style.opacity = '1';
     }
 }
 
@@ -251,7 +264,7 @@ async function loadForensicSystem() {
                 logAudit('✅ Sistema VDC v11.4 - Auditoria Fiscal "THE CHECKMATE" inicializado', 'success');
                 logAudit('🔐 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86, RGRC 4%, AMT/IMT 5%', 'info');
                 logAudit('🔗 Cadeia de Custódia Digital configurada (Art. 158-A a 158-F)', 'success');
-                logAudit('📁 Extração Big Data estruturada ativada - FUZZY MAPPING V11.4', 'info');
+                logAudit('📁 Extração Big Data estruturada ativada - Parsing Regional v11.4', 'info');
                 generateMasterHash();
             }, 300);
         }, 500);
@@ -336,25 +349,26 @@ function startClockAndDate() {
     setInterval(updateDateTime, 1000);
 }
 
-// ===== SETUP DE EVENT LISTENERS =====
+// ===== SETUP DE EVENT LISTENERS - CORREÇÃO DE IDs =====
 function setupEventListeners() {
     try {
         const registerBtn = document.getElementById('registerClientBtnFixed');
         if (registerBtn) registerBtn.addEventListener('click', registerClientFixed);
         
-        const clientNameInput = document.getElementById('clientNameFixed');
-        if (clientNameInput) {
-            clientNameInput.addEventListener('input', handleClientAutocompleteFixed);
-            clientNameInput.addEventListener('keypress', (e) => {
+        // CORREÇÃO: IDs sincronizados com HTML
+        const clienteNome = document.getElementById('clientNameFixed');
+        if (clienteNome) {
+            clienteNome.addEventListener('input', handleClientAutocompleteFixed);
+            clienteNome.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    const clientNIF = document.getElementById('clientNIFFixed');
-                    if (clientNIF) clientNIF.focus();
+                    const clienteNIF = document.getElementById('clientNIFFixed');
+                    if (clienteNIF) clienteNIF.focus();
                 }
             });
         }
         
-        const clientNIFInput = document.getElementById('clientNIFFixed');
-        if (clientNIFInput) clientNIFInput.addEventListener('keypress', (e) => {
+        const clienteNIF = document.getElementById('clientNIFFixed');
+        if (clienteNIF) clienteNIF.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') registerClientFixed();
         });
         
@@ -521,7 +535,7 @@ function clearAllEvidence() {
     }
 }
 
-// ===== PROCESSAMENTO DE FICHEIROS - FUZZY MAPPING V11.4 =====
+// ===== PROCESSAMENTO DE FICHEIROS - PARSING REGIONAL V11.4 =====
 async function handleFileUploadModal(event, type) {
     if (!event.target.files || event.target.files.length === 0) return;
     const files = Array.from(event.target.files);
@@ -561,7 +575,7 @@ async function handleFileUploadModal(event, type) {
 
 async function processMultipleFilesModal(type, files, appendMode = true) {
     try {
-        logAudit(`📁 Processando ${files.length} ficheiros ${type.toUpperCase()} via Modal (Fuzzy Mapping v11.4)...`, 'info');
+        logAudit(`📁 Processando ${files.length} ficheiros ${type.toUpperCase()} via Modal (Parsing Regional v11.4)...`, 'info');
         
         if (!VDCSystem.documents[type]) {
             VDCSystem.documents[type] = { files: [], parsedData: [], totals: {}, hashes: {} };
@@ -643,7 +657,7 @@ async function processMultipleFilesModal(type, files, appendMode = true) {
             }
         }
         
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados via Modal (Fuzzy Mapping)', 'success');
+        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados via Modal (Parsing Regional)`, 'success');
         generateMasterHash();
         updateAnalysisButton();
     } catch (error) {
@@ -811,7 +825,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// ===== REGISTO DE CLIENTE - SAFE DOM UPDATE (SEM INNERHTML) =====
+// ===== REGISTO DE CLIENTE - SAFE DOM UPDATE =====
 function loadClientsFromLocal() {
     try {
         const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_4') || '[]');
@@ -823,12 +837,15 @@ function loadClientsFromLocal() {
     }
 }
 
+// CORREÇÃO: Envolvido em if (element) para evitar erros de null
 function handleClientAutocompleteFixed() {
     try {
         const input = document.getElementById('clientNameFixed');
+        if (!input) return;
+        
         const nifInput = document.getElementById('clientNIFFixed');
-        const value = input?.value.trim();
-        const nifValue = nifInput?.value.trim();
+        const value = input.value.trim();
+        const nifValue = nifInput?.value.trim() || '';
         const datalist = document.getElementById('clientSuggestions');
         if (!datalist) return;
         
@@ -898,7 +915,7 @@ function registerClientFixed() {
             platform: VDCSystem.selectedPlatform
         };
         
-        // SAFE DOM UPDATE - NUNCA USAR INNERHTML NO CONTAINER PAI
+        // SAFE DOM UPDATE
         const status = document.getElementById('clientStatusFixed');
         const nameDisplay = document.getElementById('clientNameDisplayFixed');
         const nifDisplay = document.getElementById('clientNifDisplayFixed');
@@ -1127,7 +1144,7 @@ function simulateEvidenceModalUpdate() {
     }
 }
 
-// ===== MOTOR DE EXTRAÇÃO - FUZZY MAPPING V11.4 =====
+// ===== MOTOR DE EXTRAÇÃO - PARSING REGIONAL V11.4 =====
 function extractDAC7Data(text, filename) {
     const data = {
         filename: filename,
@@ -1203,7 +1220,7 @@ function extractDAC7Data(text, filename) {
     return data;
 }
 
-// ===== EXTRACT SAF-T DATA - FUZZY MAPPING V11.4 =====
+// ===== EXTRACT SAF-T DATA - PARSING REGIONAL V11.4 =====
 function extractSAFTData(text, filename, fileType) {
     const data = {
         filename: filename,
@@ -1213,7 +1230,7 @@ function extractSAFTData(text, filename, fileType) {
         transactionCount: 0,
         records: 0,
         transactionDetails: [],
-        extractionMethod: 'Fuzzy Mapping v11.4 - Colunas: IVA, Preço da viagem (sem IVA), Preço da viagem, Gross, Rendimento, Liquido',
+        extractionMethod: 'Parsing Regional v11.4 - Delimitador ; prioritário',
         isoStandard: 'ISO/IEC 27037'
     };
     
@@ -1221,15 +1238,38 @@ function extractSAFTData(text, filename, fileType) {
         const isCSV = fileType === 'text/csv' || filename.endsWith('.csv') || (text.includes(',') && !text.includes('<'));
         
         if (isCSV) {
-            data.extractionMethod = 'CSV Parser - Fuzzy Mapping v11.4';
+            data.extractionMethod = 'CSV Parser - Delimitador ; prioritário';
             
             try {
-                const parsed = Papa.parse(text, {
-                    header: true,
-                    dynamicTyping: true,
-                    skipEmptyLines: true,
-                    delimitersToGuess: [',', ';', '\t']
-                });
+                // FORÇAR TESTAR ; ANTES DE ,
+                const delimiters = [';', ',', '\t'];
+                let parsed = null;
+                
+                for (const delimiter of delimiters) {
+                    try {
+                        parsed = Papa.parse(text, {
+                            header: true,
+                            dynamicTyping: true,
+                            skipEmptyLines: true,
+                            delimiter: delimiter
+                        });
+                        if (parsed.data && parsed.data.length > 0 && Object.keys(parsed.data[0]).length > 1) {
+                            data.extractionMethod += ` (delimitador: ${delimiter})`;
+                            break;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                
+                if (!parsed || !parsed.data || parsed.data.length === 0) {
+                    parsed = Papa.parse(text, {
+                        header: true,
+                        dynamicTyping: true,
+                        skipEmptyLines: true,
+                        delimitersToGuess: [';', ',', '\t']
+                    });
+                }
                 
                 if (parsed.data && parsed.data.length > 0) {
                     let totalGross = 0, totalIVA6 = 0, totalNet = 0;
@@ -1269,20 +1309,45 @@ function extractSAFTData(text, filename, fileType) {
                             }
                         });
                         
+                        // SOMA DINÂMICA: se não encontrou colunas, split na linha e soma primeiro valor após palavra-chave
                         if (precoSemIVA === 0 && iva === 0 && precoTotal === 0) {
-                            const numericValues = Object.values(row)
-                                .map(val => toForensicNumber(val))
-                                .filter(val => val > 0);
+                            const line = Object.values(row).join(' ').toLowerCase();
                             
-                            if (numericValues.length >= 3) {
-                                precoSemIVA = numericValues[0] || 0;
-                                iva = numericValues[1] || 0;
-                                precoTotal = numericValues[2] || 0;
-                            } else if (numericValues.length === 2) {
-                                precoSemIVA = numericValues[0] || 0;
-                                precoTotal = numericValues[1] || 0;
-                            } else if (numericValues.length === 1) {
-                                precoTotal = numericValues[0] || 0;
+                            if (line.includes('gross') || line.includes('bruto') || line.includes('rendimento')) {
+                                const numbers = line.match(/\d+[.,]\d{2}/g);
+                                if (numbers && numbers.length > 0) {
+                                    precoSemIVA = toForensicNumber(numbers[0]);
+                                }
+                            }
+                            if (line.includes('iva') || line.includes('tax')) {
+                                const numbers = line.match(/\d+[.,]\d{2}/g);
+                                if (numbers && numbers.length > 0) {
+                                    iva = toForensicNumber(numbers[0]);
+                                }
+                            }
+                            if (line.includes('total') || line.includes('net') || line.includes('liquido')) {
+                                const numbers = line.match(/\d+[.,]\d{2}/g);
+                                if (numbers && numbers.length > 0) {
+                                    precoTotal = toForensicNumber(numbers[0]);
+                                }
+                            }
+                            
+                            // Fallback: usar valores numéricos por ordem
+                            if (precoSemIVA === 0 && iva === 0 && precoTotal === 0) {
+                                const numericValues = Object.values(row)
+                                    .map(val => toForensicNumber(val))
+                                    .filter(val => val > 0);
+                                
+                                if (numericValues.length >= 3) {
+                                    precoSemIVA = numericValues[0];
+                                    iva = numericValues[1];
+                                    precoTotal = numericValues[2];
+                                } else if (numericValues.length === 2) {
+                                    precoSemIVA = numericValues[0];
+                                    precoTotal = numericValues[1];
+                                } else if (numericValues.length === 1) {
+                                    precoTotal = numericValues[0];
+                                }
                             }
                         }
                         
@@ -1305,7 +1370,7 @@ function extractSAFTData(text, filename, fileType) {
                     data.transactionCount = parsed.data.length;
                     data.records = parsed.data.length;
                     
-                    logAudit(`📊 SAF-T CSV ${filename}: ${parsed.data.length} transações | Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ (Fuzzy Mapping)`, 'success');
+                    logAudit(`📊 SAF-T CSV ${filename}: ${parsed.data.length} transações | Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ (Parsing Regional)`, 'success');
                 }
             } catch (csvError) {
                 console.error(`Erro no parsing CSV ${filename}:`, csvError);
@@ -1351,7 +1416,7 @@ function extractSAFTFromText(text, data) {
     }
 }
 
-// ===== EXTRACT INVOICE DATA - V11.4 COM FUZZY MAPPING =====
+// ===== EXTRACT INVOICE DATA - PARSING REGIONAL V11.4 =====
 function extractInvoiceData(text, filename) {
     const data = {
         filename: filename,
@@ -1363,7 +1428,7 @@ function extractInvoiceData(text, filename) {
         periodo: '',
         boltEntityDetected: false,
         records: 1,
-        extractionMethod: 'Fuzzy Mapping v11.4 - Total com IVA (EUR)',
+        extractionMethod: 'Parsing Regional v11.4 - Total com IVA (EUR)',
         isoStandard: 'ISO/IEC 27037'
     };
     
@@ -1407,12 +1472,14 @@ function extractInvoiceData(text, filename) {
             }
         });
         
+        // CORREÇÃO: Regex robusta para capturar 'Total com IVA (EUR)' ignorando espaços e quebras de linha
         const invoiceValuePatterns = [
-            /Total\s+com\s+IVA\s*\(EUR\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-            /Total\s+\(incl\.\s+IVA\)[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-            /Amount\s+due[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-            /Total\s+amount[:\s]*([\d\.,]+)\s*(?:€|EUR)?/i,
-            /Total[:\s]*([\d\.,]+)\s*(?:€|EUR)\s*$/im
+            /Total\s+com\s+IVA\s*\(EUR\)[\s:]*([\d\.,]+)/i,
+            /Total\s+com\s+IVA[\s:]*([\d\.,]+)\s*(?:€|EUR)/i,
+            /Total\s+\(incl\.\s+IVA\)[\s:]*([\d\.,]+)/i,
+            /Amount\s+due[\s:]*([\d\.,]+)/i,
+            /Total\s+amount[\s:]*([\d\.,]+)/i,
+            /Total[\s:]*([\d\.,]+)\s*(?:€|EUR)\s*$/im
         ];
         
         let invoiceValueFound = false;
@@ -1427,6 +1494,22 @@ function extractInvoiceData(text, filename) {
                 }
             }
         });
+        
+        // SOMA DINÂMICA: Se não encontrou, procurar valores após palavras-chave
+        if (!invoiceValueFound) {
+            const lines = text.split('\n');
+            for (const line of lines) {
+                if (line.toLowerCase().includes('total') && line.toLowerCase().includes('iva')) {
+                    const numbers = line.match(/\d+[.,]\d{2}/g);
+                    if (numbers && numbers.length > 0) {
+                        data.invoiceValue = toForensicNumber(numbers[0]);
+                        invoiceValueFound = true;
+                        logAudit(`🔍 Soma Dinâmica: Total com IVA encontrado = ${data.invoiceValue.toFixed(2)}€`, 'info');
+                        break;
+                    }
+                }
+            }
+        }
         
         const commissionPatterns = [
             /(?:Comissão|Commission|Service\s+fee|Fee)[:\s]*([\d\.,]+)\s*(?:€|EUR)/i,
@@ -1444,16 +1527,16 @@ function extractInvoiceData(text, filename) {
         });
         
         if (data.commissionValue === 0 && data.invoiceValue > 0) {
-            const allNumbers = text.match(/\b\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?\b/g) || [];
-            const uniqueValues = [...new Set(allNumbers.map(n => toForensicNumber(n)))].filter(v => v > 0 && v < data.invoiceValue * 5);
-            
-            const possibleCommissions = uniqueValues.filter(v => 
-                v > data.invoiceValue * 0.2 && v < data.invoiceValue * 0.4
-            );
-            
-            if (possibleCommissions.length > 0) {
-                data.commissionValue = Math.max(...possibleCommissions);
-                logAudit(`🔍 Fuzzy Mapping: Comissão inferida = ${data.commissionValue.toFixed(2)}€ (${filename})`, 'info');
+            const lines = text.split('\n');
+            for (const line of lines) {
+                if (line.toLowerCase().includes('comissão') || line.toLowerCase().includes('commission')) {
+                    const numbers = line.match(/\d+[.,]\d{2}/g);
+                    if (numbers && numbers.length > 0) {
+                        data.commissionValue = toForensicNumber(numbers[0]);
+                        logAudit(`🔍 Soma Dinâmica: Comissão encontrada = ${data.commissionValue.toFixed(2)}€`, 'info');
+                        break;
+                    }
+                }
             }
         }
         
@@ -1491,7 +1574,7 @@ function extractInvoiceData(text, filename) {
     return data;
 }
 
-// ===== EXTRACT STATEMENT DATA - V11.4 COM SOMATÓRIO DE TRANSAÇÕES =====
+// ===== EXTRACT STATEMENT DATA - PARSING REGIONAL V11.4 =====
 function extractStatementData(text, filename) {
     const data = {
         filename: filename,
@@ -1504,7 +1587,7 @@ function extractStatementData(text, filename) {
         tolls: 0,
         records: 0,
         transactionDetails: [],
-        extractionMethod: 'Fuzzy Mapping v11.4 - Soma de Transações Individuais',
+        extractionMethod: 'Parsing Regional v11.4 - Soma de Transações Individuais',
         isoStandard: 'ISO/IEC 27037'
     };
     
@@ -1539,64 +1622,33 @@ function extractStatementData(text, filename) {
             });
         }
         
+        // SOMA DINÂMICA: primeiro valor numérico após palavra-chave
         transactionLines.forEach(line => {
-            if (line.match(/ganhos?\s+na\s+app|earnings|bruto|gross/i)) {
-                const values = line.match(/\d+[.,]\d{2}/g);
-                if (values) {
-                    values.forEach(v => {
-                        const num = toForensicNumber(v);
-                        if (num > 0 && num < 1000) {
-                            data.grossEarnings += num;
-                        }
-                    });
-                }
-            }
+            const lineLower = line.toLowerCase();
+            const numbers = line.match(/\d+[.,]\d{2}/g);
             
-            if (line.match(/campanha|campaign|bónus|bonus|incentive/i)) {
-                const values = line.match(/\d+[.,]\d{2}/g);
-                if (values) {
-                    values.forEach(v => {
-                        const num = toForensicNumber(v);
-                        if (num > 0 && num < 100) {
-                            data.campaigns += num;
-                        }
-                    });
+            if (numbers && numbers.length > 0) {
+                const firstValue = toForensicNumber(numbers[0]);
+                
+                if (lineLower.includes('ganhos') || lineLower.includes('earnings') || lineLower.includes('bruto') || lineLower.includes('gross')) {
+                    data.grossEarnings += firstValue;
                 }
-            }
-            
-            if (line.match(/gorjeta|tip|gratificação|gratuity/i)) {
-                const values = line.match(/\d+[.,]\d{2}/g);
-                if (values) {
-                    values.forEach(v => {
-                        const num = toForensicNumber(v);
-                        if (num > 0 && num < 50) {
-                            data.tips += num;
-                        }
-                    });
+                else if (lineLower.includes('campanha') || lineLower.includes('campaign') || lineLower.includes('bónus') || lineLower.includes('bonus')) {
+                    data.campaigns += firstValue;
                 }
-            }
-            
-            if (line.match(/cancelamento|cancellation|cancel\s+fee/i)) {
-                const values = line.match(/\d+[.,]\d{2}/g);
-                if (values) {
-                    values.forEach(v => {
-                        const num = toForensicNumber(v);
-                        if (num > 0 && num < 30) {
-                            data.cancellations += num;
-                        }
-                    });
+                else if (lineLower.includes('gorjeta') || lineLower.includes('tip')) {
+                    data.tips += firstValue;
                 }
-            }
-            
-            if (line.match(/portagem|toll|road\s+fee/i)) {
-                const values = line.match(/\d+[.,]\d{2}/g);
-                if (values) {
-                    values.forEach(v => {
-                        const num = toForensicNumber(v);
-                        if (num > 0 && num < 20) {
-                            data.tolls += num;
-                        }
-                    });
+                else if (lineLower.includes('cancelamento') || lineLower.includes('cancellation')) {
+                    data.cancellations += firstValue;
+                }
+                else if (lineLower.includes('portagem') || lineLower.includes('toll')) {
+                    data.tolls += firstValue;
+                }
+                // Fallback: se não identificou, somar todos os valores como grossEarnings
+                else if (!lineLower.includes('comissão') && !lineLower.includes('commission') && 
+                         !lineLower.includes('despesa') && !lineLower.includes('fee')) {
+                    data.grossEarnings += firstValue;
                 }
             }
         });
@@ -1652,18 +1704,18 @@ function extractStatementData(text, filename) {
         if (data.grossEarnings === 0 && (data.campaigns > 0 || data.tips > 0 || data.cancellations > 0 || data.tolls > 0)) {
             data.grossEarnings = data.campaigns + data.tips + Math.abs(data.cancellations) + data.tolls;
             if (data.grossEarnings > 0) {
-                logAudit(`🔍 Fuzzy Mapping: Rendimentos Brutos inferidos = ${data.grossEarnings.toFixed(2)}€ (soma de transações)`, 'info');
+                logAudit(`🔍 Soma Dinâmica: Rendimentos Brutos inferidos = ${data.grossEarnings.toFixed(2)}€ (soma de transações)`, 'info');
             }
         }
         
         if (data.commission === 0 && data.grossEarnings > 0 && data.netTransfer > 0) {
             data.commission = -(data.grossEarnings - data.netTransfer);
-            logAudit(`🔍 Fuzzy Mapping: Comissão inferida = ${Math.abs(data.commission).toFixed(2)}€ (diferença Bruto - Líquido)`, 'info');
+            logAudit(`🔍 Soma Dinâmica: Comissão inferida = ${Math.abs(data.commission).toFixed(2)}€ (diferença Bruto - Líquido)`, 'info');
         }
         
         data.records = Math.max(1, Math.floor(transactionLines.length / 2));
         
-        logAudit(`🏦 Extrato ${filename}: Bruto=${data.grossEarnings.toFixed(2)}€ | Comissão=${data.commission.toFixed(2)}€ | Campanhas=${data.campaigns.toFixed(2)}€ | Gorjetas=${data.tips.toFixed(2)}€ | ${data.records} registos (Fuzzy Mapping v11.4)`, 'success');
+        logAudit(`🏦 Extrato ${filename}: Bruto=${data.grossEarnings.toFixed(2)}€ | Comissão=${data.commission.toFixed(2)}€ | Campanhas=${data.campaigns.toFixed(2)}€ | Gorjetas=${data.tips.toFixed(2)}€ | ${data.records} registos (Parsing Regional v11.4)`, 'success');
     } catch (error) {
         console.error(`Erro na extração de extrato ${filename}:`, error);
         data.error = error.message;
@@ -1706,7 +1758,7 @@ async function processLoadedData() {
             VDCSystem.documents.saft.totals.net = totalNet;
             VDCSystem.documents.saft.totals.records = totalRecords;
             VDCSystem.documents.saft.totals.transactionDetails = transactionDetails;
-            logAudit(`SAF-T: Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ | ${totalRecords} transações (Fuzzy Mapping)`, 'info');
+            logAudit(`SAF-T: Bruto=${totalGross.toFixed(2)}€ | IVA6=${totalIVA6.toFixed(2)}€ | Líquido=${totalNet.toFixed(2)}€ | ${totalRecords} transações (Parsing Regional)`, 'info');
         }
         
         if (VDCSystem.documents.invoices && VDCSystem.documents.invoices.parsedData && VDCSystem.documents.invoices.parsedData.length > 0) {
