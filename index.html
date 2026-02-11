@@ -156,7 +156,7 @@
     </div>
 
     <!-- CONTAINER PRINCIPAL DO SISTEMA V11.2 -->
-    <div class="main-container" id="mainContainer" style="display: none;">
+    <div class="main-container">
         <!-- CABEÇALHO FIXO ISO/NIST V11.2 -->
         <header class="main-header">
             <div class="header-content">
@@ -178,11 +178,11 @@
                     </div>
                     <div class="timestamp-item">
                         <i class="fas fa-user-shield"></i>
-                        <span id="sessionIdDisplay">SESSION: --</span>
+                        <span id="sessionId">SESSION: --</span>
                     </div>
                 </div>
                 <div class="demo-section">
-                    <button id="demoModeBtn" class="btn-demo-nav" title="Carregar dados de demonstração">
+                    <button id="demoBtn" class="btn-demo-nav" title="Carregar dados de demonstração">
                         <i class="fas fa-vial"></i> DEMO
                     </button>
                 </div>
@@ -195,7 +195,7 @@
                 <button id="openModalBtn" class="toolbar-btn">
                     <i class="fas fa-database"></i> GESTÃO EVIDÊNCIAS
                 </button>
-                <button id="analyzeBtn" class="toolbar-btn">
+                <button id="processBtn" class="toolbar-btn">
                     <i class="fas fa-microchip"></i> PROCESSAR
                 </button>
                 <button id="analysisBtn" class="toolbar-btn">
@@ -393,13 +393,6 @@
                             </div>
                             <div id="kpiInvoice" class="kpi-value">0,00€</div>
                         </div>
-                        <div class="kpi-card" id="jurosCard" style="display: none;">
-                            <div class="kpi-header">
-                                <i class="fas fa-percent"></i>
-                                <span>JUROS DE MORA (4%)</span>
-                            </div>
-                            <div id="jurosVal" class="kpi-value">0,00€</div>
-                        </div>
                     </div>
                 </section>
 
@@ -425,7 +418,7 @@
                         </div>
                         <div class="stat-card regulatory">
                             <h5>JUROS DE MORA (4%)</h5>
-                            <p id="jurosValStats" class="stat-value regulatory-text">0,00€</p>
+                            <p id="jurosVal" class="stat-value regulatory-text">0,00€</p>
                         </div>
                     </div>
                     <div class="secondary-stats">
