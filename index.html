@@ -12,25 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- PROTOCOLO DE ATIVAÇÃO AUTOMÁTICA VDC v11.5 - INTEGRIDADE DE DADOS -->
-    <script>
-        // Protocolo de Ativação Automática VDC v11.5
-        // Garante populateYears() e master hash na inicialização do DOM
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.populateYears === 'function') {
-                window.populateYears();
-                console.log("✅ VDC: Seletor de anos populado (2018-2036)");
-            }
-            if (typeof window.generateMasterHash === 'function') {
-                setTimeout(() => {
-                    window.generateMasterHash();
-                    console.log("✅ VDC: Master Hash SHA-256 gerada");
-                }, 100);
-            }
-            console.log("🔐 SISTEMA VDC v11.5: Integridade de Dados Verificada.");
-        });
-    </script>
 </head>
 <body>
     <!-- SPLASH SCREEN INICIAL -->
@@ -488,5 +469,28 @@
 
     <!-- SCRIPT PRINCIPAL -->
     <script src="script.js"></script>
+    
+    <!-- PROTOCOLO DE ATIVAÇÃO AUTOMÁTICA VDC v11.5 - PERFEIÇÃO DE EXECUÇÃO -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verifica se as funções do script.js estão disponíveis e executa-as
+            if (typeof window.populateYears === 'function') window.populateYears();
+            if (typeof window.generateMasterHash === 'function') window.generateMasterHash();
+            
+            // Log de Integridade Inicial
+            if (typeof window.logAudit === 'function') {
+                window.logAudit("SISTEMA VDC v11.5: Protocolo de Integridade Ativo.", "success");
+            }
+
+            // Gestão da Splash Screen
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.style.display = 'none', 500);
+                }
+            }, 2000);
+        });
+    </script>
 </body>
 </html>
