@@ -94,6 +94,7 @@
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
+                        <ul id="faturasList" class="file-list-modal" style="margin-top: 0.5rem;"></ul>
                     </div>
 
                     <div class="upload-group-modal">
@@ -103,6 +104,7 @@
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
                         <div id="statementFileListModal" class="file-list-modal"></div>
+                        <ul id="extratosList" class="file-list-modal" style="margin-top: 0.5rem;"></ul>
                     </div>
                 </div>
 
@@ -199,7 +201,6 @@
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
                                 <select id="selYearFixed" class="year-select-fixed">
-                                    <!-- Preenchido dinamicamente -->
                                 </select>
                             </div>
                             <div class="info-item">
@@ -215,7 +216,7 @@
                         
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
-                            <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong></span>
+                            <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong> (NIF: <span id="clientNifDisplayFixed"></span>)</span>
                         </div>
                     </div>
                 </div>
