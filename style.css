@@ -1,7 +1,7 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v11.4
+   VDC SISTEMA DE PERITAGEM FORENSE v11.5
    AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX COMPLETA
-   CORREÇÃO: SIDEBAR FIXA, LAYOUT ESTÁVEL, BLINDAGEM TOTAL
+   CORREÇÃO: SIDEBAR FIXA, DASHBOARD ESTÁVEL, PARECER TÉCNICO JUSTO
    ============================================ */
 
 :root {
@@ -241,7 +241,7 @@ body {
     height: calc(100vh - 120px);
 }
 
-/* ===== SIDEBAR BLINDADA - V11.4 FIX ===== */
+/* ===== SIDEBAR BLINDADA ===== */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
@@ -441,7 +441,7 @@ body {
     box-sizing: border-box;
 }
 
-/* ===== GESTÃO DE EVIDÊNCIAS - ELEMENTO NUNCA OCULTO ===== */
+/* ===== GESTÃO DE EVIDÊNCIAS ===== */
 .evidence-management-section-solid {
     flex: 1;
     display: flex;
@@ -727,6 +727,7 @@ body {
     border-color: var(--iso-blue);
 }
 
+/* ===== DASHBOARD PRINCIPAL - MÁSCARA REMOVIDA ===== */
 .dashboard-fixed {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -735,9 +736,9 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
-    position: sticky;
-    top: 70px;
-    z-index: 50;
+    /* POSITION: STATIC - REMOVE OVERLAY FLUTUANTE */
+    position: static;
+    /* Z-INDEX REMOVIDO - NÃO SOBREPÕE CONTEÚDO */
     justify-content: center;
     align-content: start;
     width: 100%;
@@ -830,6 +831,7 @@ body {
     font-weight: 500;
 }
 
+/* ===== PARECER TÉCNICO-FORENSE BIG DATA - CORREÇÃO DE REDAÇÃO ===== */
 .kpi-section {
     background: rgba(30, 42, 68, 0.5);
     border-radius: var(--border-radius);
@@ -864,6 +866,15 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     box-sizing: border-box;
+}
+
+/* ===== AJUSTE DIRETO PARA O PARECER TÉCNICO ===== */
+.kpi-section .kpi-grid {
+    /* Fonte e espaçamento ajustados */
+    font-size: 0.85rem;
+    line-height: 1.2;
+    max-height: 150px;
+    overflow-y: auto;
 }
 
 @media (min-width: 1400px) {
@@ -2131,8 +2142,9 @@ button:active {
     z-index: 100;
 }
 
+/* Z-INDEX DO DASHBOARD REMOVIDO - FIM DA MÁSCARA */
 .dashboard-fixed {
-    z-index: 50;
+    /* Z-INDEX: AUTO (NENHUM VALOR DEFINIDO) */
 }
 
 .sidebar-header-fixed {
