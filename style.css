@@ -1,7 +1,7 @@
 /* ============================================
-   VDC SISTEMA DE PERITAGEM FORENSE v11.2
+   VDC SISTEMA DE PERITAGEM FORENSE v11.4
    AUDITORIA FISCAL BIG DATA - RESTRUTURAÇÃO UI/UX COMPLETA
-   CORREÇÃO: SIDEBAR FIXA, LAYOUT ESTÁVEL
+   CORREÇÃO: SIDEBAR FIXA, LAYOUT ESTÁVEL, BLINDAGEM TOTAL
    ============================================ */
 
 :root {
@@ -241,15 +241,16 @@ body {
     height: calc(100vh - 120px);
 }
 
+/* ===== SIDEBAR BLINDADA - V11.4 FIX ===== */
 .sidebar {
     background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
     border-right: 1px solid #1e2a44;
     display: flex;
     flex-direction: column;
-    width: 350px;
-    min-width: 320px;
-    max-width: 350px;
-    flex-shrink: 0;
+    width: 350px !important;
+    min-width: 350px !important;
+    max-width: 350px !important;
+    flex-shrink: 0 !important;
     position: sticky;
     top: 120px;
     height: calc(100vh - 120px);
@@ -326,6 +327,16 @@ body {
     background: rgba(30, 42, 68, 0.9);
 }
 
+.form-group-fixed input.success {
+    border-color: var(--nist-green);
+    box-shadow: 0 0 0 2px rgba(0, 204, 136, 0.2);
+}
+
+.form-group-fixed input.error {
+    border-color: var(--warn-primary);
+    box-shadow: 0 0 0 2px rgba(232, 65, 24, 0.2);
+}
+
 .btn-group-fixed {
     margin-top: var(--spacing-sm);
     box-sizing: border-box;
@@ -353,6 +364,13 @@ body {
 .btn-group-fixed .btn-primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-group-fixed .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .info-fixed {
@@ -423,6 +441,7 @@ body {
     box-sizing: border-box;
 }
 
+/* ===== GESTÃO DE EVIDÊNCIAS - ELEMENTO NUNCA OCULTO ===== */
 .evidence-management-section-solid {
     flex: 1;
     display: flex;
@@ -1866,9 +1885,9 @@ body {
         max-height: 600px;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        width: 100%;
-        min-width: 100%;
-        max-width: 100%;
+        width: 350px !important;
+        min-width: 350px !important;
+        max-width: 350px !important;
         position: static;
         height: auto;
     }
@@ -1928,6 +1947,12 @@ body {
 }
 
 @media (max-width: 768px) {
+    .sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+    
     .header-content {
         flex-direction: column;
         text-align: center;
