@@ -2,8 +2,8 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC | Sistema de Peritagem Forense v11.2 - Auditoria Fiscal Big Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>VDC | Sistema de Peritagem Forense v11.4 - Auditoria Fiscal Big Data</title>
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.2</h1>
-            <h2>BIG DATA AUDITORIA FISCAL</h2>
+            <h1>VDC FORENSIC SYSTEM v11.4</h1>
+            <h2>BIG DATA AUDITORIA FISCAL - THE CHECKMATE</h2>
             <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
             <p class="splash-warning">
                 <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
@@ -30,7 +30,7 @@
             </button>
             <div class="splash-footer">
                 <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
-                <p class="version">v11.2 - Auditoria Fiscal Big Data</p>
+                <p class="version">v11.4 - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
             </div>
-            <h2>VDC FORENSIC SYSTEM v11.2 - AUDITORIA FISCAL</h2>
+            <h2>VDC FORENSIC SYSTEM v11.4 - AUDITORIA FISCAL</h2>
             <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação AMT/IMT</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
@@ -53,7 +53,7 @@
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (EXTRUÇÃO ESTRUTURADA)</h3>
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (EXTRAÇÃO ESTRUTURADA)</h3>
                 <button id="closeModalBtn" class="icon-btn">
                     <i class="fas fa-times"></i>
                 </button>
@@ -94,7 +94,7 @@
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
-                        <ul id="faturasList" class="file-list-modal" style="margin-top: 0.5rem;"></ul>
+                        <div id="faturasList" class="file-list-modal" style="margin-top: 0.5rem;"></div>
                     </div>
 
                     <div class="upload-group-modal">
@@ -104,7 +104,7 @@
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
                         <div id="statementFileListModal" class="file-list-modal"></div>
-                        <ul id="extratosList" class="file-list-modal" style="margin-top: 0.5rem;"></ul>
+                        <div id="extratosList" class="file-list-modal" style="margin-top: 0.5rem;"></div>
                     </div>
                 </div>
 
@@ -155,7 +155,7 @@
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.2 AF</span></h1>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.4 AF</span></h1>
                         <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
                     </div>
                 </div>
@@ -191,6 +191,8 @@
                             <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
                         </div>
                         
+                        <datalist id="clientSuggestions"></datalist>
+                        
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> REGISTAR CLIENTE
@@ -200,8 +202,7 @@
                         <div class="info-fixed">
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
-                                <select id="selYearFixed" class="year-select-fixed">
-                                </select>
+                                <select id="selYearFixed" class="year-select-fixed"></select>
                             </div>
                             <div class="info-item">
                                 <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
@@ -214,6 +215,7 @@
                             </div>
                         </div>
                         
+                        <!-- SAFE DOM UPDATE - NUNCA INNERHTML NO CONTAINER PAI -->
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
                             <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong> (NIF: <span id="clientNifDisplayFixed"></span>)</span>
@@ -221,6 +223,7 @@
                     </div>
                 </div>
 
+                <!-- BOTÃO DE GESTÃO DE EVIDÊNCIAS - NUNCA DESAPARECE -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
                         <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
@@ -425,8 +428,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="auditOutput" class="console-output">
-                    </div>
+                    <div id="auditOutput" class="console-output"></div>
                 </section>
             </main>
         </div>
@@ -438,7 +440,7 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.2 - Auditoria Fiscal Big Data | © 2024
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.4 - Auditoria Fiscal Big Data "THE CHECKMATE" | © 2024
                 </div>
             </div>
         </footer>
