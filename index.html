@@ -11,28 +11,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="deepseek_css_20260211_3eafe7.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- SPLASH SCREEN INICIAL - GATEKEEPER: SÓ DESAPARECE POR AÇÃO DO PERITO -->
+    <!-- SPLASH SCREEN INICIAL - GATEKEEPER: NUNCA DESAPARECE AUTOMATICAMENTE -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
             <h1>VDC FORENSIC SYSTEM v11.6</h1>
-            <h2>BIG DATA AUDITORIA FISCAL - GATEKEEPER</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado PT | Taxa Regulação 5%</p>
+            <h2>BIG DATA AUDITORIA FISCAL - GATEKEEPER EDITION</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado PT-PT | Taxa Regulação 5%</p>
             <p class="splash-warning">
-                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Acesso Restrito a Peritos
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
             </p>
-            <!-- ÚNICO GATEKEEPER: BOTÃO QUE ATIVA O SISTEMA -->
             <button id="startSessionBtn" class="splash-btn">
                 <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA
             </button>
             <div class="splash-footer">
                 <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
-                <p class="version">v11.6 - GATEKEEPER - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
+                <p class="version">v11.6 - Auditoria Fiscal Big Data "GATEKEEPER"</p>
             </div>
         </div>
     </div>
@@ -160,8 +159,8 @@
         </div>
     </div>
 
-    <!-- MAIN CONTAINER - INTERFACE PRINCIPAL -->
-    <div id="mainContainer" class="main-container" style="display: none;">
+    <!-- MAIN CONTAINER - INTERFACE PRINCIPAL (OCULTO ATÉ CLIQUE NO GATEKEEPER) -->
+    <div id="mainContainer" class="main-container">
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
@@ -462,13 +461,13 @@
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
                 <div class="copyright">
-                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.6 - Auditoria Fiscal Big Data "GATEKEEPER" | © 2025
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.6 - Auditoria Fiscal Big Data "GATEKEEPER" | © 2024
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- SCRIPT PRINCIPAL - ÚNICO PONTO DE ENTRADA -->
-    <script src="deepseek_javascript_20260211_97d27c.js"></script>
+    <!-- SCRIPT PRINCIPAL - ÚNICO PONTO DE INICIALIZAÇÃO -->
+    <script src="script.js"></script>
 </body>
 </html>
