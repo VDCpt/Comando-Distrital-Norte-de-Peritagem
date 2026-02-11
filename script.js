@@ -932,7 +932,7 @@ function updateCompactCounters() {
     }
 }
 
-// 10. REGISTRO E GESTÃO DE CLIENTES V11.2
+// 10. REGISTRO E GESTÃO DE CLIENTES V11.2 - CORREÇÃO IMPLEMENTADA
 function loadClientsFromLocal() {
     try {
         const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_2') || '[]');
@@ -1024,8 +1024,15 @@ function registerClientFixed() {
         const status = document.getElementById('clientStatusFixed');
         const nameDisplay = document.getElementById('clientNameDisplayFixed');
         
-        if (status) status.style.display = 'flex';
-        if (nameDisplay) nameDisplay.textContent = name;
+        if (status) {
+            status.style.display = 'flex';
+            // CORREÇÃO: Usar textContent em vez de innerHTML
+            status.querySelector('strong').textContent = name;
+        }
+        
+        if (nameDisplay) {
+            nameDisplay.textContent = name; // CORREÇÃO: textContent em vez de innerHTML
+        }
         
         logAudit(`✅ Cliente registado: ${name} (NIF: ${nif})`, 'success');
         
