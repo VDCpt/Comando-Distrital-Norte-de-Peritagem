@@ -1,25 +1,43 @@
-// ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v11.5
-// AUDITORIA FISCAL BIG DATA - VERSÃO FINAL RETIFICADA
-// ============================================
+/**
+ * VDC SISTEMA DE PERITAGEM FORENSE v11.6 GATEKEEPER
+ * Core Logic & Audit Controller
+ * Strict Mode Activated
+ */
 
-// ===== NORMALIZADOR NUMÉRICO =====
+'use strict';
+
+// ==========================================
+// 1. UTILITÁRIOS DE NORMALIZAÇÃO FORENSE
+// ==========================================
+
+/**
+ * toForensicNumber
+ * Normaliza strings monetárias provenientes de CSV/PDF/HTML para Float.
+ * Suporta formatos PT (1.000,00), EU (1,000.00) e mistos.
+ */
 const toForensicNumber = (v) => {
     if (v === null || v === undefined || v === '') return 0;
+    
     let str = v.toString().trim();
+    // Remove ruído (espaços invisíveis, tabs, quebras de linha)
     str = str.replace(/[\n\r\t\s\u200B-\u200D\uFEFF]/g, '');
+    // Remove símbolos de moeda e texto comum
     str = str.replace(/["'`]/g, '').replace(/[€$£]/g, '').replace(/EUR|USD|GBP/gi, '').replace(/\s+/g, '');
     
     const hasComma = str.includes(',');
     const hasDot = str.includes('.');
     
+    // Lógica de inferência de separador decimal
     if (hasComma && hasDot) {
+        // Se o ponto vier antes da vírgula -> PT (1.000,00)
         if (str.indexOf(',') > str.indexOf('.')) {
             str = str.replace(/\./g, '').replace(',', '.');
         } else {
+            // Se a vírgula vier antes do ponto -> EU (1,000.00)
             str = str.replace(/,/g, '');
         }
     } else if (hasComma && !hasDot) {
+        // Apenas vírgula. Se houver mais de uma, é milhar PT.
         const commaCount = (str.match(/,/g) || []).length;
         if (commaCount > 1) {
             const parts = str.split(',');
@@ -28,6 +46,7 @@ const toForensicNumber = (v) => {
             str = str.replace(',', '.');
         }
     } else if (!hasComma && hasDot) {
+        // Apenas ponto. Se houver mais de um, é milhar EUA (1.000.000).
         const dotCount = (str.match(/\./g) || []).length;
         if (dotCount > 1) {
             const parts = str.split('.');
@@ -35,6 +54,7 @@ const toForensicNumber = (v) => {
         }
     }
     
+    // Remove tudo o que não for dígito, ponto ou menos
     str = str.replace(/[^\d.-]/g, '');
     if (str === '' || str === '-' || str === '.') return 0;
     
@@ -42,13 +62,16 @@ const toForensicNumber = (v) => {
     return isNaN(num) ? 0 : Math.abs(num);
 };
 
-function isValidDate(d) {
+const isValidDate = (d) => {
     return d instanceof Date && !isNaN(d.getTime());
-}
+};
 
-// ===== SISTEMA VDC V11.5 =====
+// ==========================================
+// 2. ESTADO GLOBAL DO SISTEMA (VDCSystem)
+// ==========================================
+
 const VDCSystem = {
-    version: 'v11.5-FINAL',
+    version: 'v11.6-GATEKEEPER',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -57,141 +80,169 @@ const VDCSystem = {
     processing: false,
     clientLocked: false,
     
+    // Dados da Entidade Alvo (Bolt)
     boltEntity: {
         nome: "Bolt Operations OÜ",
         nif: "EE102090374",
         endereco: "Vana-Lõuna 15, Tallinn 10134 Estonia",
         isoCompliance: "ISO/IEC 27037",
-        dac7Obrigacao: true,
         taxaRegulacao: "5% (AMT/IMT)"
     },
     
+    // Estrutura de Documentos
     documents: {
-        dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, period: '', records: 0, quarterlyDetails: [] }, hashes: {} },
+        dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, records: 0 }, hashes: {} },
         control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-        saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0, transactionDetails: [] }, hashes: {} },
-        invoices: { files: [], parsedData: [], totals: { commission: 0, iva23: 0, invoiceValue: 0, invoicesFound: [], invoiceNumbers: [], boltEntities: [], records: 0, periodos: [], numerosFatura: [] }, hashes: {}},
-        statements: { files: [], parsedData: [], totals: { transfer: 0, expected: 0, rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0, transactionDetails: [], records: 0 }, hashes: {}}
+        saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0 }, hashes: {} },
+        invoices: { files: [], parsedData: [], totals: { invoiceValue: 0, commission: 0, iva23: 0, records: 0 }, hashes: {} },
+        statements: { files: [], parsedData: [], totals: { rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, records: 0 }, hashes: {} }
     },
     
+    // Análise e Cruzamentos
     analysis: {
         extractedValues: {
-            saftGross: 0, saftIVA6: 0, saftNet: 0, platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-            rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, faturaPlataforma: 0,
-            campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0,
-            prejuizoFiscal: 0, ivaAutoliquidacao: 0, dac7Revenue: 0, dac7Period: '', dac7Quarterly: [],
-            jurosMora: 0, taxaRegulacao: 0, riscoRegulatorio: 0
+            saftGross: 0, saftIVA6: 0, saftNet: 0,
+            platformCommission: 0, bankTransfer: 0, iva23Due: 0,
+            rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
+            faturaPlataforma: 0, diferencialCusto: 0,
+            prejuizoFiscal: 0, ivaAutoliquidacao: 0,
+            dac7Revenue: 0,
+            jurosMora: 0, taxaRegulacao: 0
         },
-        crossings: { deltaA: 0, deltaB: 0, omission: 0, isValid: true, diferencialAlerta: false, fraudIndicators: [], bigDataAlertActive: false, discrepanciaAlertaAtiva: false, riscoRegulatorioAtivo: false },
-        projection: { marketProjection: 0, averagePerDriver: 0, driverCount: 38000, monthsPerYear: 12, yearsOfOperation: 7, totalMarketImpact: 0 },
+        crossings: { deltaA: 0, deltaB: 0, omission: 0, diferencialAlerta: false, bigDataAlertActive: false },
         chainOfCustody: [],
-        anomalies: [],
-        quesitosEstrategicos: [],
         legalCitations: [
             "ISO/IEC 27037:2012 - Preservação de Evidência Digital",
-            "NIST SP 800-86 - Guia para Análise Forense de Dados",
-            "Regime Geral das Infrações Tributárias (RGRC) - Art. 103.º",
-            "Código do IRC, Artigo 87º - Tratamento Contabilístico integral",
-            "CIVA, Artigo 2.º - Obrigação de faturação completa",
-            "CIVA, Artigo 29º - Autoliquidação do IVA",
-            "RGIT, Artigo 103º - Crime de Fraude Fiscal",
-            "Código Penal, Art. 158-A a 158-F - Cadeia de Custódia Digital",
-            "Diretiva DAC7 - Transparência de plataformas digitais",
-            "Lei 83/2017 - Prevenção do Branqueamento de Capitais",
-            "Decreto-Lei 83/2017 - Taxa de Regulação (AMT/IMT)",
-            "Regulamento (UE) 2016/679 - RGPD - Governança de Dados"
+            "NIST SP 800-86 - Guia para Análise Forense",
+            "RGIT - Regime Geral das Infrações Tributárias",
+            "CIVA - Autoliquidação do IVA",
+            "DL 83/2017 - Taxa de Regulação"
         ]
     },
     
+    // Contadores e Logs
     counters: { dac7: 0, control: 0, saft: 0, invoices: 0, statements: 0, total: 0 },
     logs: [],
     chart: null,
-    preRegisteredClients: [],
-    bigDataAlertInterval: null,
-    discrepanciaAlertaInterval: null
+    preRegisteredClients: []
 };
 
-// ===== POPULATE YEARS (CORREÇÃO DE LOOP) =====
-function populateYears() {
-    const yearSelect = document.getElementById('selYearFixed');
-    if (!yearSelect) return; // Retorna silenciosamente se não encontrar
-    
-    yearSelect.innerHTML = '';
-    const currentYear = new Date().getFullYear();
-    VDCSystem.selectedYear = currentYear;
-    for (let year = 2018; year <= 2036; year++) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) option.selected = true;
-        yearSelect.appendChild(option);
-    }
-    console.log(`✅ Anos carregados: 2018 a 2036. Atual: ${currentYear}`);
-}
+// ==========================================
+// 3. INICIALIZAÇÃO E EVENTOS (GATEKEEPER)
+// ==========================================
 
-// ===== DOMContentLoaded =====
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 DOM pronto. Executando populateYears()...');
-    populateYears();
+/**
+ * Inicialização Segura do DOM
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    console.log(`%c VDC v11.6 GATEKEEPER INICIADO `, 'background: #0066cc; color: #fff; padding: 5px;');
+    // Prepara UI sem desbloquear
+    setupStaticListeners();
 });
 
-// ===== WINDOW.ONLOAD =====
-window.onload = async function() {
-    try {
-        console.log('🔧 Inicializando VDC Forensic System v11.5...');
-        
-        // Verificar bibliotecas
-        if (typeof CryptoJS === 'undefined') throw new Error('CryptoJS não carregado');
-        if (typeof Papa === 'undefined') throw new Error('PapaParse não carregado');
-        if (typeof Chart === 'undefined') throw new Error('Chart.js não carregado');
-        
-        const startBtn = document.getElementById('startSessionBtn');
-        if (startBtn) startBtn.addEventListener('click', startForensicSession);
-        
-        startClockAndDate();
-        updatePageTitle('Inicializando Auditoria Fiscal...');
-        logAudit('✅ Sistema VDC v11.5 pronto para auditoria fiscal Big Data', 'success');
-        
-        // Listeners principais
-        setupEventListeners();
-        
-        // Forçar ano se falhou no DOMContentLoaded
-        const yearSelect = document.getElementById('selYearFixed');
-        if (yearSelect && yearSelect.children.length === 0) {
-            populateYears();
-        }
-    } catch (error) {
-        console.error('Erro crítico na inicialização:', error);
-        logAudit(`❌ Erro crítico: ${error.message}`, 'error');
+/**
+ * Window Onload - Finaliza carregamento de recursos
+ */
+window.onload = () => {
+    console.log('Recursos externos carregados.');
+    // Verifica bibliotecas essenciais
+    if (typeof CryptoJS === 'undefined') {
+        console.error('CRÍTICO: CryptoJS não carregado.');
+        alert('Erro de Segurança: Bibliotecas de criptografia indisponíveis.');
+    }
+    if (typeof Papa === 'undefined') {
+        console.error('CRÍTICO: PapaParse não carregado.');
     }
 };
 
-// ===== INICIALIZAÇÃO DA SESSÃO =====
-function startForensicSession() {
+/**
+ * setupStaticListeners
+ * Configura listeners que funcionam independentemente do estado da sessão
+ */
+function setupStaticListeners() {
+    const startBtn = document.getElementById('startSessionBtn');
+    if (startBtn) {
+        // GATEKEEPER: Apenas o clique humano inicia o sistema
+        startBtn.addEventListener('click', startGatekeeperSession);
+    }
+}
+
+/**
+ * startGatekeeperSession
+ * Manipula a transição da Splash Screen para a UI Principal
+ */
+function startGatekeeperSession() {
     try {
         const splashScreen = document.getElementById('splashScreen');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        
         if (splashScreen && loadingOverlay) {
+            // Fade out splash
             splashScreen.style.opacity = '0';
             setTimeout(() => {
                 splashScreen.style.display = 'none';
+                // Show loader
                 loadingOverlay.style.display = 'flex';
-                setTimeout(() => loadForensicSystem(), 300);
+                // Inicializa sistema
+                loadSystemCore();
             }, 500);
         }
     } catch (error) {
-        console.error('Erro ao iniciar sessão:', error);
+        console.error('Erro no startGatekeeperSession:', error);
+        alert('Erro ao iniciar sessão segura.');
     }
 }
 
+/**
+ * loadSystemCore
+ * Carrega o motor lógico do sistema
+ */
+function loadSystemCore() {
+    updateLoadingProgress(20);
+    
+    setTimeout(() => {
+        // Gera ID da Sessão
+        VDCSystem.sessionId = generateSessionId();
+        const sessionIdElement = document.getElementById('sessionIdDisplay');
+        if (sessionIdElement) sessionIdElement.textContent = VDCSystem.sessionId;
+        
+        updateLoadingProgress(40);
+        
+        // Popula anos (2018-2036)
+        populateYears();
+        
+        // Inicia relógio
+        startClockAndDate();
+        
+        updateLoadingProgress(60);
+        
+        // Configura restantes listeners
+        setupMainListeners();
+        
+        updateLoadingProgress(80);
+        
+        // Gera Hash inicial
+        generateMasterHash();
+        
+        setTimeout(() => {
+            updateLoadingProgress(100);
+            // Transição para Main Container
+            setTimeout(showMainInterface, 500);
+        }, 500);
+    }, 500);
+}
+
 function updateLoadingProgress(percent) {
-    const progressBar = document.getElementById('loadingProgress');
-    if (progressBar) progressBar.style.width = percent + '%';
+    const bar = document.getElementById('loadingProgress');
+    const text = document.getElementById('loadingStatusText');
+    if (bar) bar.style.width = percent + '%';
+    if (text) text.textContent = `Carregando módulos... ${percent}%`;
 }
 
 function showMainInterface() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     const mainContainer = document.getElementById('mainContainer');
+    
     if (loadingOverlay && mainContainer) {
         loadingOverlay.style.opacity = '0';
         setTimeout(() => {
@@ -200,753 +251,526 @@ function showMainInterface() {
             setTimeout(() => { mainContainer.style.opacity = '1'; }, 50);
         }, 500);
     }
+    logAudit('SISTEMA VDC v11.6 GATEKEEPER ONLINE', 'success');
 }
 
-async function loadForensicSystem() {
-    try {
-        updateLoadingProgress(10);
-        updatePageTitle('Carregando Sistema...');
-        
-        VDCSystem.sessionId = generateSessionId();
-        const sessionIdElement = document.getElementById('sessionIdDisplay');
-        if (sessionIdElement) sessionIdElement.textContent = VDCSystem.sessionId;
-        updateLoadingProgress(20);
-        
-        populateYears(); // Garantir preenchimento
-        setupPlatformSelector();
-        updateLoadingProgress(40);
-        
-        loadClientsFromLocal();
-        updateLoadingProgress(50);
-        
-        setupEventListeners();
-        updateLoadingProgress(60);
-        
-        resetDashboard();
-        updateLoadingProgress(80);
-        
-        // Gráfico renderizado vazio inicialmente
-        updateLoadingProgress(90);
-        
-        setTimeout(() => {
-            updateLoadingProgress(100);
-            setTimeout(() => showMainInterface(), 300);
-            updatePageTitle('Sistema Pronto');
-            logAudit('✅ Sistema VDC v11.5 inicializado', 'success');
-            logAudit('🔐 Protocolos ativados: ISO/IEC 27037, NIST SP 800-86', 'info');
-            generateMasterHash();
-        }, 500);
-    } catch (error) {
-        console.error('Erro no carregamento:', error);
-        showMainInterface();
+// ==========================================
+// 4. GESTÃO DE UTILIZADORES E DADOS
+// ==========================================
+
+function populateYears() {
+    const yearSelect = document.getElementById('selYearFixed');
+    if (!yearSelect) return;
+    
+    yearSelect.innerHTML = '';
+    const currentYear = new Date().getFullYear();
+    
+    for (let year = 2018; year <= 2036; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) option.selected = true;
+        yearSelect.appendChild(option);
     }
-}
-
-// ===== CONFIGURAÇÕES DE INTERFACE =====
-function setupPlatformSelector() {
-    const selPlatform = document.getElementById('selPlatformFixed');
-    if (!selPlatform) return;
-    selPlatform.addEventListener('change', (e) => {
-        VDCSystem.selectedPlatform = e.target.value;
-        const platformName = e.target.options[e.target.selectedIndex].text;
-        logAudit(`Plataforma selecionada: ${platformName}`, 'info');
-        if (VDCSystem.selectedPlatform === 'bolt') {
-            logAudit(`🎯 ALVO PRINCIPAL: ${VDCSystem.boltEntity.nome}`, 'warn');
-        }
-        resetExtractedValues();
-    });
-}
-
-function resetExtractedValues() {
-    VDCSystem.analysis.extractedValues = {
-        saftGross: 0, saftIVA6: 0, saftNet: 0, platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-        rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, faturaPlataforma: 0,
-        campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0,
-        prejuizoFiscal: 0, ivaAutoliquidacao: 0, dac7Revenue: 0, dac7Period: '', dac7Quarterly: [],
-        jurosMora: 0, taxaRegulacao: 0, riscoRegulatorio: 0
-    };
-    updateDashboard();
-    updateKPIResults();
 }
 
 function startClockAndDate() {
-    function updateDateTime() {
-        try {
-            const now = new Date();
-            if (isNaN(now.getTime())) return;
-            const dateString = now.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const timeString = now.toLocaleTimeString('pt-PT', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const dateElement = document.getElementById('currentDate');
-            const timeElement = document.getElementById('currentTime');
-            if (dateElement) dateElement.textContent = dateString;
-            if (timeElement) timeElement.textContent = timeString;
-        } catch (error) { console.error('Erro no relógio:', error); }
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+    const update = () => {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-PT');
+        const timeStr = now.toLocaleTimeString('pt-PT');
+        
+        const dateEl = document.getElementById('currentDate');
+        const timeEl = document.getElementById('currentTime');
+        
+        if (dateEl) dateEl.textContent = dateStr;
+        if (timeEl) timeEl.textContent = timeStr;
+    };
+    update();
+    setInterval(update, 1000);
 }
 
-// ===== SETUP DE EVENT LISTENERS =====
-function setupEventListeners() {
-    try {
-        const registerBtn = document.getElementById('registerClientBtnFixed');
-        if (registerBtn) registerBtn.addEventListener('click', registerClientFixed);
-        
-        const demoBtn = document.getElementById('demoModeBtn');
-        if (demoBtn) demoBtn.addEventListener('click', activateDemoMode);
-        
-        const openModalBtn = document.getElementById('openEvidenceModalBtn');
-        if (openModalBtn) openModalBtn.addEventListener('click', openEvidenceModal);
-        
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const closeAndSaveBtn = document.getElementById('closeAndSaveBtn');
-        
-        // CORREÇÃO: Atualizar botão de análise ao fechar modal
-        const closeHandler = () => {
-            closeEvidenceModal();
-            updateAnalysisButton(); // Verifica se há evidências para ativar o botão
-        };
-        
-        if (closeModalBtn) closeModalBtn.addEventListener('click', closeHandler);
-        if (closeAndSaveBtn) closeAndSaveBtn.addEventListener('click', closeHandler);
-        
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllEvidence);
-        
-        setupModalUploadButtons();
-        
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        if (analyzeBtn) analyzeBtn.addEventListener('click', performForensicAnalysis);
-        
-        const exportJSONBtn = document.getElementById('exportJSONBtn');
-        if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportJSON);
-        
-        const exportPDFBtn = document.getElementById('exportPDFBtn');
-        if (exportPDFBtn) exportPDFBtn.addEventListener('click', exportPDF);
-        
-        const resetBtn = document.getElementById('resetBtn');
-        if (resetBtn) resetBtn.addEventListener('click', resetDashboard);
-        
-        const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-        if (clearConsoleBtn) clearConsoleBtn.addEventListener('click', clearConsole);
-        
-        const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
-        if (toggleConsoleBtn) toggleConsoleBtn.addEventListener('click', toggleConsole);
-        
-        const custodyBtn = document.getElementById('custodyBtn');
-        if (custodyBtn) custodyBtn.addEventListener('click', showChainOfCustody);
-        
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) evidenceModal.addEventListener('click', (e) => {
-            if (e.target === evidenceModal) closeHandler();
-        });
-    } catch (error) {
-        console.error('Erro na configuração de eventos:', error);
-    }
+function setupMainListeners() {
+    // Registo de Cliente
+    const registerBtn = document.getElementById('registerClientBtnFixed');
+    if (registerBtn) registerBtn.addEventListener('click', registerClient);
+    
+    // Demo Mode
+    const demoBtn = document.getElementById('demoModeBtn');
+    if (demoBtn) demoBtn.addEventListener('click', activateDemoMode);
+    
+    // Modal Evidências
+    const openModalBtn = document.getElementById('openEvidenceModalBtn');
+    if (openModalBtn) openModalBtn.addEventListener('click', openEvidenceModal);
+    
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeAndSaveBtn = document.getElementById('closeAndSaveBtn');
+    
+    const closeModalHandler = () => {
+        closeEvidenceModal();
+        updateAnalysisButton(); // Verifica estado
+    };
+    
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModalHandler);
+    if (closeAndSaveBtn) closeAndSaveBtn.addEventListener('click', closeModalHandler);
+    
+    // Uploads
+    setupUploadListeners();
+    
+    // Ações Principais
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) analyzeBtn.addEventListener('click', performAudit);
+    
+    const exportJSONBtn = document.getElementById('exportJSONBtn');
+    if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportDataJSON);
+    
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) resetBtn.addEventListener('click', resetSystem);
+    
+    const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+    if (clearConsoleBtn) clearConsoleBtn.addEventListener('click', clearConsole);
+    
+    // Fechar modal ao clicar fora
+    const modal = document.getElementById('evidenceModal');
+    if (modal) modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModalHandler();
+    });
 }
 
-function setupModalUploadButtons() {
+function setupUploadListeners() {
     const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
     types.forEach(type => {
         const btn = document.getElementById(`${type}UploadBtnModal`);
         const input = document.getElementById(`${type}FileModal`);
         if (btn && input) {
             btn.addEventListener('click', () => input.click());
-            input.addEventListener('change', (e) => handleFileUploadModal(e, type));
+            input.addEventListener('change', (e) => handleFileUpload(e, type));
         }
     });
-}
-
-// ===== GESTÃO DE MODAL =====
-function openEvidenceModal() {
-    try {
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) {
-            evidenceModal.style.display = 'flex';
-            updateEvidenceSummary();
-            updateCompactCounters();
-            logAudit('📂 Modal aberto', 'info');
-        }
-    } catch (error) {
-        console.error('Erro ao abrir modal:', error);
-    }
-}
-
-function closeEvidenceModal() {
-    try {
-        const evidenceModal = document.getElementById('evidenceModal');
-        if (evidenceModal) evidenceModal.style.display = 'none';
-    } catch (error) {
-        console.error('Erro ao fechar modal:', error);
-    }
-}
-
-// ===== LIMPAR EVIDÊNCIAS =====
-function clearAllEvidence() {
-    if (confirm('Tem a certeza que deseja limpar TODAS as evidências?')) {
-        // Reset estrutura de documentos
-        VDCSystem.documents = {
-            dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, period: '', records: 0, quarterlyDetails: [] }, hashes: {} },
-            control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-            saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0, transactionDetails: [] }, hashes: {} },
-            invoices: { files: [], parsedData: [], totals: { commission: 0, iva23: 0, invoiceValue: 0, invoicesFound: [], invoiceNumbers: [], boltEntities: [], records: 0, periodos: [], numerosFatura: [] }, hashes: {}},
-            statements: { files: [], parsedData: [], totals: { transfer: 0, expected: 0, rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0, transactionDetails: [], records: 0 }, hashes: {}}
-        };
-        VDCSystem.counters = { dac7: 0, control: 0, saft: 0, invoices: 0, statements: 0, total: 0 };
-        
-        // Limpar UI
-        ['dac7FileListModal', 'controlFileListModal', 'saftFileListModal', 'invoiceFileListModal', 'statementFileListModal'].forEach(id => {
-            updateFileListModal(id, []);
-        });
-        
-        updateEvidenceSummary();
-        updateAnalysisButton(); // Desativar botão
-        updateEvidenceCount();
-        updateCompactCounters();
-        generateMasterHash();
-        logAudit('🗑️ Evidências limpas', 'warn');
-    }
-}
-
-// ===== PROCESSAMENTO DE FICHEIROS =====
-async function handleFileUploadModal(event, type) {
-    if (!event.target.files || event.target.files.length === 0) return;
-    const files = Array.from(event.target.files);
     
-    const uploadBtn = document.querySelector(`#${type}UploadBtnModal`);
-    if (uploadBtn) {
-        uploadBtn.classList.add('processing');
-        uploadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...`;
-    }
-    
-    try {
-        await processMultipleFilesModal(type, files, true);
-        const totalCount = VDCSystem.documents[type].files.length;
-        updateCounter(type, totalCount);
-        updateCompactCounters();
-        updateEvidenceSummary();
-        updateEvidenceCount();
-        generateMasterHash();
-        logAudit(`✅ ${files.length} ficheiros ${type.toUpperCase()} processados`, 'success');
-    } catch (error) {
-        logAudit(`❌ Erro no processamento: ${error.message}`, 'error');
-    } finally {
-        if (uploadBtn) {
-            uploadBtn.classList.remove('processing');
-            uploadBtn.innerHTML = `<i class="fas fa-file-upload"></i> SELECIONAR FICHEIROS`;
-        }
-        event.target.value = '';
-    }
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllEvidence);
 }
 
-async function processMultipleFilesModal(type, files, appendMode = true) {
-    try {
-        if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: {}, hashes: {} };
-        if (!VDCSystem.documents[type].files) VDCSystem.documents[type].files = [];
-        if (!VDCSystem.documents[type].parsedData) VDCSystem.documents[type].parsedData = [];
-        
-        if (appendMode) VDCSystem.documents[type].files.push(...files);
-        else VDCSystem.documents[type].files = files;
-        
-        for (const file of files) {
-            try {
-                const text = await readFileAsText(file);
-                const fileHash = CryptoJS.SHA256(text).toString();
-                VDCSystem.documents[type].hashes[file.name] = fileHash;
-                addToChainOfCustody(file, type, fileHash);
-                
-                let extractedData = null;
-                // Simplificação para este exemplo: os parsers específicos seriam chamados aqui
-                // Como não há dados reais, simulamos extração básica
-                extractedData = { filename: file.name, size: file.size, records: 1, type: type };
-                
-                if (extractedData) {
-                    VDCSystem.documents[type].parsedData.push({
-                        filename: file.name,
-                        hash: fileHash,
-                        data: extractedData,
-                        timestamp: new Date().toISOString()
-                    });
-                    
-                    VDCSystem.documents[type].totals.records = (VDCSystem.documents[type].totals.records || 0) + 1;
-                    updateFileListModal(`${type}FileListModal`, VDCSystem.documents[type].files, fileHash);
-                }
-            } catch (fileError) {
-                console.error(`Erro no ficheiro ${file.name}:`, fileError);
-            }
-        }
-    } catch (error) {
-        console.error('Erro no processamento:', error);
-        throw error;
-    }
-}
+// ==========================================
+// 5. LÓGICA DE CLIENTES
+// ==========================================
 
-function updateFileListModal(listId, files) {
-    const fileList = document.getElementById(listId);
-    if (!fileList) return;
-    fileList.innerHTML = '';
-    if (files.length === 0) {
-        fileList.classList.remove('visible');
-        return;
-    }
-    fileList.classList.add('visible');
-    
-    files.forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item-modal';
-        const size = formatBytes(file.size);
-        const hash = VDCSystem.documents[getTypeFromListId(listId)]?.hashes[file.name] || '';
-        
-        fileItem.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <span class="file-name-modal">${file.name}</span>
-            <span class="file-status-modal">${size} ✓</span>
-            ${hash ? `<span class="file-hash-modal"><i class="fas fa-fingerprint"></i> ${hash.substring(0, 12)}...</span>` : ''}
-        `;
-        fileList.appendChild(fileItem);
-    });
-}
-
-function getTypeFromListId(listId) {
-    if (listId.includes('dac7')) return 'dac7';
-    if (listId.includes('control')) return 'control';
-    if (listId.includes('saft')) return 'saft';
-    if (listId.includes('invoice')) return 'invoices';
-    if (listId.includes('statement')) return 'statements';
-    return 'dac7';
-}
-
-function updateEvidenceSummary() {
-    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
-    let totalFiles = 0, totalRecords = 0;
-    
-    types.forEach(type => {
-        const count = VDCSystem.documents[type]?.files?.length || 0;
-        const records = VDCSystem.documents[type]?.totals?.records || 0;
-        const el = document.getElementById(`summary${type.charAt(0).toUpperCase() + type.slice(1)}`);
-        if (el) el.textContent = `${count} ficheiros | ${records} registos`;
-        
-        totalFiles += count;
-        totalRecords += records;
-    });
-    
-    const totalEl = document.getElementById('summaryTotal');
-    if (totalEl) totalEl.textContent = `${totalFiles} ficheiros | ${totalRecords} registos`;
-}
-
-function updateEvidenceCount() {
-    const evidenceBtn = document.getElementById('openEvidenceModalBtn');
-    const totalFiles = Object.values(VDCSystem.counters).reduce((a, b) => a + b, 0);
-    if (evidenceBtn) {
-        const countEl = evidenceBtn.querySelector('.evidence-count-solid');
-        if (countEl) countEl.textContent = `${totalFiles} ficheiros`;
-    }
-}
-
-function updateCompactCounters() {
-    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
-    types.forEach(type => {
-        const el = document.getElementById(`${type}CountCompact`);
-        if (el) el.textContent = VDCSystem.documents[type]?.files?.length || 0;
-    });
-}
-
-function formatBytes(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = 2;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-// ===== REGISTO DE CLIENTE =====
-function loadClientsFromLocal() {
-    try {
-        const clients = JSON.parse(localStorage.getItem('vdc_clients_bd_v11_5') || '[]');
-        VDCSystem.preRegisteredClients = clients;
-    } catch (error) { console.error('Erro ao carregar clientes:', error); }
-}
-
-function registerClientFixed() {
+function registerClient() {
     const nameInput = document.getElementById('clientNameFixed');
     const nifInput = document.getElementById('clientNIFFixed');
     const name = nameInput?.value.trim();
     const nif = nifInput?.value.trim();
     
-    if (!name || name.length < 3) { alert('Nome inválido'); return; }
-    if (!nif || !/^\d{9}$/.test(nif)) { alert('NIF inválido'); return; }
-    
-    VDCSystem.client = { name, nif, registrationDate: new Date().toISOString(), platform: VDCSystem.selectedPlatform };
-    
-    const status = document.getElementById('clientStatusFixed');
-    if (status) {
-        status.style.display = 'flex';
-        document.getElementById('clientNameDisplayFixed').textContent = name;
-        document.getElementById('clientNifDisplayFixed').textContent = nif;
+    if (!name || name.length < 3) {
+        showToast('Nome inválido', 'error');
+        return;
     }
     
-    logAudit(`✅ Cliente registado: ${name}`, 'success');
+    if (!nif || !/^\d{9}$/.test(nif)) {
+        showToast('NIF inválido (9 dígitos)', 'error');
+        return;
+    }
+    
+    VDCSystem.client = {
+        name: name,
+        nif: nif,
+        platform: VDCSystem.selectedPlatform,
+        timestamp: new Date().toISOString()
+    };
+    
+    // Atualiza UI
+    const statusEl = document.getElementById('clientStatusFixed');
+    const nameDisplay = document.getElementById('clientNameDisplayFixed');
+    const nifDisplay = document.getElementById('clientNifDisplayFixed');
+    
+    if (statusEl) statusEl.style.display = 'flex';
+    if (nameDisplay) nameDisplay.textContent = name;
+    if (nifDisplay) nifDisplay.textContent = nif;
+    
+    logAudit(`Cliente registado: ${name} (${nif})`, 'success');
     updateAnalysisButton();
 }
 
-// ===== CADEIA DE CUSTÓDIA =====
-function addToChainOfCustody(file, type, hash = '') {
+// ==========================================
+// 6. GESTÃO DE MODAL E EVIDÊNCIAS
+// ==========================================
+
+function openEvidenceModal() {
+    const modal = document.getElementById('evidenceModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        updateEvidenceSummary();
+    }
+}
+
+function closeEvidenceModal() {
+    const modal = document.getElementById('evidenceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function handleFileUpload(event, type) {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+    
+    const btn = document.querySelector(`#${type}UploadBtnModal`);
+    if (btn) {
+        btn.classList.add('processing');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...';
+    }
+    
+    try {
+        // Processa cada ficheiro
+        for (const file of files) {
+            await processFile(file, type);
+        }
+        
+        logAudit(`${files.length} ficheiro(s) ${type} carregado(s).`, 'success');
+        updateEvidenceSummary();
+        updateCounters();
+        generateMasterHash();
+    } catch (error) {
+        console.error(error);
+        logAudit(`Erro no upload: ${error.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.classList.remove('processing');
+            // Restaura texto original baseado no tipo
+            const iconMap = { dac7: 'fa-file-contract', control: 'fa-file-shield', saft: 'fa-file-code', invoices: 'fa-file-invoice-dollar', statements: 'fa-file-contract' };
+            btn.innerHTML = `<i class="fas ${iconMap[type]}"></i> SELECIONAR FICHEIROS`;
+        }
+        event.target.value = ''; // Limpa input
+    }
+}
+
+async function processFile(file, type) {
+    const text = await readFileAsText(file);
+    const hash = CryptoJS.SHA256(text).toString();
+    
+    // Regista na estrutura de dados
+    if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: {}, hashes: {} };
+    
+    VDCSystem.documents[type].files.push(file);
+    VDCSystem.documents[type].hashes[file.name] = hash;
+    VDCSystem.documents[type].totals.records = (VDCSystem.documents[type].totals.records || 0) + 1;
+    
+    // Adiciona à Cadeia de Custódia
     VDCSystem.analysis.chainOfCustody.push({
         filename: file.name,
-        fileType: type,
+        type: type,
+        hash: hash.substring(0, 16) + '...',
+        timestamp: new Date().toLocaleString()
+    });
+    
+    // Simulação de parsing simples (num sistema real, aqui iriam os parsers complexos)
+    VDCSystem.documents[type].parsedData.push({
+        filename: file.name,
         size: file.size,
-        uploadTimestamp: new Date().toISOString(),
-        hash: hash
+        contentLength: text.length
+    });
+    
+    // Atualiza UI da lista
+    const listId = `${type}FileListModal`;
+    const listEl = document.getElementById(listId);
+    if (listEl) {
+        listEl.style.display = 'block';
+        const item = document.createElement('div');
+        item.className = 'file-item-modal';
+        item.innerHTML = `
+            <i class="fas fa-check-circle" style="color: var(--nist-green)"></i>
+            <span class="file-name-modal">${file.name}</span>
+            <span class="file-status-modal">${formatBytes(file.size)}</span>
+            <span class="file-hash-modal">${hash.substring(0,8)}...</span>
+        `;
+        listEl.appendChild(item);
+    }
+}
+
+function clearAllEvidence() {
+    if (!confirm('Tem a certeza? Isto apagará todos os dados carregados.')) return;
+    
+    // Reset estrutura de documentos
+    Object.keys(VDCSystem.documents).forEach(key => {
+        VDCSystem.documents[key] = { files: [], parsedData: [], totals: { records: 0 }, hashes: {} };
+    });
+    
+    // Limpa UI de listas
+    const lists = document.querySelectorAll('.file-list-modal');
+    lists.forEach(l => l.innerHTML = '');
+    
+    updateEvidenceSummary();
+    updateCounters();
+    generateMasterHash();
+    logAudit('Todas as evidências limpas.', 'warn');
+}
+
+function updateEvidenceSummary() {
+    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
+    let totalFiles = 0;
+    
+    types.forEach(type => {
+        const count = VDCSystem.documents[type]?.files?.length || 0;
+        totalFiles += count;
+        const el = document.getElementById(`summary${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        if (el) el.textContent = `${count} ficheiros`;
+    });
+    
+    const totalEl = document.getElementById('summaryTotal');
+    if (totalEl) totalEl.textContent = `${totalFiles} ficheiros`;
+}
+
+function updateCounters() {
+    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
+    types.forEach(type => {
+        const count = VDCSystem.documents[type]?.files?.length || 0;
+        const el = document.getElementById(`${type}CountCompact`);
+        if (el) el.textContent = count;
     });
 }
 
-function showChainOfCustody() {
-    logAudit('📋 Cadeia de Custódia:', 'success');
-    VDCSystem.analysis.chainOfCustody.forEach((r, i) => {
-        logAudit(`${i+1}. ${r.filename} (${r.fileType}) | ${r.hash.substring(0,16)}...`, 'info');
-    });
-}
+// ==========================================
+// 7. MOTOR DE AUDITORIA & CÁLCULOS
+// ==========================================
 
-// ===== MODO DEMO =====
 function activateDemoMode() {
     if (VDCSystem.processing) return;
     VDCSystem.demoMode = true;
     VDCSystem.processing = true;
     
-    const demoBtn = document.getElementById('demoModeBtn');
-    if (demoBtn) {
-        demoBtn.disabled = true;
-        demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
-    }
+    logAudit('ATIVANDO MODO DEMO...', 'info');
     
-    logAudit('🔐 ATIVANDO MODO DEMO', 'warn');
+    // Regista Cliente Demo
+    document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
+    document.getElementById('clientNIFFixed').value = '123456789';
+    registerClient();
     
-    // Limpar dados anteriores
-    clearAllEvidence();
-    
-    // Preencher Cliente Demo
-    document.getElementById('clientNameFixed').value = 'Momento Eficaz Unipessoal, Lda';
-    document.getElementById('clientNIFFixed').value = '517905450';
-    registerClientFixed();
-    
-    // Simular carregamento de ficheiros
-    simulateDemoFiles();
+    // Simula Uploads
+    simulateUpload('dac7', 1);
+    simulateUpload('control', 1);
+    simulateUpload('saft', 1);
+    simulateUpload('invoices', 1);
+    simulateUpload('statements', 1);
     
     setTimeout(() => {
+        // Injeta valores de auditoria simulados
         VDCSystem.analysis.extractedValues = {
-            saftGross: 3202.54, saftIVA6: 192.15, saftNet: 2409.95,
-            rendimentosBrutos: 3202.54, comissaoApp: -792.59, rendimentosLiquidos: 2409.95,
-            faturaPlataforma: 239.00, campanhas: 20.00, gorjetas: 9.00, cancelamentos: 15.60, portagens: 7.65,
-            diferencialCusto: 553.59, prejuizoFiscal: 116.25, ivaAutoliquidacao: 127.33,
-            jurosMora: 22.14, taxaRegulacao: 39.63
+            saftGross: 5000.00, saftIVA6: 300.00, saftNet: 4700.00,
+            rendimentosBrutos: 5000.00, comissaoApp: -1200.00, rendimentosLiquidos: 3800.00,
+            faturaPlataforma: 200.00, // Diferencial flagrante
+            diferencialCusto: 1000.00,
+            ivaAutoliquidacao: 230.00, // 23% de 1000
+            jurosMora: 40.00, // 4% de 1000
+            taxaRegulacao: 60.00 // 5% de 1200
         };
         
-        const proj = VDCSystem.analysis.projection;
-        proj.averagePerDriver = 553.59;
-        proj.totalMarketImpact = proj.averagePerDriver * proj.driverCount * proj.monthsPerYear * proj.yearsOfOperation;
-        proj.marketProjection = proj.totalMarketImpact / 1000000;
-        
-        VDCSystem.analysis.crossings.deltaB = Math.abs(792.59 - 239.00);
-        VDCSystem.analysis.crossings.omission = VDCSystem.analysis.crossings.deltaB;
+        VDCSystem.analysis.crossings.deltaB = 1000.00;
         VDCSystem.analysis.crossings.diferencialAlerta = true;
         
         updateDashboard();
-        updateKPIResults();
-        renderDashboardChart();
-        criarDashboardDiferencial();
-        criarDashboardRegulatorio();
-        generateMasterHash();
+        renderChart();
+        showAlerts();
         
-        triggerBigDataAlert(239.00, 792.59, 553.59);
-        
-        logAudit('✅ MODO DEMO ATIVADO', 'success');
+        logAudit('Auditoria Demo concluída.', 'success');
         VDCSystem.processing = false;
-        if (demoBtn) {
-            demoBtn.disabled = false;
-            demoBtn.innerHTML = '<i class="fas fa-vial"></i> CARREGAR DADOS DEMO';
-        }
-    }, 1500);
+    }, 1000);
 }
 
-function simulateDemoFiles() {
-    // Simula contadores e preenche UI
-    VDCSystem.counters = { dac7: 1, control: 1, saft: 1, invoices: 1, statements: 1, total: 5 };
-    updateCompactCounters();
-    updateEvidenceCount();
+function simulateUpload(type, count) {
+    // Simula apenas contadores e UI
+    for(let i=0; i<count; i++) {
+        if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: { records: 0 }, hashes: {} };
+        VDCSystem.documents[type].files.push({ name: `demo_${type}_${i}.txt` });
+        VDCSystem.documents[type].totals.records++;
+    }
+    updateCounters();
     updateEvidenceSummary();
 }
 
-// ===== ANÁLISE =====
-function performForensicAnalysis() {
-    try {
-        // Na prática, isto processaria os parsedData. 
-        // No modo demo ou simples, atualiza os valores calculados.
-        logAudit('🔍 Iniciando cruzamento...', 'info');
-        
-        // (Simplificação: assumindo que os valores já estão em extractedValues)
-        updateDashboard();
-        updateKPIResults();
-        renderDashboardChart();
-        
-        logAudit('✅ Auditoria concluída', 'success');
-    } catch (error) {
-        console.error(error);
-        logAudit(`❌ Erro na auditoria: ${error.message}`, 'error');
+function performAudit() {
+    if (!VDCSystem.client) {
+        showToast('Registe um cliente primeiro.', 'error');
+        return;
     }
+    
+    logAudit('INICIANDO CRUZAMENTO DE DADOS...', 'info');
+    
+    // Num cenário real, aqui seria feita a extração real dos dados
+    // Como não temos ficheiros reais neste exemplo, assumimos zero se não for demo
+    
+    if (!VDCSystem.demoMode) {
+        showToast('Carregue ficheiros para executar a auditoria real.', 'info');
+        return;
+    }
+    
+    updateDashboard();
+    renderChart();
+    showAlerts();
+    
+    logAudit('AUDITORIA CONCLUÍDA.', 'success');
 }
 
-// ===== ATUALIZAÇÃO DE INTERFACE =====
+// ==========================================
+// 8. UI DE RESULTADOS & ALERTAS
+// ==========================================
+
 function updateDashboard() {
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
     const ev = VDCSystem.analysis.extractedValues;
+    const format = (val) => val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
     
-    const ids = {
-        'netVal': ev.saftNet, 'iva6Val': ev.saftIVA6, 'commissionVal': ev.comissaoApp,
-        'iva23Val': ev.ivaAutoliquidacao
+    const map = {
+        'netVal': ev.saftNet,
+        'iva6Val': ev.saftIVA6,
+        'commissionVal': ev.comissaoApp,
+        'iva23Val': ev.ivaAutoliquidacao,
+        'kpiGanhos': ev.rendimentosBrutos,
+        'kpiComm': ev.comissaoApp,
+        'kpiNet': ev.rendimentosLiquidos,
+        'kpiInvoice': ev.faturaPlataforma
     };
     
-    Object.entries(ids).forEach(([id, value]) => {
+    for (const [id, val] of Object.entries(map)) {
         const el = document.getElementById(id);
-        if (el) {
-            el.textContent = formatter.format(value);
-            el.classList.remove('alert-text');
-            if (id === 'iva23Val' && value > 0) el.classList.add('alert-text');
-        }
-    });
+        if (el) el.textContent = format(val);
+    }
     
-    // Juros
+    // Juros Especiais
     const jurosCard = document.getElementById('jurosCard');
     const jurosVal = document.getElementById('jurosVal');
     if (jurosCard && jurosVal && ev.jurosMora > 0) {
-        jurosVal.textContent = formatter.format(ev.jurosMora);
         jurosCard.style.display = 'flex';
+        jurosVal.textContent = format(ev.jurosMora);
     }
 }
 
-function updateKPIResults() {
-    const formatter = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
-    const ev = VDCSystem.analysis.extractedValues;
-    const proj = VDCSystem.analysis.projection;
-    
-    const kpis = {
-        'kpiGanhos': ev.rendimentosBrutos, 'kpiComm': ev.comissaoApp, 'kpiNet': ev.rendimentosLiquidos,
-        'kpiInvoice': ev.faturaPlataforma, 'valCamp': ev.campanhas, 'valTips': ev.gorjetas,
-        'valCanc': ev.cancelamentos, 'valTolls': ev.portagens
-    };
-    
-    Object.entries(kpis).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.textContent = formatter.format(value);
-            el.classList.remove('hidden');
-        }
-    });
-    
-    const results = {
-        'grossResult': ev.saftGross, 'transferResult': ev.rendimentosLiquidos,
-        'differenceResult': VDCSystem.analysis.crossings.deltaB,
-        'marketResult': proj.marketProjection.toFixed(2) + 'M€'
-    };
-    
-    Object.entries(results).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) {
-            if (typeof value === 'number') el.textContent = formatter.format(value);
-            else el.textContent = value;
-            el.classList.remove('hidden');
-        }
-    });
-}
-
-function criarDashboardDiferencial() {
-    const kpiSection = document.querySelector('.kpi-section');
-    if (!kpiSection) return;
-    
-    let card = document.getElementById('diferencialCard');
-    if (card) card.remove();
-    
-    const grid = kpiSection.querySelector('.kpi-grid');
-    if (!grid) return;
-    
-    if (VDCSystem.analysis.extractedValues.diferencialCusto > 0) {
-        card = document.createElement('div');
-        card.id = 'diferencialCard';
-        card.className = 'kpi-card alert blink-alert';
-        card.innerHTML = `
-            <h4><i class="fas fa-exclamation-triangle"></i> DIFERENCIAL DE CUSTO</h4>
-            <p id="diferencialVal">${VDCSystem.analysis.extractedValues.diferencialCusto.toFixed(2)}€</p>
-            <small>Saída de caixa não documentada</small>
-        `;
-        grid.appendChild(card);
-    }
-}
-
-function criarDashboardRegulatorio() {
-    const kpiSection = document.querySelector('.kpi-section');
-    if (!kpiSection) return;
-    
-    let card = document.getElementById('regulatoryCardKPI');
-    if (card) card.remove();
-    
-    const grid = kpiSection.querySelector('.kpi-grid');
-    if (!grid) return;
-    
-    if (VDCSystem.analysis.extractedValues.taxaRegulacao > 0) {
-        card = document.createElement('div');
-        card.id = 'regulatoryCardKPI';
-        card.className = 'kpi-card regulatory';
-        card.innerHTML = `
-            <h4><i class="fas fa-balance-scale-right"></i> RISCO REGULATÓRIO</h4>
-            <p id="regulatoryValKPI">${VDCSystem.analysis.extractedValues.taxaRegulacao.toFixed(2)}€</p>
-            <small>Taxa de Regulação 5%</small>
-        `;
-        grid.appendChild(card);
-    }
-}
-
-function renderDashboardChart() {
+function renderChart() {
     const ctx = document.getElementById('forensicChart');
     if (!ctx) return;
     
     if (VDCSystem.chart) VDCSystem.chart.destroy();
     
     const ev = VDCSystem.analysis.extractedValues;
-    // Se valores são zero e não é demo, não desenhar gráfico vazio com erro
-    const total = ev.saftNet + ev.saftIVA6 + Math.abs(ev.comissaoApp) + ev.ivaAutoliquidacao + ev.jurosMora;
     
-    if (total === 0 && !VDCSystem.demoMode) return; 
-
-    const labels = [
-        `Ilíquido: ${ev.saftNet.toFixed(2)}€`,
-        `IVA 6%: ${ev.saftIVA6.toFixed(2)}€`,
-        `Comissão: ${Math.abs(ev.comissaoApp).toFixed(2)}€`,
-        `IVA 23%: ${ev.ivaAutoliquidacao.toFixed(2)}€`,
-        `Juros: ${ev.jurosMora.toFixed(2)}€`
-    ];
+    const data = {
+        labels: ['Ilíquido', 'IVA 6%', 'Comissão', 'IVA 23%', 'Juros'],
+        datasets: [{
+            label: 'Euros (€)',
+            data: [ev.saftNet, ev.saftIVA6, Math.abs(ev.comissaoApp), ev.ivaAutoliquidacao, ev.jurosMora],
+            backgroundColor: ['#00a8ff', '#44bd32', '#e84118', '#fbc531', '#e84118'],
+            borderWidth: 1
+        }]
+    };
     
-    const data = [ev.saftNet, ev.saftIVA6, Math.abs(ev.comissaoApp), ev.ivaAutoliquidacao, ev.jurosMora];
-    
-    VDCSystem.chart = new Chart(ctx.getContext('2d'), {
+    VDCSystem.chart = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Valores (€)',
-                data: data,
-                backgroundColor: ['rgba(0, 242, 255, 0.7)', 'rgba(59, 130, 246, 0.7)', 'rgba(255, 62, 62, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(255, 107, 53, 0.7)'],
-                borderColor: ['#00f2ff', '#3b82f6', '#ff3e3e', '#f59e0b', '#ff6b35'],
-                borderWidth: 2
-            }]
-        },
+        data: data,
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: 'y',
             plugins: { legend: { display: false } },
-            scales: {
-                x: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#cbd5e1' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#cbd5e1' } }
-            }
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
 
-function triggerBigDataAlert(invoiceVal, commissionVal, deltaVal) {
-    const alertEl = document.getElementById('bigDataAlert');
-    if (!alertEl) return;
+function showAlerts() {
+    const ev = VDCSystem.analysis.extractedValues;
+    const cross = VDCSystem.analysis.crossings;
     
-    const iEl = document.getElementById('alertInvoiceVal');
-    const cEl = document.getElementById('alertCommVal');
-    const dEl = document.getElementById('alertDeltaVal');
+    // Alerta Big Data
+    if (cross.diferencialAlerta) {
+        const alert = document.getElementById('bigDataAlert');
+        if (alert) {
+            alert.style.display = 'flex';
+            document.getElementById('alertInvoiceVal').textContent = ev.faturaPlataforma.toFixed(2) + '€';
+            document.getElementById('alertCommVal').textContent = Math.abs(ev.comissaoApp).toFixed(2) + '€';
+        }
+    }
     
-    if (iEl) iEl.textContent = invoiceVal.toFixed(2) + '€';
-    if (cEl) cEl.textContent = commissionVal.toFixed(2) + '€';
-    if (dEl) dEl.textContent = deltaVal.toFixed(2) + '€';
-    
-    alertEl.style.display = 'flex';
-    logAudit('❌ ALERTA BIG DATA ATIVADO', 'error');
-}
-
-// ===== EXPORTAÇÃO JSON =====
-async function exportJSON() {
-    try {
-        const evidenceData = {
-            sistema: "VDC Forensic System v11.5",
-            sessao: VDCSystem.sessionId,
-            cliente: VDCSystem.client || { nome: "Demo", nif: "000000000" },
-            analise: VDCSystem.analysis,
-            timestamp: new Date().toISOString()
-        };
-        
-        const blob = new Blob([JSON.stringify(evidenceData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `VDC_EVIDENCE_${VDCSystem.sessionId}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        logAudit('✅ JSON exportado', 'success');
-    } catch (error) {
-        logAudit(`❌ Erro ao exportar: ${error.message}`, 'error');
+    // Alerta Layering
+    if (ev.diferencialCusto > 0) {
+        const alert = document.getElementById('omissionAlert');
+        if (alert) {
+            alert.style.display = 'flex';
+            document.getElementById('omissionValue').textContent = ev.diferencialCusto.toFixed(2) + '€';
+        }
     }
 }
 
-// ===== EXPORTAÇÃO PDF =====
-function exportPDF() {
-    logAudit('📄 Gerando PDF...', 'info');
-    alert("Funcionalidade de PDF simula a geração do relatório pericial.");
-    logAudit('✅ PDF gerado', 'success');
+// ==========================================
+// 9. EXPORTAÇÃO & RESET
+// ==========================================
+
+function exportDataJSON() {
+    const data = {
+        session: VDCSystem.sessionId,
+        client: VDCSystem.client,
+        analysis: VDCSystem.analysis,
+        timestamp: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `VDC_AUDIT_${VDCSystem.sessionId}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    logAudit('Relatório JSON exportado.', 'success');
 }
 
-// ===== RESET =====
-function resetDashboard() {
-    if (!confirm('Deseja resetar o sistema?')) return;
+function resetSystem() {
+    if (!confirm('Repor o sistema para o estado inicial?')) return;
     
-    // Limpar UI
-    ['kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice', 'valCamp', 'valTips', 'valCanc', 'valTolls', 'netVal', 'iva6Val', 'commissionVal', 'iva23Val', 'grossResult', 'transferResult', 'differenceResult', 'marketResult'].forEach(id => {
+    VDCSystem.client = null;
+    VDCSystem.analysis.extractedValues = {
+        saftGross: 0, saftIVA6: 0, saftNet: 0,
+        platformCommission: 0, bankTransfer: 0, iva23Due: 0,
+        rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
+        faturaPlataforma: 0, diferencialCusto: 0,
+        prejuizoFiscal: 0, ivaAutoliquidacao: 0,
+        dac7Revenue: 0,
+        jurosMora: 0, taxaRegulacao: 0
+    };
+    
+    // Limpa UI de texto
+    const ids = [
+        'netVal', 'iva6Val', 'commissionVal', 'iva23Val',
+        'kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice'
+    ];
+    ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '0,00€';
     });
     
-    // Remover cartões dinâmicos
-    const cards = ['diferencialCard', 'regulatoryCardKPI'];
-    cards.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    });
-    
-    // Reset dados
-    VDCSystem.client = null;
-    VDCSystem.analysis.extractedValues = {
-        saftGross: 0, saftIVA6: 0, saftNet: 0, platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-        rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, faturaPlataforma: 0,
-        campanhas: 0, gorjetas: 0, cancelamentos: 0, portagens: 0, diferencialCusto: 0,
-        prejuizoFiscal: 0, ivaAutoliquidacao: 0, dac7Revenue: 0, dac7Period: '', dac7Quarterly: [],
-        jurosMora: 0, taxaRegulacao: 0, riscoRegulatorio: 0
-    };
-    
-    VDCSystem.analysis.crossings = { deltaA: 0, deltaB: 0, omission: 0, isValid: true, diferencialAlerta: false, fraudIndicators: [], bigDataAlertActive: false };
-    
-    // Limpar cliente UI
-    const status = document.getElementById('clientStatusFixed');
-    if (status) status.style.display = 'none';
-    const inputs = ['clientNameFixed', 'clientNIFFixed'];
-    inputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
-            el.classList.remove('success', 'error');
-        }
-    });
+    // Limpa inputs
+    document.getElementById('clientNameFixed').value = '';
+    document.getElementById('clientNIFFixed').value = '';
+    document.getElementById('clientStatusFixed').style.display = 'none';
     
     clearAllEvidence();
-    logAudit('🔄 Sistema resetado', 'info');
+    clearConsole();
     generateMasterHash();
+    
+    logAudit('Sistema reiniciado.', 'info');
 }
 
-// ===== UTILIDADES =====
+// ==========================================
+// 10. FUNÇÕES AUXILIARES GERAIS
+// ==========================================
+
+function updateAnalysisButton() {
+    const btn = document.getElementById('analyzeBtn');
+    if (!btn) return;
+    
+    const hasClient = VDCSystem.client !== null;
+    const hasControl = VDCSystem.documents.control?.files?.length > 0;
+    const hasSaft = VDCSystem.documents.saft?.files?.length > 0;
+    
+    // Requer: Cliente + Controlo + SAFT
+    btn.disabled = !(hasClient && hasControl && hasSaft);
+}
+
 function readFileAsText(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -956,66 +780,61 @@ function readFileAsText(file) {
     });
 }
 
-function updateCounter(type, count) {
-    VDCSystem.counters[type] = count;
-    VDCSystem.counters.total = Object.values(VDCSystem.counters).reduce((a,b)=>a+b, 0);
-}
-
-function updateAnalysisButton() {
-    const btn = document.getElementById('analyzeBtn');
-    if (!btn) return;
-    
-    // Exige: Cliente registado, pelo menos 1 ficheiro de controle, 1 SAF-T
-    const hasClient = VDCSystem.client !== null;
-    const hasControl = VDCSystem.documents.control?.files?.length > 0;
-    const hasSaft = VDCSystem.documents.saft?.files?.length > 0;
-    
-    btn.disabled = !(hasClient && hasControl && hasSaft);
-    if (!btn.disabled) logAudit('✅ Sistema pronto para auditoria', 'success');
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function generateSessionId() {
-    return `VDC-${Date.now().toString(36).toUpperCase()}`;
+    return 'VDC-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
 }
 
 function generateMasterHash() {
-    const data = JSON.stringify(VDCSystem.analysis.extractedValues) + VDCSystem.sessionId + Date.now();
-    const hash = CryptoJS.SHA256(data).toString();
+    // Cria hash baseado no estado atual para garantir integridade
+    const payload = JSON.stringify(VDCSystem.analysis.extractedValues) + VDCSystem.sessionId + Date.now();
+    const hash = CryptoJS.SHA256(payload).toString();
+    
     const el = document.getElementById('masterHashValue');
     if (el) el.textContent = hash;
+    
     return hash;
 }
 
-function logAudit(message, type = 'info') {
-    const timestamp = new Date().toLocaleTimeString('pt-PT');
+function logAudit(msg, type = 'info') {
     const output = document.getElementById('auditOutput');
     if (!output) return;
     
+    const time = new Date().toLocaleTimeString('pt-PT');
     const entry = document.createElement('div');
     entry.className = `log-entry log-${type}`;
-    entry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> <span style="font-weight: bold;">${type.toUpperCase()}</span> ${message}`;
+    entry.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+    
     output.appendChild(entry);
     output.scrollTop = output.scrollHeight;
-    
-    VDCSystem.logs.push({ timestamp, type, message });
 }
 
 function clearConsole() {
     const output = document.getElementById('auditOutput');
     if (output) output.innerHTML = '';
-    logAudit('Consola limpa', 'info');
 }
 
-function toggleConsole() {
-    const output = document.getElementById('auditOutput');
-    if (output) {
-        output.style.height = output.style.height === '250px' ? '120px' : '250px';
-    }
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+    
+    toast.innerHTML = `<i class="fas ${icon}"></i> <p>${message}</p>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
-
-function updatePageTitle(status) {
-    document.title = status ? `VDC v11.5 - ${status}` : 'VDC v11.5';
-}
-
-// EXPORT GLOBAL
-window.VDCSystem = VDCSystem;
