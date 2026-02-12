@@ -1,10 +1,11 @@
 /* =====================================================================
    VDC SISTEMA DE PERITAGEM FORENSE · v11.9 FINAL
    ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia
+   TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
-   1. VARIÁVEIS GLOBAIS & RESET · UNIFICAÇÃO COMPLETA
+   1. VARIÁVEIS GLOBAIS & RESET
    --------------------------------------------------------------------- */
 :root {
     /* Paleta de Cores Forense - Cores Institucionais */
@@ -1171,7 +1172,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   10. MODAL · GESTÃO DE EVIDÊNCIAS
+   10. MODAL · GESTÃO DE EVIDÊNCIAS (v11.9)
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1692,7 +1693,8 @@ body {
     .sidebar,
     .btn-tool,
     .evidence-management-btn-solid,
-    #toastContainer {
+    #toastContainer,
+    .modal-overlay {
         display: none !important;
     }
 
@@ -1713,10 +1715,13 @@ body {
         width: 100%;
         border: none;
     }
+
+    .master-hash {
+        border: 1px solid #ccc;
+    }
 }
 
 /* ---------------------------------------------------------------------
    FIM · CONSOLIDAÇÃO TOTAL DO FICHEIRO STYLE.CSS v11.9
-   TODAS AS PROPRIEDADES PRESERVADAS, SEM ERROS DE SINTAXE
-   FECHO DE CHAVES PERFEITO
+   TODOS OS BLOCOS FECHADOS · SEM ERROS DE SINTAXE
    --------------------------------------------------------------------- */
