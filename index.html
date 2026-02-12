@@ -3,1805 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>VDC | Sistema de Peritagem Forense · CONSOLIDAÇÃO OFICIAL v11.6 · v11.7 · v11.8 · v11.9</title>
+    <title>VDC | Sistema de Peritagem Forense · v11.9</title>
     <link rel="shortcut icon" href="#">
+    <!-- Fontes e Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Dependências Externas de Segurança e Parsing -->
+    <!-- Ficheiros Locais -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Dependências Externas (Segurança e Parsing) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Folha de Estilos Isolada (style.css) mantida -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Meta-informação de Integridade – versão consolidada: todos os protocolos -->
-    <meta name="vdc-protocol" content="GATEKEEPER v11.6 · HYBRID v11.7 · COMPLIANCE v11.8 · FORENSIC PRO v11.9 · CONSOLIDATED">
+    <meta name="vdc-protocol" content="GATEKEEPER v11.9 · FORENSIC PRO">
     <meta name="security-mode" content="strict">
     <meta name="core-version" content="v12.3-Engine">
-
-    <!-- CSS COMPLETO CONSOLIDADO - TODOS OS FICHEIROS STYLE.CSS UNIFICADOS -->
-    <style>
-/* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · CONSOLIDAÇÃO OFICIAL
-   Versões: v11.6 GATEKEEPER · v11.7 HYBRID · v11.8 COMPLIANCE · v11.9 FORENSIC PRO
-   ISO/IEC 27037 | NIST SP 800-86 | SHADOW ENTRY DETECTOR | MULTILANG
-   ===================================================================== */
-
-/* ---------------------------------------------------------------------
-   1. VARIÁVEIS GLOBAIS & RESET · UNIFICAÇÃO COMPLETA
-   --------------------------------------------------------------------- */
-:root {
-    /* Paleta de Cores Forense - Base consolidada */
-    --bg-primary: #0a0f1d;
-    --bg-secondary: #0c1629;
-    --bg-tertiary: #111b2d;
-    --bg-sidebar: #0a1322;
-    --bg-3d: #111b2d;
-    
-    --text-primary: #e4eaf7;
-    --text-secondary: #b8c6e0;
-    --text-tertiary: #8a9bb8;
-    
-    /* Cores de Ação e Alerta - Todas as versões */
-    --accent-primary: #00a8ff;
-    --accent-secondary: #0097e6;
-    --warn-primary: #e84118;
-    --warn-secondary: #ff9f1a;
-    --success-primary: #44bd32;
-    --regulatory-orange: #ff6b35;
-    --info-primary: #8c7ae6;
-    
-    /* v11.8 Shadow Entry Color */
-    --shadow-entry: #9b59b6;
-    
-    /* Cores Institucionais */
-    --iso-blue: #0066cc;
-    --nist-green: #00cc88;
-    
-    /* Bordas e Layout */
-    --border-color: #1e2a44;
-    --border-radius: 6px;
-    --border-radius-sm: 4px;
-    
-    /* Tipografia */
-    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-    
-    /* Espaçamento - Todos os tokens */
-    --spacing-xs: 0.5rem;
-    --spacing-sm: 0.75rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    
-    /* Sombras */
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.3);
-    --shadow-lg: 0 8px 16px rgba(0,0,0,0.4);
-    --shadow-inset: inset 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Reset Básico - Completo */
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: var(--font-main);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.5;
-    min-height: 100vh;
-    overflow-x: hidden;
-    font-size: 14px;
-    max-width: 100vw;
-}
-
-/* ---------------------------------------------------------------------
-   2. SPLASH SCREEN (GATEKEEPER) · VERSÃO CONSOLIDADA v11.6/v11.7/v11.8/v11.9
-   --------------------------------------------------------------------- */
-.splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0a0f1d 0%, #0c1629 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.5s ease;
-}
-
-.splash-content {
-    text-align: center;
-    padding: 3rem;
-    background: rgba(30, 42, 68, 0.7);
-    border-radius: var(--border-radius);
-    border: 2px solid var(--iso-blue);
-    box-shadow: 0 0 50px rgba(0, 168, 255, 0.2);
-    max-width: 800px;
-}
-
-.splash-logo {
-    font-size: 5rem;
-    color: var(--iso-blue);
-    margin-bottom: 1.5rem;
-}
-
-.splash-screen h1 {
-    font-size: 2.5rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.splash-screen h2 {
-    font-size: 1.8rem;
-    color: var(--accent-primary);
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-}
-
-.splash-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-    font-family: var(--font-mono);
-}
-
-.splash-warning-box {
-    background: rgba(232, 65, 24, 0.1);
-    border: 1px solid var(--warn-primary);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin: 2rem 0;
-}
-
-.splash-warning-box p {
-    color: var(--warn-primary);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.splash-btn {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
-    color: white;
-    border: none;
-    padding: 1.2rem 3rem;
-    border-radius: var(--border-radius);
-    font-size: 1.2rem;
-    font-weight: 900;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    transition: all 0.3s ease;
-    font-family: var(--font-main);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.splash-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 102, 204, 0.5);
-}
-
-.splash-footer {
-    margin-top: 2rem;
-    color: var(--text-tertiary);
-    font-size: 0.8rem;
-}
-
-.splash-footer .version {
-    color: var(--nist-green);
-    font-weight: 800;
-    font-family: var(--font-mono);
-    margin-top: 0.5rem;
-}
-
-/* ---------------------------------------------------------------------
-   3. LOADING OVERLAY · CONSOLIDADO
-   --------------------------------------------------------------------- */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9000;
-}
-
-.loading-content {
-    text-align: center;
-    width: 100%;
-    max-width: 600px;
-}
-
-.loading-spinner {
-    font-size: 4rem;
-    color: var(--iso-blue);
-    margin-bottom: 1.5rem;
-}
-
-.loading-spinner i.fa-brain {
-    margin-left: 0.5rem;
-}
-
-.loading-content h2 {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.loading-content p {
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    margin-bottom: 1.5rem;
-}
-
-.loading-progress {
-    width: 100%;
-    max-width: 300px;
-    height: 6px;
-    background: var(--bg-tertiary);
-    border-radius: 3px;
-    overflow: hidden;
-    margin: 1rem auto;
-}
-
-.loading-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
-    width: 0%;
-    transition: width 0.3s ease;
-}
-
-.loading-status {
-    color: var(--accent-secondary);
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-}
-
-/* ---------------------------------------------------------------------
-   4. LAYOUT PRINCIPAL · MAIN CONTAINER
-   --------------------------------------------------------------------- */
-.main-container {
-    display: none;
-    flex-direction: column;
-    min-height: 100vh;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    width: 100%;
-}
-
-/* Header Consolidado */
-.main-header {
-    background: linear-gradient(135deg, #0c1629 0%, #0a0f1d 100%);
-    padding: 0.8rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    width: 100%;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1600px;
-    margin: 0 auto;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-    min-width: 250px;
-}
-
-.logo-section i {
-    color: var(--accent-primary);
-    font-size: 1.8rem;
-}
-
-.logo-section h1 {
-    font-size: 1.4rem;
-    color: var(--text-primary);
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.version-badge {
-    background: var(--accent-secondary);
-    color: #000;
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-}
-
-.subtitle {
-    font-size: 0.8rem;
-    color: var(--text-tertiary);
-    margin-top: 0.2rem;
-    font-weight: 500;
-}
-
-/* Botões de Navegação - Todos os tipos */
-.btn-demo-nav,
-.btn-litigation-nav,
-.btn-lang-nav {
-    background: linear-gradient(90deg, #ff9f1a 0%, #ffaf40 100%);
-    color: #0a0f1d;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    margin-left: 0.5rem;
-}
-
-.btn-demo-nav:hover,
-.btn-litigation-nav:hover,
-.btn-lang-nav:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
-}
-
-.btn-litigation-nav {
-    background: linear-gradient(90deg, var(--shadow-entry) 0%, #8e44ad 100%);
-    color: #fff;
-}
-
-.btn-lang-nav {
-    background: linear-gradient(90deg, #6c5ce7 0%, #a29bfe 100%);
-    color: #fff;
-}
-
-/* Session Info */
-.session-info {
-    display: flex;
-    align-items: center;
-}
-
-.timestamp-fbi {
-    background: rgba(0, 168, 255, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    border: 1px solid rgba(0, 168, 255, 0.2);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-family: var(--font-mono);
-}
-
-.timestamp-fbi strong {
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-.session-id {
-    color: var(--accent-primary);
-}
-
-#currentTime {
-    color: var(--success-primary);
-}
-
-/* App Grid Layout - Base 320px/1fr */
-.app-container {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    flex: 1;
-    overflow: hidden;
-    max-width: 100%;
-    width: 100%;
-}
-
-/* ---------------------------------------------------------------------
-   5. SIDEBAR · COMPLETAMENTE CONSOLIDADA
-   --------------------------------------------------------------------- */
-.sidebar {
-    background: linear-gradient(180deg, #0a1322 0%, #0c1629 100%);
-    border-right: 1px solid var(--border-color);
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    overflow-y: auto;
-    height: calc(100vh - 80px);
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
-    flex-shrink: 0 !important;
-}
-
-.sidebar-header-fixed {
-    background: linear-gradient(135deg, #0c1629 0%, #0a1322 100%);
-    border-bottom: 2px solid var(--iso-blue);
-    padding: var(--spacing-md);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-md);
-    border-radius: var(--border-radius-sm);
-}
-
-.sidebar-header-fixed h3 {
-    color: var(--iso-blue);
-    font-size: 1rem;
-    margin-bottom: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 800;
-    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
-    padding-bottom: 0.5rem;
-}
-
-/* Formulário Cliente */
-.client-identification-fixed {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.form-group-fixed label {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-}
-
-.form-group-fixed input {
-    width: 100%;
-    padding: 0.6rem;
-    background: rgba(20, 30, 48, 0.9);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    color: var(--text-primary);
-    font-family: var(--font-main);
-    font-size: 0.8rem;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-.form-group-fixed input:focus {
-    outline: none;
-    border-color: var(--iso-blue);
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
-    background: rgba(30, 42, 68, 0.9);
-}
-
-.form-group-fixed input.success {
-    border-color: var(--nist-green);
-    box-shadow: 0 0 0 2px rgba(0, 204, 136, 0.2);
-}
-
-.form-group-fixed input.error {
-    border-color: var(--warn-primary);
-    box-shadow: 0 0 0 2px rgba(232, 65, 24, 0.2);
-}
-
-.btn-group-fixed .btn-primary {
-    width: 100%;
-    background: var(--accent-primary);
-    color: #fff;
-    border: none;
-    padding: 0.7rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-family: var(--font-main);
-    font-size: 0.85rem;
-}
-
-.btn-group-fixed .btn-primary:hover {
-    background: var(--accent-secondary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-}
-
-.btn-group-fixed .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.client-status-fixed {
-    background: rgba(68, 189, 50, 0.1);
-    border: 1px solid var(--success-primary);
-    color: var(--success-primary);
-    padding: 0.8rem;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    font-weight: 600;
-}
-
-/* Filtros Sidebar */
-.sidebar-filters {
-    margin-top: var(--spacing-sm);
-}
-
-.sidebar-filters h3 {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    margin-bottom: 0.8rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.info-fixed {
-    background: rgba(20, 30, 48, 0.7);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.info-item .info-label {
-    font-size: 0.75rem;
-    color: var(--text-tertiary);
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-weight: 600;
-}
-
-.info-item select {
-    padding: 0.5rem;
-    background: rgba(30, 42, 68, 0.9);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: var(--border-radius-sm);
-    font-family: var(--font-main);
-    font-size: 0.8rem;
-    width: 100%;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.info-item select:focus {
-    outline: none;
-    border-color: var(--iso-blue);
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
-}
-
-/* Gestão de Evidências */
-.evidence-management-section-solid {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    padding: var(--spacing-md) 0;
-}
-
-.evidence-management-btn-solid {
-    width: 100%;
-    padding: 1rem;
-    background: linear-gradient(90deg, var(--nist-green) 0%, var(--success-primary) 100%);
-    color: var(--bg-primary);
-    border: none;
-    border-radius: var(--border-radius);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    box-shadow: var(--shadow-md);
-    margin-bottom: var(--spacing-md);
-}
-
-.evidence-management-btn-solid:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 204, 136, 0.4);
-}
-
-.evidence-count-solid {
-    background: var(--bg-primary);
-    color: var(--nist-green);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-}
-
-/* Contadores Compactos - Grid 5 colunas */
-.counters-compact {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-}
-
-.counter-item-compact {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-    background: rgba(20, 30, 48, 0.8);
-    border-radius: var(--border-radius-sm);
-    min-height: 50px;
-}
-
-.counter-label-compact {
-    display: block;
-    font-size: 0.65rem;
-    color: var(--text-tertiary);
-    margin-bottom: 0.2rem;
-    font-weight: 700;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-}
-
-.counter-value-compact {
-    display: block;
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    text-align: center;
-}
-
-/* ---------------------------------------------------------------------
-   6. ÁREA DE ANÁLISE (MAIN) · CONSOLIDADA
-   --------------------------------------------------------------------- */
-.analysis-area {
-    padding: 1.5rem;
-    overflow-y: auto;
-    background: var(--bg-secondary);
-    height: calc(100vh - 80px);
-    width: 100%;
-    max-width: 100%;
-}
-
-/* Toolbar */
-.toolbar-section {
-    background: rgba(30, 42, 68, 0.5);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
-}
-
-.toolbar-grid {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn-forensic {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3);
-    transition: all 0.3s ease;
-}
-
-.btn-forensic:disabled {
-    background: var(--bg-tertiary);
-    color: var(--text-tertiary);
-    cursor: not-allowed;
-    box-shadow: none;
-    opacity: 0.5;
-}
-
-.btn-tool {
-    background: rgba(20, 30, 48, 0.8);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 0.8rem 1rem;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-}
-
-.btn-tool:hover {
-    background: rgba(0, 102, 204, 0.1);
-    border-color: var(--iso-blue);
-    color: var(--text-primary);
-}
-
-/* Dashboard Cards */
-.dashboard-fixed {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-}
-
-.stat-card {
-    background: linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(30, 42, 68, 0.9) 100%);
-    padding: 1.2rem;
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--accent-primary);
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.stat-card:hover {
-    transform: translateY(-1px);
-}
-
-.stat-card h4 {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-}
-
-.stat-card p {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    margin-bottom: 0.25rem;
-}
-
-.stat-card.alert {
-    border-left-color: var(--warn-primary);
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
-}
-
-.stat-card.regulatory {
-    border-left-color: var(--regulatory-orange);
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(20, 30, 48, 0.9) 100%);
-}
-
-/* KPI Section */
-.kpi-section {
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
-}
-
-.kpi-section h3 {
-    color: var(--iso-blue);
-    font-size: 1rem;
-    margin-bottom: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 800;
-    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
-    padding-bottom: 0.5rem;
-}
-
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.kpi-card {
-    background: var(--bg-primary);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    border-top: 2px solid var(--border-color);
-}
-
-.kpi-card.highlight {
-    border-top-color: var(--success-primary);
-}
-
-.kpi-card.danger {
-    border-top-color: var(--warn-primary);
-}
-
-.kpi-card h4 {
-    font-size: 0.75rem;
-    color: var(--text-tertiary);
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-}
-
-.kpi-card p {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-}
-
-/* Chart Section */
-.chart-section {
-    background: rgba(30, 42, 68, 0.5);
-    padding: 1.5rem;
-    border-radius: var(--border-radius);
-    margin-bottom: 1.5rem;
-    height: 400px;
-    border: 1px solid var(--border-color);
-}
-
-.chart-container {
-    position: relative;
-    height: 320px;
-    width: 100%;
-    background: rgba(20, 30, 48, 0.8);
-    border-radius: var(--border-radius-sm);
-    padding: 15px;
-    border: 1px solid var(--border-color);
-}
-
-.chart-container canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-
-/* ---------------------------------------------------------------------
-   7. ALERTAS · CONSOLIDAÇÃO COMPLETA (v11.6, v11.7, v11.8, v11.9)
-   --------------------------------------------------------------------- */
-.analysis-results {
-    background: rgba(30, 42, 68, 0.5);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
-}
-
-.omission-alert,
-.bigdata-alert,
-.shadow-alert {
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
-    border: 1px solid var(--warn-primary);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    display: none;
-    align-items: center;
-    gap: 1rem;
-}
-
-.bigdata-alert {
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
-    border: 2px solid var(--warn-primary);
-    animation: pulse-red 2s infinite;
-}
-
-.shadow-alert {
-    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.05) 100%);
-    border: 2px solid var(--shadow-entry);
-    color: var(--shadow-entry);
-    animation: pulse-purple 2s infinite;
-}
-
-.shadow-alert i {
-    color: var(--shadow-entry);
-    font-size: 1.5rem;
-}
-
-.alert-icon {
-    font-size: 1.5rem;
-}
-
-.alert-text strong {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
-}
-
-/* Alertas Diferenciais e Regulatórios */
-.diferencial-alert {
-    border-color: var(--warn-secondary) !important;
-    background: linear-gradient(135deg, rgba(255, 159, 26, 0.1) 0%, rgba(255, 159, 26, 0.05) 100%) !important;
-}
-
-.diferencial-alert i.fa-balance-scale {
-    color: var(--warn-secondary) !important;
-    font-size: 1.8rem !important;
-}
-
-.diferencial-alert strong {
-    color: var(--warn-secondary) !important;
-    font-weight: 800 !important;
-}
-
-.regulatory-alert {
-    border-color: var(--regulatory-orange) !important;
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%) !important;
-}
-
-.regulatory-alert i.fa-gavel {
-    color: var(--regulatory-orange) !important;
-    font-size: 1.8rem !important;
-}
-
-.regulatory-alert strong {
-    color: var(--regulatory-orange) !important;
-    font-weight: 800 !important;
-}
-
-/* ---------------------------------------------------------------------
-   8. CONSOLE SECTION · LOG DE AUDITORIA
-   --------------------------------------------------------------------- */
-.console-section {
-    background: #000;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-.console-header {
-    background: #111;
-    padding: 0.5rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #333;
-}
-
-.console-header h3 {
-    color: var(--accent-primary);
-    font-size: 0.9rem;
-    margin-bottom: 0;
-}
-
-.console-controls {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.icon-btn {
-    background: none;
-    border: 1px solid #333;
-    color: var(--text-secondary);
-    width: 32px;
-    height: 32px;
-    border-radius: var(--border-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1rem;
-}
-
-.icon-btn:hover {
-    background: rgba(0, 102, 204, 0.1);
-    border-color: var(--accent-primary);
-    color: var(--text-primary);
-}
-
-.console-output {
-    height: 150px;
-    padding: 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    overflow-y: auto;
-    color: #00ff00;
-    background: #000;
-}
-
-.log-entry {
-    margin-bottom: 0.2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    padding: 3px 5px;
-    border-radius: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 10px;
-    font-weight: 500;
-}
-
-.log-entry:hover {
-    background: rgba(255, 255, 255, 0.03);
-    white-space: normal;
-    overflow: visible;
-}
-
-.log-info {
-    color: var(--iso-blue);
-    border-left: 2px solid var(--iso-blue);
-}
-
-.log-success {
-    color: var(--nist-green);
-    border-left: 2px solid var(--nist-green);
-}
-
-.log-warn {
-    color: var(--warn-secondary);
-    border-left: 2px solid var(--warn-secondary);
-}
-
-.log-error {
-    color: var(--warn-primary);
-    border-left: 2px solid var(--warn-primary);
-}
-
-.log-regulatory {
-    color: var(--regulatory-orange);
-    border-left: 2px solid var(--regulatory-orange);
-}
-
-.log-shadow {
-    color: var(--shadow-entry);
-    border-left: 2px solid var(--shadow-entry);
-}
-
-/* ---------------------------------------------------------------------
-   9. FOOTER · INTEGRIDADE DO SISTEMA
-   --------------------------------------------------------------------- */
-.action-footer {
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
-    padding: 1rem 1.5rem;
-    margin-top: auto;
-}
-
-.system-info {
-    text-align: center;
-}
-
-.master-hash {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--accent-primary);
-    word-break: break-all;
-    background: rgba(0, 168, 255, 0.05);
-    padding: 0.5rem;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 168, 255, 0.2);
-    display: inline-block;
-    box-shadow: var(--shadow-inset);
-}
-
-.master-hash strong {
-    color: var(--accent-primary);
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 800;
-    font-size: 0.9rem;
-}
-
-.master-hash span {
-    color: #00d1ff;
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    line-height: 1.3;
-    letter-spacing: 0.3px;
-    font-weight: 600;
-    font-family: var(--font-mono);
-    word-break: break-all;
-}
-
-.copyright {
-    color: var(--text-tertiary);
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-/* ---------------------------------------------------------------------
-   10. MODAL · GESTÃO DE EVIDÊNCIAS (CONSOLIDADO)
-   --------------------------------------------------------------------- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(10, 15, 29, 0.9);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    backdrop-filter: blur(5px);
-}
-
-.modal-content {
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 1000px;
-    max-height: 85vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 3px solid var(--nist-green);
-    box-shadow: var(--shadow-lg);
-}
-
-.modal-header {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
-    padding: var(--spacing-md);
-    border-bottom: 2px solid var(--nist-green);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    color: white;
-    font-size: 1.2rem;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin: 0;
-}
-
-.modal-header .icon-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--border-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1.2rem;
-}
-
-.modal-header .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg);
-}
-
-.modal-body {
-    padding: var(--spacing-xl);
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* Upload Section */
-.upload-section-modal {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
-}
-
-.upload-group-modal {
-    background: rgba(30, 42, 68, 0.7);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.upload-group-modal:hover {
-    border-color: var(--iso-blue);
-    background: rgba(30, 42, 68, 0.9);
-}
-
-.upload-group-modal label {
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    display: block;
-    margin-bottom: var(--spacing-sm);
-    font-weight: 700;
-    text-align: left;
-}
-
-.upload-btn,
-.modal-btn {
-    width: 100%;
-    padding: 1rem;
-    background: rgba(20, 30, 48, 0.9);
-    border: 1px dashed var(--border-color);
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    cursor: pointer;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    transition: all 0.2s ease;
-    font-weight: 700;
-    border-radius: var(--border-radius-sm);
-}
-
-.upload-btn:hover,
-.modal-btn:hover {
-    border-color: var(--iso-blue);
-    background: rgba(0, 168, 255, 0.1);
-    transform: translateY(-2px);
-}
-
-.upload-btn.processing,
-.modal-btn.processing {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
-    color: white;
-    border-color: var(--iso-blue);
-}
-
-/* File List & Badges */
-.file-list-modal {
-    margin-top: 1rem;
-    max-height: 200px;
-    overflow-y: auto;
-    display: none;
-    background: rgba(10, 15, 29, 0.9);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-md);
-    border: 1px solid var(--border-color);
-}
-
-.file-list-modal.visible {
-    display: block;
-}
-
-.file-item-modal {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.6rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-
-.file-item-modal:hover {
-    background: rgba(0, 102, 204, 0.05);
-    border-radius: var(--border-radius-sm);
-}
-
-.file-name-modal {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.file-status-modal {
-    color: var(--nist-green);
-    font-size: 0.75rem;
-    font-weight: 700;
-    flex-shrink: 0;
-    font-family: var(--font-mono);
-}
-
-.file-hash-modal {
-    color: var(--text-tertiary);
-    font-size: 0.7rem;
-    font-family: var(--font-mono);
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-/* File Badges */
-.file-badge {
-    background: var(--accent-primary);
-    color: #000;
-    font-weight: 800;
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    display: inline-block;
-    margin-top: 0.3rem;
-    font-family: var(--font-mono);
-}
-
-/* Processing Summary */
-.processing-summary {
-    background: rgba(20, 30, 48, 0.8);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-xl);
-    margin-top: var(--spacing-xl);
-    border-top: 1px solid var(--iso-blue);
-}
-
-.processing-summary h4 {
-    color: var(--iso-blue);
-    font-size: 1.1rem;
-    margin-bottom: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    font-weight: 800;
-    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
-    padding-bottom: 0.5rem;
-}
-
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: var(--spacing-md);
-    text-align: center;
-}
-
-.summary-item {
-    background: rgba(30, 42, 68, 0.9);
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
-    transition: transform 0.2s ease;
-}
-
-.summary-item:hover {
-    transform: translateY(-2px);
-    border-color: var(--iso-blue);
-}
-
-.summary-label {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-    text-align: center;
-}
-
-.summary-value {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    text-align: center;
-}
-
-.summary-value.total {
-    color: var(--nist-green);
-    font-size: 1.1rem;
-    font-weight: 800;
-}
-
-/* Modal Footer */
-.modal-footer {
-    background: rgba(30, 42, 68, 0.9);
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    gap: var(--spacing-md);
-}
-
-.modal-footer .btn-primary,
-.modal-footer .btn-secondary {
-    flex: 1;
-    padding: 0.8rem 1.2rem;
-    border-radius: var(--border-radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    border: none;
-    font-family: var(--font-main);
-    font-size: 0.9rem;
-}
-
-.modal-footer .btn-primary {
-    background: linear-gradient(90deg, var(--iso-blue) 0%, var(--accent-primary) 100%);
-    color: white;
-}
-
-.modal-footer .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-}
-
-.modal-footer .btn-secondary {
-    background: rgba(30, 42, 68, 0.8);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.modal-footer .btn-secondary:hover {
-    background: rgba(0, 168, 255, 0.1);
-    border-color: var(--iso-blue);
-    color: var(--text-primary);
-}
-
-/* ---------------------------------------------------------------------
-   11. TOAST NOTIFICATIONS · CONSOLIDADO
-   --------------------------------------------------------------------- */
-#toastContainer {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast-notification {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    padding: 1rem 1.5rem;
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--accent-primary);
-    box-shadow: var(--shadow-lg);
-    min-width: 300px;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    animation: slideIn 0.3s ease;
-}
-
-.toast-notification.success {
-    border-left-color: var(--nist-green);
-}
-
-.toast-notification.error {
-    border-left-color: var(--warn-primary);
-}
-
-.toast-notification.warning {
-    border-left-color: var(--warn-secondary);
-}
-
-.toast-notification i {
-    font-size: 1.2rem;
-}
-
-.toast-notification p {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-/* ---------------------------------------------------------------------
-   12. ANIMAÇÕES · CONSOLIDADAS
-   --------------------------------------------------------------------- */
-@keyframes pulse-red {
-    0% { box-shadow: 0 0 0 0 rgba(232, 65, 24, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(232, 65, 24, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(232, 65, 24, 0); }
-}
-
-@keyframes pulse-purple {
-    0% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(155, 89, 182, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0); }
-}
-
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* ---------------------------------------------------------------------
-   13. RESPONSIVIDADE · TODAS AS BREAKPOINTS
-   --------------------------------------------------------------------- */
-@media (max-width: 1024px) {
-    .app-container {
-        grid-template-columns: 1fr;
-        overflow-y: auto;
-    }
-    
-    .sidebar {
-        width: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        height: auto;
-        max-height: 600px;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .sidebar-header-fixed,
-    .info-fixed {
-        position: static;
-    }
-    
-    .analysis-area {
-        height: auto;
-        overflow-y: visible;
-        padding: 0 var(--spacing-sm);
-    }
-    
-    .chart-section {
-        height: auto;
-        min-height: 350px;
-    }
-    
-    .chart-container {
-        height: 250px;
-    }
-    
-    .toolbar-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .dashboard-fixed {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .logo-section {
-        width: 100%;
-        justify-content: space-between;
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .demo-section {
-        order: 3;
-        width: 100%;
-        margin-top: var(--spacing-sm);
-    }
-    
-    .btn-demo-nav,
-    .btn-litigation-nav,
-    .btn-lang-nav {
-        width: 100%;
-        justify-content: center;
-        margin-left: 0;
-        margin-top: 0.5rem;
-    }
-    
-    .toolbar-grid {
-        flex-direction: column;
-        grid-template-columns: 1fr;
-    }
-    
-    .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-fixed {
-        grid-template-columns: 1fr;
-    }
-    
-    .counters-compact {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .summary-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .modal-content {
-        width: 100%;
-        height: 100%;
-        max-height: 100vh;
-        border-radius: 0;
-        border: none;
-    }
-    
-    .modal-body {
-        padding: 1.5rem;
-    }
-}
-
-/* ---------------------------------------------------------------------
-   FIM · CONSOLIDAÇÃO TOTAL DOS FICHEIROS STYLE.CSS
-   TODAS AS PROPRIEDADES PRESERVADAS, SEM ALTERAÇÕES
-   FECHO DE CHAVES PERFEITO
-   --------------------------------------------------------------------- */
-    </style>
 </head>
 <body>
 
-    <!-- ===================================================================== -->
-    <!-- 1. GATEKEEPER: SPLASH SCREEN MANUAL · VERSÃO CONSOLIDADA (v11.6-v11.9) -->
-    <!-- ===================================================================== -->
+    <!-- 1. GATEKEEPER: SPLASH SCREEN -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
-            <div class="splash-logo">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <!-- Título unificado – incorpora elementos de todos os index -->
-            <h1>VDC FORENSIC SYSTEM v11.6 · v11.7 · v11.8 · v11.9</h1>
-            <h2>GATEKEEPER PROTOCOL | HYBRID | COMPLIANCE | FORENSIC PRO</h2>
+            <div class="splash-logo"><i class="fas fa-shield-alt"></i></div>
+            <h1>VDC FORENSIC SYSTEM v11.9</h1>
+            <h2>FORENSIC PRO & MULTILINGUAL DEPLOYMENT</h2>
             <p class="splash-subtitle">
-                ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5% | Smart Column Search | Shadow Entry Detector | Multilang
+                ISO/IEC 27037 | NIST SP 800-86 | Juros Compensatórios | Cadeia de Custódia
             </p>
             <div class="splash-warning-box">
-                <p><i class="fas fa-exclamation-triangle"></i> <i class="fas fa-brain"></i> <i class="fas fa-balance-scale"></i> AMBIENTE RESTRITO — BIG DATA FORENSE · ALTA RESPONSABILIDADE</p>
-                <p>Este sistema processa dados sensíveis de Auditoria Fiscal / validação cruzada / perícia criminal.</p>
-                <p>Ao continuar, aceita os protocolos de Integridade Digital, Parsing Inteligente e Cadeia de Custódia.</p>
+                <p><i class="fas fa-exclamation-triangle"></i> <i class="fas fa-balance-scale"></i> AMBIENTE RESTRITO — PERÍCIA FORENSE</p>
+                <p>Sistema Certificado para Alta Responsabilidade Civil e Criminal.</p>
             </div>
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO SEGURA · AUTENTICAR ENGINE
+                <i class="fas fa-fingerprint"></i> <span id="splashStartBtnText">INICIAR SESSÃO V11.9</span>
             </button>
             <div class="splash-footer">
                 <p>VDC Systems International &copy; 2024</p>
-                <p class="version">Build: v11.6.0-GATEKEEPER · v11.7.0-HYBRID · v11.8.0-COMPLIANCE · v11.9.0-FORENSIC-PRO | Secure Core + Smart Parsing + Shadow Detection + Multilang</p>
+                <p class="version">Build: v11.9.0-FORENSIC-PRO | Multilang Ready</p>
             </div>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- 2. LOADING OVERLAY (Processamento) – unificado -->
-    <!-- ===================================================================== -->
+    <!-- 2. LOADING OVERLAY -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
                 <i class="fas fa-fingerprint fa-spin"></i>
                 <i class="fas fa-brain fa-spin" style="margin-left: 8px;"></i>
-                <i class="fas fa-balance-scale fa-spin" style="margin-left: 8px;"></i>
             </div>
-            <h2>CARREGANDO MÓDULOS DE ANÁLISE, TRIANGULAÇÃO, COMPLIANCE E LITIGÂNCIA...</h2>
-            <p>Inicializando motores de parsing RegEx, validação SHA-256, busca de colunas v12.3, deteção de Shadow Entries</p>
+            <h2 id="loadingTitle">CARREGANDO MÓDULOS...</h2>
+            <p id="loadingSub">Verificando integridade de fontes e hashes SHA-256...</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
-            <p id="loadingStatusText" class="loading-status">Aguardando input...</p>
+            <p id="loadingStatusText" class="loading-status">AGUARDANDO INPUT...</p>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- 3. TOAST CONTAINER (Notificações Não-Intrusivas) -->
-    <!-- ===================================================================== -->
+    <!-- 3. TOAST CONTAINER -->
     <div id="toastContainer"></div>
 
-    <!-- ===================================================================== -->
-    <!-- 4. MODAL DE GESTÃO DE EVIDÊNCIAS – VERSÃO CONSOLIDADA (MAX)          -->
-    <!-- Incorpora todos os campos, badges, contadores, e formatos dos 7 ficheiros -->
-    <!-- ===================================================================== -->
+    <!-- 4. MODAL DE GESTÃO DE EVIDÊNCIAS -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA · PARSING v12.3</h3>
+                <h3><i class="fas fa-database"></i> <span id="modalTitle">GESTÃO DE EVIDÊNCIAS BIG DATA</span></h3>
                 <button id="closeModalBtn" class="icon-btn" aria-label="Fechar Modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
-                    
-                    <!-- DAC7 - Report de Receitas (versão completa: .html .htm .eml .txt .pdf .xml) -->
+                    <!-- DAC7 -->
                     <div class="upload-group-modal">
                         <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
-                            <i class="fas fa-file-contract"></i> SELECIONAR FICHEIROS DAC7
+                            <i class="fas fa-file-contract"></i> <span id="uploadDac7Text">SELECIONAR FICHEIROS DAC7</span>
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                         <div id="count-dac7" class="file-badge">0</div>
                     </div>
-
-                    <!-- FICHEIRO DE CONTROLO ISO/NIST (aceita .csv .xml .pdf .txt) -->
+                    <!-- CONTROL -->
                     <div class="upload-group-modal">
                         <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
                         <button id="controlUploadBtnModal" class="upload-btn modal-btn">
-                            <i class="fas fa-file-shield"></i> SELECIONAR FICHEIRO DE CONTROLO
+                            <i class="fas fa-file-shield"></i> <span id="uploadControlText">SELECIONAR FICHEIRO DE CONTROLO</span>
                         </button>
                         <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.xml,.pdf,.txt" hidden>
                         <div id="controlFileListModal" class="file-list-modal"></div>
                         <div id="count-control" class="file-badge">0</div>
                     </div>
-
-                    <!-- SAF-T / XML / CSV (aceita .xml .csv) -->
+                    <!-- SAF-T -->
                     <div class="upload-group-modal">
                         <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV</label>
                         <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-code"></i> SELECIONAR FICHEIROS SAF-T/XML/CSV
+                            <i class="fas fa-file-code"></i> <span id="uploadSaftText">SELECIONAR FICHEIROS SAF-T/XML/CSV</span>
                         </button>
                         <input type="file" id="saftFileModal" class="file-input-modal" multiple accept=".xml,.csv" hidden>
                         <div id="saftFileListModal" class="file-list-modal"></div>
                         <div id="count-saft" class="file-badge">0</div>
                     </div>
-
-                    <!-- FATURAS DA PLATAFORMA (aceita .pdf .csv .xml .jpg .png .jpeg) -->
+                    <!-- FATURAS -->
                     <div class="upload-group-modal">
                         <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
+                            <i class="fas fa-file-invoice-dollar"></i> <span id="uploadInvoiceText">SELECIONAR FATURAS</span>
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
                         <div id="count-invoices" class="file-badge">0</div>
                     </div>
-
-                    <!-- EXTRATOS BANCÁRIOS (aceita .pdf .csv .txt .ofx .qif .mt940) -->
+                    <!-- EXTRATOS -->
                     <div class="upload-group-modal">
                         <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
-                            <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
+                            <i class="fas fa-file-contract"></i> <span id="uploadStatementText">SELECIONAR EXTRATOS</span>
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
                         <div id="statementFileListModal" class="file-list-modal"></div>
@@ -1809,84 +129,75 @@ body {
                     </div>
                 </div>
 
-                <!-- RESUMO DE PROCESSAMENTO (HASH SHA-256) – com contadores "ficheiros" -->
                 <div class="processing-summary">
-                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
+                    <h4><i class="fas fa-chart-bar"></i> <span id="summaryTitle">RESUMO DE PROCESSAMENTO (HASH SHA-256)</span></h4>
                     <div class="summary-grid">
                         <div class="summary-item">
                             <span class="summary-label">DAC7</span>
-                            <span id="summaryDac7" class="summary-value">0 ficheiros</span>
+                            <span id="summaryDac7" class="summary-value">0 files</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">CONTROLO</span>
-                            <span id="summaryControl" class="summary-value">0 ficheiros</span>
+                            <span id="summaryControl" class="summary-value">0 files</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">SAF-T</span>
-                            <span id="summarySaft" class="summary-value">0 ficheiros</span>
+                            <span id="summarySaft" class="summary-value">0 files</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">FATURAS</span>
-                            <span id="summaryInvoices" class="summary-value">0 ficheiros</span>
+                            <span id="summaryInvoices" class="summary-value">0 files</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">EXTRATOS</span>
-                            <span id="summaryStatements" class="summary-value">0 ficheiros</span>
+                            <span id="summaryStatements" class="summary-value">0 files</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">TOTAL</span>
-                            <span id="summaryTotal" class="summary-value total">0 ficheiros</span>
+                            <span id="summaryTotal" class="summary-value total">0 files</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="closeAndSaveBtn" class="btn-primary">
-                    <i class="fas fa-save"></i> CONFIRMAR EVIDÊNCIAS
+                    <i class="fas fa-save"></i> <span id="modalSaveBtn">CONFIRMAR EVIDÊNCIAS</span>
                 </button>
                 <button id="clearAllBtn" class="btn-secondary">
-                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS
+                    <i class="fas fa-trash"></i> <span id="modalClearBtn">LIMPAR TUDO</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- 5. MAIN CONTAINER (UI PRINCIPAL) – CONSOLIDAÇÃO COMPLETA             -->
-    <!-- Integra: sidebar com datalist, ano fiscal, plataforma; dashboard KPI;-->
-    <!-- alertas de layering/omission; gráfico; console; demoModeBtn; jurosCard;-->
-    <!-- todos os IDs únicos dos sete ficheiros, sem qualquer perda.          -->
-    <!-- ===================================================================== -->
+    <!-- 5. MAIN CONTAINER -->
     <div id="mainContainer" class="main-container" style="display: none;">
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC GATEKEEPER · HYBRID · COMPLIANCE · PRO <span class="version-badge">v11.6 AF · v11.7 · v11.8 · v11.9 ML</span></h1>
-                        <p class="subtitle">
-                            ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | SMART PARSING v12.3 | Taxa 5% | SHADOW DETECTOR | MULTILANG
+                        <h1>VDC FORENSIC PRO <span class="version-badge">v11.9 ML</span></h1>
+                        <p class="subtitle" id="headerSubtitle">
+                            ISO/IEC 27037 | NIST SP 800-86 | Juros Compensatórios | Cadeia de Custódia
                         </p>
                     </div>
                 </div>
                 
-                <!-- Botão Demo Simulada e Novos Botões v11.8/v11.9 -->
                 <div class="demo-section" style="display: flex; gap: 0.5rem; align-items: center;">
                     <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i> DEMO SIMULADA
+                        <i class="fas fa-vial"></i> <span id="demoBtnText">DEMO SIMULADA</span>
                     </button>
-                    <button id="litigationBtn" class="btn-litigation-nav">
-                        <i class="fas fa-balance-scale"></i> LITIGÂNCIA
-                    </button>
-                    <button id="langToggleBtn" class="btn-lang-nav">
-                        <i class="fas fa-language"></i> <span id="currentLangLabel">PT</span>
+                    <!-- v11.9 Language Toggle -->
+                    <button id="langToggleBtn" class="btn-lang-toggle">
+                        <i class="fas fa-language"></i> <span id="currentLangLabel">EN</span>
                     </button>
                 </div>
                 
                 <div class="session-info">
                     <div class="timestamp-fbi">
                         <span class="session-id">ID: <strong id="sessionIdDisplay">---</strong></span> | 
-                        <span>Data: <strong id="currentDate">--/--/----</strong></span> | 
+                        <span id="lblDate">Data</span>: <strong id="currentDate">--/--/----</strong> | 
                         <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
                     </div>
                 </div>
@@ -1894,25 +205,25 @@ body {
         </header>
 
         <div class="app-container">
-            <!-- SIDEBAR: IDENTIFICAÇÃO E CONTROLO + PARÂMETROS + CONTADORES COMPACTOS -->
+            <!-- SIDEBAR -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
-                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO</h3>
+                    <h3><i class="fas fa-user-secret"></i> <span id="sidebarIdTitle">IDENTIFICAÇÃO</span></h3>
                     
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
-                            <label for="clientNameFixed"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
+                            <label for="clientNameFixed"><i class="fas fa-user-tag"></i> <span id="lblClientName">Nome do Cliente</span></label>
                             <input type="text" id="clientNameFixed" placeholder="Ex: Empresa Lda" list="clientSuggestions">
                             <datalist id="clientSuggestions"></datalist>
                         </div>
                         <div class="form-group-fixed">
-                            <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> NIF</label>
+                            <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> <span id="lblNIF">NIF</span></label>
                             <input type="text" id="clientNIFFixed" placeholder="000000000" maxlength="9">
                         </div>
                         
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
-                                <i class="fas fa-user-check"></i> REGISTAR
+                                <i class="fas fa-user-check"></i> <span id="btnRegister">REGISTAR</span>
                             </button>
                         </div>
                         
@@ -1923,16 +234,15 @@ body {
                     </div>
                 </div>
 
-                <!-- PARÂMETROS: Ano Fiscal + Plataforma (ícones e selects) -->
                 <div class="sidebar-filters">
-                    <h3><i class="fas fa-sliders-h"></i> PARÂMETROS</h3>
+                    <h3><i class="fas fa-sliders-h"></i> <span id="sidebarParamTitle">PARÂMETROS</span></h3>
                     <div class="info-fixed">
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-calendar"></i> Ano Fiscal</span>
+                            <span class="info-label"><i class="fas fa-calendar"></i> <span id="lblYear">Ano Fiscal</span></span>
                             <select id="selYearFixed" class="year-select-fixed"></select>
                         </div>
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
+                            <span class="info-label"><i class="fas fa-server"></i> <span id="lblPlatform">Plataforma</span></span>
                             <select id="selPlatformFixed" class="platform-select-fixed">
                                 <option value="bolt">Bolt Operations OÜ</option>
                                 <option value="uber">Uber B.V.</option>
@@ -1943,10 +253,9 @@ body {
                     </div>
                 </div>
 
-                <!-- GESTÃO DE EVIDÊNCIAS + CONTADORES COMPACTOS -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
-                        <i class="fas fa-folder-open"></i> EVIDÊNCIAS
+                        <i class="fas fa-folder-open"></i> <span id="btnEvidence">EVIDÊNCIAS</span>
                         <span class="evidence-count-solid">0</span>
                     </button>
                     
@@ -1975,19 +284,18 @@ body {
                 </div>
             </aside>
 
-            <!-- ÁREA PRINCIPAL DE ANÁLISE -->
+            <!-- ÁREA PRINCIPAL -->
             <main class="analysis-area">
-                <!-- TOOLBAR: Botões consolidados -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search-dollar"></i> EXECUTAR AUDITORIA / TRIANGULAÇÃO
+                            <i class="fas fa-search-dollar"></i> <span id="btnAnalyze">EXECUTAR AUDITORIA / TRIANGULAÇÃO</span>
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
                             <i class="fas fa-file-code"></i> JSON
                         </button>
                         <button id="exportPDFBtn" class="btn-tool">
-                            <i class="fas fa-file-pdf"></i> PDF PARECER
+                            <i class="fas fa-file-pdf"></i> <span id="btnPDF">PDF PARECER</span>
                         </button>
                         <button id="resetBtn" class="btn-tool">
                             <i class="fas fa-redo"></i> RESET
@@ -1995,10 +303,9 @@ body {
                     </div>
                 </section>
 
-                <!-- DASHBOARD KPI – 5 cards: ILÍQUIDO, IVA 6%, COMISSÃO, IVA 23%, JUROS (4%) -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
-                        <h4><i class="fas fa-coins"></i> VALOR ILÍQUIDO</h4>
+                        <h4><i class="fas fa-coins"></i> <span id="cardNet">VALOR ILÍQUIDO</span></h4>
                         <p id="netVal">0,00€</p>
                     </div>
                     <div class="stat-card">
@@ -2006,7 +313,7 @@ body {
                         <p id="iva6Val">0,00€</p>
                     </div>
                     <div class="stat-card">
-                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO</h4>
+                        <h4><i class="fas fa-hand-holding-usd"></i> <span id="cardComm">COMISSÃO</span></h4>
                         <p id="commissionVal">0,00€</p>
                     </div>
                     <div class="stat-card alert">
@@ -2014,75 +321,71 @@ body {
                         <p id="iva23Val">0,00€</p>
                     </div>
                     <div class="stat-card regulatory" id="jurosCard" style="display: none;">
-                        <h4><i class="fas fa-percentage"></i> JUROS (4%)</h4>
+                        <h4><i class="fas fa-percentage"></i> <span id="cardJuros">JUROS (4%)</span></h4>
                         <p id="jurosVal">0,00€</p>
                     </div>
                 </section>
 
-                <!-- PARECER TÉCNICO / ANÁLISE DE CRUZAMENTO / TRIANGULAÇÃO FORENSE -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-line"></i> <i class="fas fa-chart-network"></i> ANÁLISE DE CRUZAMENTO · TRIANGULAÇÃO FORENSE</h3>
+                    <h3><i class="fas fa-chart-line"></i> <span id="kpiTitle">ANÁLISE DE CRUZAMENTO · TRIANGULAÇÃO FORENSE</span></h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <h4><i class="fas fa-money-bill-wave"></i> BRUTO</h4>
+                            <h4><i class="fas fa-money-bill-wave"></i> <span id="kpiGross">BRUTO</span></h4>
                             <p id="kpiGanhos">0,00€</p>
                         </div>
                         <div class="kpi-card">
-                            <h4><i class="fas fa-chart-pie"></i> COMISSÃO</h4>
+                            <h4><i class="fas fa-chart-pie"></i> <span id="kpiCommText">COMISSÃO</span></h4>
                             <p id="kpiComm">0,00€</p>
                         </div>
                         <div class="kpi-card highlight">
-                            <h4><i class="fas fa-university"></i> LÍQUIDO</h4>
+                            <h4><i class="fas fa-university"></i> <span id="kpiNetText">LÍQUIDO</span></h4>
                             <p id="kpiNet">0,00€</p>
                         </div>
                         <div class="kpi-card danger">
-                            <h4><i class="fas fa-file-invoice"></i> FATURA</h4>
+                            <h4><i class="fas fa-file-invoice"></i> <span id="kpiInvText">FATURA</span></h4>
                             <p id="kpiInvoice">0,00€</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- GRÁFICO FORENSE (Chart.js) -->
                 <section class="chart-section">
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
                 </section>
 
-                <!-- ALERTAS: Layering/Omission + BigData Critical Alert + Shadow Entry (v11.8/v11.9) -->
                 <section class="analysis-results">
                     <div id="shadowEntriesAlert" class="shadow-alert" style="display: none;">
                         <i class="fas fa-ghost"></i>
                         <div>
-                            <strong>⚠️ SHADOW ENTRY DETECTED (v11.8/v11.9)</strong>
-                            <p>Entradas fantasma ou não rastreadas detetadas no Parsing de Big Data.</p>
-                            <p>Verificação de integridade falhou em <span id="shadowCount">0</span> registos.</p>
+                            <strong>⚠️ SHADOW ENTRY DETECTED (v11.9)</strong>
+                            <p id="shadowAlertText">Entradas fantasma ou não rastreadas detetadas no Parsing de Big Data.</p>
+                            <p><span id="shadowVerificationText">Verificação de integridade falhou em</span> <span id="shadowCount">0</span> <span id="shadowRegText">registos.</span></p>
                         </div>
                     </div>
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA DE LAYERING · BIG DATA LAYERING</strong>
-                            <p>Discrepância detetada: <span id="omissionValue">0,00€</span></p>
+                            <strong id="alertOmissionTitle">ALERTA DE LAYERING · BIG DATA LAYERING</strong>
+                            <p id="alertOmissionText">Discrepância detetada:</p>
+                            <p id="omissionValue">0,00€</p>
                         </div>
                     </div>
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation"></i>
                         <div>
-                            <strong>⚠️ CRITICAL ALERT · DISCREPÂNCIA CRÍTICA DETETADA</strong>
+                            <strong>⚠️ CRITICAL ALERT · <span id="alertCriticalTitle">DISCREPÂNCIA CRÍTICA DETETADA</span></strong>
                             <p>
-                                FATURA (<span id="alertInvoiceVal">0</span>) ≠ COMISSÃO (<span id="alertCommVal">0</span>) 
+                                <span id="alertDeltaLabel">FATURA</span> (<span id="alertInvoiceVal">0</span>) ≠ <span id="alertCommissionLabel">COMISSÃO</span> (<span id="alertCommVal">0</span>) 
                                 | Δ = <span id="alertDeltaVal">0,00€</span>
-                                <span id="alertDiffVal" style="display: none;">0,00€</span>
                             </p>
                         </div>
                     </div>
                 </section>
 
-                <!-- CONSOLE / LOG DE AUDITORIA -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> LOG DE AUDITORIA · FORENSIC LOG</h3>
+                        <h3><i class="fas fa-terminal"></i> <span id="consoleTitle">LOG DE AUDITORIA · FORENSIC LOG</span></h3>
                         <div class="console-controls">
                             <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
                         </div>
@@ -2092,42 +395,18 @@ body {
             </main>
         </div>
 
-        <!-- RODAPÉ: INTEGRIDADE DO SISTEMA (SHA-256) v11.9 -->
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 PROTOCOL v11.9)</strong>
+                    <strong><i class="fas fa-fingerprint"></i> <span id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v11.9)</span></strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
-                <div class="copyright">VDC Systems International &copy; 2024 | Forensic Compliance Module v11.9 | Consolidated Build</div>
+                <div class="copyright">VDC Systems International &copy; 2024 | Forensic Compliance Module v11.9</div>
             </div>
         </footer>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- SCRIPT PRINCIPAL ISOLADO (script.js) – link mantido                  -->
-    <!-- ===================================================================== -->
+    <!-- Lógica do Sistema -->
     <script src="script.js"></script>
-    
-    <!-- 
-        CONSOLIDAÇÃO TOTAL: 
-        - Todos os elementos dos 7 ficheiros index(.html) foram unificados sem omissões.
-        - IDs não conflituantes, todos presentes: 
-          sessionIdDisplay, currentDate, currentTime, clientNameFixed, clientNIFFixed, 
-          clientSuggestions, registerClientBtnFixed, clientStatusFixed, clientNameDisplayFixed,
-          clientNifDisplayFixed, selYearFixed, selPlatformFixed, openEvidenceModalBtn,
-          evidence-count-solid, controlCountCompact, saftCountCompact, invoiceCountCompact,
-          statementCountCompact, dac7CountCompact, analyzeBtn, exportJSONBtn, exportPDFBtn,
-          resetBtn, netVal, iva6Val, commissionVal, iva23Val, jurosCard, jurosVal,
-          kpiGanhos, kpiComm, kpiNet, kpiInvoice, forensicChart, omissionAlert, omissionValue,
-          bigDataAlert, alertInvoiceVal, alertCommVal, alertDeltaVal, alertDiffVal,
-          shadowEntriesAlert, shadowCount, litigationBtn, langToggleBtn, currentLangLabel,
-          clearConsoleBtn, auditOutput, masterHashValue, 
-          e todos os específicos do modal: dac7UploadBtnModal, controlUploadBtnModal, ... 
-          summaryDac7, summaryControl, summarySaft, summaryInvoices, summaryStatements, summaryTotal,
-          closeModalBtn, closeAndSaveBtn, clearAllBtn, mais os badges count-dac7, count-control, etc.
-        - Fecho de tags perfeito, aninhamento correto.
-        - Sem alterações lógicas; apenas unificação cosmética e estrutural.
-    -->
 </body>
 </html>
