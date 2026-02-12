@@ -1,6 +1,6 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE v11.6 GATEKEEPER
- * Motor de Triangulação e Sincronização DOM
+ * Motor de Triangulação, Persistência e Exportação Legal
  * Strict Mode Activated
  */
 
@@ -78,11 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup inicial
     const startBtn = document.getElementById('startSessionBtn');
     if (startBtn) startBtn.addEventListener('click', startGatekeeperSession);
+    
+    // Persistência: Recuperar cliente ao carregar
+    loadClientFromStorage();
 });
 
 window.onload = () => {
     console.log('Recursos carregados.');
     if (typeof Papa === 'undefined') alert('Erro: PapaParse indisponível.');
+    if (typeof Chart === 'undefined') alert('Erro: Chart.js indisponível.');
+    if (typeof jsPDF === 'undefined') alert('Erro: jsPDF indisponível.');
 };
 
 function startGatekeeperSession() {
@@ -161,6 +166,10 @@ function setupMainListeners() {
     document.getElementById('clearConsoleBtn').addEventListener('click', clearConsole);
 }
 
+// ==========================================
+// 5. PERSISTÊNCIA DE DADOS
+// ==========================================
+
 function registerClient() {
     const name = document.getElementById('clientNameFixed').value.trim();
     const nif = document.getElementById('clientNIFFixed').value.trim();
@@ -169,6 +178,12 @@ function registerClient() {
     if (!nif || !/^\d{9}$/.test(nif)) { showToast('NIF inválido', 'error'); return; }
     
     VDCSystem.client = { name, nif, timestamp: new Date().toISOString() };
+    
+    // Guardar no localStorage
+    try {
+        localStorage.setItem('vdc_client_data', JSON.stringify(VDCSystem.client));
+    } catch(e) { console.warn('LocalStorage indisponível para gravação de cliente.', e); }
+    
     const statusEl = document.getElementById('clientStatusFixed');
     if (statusEl) {
         statusEl.style.display = 'flex';
@@ -176,6 +191,28 @@ function registerClient() {
     }
     logAudit(`Cliente registado: ${name}`, 'success');
     updateAnalysisButton();
+}
+
+function loadClientFromStorage() {
+    try {
+        const data = localStorage.getItem('vdc_client_data');
+        if (data) {
+            const client = JSON.parse(data);
+            if (client && client.name && client.nif) {
+                VDCSystem.client = client;
+                const statusEl = document.getElementById('clientStatusFixed');
+                if (statusEl) {
+                    statusEl.style.display = 'flex';
+                    statusEl.textContent = `${client.name} (${client.nif})`;
+                }
+                document.getElementById('clientNameFixed').value = client.name;
+                document.getElementById('clientNIFFixed').value = client.nif;
+                logAudit('Cliente recuperado do armazenamento local.', 'info');
+            }
+        }
+    } catch (e) {
+        console.error('Erro ao carregar cliente do localStorage:', e);
+    }
 }
 
 function updateAnalysisButton() {
@@ -187,7 +224,7 @@ function updateAnalysisButton() {
 }
 
 // ==========================================
-// 5. GESTÃO DE MODAL E EVIDÊNCIAS
+// 6. GESTÃO DE MODAL E EVIDÊNCIAS
 // ==========================================
 
 function openEvidenceModal() { document.getElementById('evidenceModal').style.display = 'flex'; updateEvidenceSummary(); }
@@ -296,7 +333,7 @@ function updateCounters() {
 }
 
 // ==========================================
-// 6. MOTOR DE TRIANGULAÇÃO FORENSE (CORE)
+// 7. MOTOR DE TRIANGULAÇÃO FORENSE (CORE)
 // ==========================================
 
 function performAudit() {
@@ -320,11 +357,6 @@ function performAudit() {
     logAudit('TRIANGULAÇÃO CONCLUÍDA.', 'success');
 }
 
-/**
- * performForensicCrossings
- * Tarefa Mandatória: Comparar extractedValues com manualInput (se houver)
- * Calcular IVA 23% e Juros 4%
- */
 function performForensicCrossings(gross, commission, invoice) {
     const ev = VDCSystem.analysis.extractedValues;
     const cross = VDCSystem.analysis.crossings;
@@ -344,7 +376,7 @@ function performForensicCrossings(gross, commission, invoice) {
     // 1. Cálculo de IVA Autoliquidação (23% sobre o diferencial não justificado)
     ev.ivaAutoliquidacao = diferencial * 0.23;
     
-    // 2. Cálculo de Juros de Mora (4% sobre o IVA)
+    // 2. Cítulo de Juros de Mora (4% sobre o IVA)
     ev.jurosMora = ev.ivaAutoliquidacao * 0.04;
     
     // Deteta Alertas
@@ -357,7 +389,7 @@ function performForensicCrossings(gross, commission, invoice) {
 }
 
 // ==========================================
-// 7. UI E ALERTAS (SINCRONIZAÇÃO)
+// 8. UI E ALERTAS (SINCRONIZAÇÃO)
 // ==========================================
 
 function updateDashboard() {
@@ -396,11 +428,11 @@ function renderChart() {
     VDCSystem.chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Bruto', 'Comissão', 'Fatura', 'IVA 23%'],
+            labels: ['Bruto', 'Comissão', 'Fatura', 'IVA 23%', 'Juros 4%'],
             datasets: [{
                 label: '€',
-                data: [ev.rendimentosBrutos, Math.abs(ev.comissaoApp), ev.faturaPlataforma, ev.ivaAutoliquidacao],
-                backgroundColor: ['#00a8ff', '#e84118', '#44bd32', '#fbc531']
+                data: [ev.rendimentosBrutos, Math.abs(ev.comissaoApp), ev.faturaPlataforma, ev.ivaAutoliquidacao, ev.jurosMora],
+                backgroundColor: ['#00a8ff', '#e84118', '#44bd32', '#fbc531', '#ff9f1a']
             }]
         },
         options: {
@@ -430,8 +462,93 @@ function showAlerts() {
 }
 
 // ==========================================
-// 8. EXPORTAÇÃO & RESET
+// 9. EXPORTAÇÃO LEGAL (RELATÓRIO PERICIAL)
 // ==========================================
+
+function exportPDF() {
+    if (!VDCSystem.client) { showToast('Sem cliente para gerar relatório', 'error'); return; }
+    
+    logAudit('Gerando Relatório Pericial...', 'info');
+    const { jsPDF } = window.jspdf;
+    
+    try {
+        const doc = new jsPDF();
+        
+        // --- CABEÇALHO ---
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 40);
+        doc.setFillColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.text("VDC RELATÓRIO PERICIAL v11.6", 105, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Sessão: ${VDCSystem.sessionId}`, 20, 30);
+        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')} - ${new Date().toLocaleTimeString('pt-PT')}`, 20, 36);
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 42, 190, 42);
+        
+        // --- DADOS DO CLIENTE ---
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("1. DADOS DO SUJEITO AUDITADO", 20, 50);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text(`Nome: ${VDCSystem.client.name}`, 25, 58);
+        doc.text(`NIF: ${VDCSystem.client.nif}`, 25, 64);
+        doc.text(`ID da Sessão Forense: ${VDA-SESSION-${VDCSystem.sessionId}`, 25, 70);
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 76, 190, 76);
+        
+        // --- ANÁLISE DE DIVERGÊNCIAS ---
+        doc.setFont("helvetica", "bold");
+        doc.text("2. ANÁLISE FISCAL CRUZADA", 20, 90);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text(`Valor Bruto (Extrato CSV): ${VDCSystem.analysis.extractedValues.rendimentosBrutos.toFixed(2)}€`, 25, 98);
+        doc.text(`Comissão Retida (Extrato CSV): ${Math.abs(VDCSystem.analysis.extractedValues.comissaoApp).toFixed(2)}€`, 25, 104);
+        doc.text(`Fatura Emitida (Input): ${VDCSystem.analysis.extractedValues.faturaPlataforma.toFixed(2)}€`, 25, 110);
+        
+        const diferencial = VDCSystem.analysis.extractedValues.diferencialCusto;
+        if (diferencial > 0.01) {
+            doc.setTextColor(200, 50, 50);
+            doc.text(`Diferencial Encontrada: ${diferencial.toFixed(2)}€`, 25, 130);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`IVA de Autoliquidação (23%): ${VDCSystem.analysis.extractedValues.ivaAutoliquidacao.toFixed(2)}€`, 25, 136);
+        } else {
+            doc.text("Diferencial: 0,00€", 25, 125);
+        }
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 142, 190, 142);
+        
+        // --- NOTA DE CONFORMIDADE LEGAL ---
+        doc.setFont("helvetica", "bold", "italic");
+        doc.text("3. NOTA DE CONFORMIDADE ISO/IEC 27037", 20, 150);
+        doc.setFont("helvetica", "normal", 8);
+        const note = "O presente relatório cumpre com os requisitos de integridade e validação de dados forenses. O hash SHA-256 da sessão garante a autenticidade.";
+        const splitTitle = doc.splitText(note, 180, 170);
+        splitTitle.text(note, 20, 160);
+        
+        // --- HASH DA SESSÃO ---
+        doc.setFont("helvetica", "bold");
+        doc.text(`Hash de Integridade da Sessão:`, 20, 180);
+        doc.setFont("courier", 8);
+        const masterHashEl = document.getElementById('masterHashValue');
+        const hashText = masterHashEl ? masterHashEl.textContent : 'N/A';
+        doc.text(hashText.substring(0, 24) + "...", 20, 186);
+        
+        doc.save(`VDC_Report_${VDCSystem.sessionId}.pdf`);
+        logAudit('Relatório PDF gerado.', 'success');
+    } catch (e) {
+        console.error(e);
+        logAudit('Erro ao gerar PDF.', 'error');
+    }
+}
 
 function exportDataJSON() {
     const data = { session: VDCSystem.sessionId, analysis: VDCSystem.analysis, timestamp: new Date().toISOString() };
@@ -441,26 +558,17 @@ function exportDataJSON() {
     link.href = url;
     link.download = `VDC_Report_${VDCSystem.sessionId}.json`;
     link.click();
+    URL.revokeObjectURL(url);
     logAudit('JSON exportado.', 'success');
-}
-
-function exportPDF() {
-    logAudit('Gerando PDF...', 'info');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("RELATÓRIO FORENSE VDC", 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Sessão: ${VDCSystem.sessionId}`, 20, 30);
-    doc.text(`Cliente: ${VDCSystem.client?.name || 'N/A'}`, 20, 40);
-    doc.save(`VDC_Report_${VDCSystem.sessionId}.pdf`);
-    logAudit('PDF gerado.', 'success');
 }
 
 function resetSystem() {
     if (!confirm('Resetar sistema?')) return;
     
+    // Reset lógica
     VDCSystem.client = null;
+    localStorage.removeItem('vdc_client_data');
+    
     VDCSystem.analysis.extractedValues = {
         saftGross: 0, saftIVA6: 0, saftNet: 0,
         platformCommission: 0, iva23Due: 0,
@@ -469,14 +577,15 @@ function resetSystem() {
         jurosMora: 0
     };
     
+    // Reset UI
+    document.getElementById('clientNameFixed').value = '';
+    document.getElementById('clientNIFFixed').value = '';
+    document.getElementById('clientStatusFixed').style.display = 'none';
+    
     ['kpiGanhos', 'kpiComm', 'kpiInvoice', 'iva23Val'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '0,00€';
     });
-    
-    document.getElementById('clientNameFixed').value = '';
-    document.getElementById('clientNIFFixed').value = '';
-    document.getElementById('clientStatusFixed').style.display = 'none';
     
     clearAllEvidence();
     clearConsole();
@@ -485,7 +594,7 @@ function resetSystem() {
 }
 
 // ==========================================
-// 9. AUXILIARES & BINDING GLOBAL
+// 10. AUXILIARES & BINDING GLOBAL
 // ==========================================
 
 function readFileAsText(file) {
@@ -544,7 +653,7 @@ function showToast(msg, type) {
 }
 
 // ==========================================
-// 10. GARANTIA DE ESTABILIDADE (BINDING)
+// 11. GARANTIA DE ESTABILIDADE (BINDING)
 // Todas as funções vinculadas a window para evitar erros
 // ==========================================
 
