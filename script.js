@@ -1,9 +1,11 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 CORRIGIDO
+ * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 CORRIGIDO FINAL
  * STRICT MODE ACTIVATED
  * 
- * CORREÇÃO: Movido a propriedade 'logs' para o raiz do objeto VDCSystem
- * para evitar erros de "undefined" ao tentar adicionar logs.
+ * CORREÇÃO FINAL:
+ * 1. 'logs' movido para o raiz do objeto VDCSystem.
+ * 2. Correção de Fontes no PDF (Font Crash fix).
+ * 3. Verificação robusta da biblioteca jsPDF.
  */
 
 'use strict';
@@ -210,7 +212,7 @@ const translations = {
             "3. Are there records of 'Shadow Entries' (entries without transaction ID) in the system?",
             "4. Does the platform provide the source code or technical documentation of the pricing algorithm for external audit?",
             "5. How are 'Tips' values treated in invoicing and VAT declaration?",
-            "6. How is the geographical origin of the service provision determined for VAT purposes in TVDE transactions?",
+            "6. How is the geographical origin of service provision determined for VAT purposes in TVDE transactions?",
             "7. Were dynamic fluctuating rate rules applied without prior notification to the end user?",
             "8. Do the bank statements provided correspond exactly to the transaction records in the platform's database?",
             "9. What is the methodology for retaining self-billed VAT when the invoice does not itemize the service fee?",
@@ -222,7 +224,7 @@ const translations = {
 let currentLang = 'pt';
 
 // ============================================================================
-//2. ESTADO GLOBAL DO SISTEMA v11.9 (CORRIGIDO)
+//2. ESTADO GLOBAL DO SISTEMA v11.9
 // ============================================================================
 
 const VDCSystem = {
@@ -234,7 +236,7 @@ const VDCSystem = {
     demoMode: false,
     processing: false,
     
-    // CORREÇÃO CRÍTICA: Logs movidos para o raiz do objeto
+    // CORREÇÃO: Logs no raiz
     logs: [],
     
     documents: {
@@ -255,7 +257,6 @@ const VDCSystem = {
         },
         crossings: { delta: 0, omission: 0, diferencialAlerta: false, bigDataAlertActive: false, shadowAlertActive: false },
         evidenceIntegrity: []
-        // Logs foi removido daqui para evitar conflito
     },
     
     chart: null
@@ -270,11 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSystemRecursively();
 });
 
+// CORREÇÃO: Verificação mais robusta de jsPDF
 window.onload = () => {
     if (typeof CryptoJS === 'undefined') alert('CRITICAL: CryptoJS failed.');
     if (typeof Papa === 'undefined') alert('CRITICAL: PapaParse failed.');
     if (typeof Chart === 'undefined') alert('CRITICAL: Chart.js failed.');
-    if (typeof jsPDF === 'undefined') alert('CRITICAL: jsPDF failed.');
+    // Verifica explicitamente se window.jspdf existe antes de alertar erro fatal
+    if (typeof window.jspdf === 'undefined') alert('CRITICAL: jsPDF failed to load from CDN.');
 };
 
 function setupStaticListeners() {
@@ -294,7 +297,7 @@ function startGatekeeperSession() {
                 splashScreen.style.display = 'none';
                 loadingOverlay.style.display = 'flex';
                 loadSystemCore();
-            }, 500);
+            },500);
         }
     } catch (error) { console.error('Error startGatekeeperSession:', error); alert('Erro ao iniciar sessão.'); }
 }
@@ -831,7 +834,7 @@ function renderChart() {
     
     VDCSystem.chart = new Chart(ctx, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'EUR', data: data, backgroundColor: backgroundColor, borderWidth: 1 }] },
+        data: { labels: labels, datasets: [{ label: 'EUR', data: data, backgroundColor: backgroundColor, borderWidth:1 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: labels.length > 5, position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
     });
 }
@@ -864,7 +867,7 @@ function showAlerts() {
 }
 
 // ============================================================================
-//8. EXPORTAÇÃO PDF
+//8. EXPORTAÇÃO PDF (CORRIGIDO - FONT FIX)
 // ============================================================================
 
 function exportDataJSON() {
@@ -889,6 +892,13 @@ function exportDataJSON() {
 function exportPDF() {
     if (!VDCSystem.client) { showToast(currentLang === 'pt' ? 'Sem cliente para gerar relatório.' : 'No client for report.', 'error'); return; }
     
+    // CORREÇÃO CRÍTICA: Verificação de disponibilidade do jsPDF
+    if (typeof window.jspdf === 'undefined') {
+        logAudit('Erro: jsPDF não carregado.', 'error');
+        showToast('Erro de sistema (jsPDF)', 'error');
+        return;
+    }
+
     logAudit(currentLang === 'pt' ? 'Gerando PDF Jurídico...' : 'Generating Legal PDF...', 'info');
     
     try {
@@ -897,6 +907,7 @@ function exportPDF() {
         const t = translations[currentLang];
         const ev = VDCSystem.analysis.extractedValues;
         
+        // Helper function for safe text wrapping
         const safeText = (txt, x, y, maxWidth = 170) => {
             try {
                 const split = doc.splitTextToSize(txt, maxWidth);
@@ -905,6 +916,7 @@ function exportPDF() {
             } catch(e) { return 0; }
         };
 
+        // --- HEADER ---
         doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 45, 'F');
         doc.setFontSize(16); doc.setTextColor(255,255,255); doc.setFont('helvetica', 'bold');
         doc.text(t.pdfTitle, 105, 20, { align: 'center' });
@@ -915,6 +927,7 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, 42, 190, 42);
         
+        // ---1. IDENTIFICATION ---
         let currentY = 50;
         doc.setTextColor(0, 0, 0); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
         doc.text(t.pdfSection1, 20, currentY); currentY += 8;
@@ -926,6 +939,7 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
+        // --- 2. FINANCIAL ANALYSIS ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection2, 20, currentY); currentY += 8;
         const fmt = (n) => n.toLocaleString(currentLang === 'pt' ? 'pt-PT' : 'en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
         
@@ -947,6 +961,7 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
+        // --- 3. SCIENTIFIC METHODOLOGY ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection3, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         const methodHeight = safeText(t.pdfMethodText, 25, currentY, 170);
@@ -954,6 +969,7 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
+        // --- 4. CONCLUSIONS ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection4, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         const concHeight = safeText(t.pdfConclusionText, 25, currentY, 170);
@@ -961,8 +977,10 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
+        // --- 5. EVIDENCE ANNEX ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection5, 20, currentY); currentY += 8;
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setFont('courier', 'monospace');
+        // CORREÇÃO: Alterado para 'times' para evitar erro 'courier monospace'
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setFont('times', 'normal');
         
         if (VDCSystem.analysis.evidenceIntegrity && VDCSystem.analysis.evidenceIntegrity.length > 0) {
             VDCSystem.analysis.evidenceIntegrity.forEach(item => {
@@ -973,7 +991,8 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
+        // --- 6. INTERROGATION ---
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         
         t.pdfQuestions.forEach(q => {
@@ -984,6 +1003,7 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
+        // --- 7. CHAIN OF CUSTODY ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection7, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
@@ -992,15 +1012,19 @@ function exportPDF() {
         const logs = VDCSystem.logs.slice(-10);
         logs.forEach(l => {
             if(currentY > 280) { doc.addPage(); currentY = 20; }
-            doc.setTextColor(l.type === 'error' ? 255 : (l.type === 'warn' ? 255 : 0), l.type === 'warn' ? 165 : 0, 0);
+            doc.setTextColor(l.type === 'error' ? 255 : (l.type === 'warn' ?255 : 0), l.type === 'warn' ? 165 : 0, 0);
+            // CORREÇÃO: Fonte para Logs
+            doc.setFont('times', 'normal'); 
             const logHeight = safeText(`[${l.time}] ${l.msg}`, 25, currentY, 170);
             currentY += logHeight + 4;
         });
-
+        
+        // --- FOOTER & HASH ---
         doc.setDrawColor(200, 200, 200); doc.line(20, 285, 190, 285);
         doc.setFontSize(10); doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold');
         doc.text(`${t.footerHashTitle}`, 20, 290);
-        doc.setFont('courier', 'normal'); doc.setFontSize(8); doc.setTextColor(50, 50, 50);
+        // CORREÇÃO: Fonte para Hash
+        doc.setFont('times', 'normal'); doc.setFontSize(8); doc.setTextColor(50, 50, 50);
         const hashEl = document.getElementById('masterHashValue');
         const hashText = hashEl ? hashEl.textContent : 'N/A';
         safeText(hashText, 20, 295, 170);
