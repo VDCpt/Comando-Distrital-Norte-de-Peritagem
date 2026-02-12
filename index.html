@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>VDC | Sistema de Peritagem Forense · v11.9 Final</title>
+    <title>VDC | Sistema de Peritagem Forense · v11.9 FINAL</title>
     <link rel="shortcut icon" href="#">
-    
+
     <!-- Fontes e Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Ficheiros Locais -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Dependências Externas -->
+
+    <!-- Dependências Externas (ordem crítica: jsPDF deve estar global antes do script.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- MOVED JSPDF TO HEAD FOR SAFETY & GLOBAL SCOPE -->
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    
+
+    <!-- Meta-informação de Integridade -->
     <meta name="vdc-protocol" content="GATEKEEPER v11.9 · FORENSIC PRO FINAL">
     <meta name="security-mode" content="strict">
     <meta name="core-version" content="v12.4-Engine-Corrected">
+
+    <!-- CSS Local -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 1. GATEKEEPER: SPLASH SCREEN -->
+    <!-- ==================== 1. SPLASH SCREEN ==================== -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo"><i class="fas fa-shield-alt"></i></div>
@@ -50,7 +49,7 @@
         </div>
     </div>
 
-    <!-- 2. LOADING OVERLAY -->
+    <!-- ==================== 2. LOADING OVERLAY ==================== -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
@@ -66,10 +65,10 @@
         </div>
     </div>
 
-    <!-- 3. TOAST CONTAINER -->
+    <!-- ==================== 3. TOAST CONTAINER ==================== -->
     <div id="toastContainer"></div>
 
-    <!-- 4. MODAL DE GESTÃO DE EVIDÊNCIAS -->
+    <!-- ==================== 4. MODAL DE GESTÃO DE EVIDÊNCIAS ==================== -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
@@ -110,7 +109,7 @@
                         <div id="saftFileListModal" class="file-list-modal"></div>
                         <div id="count-saft" class="file-badge">0</div>
                     </div>
-                    <!-- FATURAS -->
+                    <!-- FATURAS (ID obrigatório: invoiceFileModal) -->
                     <div class="upload-group-modal">
                         <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
@@ -120,7 +119,7 @@
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
                         <div id="count-invoices" class="file-badge">0</div>
                     </div>
-                    <!-- EXTRATOS (Corrigido texto do Label) -->
+                    <!-- EXTRATOS (Texto corrigido: apenas "EXTRATOS" / ID obrigatório: statementFileModal) -->
                     <div class="upload-group-modal">
                         <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
@@ -137,27 +136,27 @@
                     <div class="summary-grid">
                         <div class="summary-item">
                             <span class="summary-label">DAC7</span>
-                            <span id="summaryDac7" class="summary-value">0 files</span>
+                            <span id="summaryDac7" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">CONTROLO</span>
-                            <span id="summaryControl" class="summary-value">0 files</span>
+                            <span id="summaryControl" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">SAF-T</span>
-                            <span id="summarySaft" class="summary-value">0 files</span>
+                            <span id="summarySaft" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">FATURAS</span>
-                            <span id="summaryInvoices" class="summary-value">0 files</span>
+                            <span id="summaryInvoices" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">EXTRATOS</span>
-                            <span id="summaryStatements" class="summary-value">0 files</span>
+                            <span id="summaryStatements" class="summary-value">0 ficheiros</span>
                         </div>
                         <div class="summary-item">
                             <span class="summary-label">TOTAL</span>
-                            <span id="summaryTotal" class="summary-value total">0 files</span>
+                            <span id="summaryTotal" class="summary-value total">0 ficheiros</span>
                         </div>
                     </div>
                 </div>
@@ -173,7 +172,7 @@
         </div>
     </div>
 
-    <!-- 5. MAIN CONTAINER -->
+    <!-- ==================== 5. MAIN CONTAINER ==================== -->
     <div id="mainContainer" class="main-container" style="display: none; opacity: 0;">
         <header class="main-header">
             <div class="header-content">
@@ -186,7 +185,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 <div class="demo-section" style="display: flex; gap: 0.5rem; align-items: center;">
                     <button id="demoModeBtn" class="btn-demo-nav">
                         <i class="fas fa-vial"></i> <span id="demoBtnText">DEMO SIMULADA</span>
@@ -195,11 +194,11 @@
                         <i class="fas fa-language"></i> <span id="currentLangLabel">EN</span>
                     </button>
                 </div>
-                
+
                 <div class="session-info">
                     <div class="timestamp-fbi">
-                        <span class="session-id">ID: <strong id="sessionIdDisplay">---</strong></span> | 
-                        <span id="lblDate">Data</span>: <strong id="currentDate">--/--/----</strong> | 
+                        <span class="session-id">ID: <strong id="sessionIdDisplay">---</strong></span> |
+                        <span id="lblDate">Data</span>: <strong id="currentDate">--/--/----</strong> |
                         <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
                     </div>
                 </div>
@@ -207,11 +206,10 @@
         </header>
 
         <div class="app-container">
-            <!-- SIDEBAR -->
+            <!-- ========== SIDEBAR ========== -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
                     <h3><i class="fas fa-user-secret"></i> <span id="sidebarIdTitle">IDENTIFICAÇÃO</span></h3>
-                    
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
                             <label for="clientNameFixed"><i class="fas fa-user-tag"></i> <span id="lblClientName">Nome do Cliente</span></label>
@@ -222,13 +220,11 @@
                             <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> <span id="lblNIF">NIF</span></label>
                             <input type="text" id="clientNIFFixed" placeholder="000000000" maxlength="9">
                         </div>
-                        
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> <span id="btnRegister">REGISTAR</span>
                             </button>
                         </div>
-                        
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
                             <span id="clientNameDisplayFixed"></span> (<span id="clientNifDisplayFixed"></span>)
@@ -260,7 +256,6 @@
                         <i class="fas fa-folder-open"></i> <span id="btnEvidence">EVIDÊNCIAS</span>
                         <span class="evidence-count-solid">0</span>
                     </button>
-                    
                     <div class="counters-compact">
                         <div class="counter-item-compact">
                             <span class="counter-label-compact">CTR</span>
@@ -286,7 +281,7 @@
                 </div>
             </aside>
 
-            <!-- ÁREA PRINCIPAL -->
+            <!-- ========== ÁREA PRINCIPAL DE ANÁLISE ========== -->
             <main class="analysis-area">
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
@@ -373,12 +368,12 @@
                             <p id="omissionValue">0,00€</p>
                         </div>
                     </div>
-                    <div id="bigDataAlert" class="bigdata-alert alert-active" style="display: none;">
+                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation"></i>
                         <div>
                             <strong>⚠️ CRITICAL ALERT · <span id="alertCriticalTitle">DISCREPÂNCIA CRÍTICA DETETADA</span></strong>
                             <p>
-                                <span id="alertDeltaLabel">FATURA</span> (<span id="alertInvoiceVal">0</span>) ≠ <span id="alertCommissionLabel">COMISSÃO</span> (<span id="alertCommVal">0</span>) 
+                                <span id="alertDeltaLabel">FATURA</span> (<span id="alertInvoiceVal">0</span>) ≠ <span id="alertCommissionLabel">COMISSÃO</span> (<span id="alertCommVal">0</span>)
                                 | Δ = <span id="alertDeltaVal">0,00€</span>
                             </p>
                         </div>
@@ -392,7 +387,6 @@
                             <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
                         </div>
                     </div>
-                    <!-- Verificação de integridade de bloco: ID auditOutput -->
                     <div id="auditOutput" class="console-output"></div>
                 </section>
             </main>
@@ -409,7 +403,7 @@
         </footer>
     </div>
 
-    <!-- Lógica do Sistema -->
+    <!-- Script Local (carregado APÓS as CDNs, especialmente jsPDF) -->
     <script src="script.js"></script>
 </body>
 </html>
