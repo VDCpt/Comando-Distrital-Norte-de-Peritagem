@@ -1,74 +1,41 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE v11.6 GATEKEEPER
- * Core Logic & Audit Controller
+ * Motor de Triangulação e Sincronização DOM
  * Strict Mode Activated
- * Includes: Big Data Parsing, Fiscal Engine, Global Binding
  */
 
 'use strict';
 
 // ==========================================
-// 1. UTILITÁRIOS DE NORMALIZAÇÃO FORENSE
+// 1. UTILITÁRIOS
 // ==========================================
 
-/**
- * toForensicNumber
- * Normaliza strings monetárias provenientes de CSV/PDF/HTML para Float.
- * Suporta formatos PT (1.000,00), EU (1,000.00) e mistos.
- */
 const toForensicNumber = (v) => {
     if (v === null || v === undefined || v === '') return 0;
-    
     let str = v.toString().trim();
-    // Remove ruído (espaços invisíveis, tabs, quebras de linha)
     str = str.replace(/[\n\r\t\s\u200B-\u200D\uFEFF]/g, '');
-    // Remove símbolos de moeda e texto comum
     str = str.replace(/["'`]/g, '').replace(/[€$£]/g, '').replace(/EUR|USD|GBP/gi, '').replace(/\s+/g, '');
-    
     const hasComma = str.includes(',');
     const hasDot = str.includes('.');
-    
-    // Lógica de inferência de separador decimal
     if (hasComma && hasDot) {
-        // Se o ponto vier antes da vírgula -> PT (1.000,00)
-        if (str.indexOf(',') > str.indexOf('.')) {
-            str = str.replace(/\./g, '').replace(',', '.');
-        } else {
-            // Se a vírgula vier antes do ponto -> EU (1,000.00)
-            str = str.replace(/,/g, '');
-        }
+        if (str.indexOf(',') > str.indexOf('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+        else { str = str.replace(/,/g, ''); }
     } else if (hasComma && !hasDot) {
-        // Apenas vírgula. Se houver mais de uma, é milhar PT.
         const commaCount = (str.match(/,/g) || []).length;
-        if (commaCount > 1) {
-            const parts = str.split(',');
-            str = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
-        } else {
-            str = str.replace(',', '.');
-        }
+        if (commaCount > 1) { const parts = str.split(','); str = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]; } 
+        else { str = str.replace(',', '.'); }
     } else if (!hasComma && hasDot) {
-        // Apenas ponto. Se houver mais de um, é milhar EUA (1.000.000).
         const dotCount = (str.match(/\./g) || []).length;
-        if (dotCount > 1) {
-            const parts = str.split('.');
-            str = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
-        }
+        if (dotCount > 1) { const parts = str.split('.'); str = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]; }
     }
-    
-    // Remove tudo o que não for dígito, ponto ou menos
     str = str.replace(/[^\d.-]/g, '');
     if (str === '' || str === '-' || str === '.') return 0;
-    
     const num = parseFloat(str);
     return isNaN(num) ? 0 : Math.abs(num);
 };
 
-const isValidDate = (d) => {
-    return d instanceof Date && !isNaN(d.getTime());
-};
-
 // ==========================================
-// 2. ESTADO GLOBAL DO SISTEMA (VDCSystem)
+// 2. ESTADO GLOBAL (VDCSystem)
 // ==========================================
 
 const VDCSystem = {
@@ -77,678 +44,344 @@ const VDCSystem = {
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
     client: null,
-    demoMode: false,
     processing: false,
-    clientLocked: false,
     
-    // Dados da Entidade Alvo (Bolt)
-    boltEntity: {
-        nome: "Bolt Operations OÜ",
-        nif: "EE102090374",
-        endereco: "Vana-Lõuna 15, Tallinn 10134 Estonia",
-        isoCompliance: "ISO/IEC 27037",
-        taxaRegulacao: "5% (AMT/IMT)"
-    },
-    
-    // Estrutura de Documentos
     documents: {
         dac7: { files: [], parsedData: [], totals: { annualRevenue: 0, records: 0 }, hashes: {} },
         control: { files: [], parsedData: null, totals: { records: 0 }, hashes: {} },
-        saft: { files: [], parsedData: [], totals: { gross: 0, iva6: 0, net: 0, records: 0 }, hashes: {} },
-        invoices: { files: [], parsedData: [], totals: { invoiceValue: 0, commission: 0, iva23: 0, records: 0 }, hashes: {} },
-        statements: { files: [], parsedData: [], totals: { rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0, records: 0 }, hashes: {} }
+        saft: { files: [], parsedData: [], totals: { gross: 0, records: 0 }, hashes: {} },
+        invoices: { files: [], parsedData: [], totals: { invoiceValue: 0, records: 0 }, hashes: {} },
+        statements: { files: [], parsedData: [], totals: { rendimentosBrutos: 0, comissaoApp: 0, records: 0 }, hashes: {} }
     },
     
-    // Análise e Cruzamentos
     analysis: {
         extractedValues: {
             saftGross: 0, saftIVA6: 0, saftNet: 0,
-            platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-            rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
-            faturaPlataforma: 0, diferencialCusto: 0,
-            prejuizoFiscal: 0, ivaAutoliquidacao: 0,
-            dac7Revenue: 0,
-            jurosMora: 0, taxaRegulacao: 0, riscoRegulatorio: 0
+            platformCommission: 0, iva23Due: 0,
+            rendimentosBrutos: 0, comissaoApp: 0, faturaPlataforma: 0,
+            diferencialCusto: 0, ivaAutoliquidacao: 0,
+            jurosMora: 0
         },
-        crossings: { deltaA: 0, deltaB: 0, omission: 0, diferencialAlerta: false, bigDataAlertActive: false },
-        chainOfCustody: [],
-        legalCitations: [
-            "ISO/IEC 27037:2012 - Preservação de Evidência Digital",
-            "NIST SP 800-86 - Guia para Análise Forense",
-            "RGIT - Regime Geral das Infrações Tributárias",
-            "CIVA - Autoliquidação do IVA",
-            "DL 83/2017 - Taxa de Regulação"
-        ]
+        crossings: { deltaB: 0, diferencialAlerta: false }
     },
     
-    // Contadores e Logs
-    counters: { dac7: 0, control: 0, saft: 0, invoices: 0, statements: 0, total: 0 },
     logs: [],
-    chart: null,
-    preRegisteredClients: []
+    chart: null
 };
 
 // ==========================================
-// 3. INICIALIZAÇÃO E EVENTOS (GATEKEEPER)
+// 3. INICIALIZAÇÃO (GATEKEEPER)
 // ==========================================
 
-/**
- * Inicialização Segura do DOM
- */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log(`%c VDC v11.6 GATEKEEPER INICIADO `, 'background: #0066cc; color: #fff; padding: 5px;');
-    // Prepara UI sem desbloquear
-    setupStaticListeners();
+    console.log('%c VDC v11.6 GATEKEEPER: DOM Ready ', 'background: #0066cc; color: #fff; padding: 5px;');
+    // Setup inicial
+    const startBtn = document.getElementById('startSessionBtn');
+    if (startBtn) startBtn.addEventListener('click', startGatekeeperSession);
 });
 
-/**
- * Window Onload - Finaliza carregamento de recursos
- */
 window.onload = () => {
-    console.log('Recursos externos carregados.');
-    // Verifica bibliotecas essenciais
-    if (typeof CryptoJS === 'undefined') {
-        console.error('CRÍTICO: CryptoJS não carregado.');
-        alert('Erro de Segurança: Bibliotecas de criptografia indisponíveis.');
-    }
-    if (typeof Papa === 'undefined') {
-        console.error('CRÍTICO: PapaParse não carregado.');
-    }
+    console.log('Recursos carregados.');
+    if (typeof Papa === 'undefined') alert('Erro: PapaParse indisponível.');
 };
 
-/**
- * setupStaticListeners
- * Configura listeners que funcionam independentemente do estado da sessão
- */
-function setupStaticListeners() {
-    const startBtn = document.getElementById('startSessionBtn');
-    if (startBtn) {
-        // GATEKEEPER: Apenas o clique humano inicia o sistema
-        startBtn.addEventListener('click', startGatekeeperSession);
-    }
-}
-
-/**
- * startGatekeeperSession
- * Manipula a transição da Splash Screen para a UI Principal
- */
 function startGatekeeperSession() {
     try {
-        const splashScreen = document.getElementById('splashScreen');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        
-        if (splashScreen && loadingOverlay) {
-            // Fade out splash
-            splashScreen.style.opacity = '0';
+        const splash = document.getElementById('splashScreen');
+        const loader = document.getElementById('loadingOverlay');
+        if (splash && loader) {
+            splash.style.opacity = '0';
             setTimeout(() => {
-                splashScreen.style.display = 'none';
-                // Show loader
-                loadingOverlay.style.display = 'flex';
-                // Inicializa sistema
+                splash.style.display = 'none';
+                loader.style.display = 'flex';
                 loadSystemCore();
             }, 500);
         }
-    } catch (error) {
-        console.error('Erro no startGatekeeperSession:', error);
-        alert('Erro ao iniciar sessão segura.');
-    }
+    } catch (e) { console.error(e); alert('Erro ao iniciar.'); }
 }
 
-/**
- * loadSystemCore
- * Carrega o motor lógico do sistema
- */
 function loadSystemCore() {
     updateLoadingProgress(20);
-    
     setTimeout(() => {
-        // Gera ID da Sessão
         VDCSystem.sessionId = generateSessionId();
-        const sessionIdElement = document.getElementById('sessionIdDisplay');
-        if (sessionIdElement) sessionIdElement.textContent = VDCSystem.sessionId;
+        const idEl = document.getElementById('sessionIdDisplay');
+        if (idEl) idEl.textContent = VDCSystem.sessionId;
         
-        updateLoadingProgress(40);
-        
-        // Popula anos (2018-2036)
-        populateYears();
-        
-        // Inicia relógio
-        startClockAndDate();
-        
-        updateLoadingProgress(60);
-        
-        // Configura restantes listeners
+        updateLoadingProgress(50);
         setupMainListeners();
-        
         updateLoadingProgress(80);
         
-        // Gera Hash inicial
         generateMasterHash();
-        
         setTimeout(() => {
             updateLoadingProgress(100);
-            // Transição para Main Container
-            setTimeout(showMainInterface, 500);
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
+                logAudit('SISTEMA ONLINE', 'success');
+            }, 300);
         }, 500);
     }, 500);
 }
 
-function updateLoadingProgress(percent) {
+function updateLoadingProgress(pct) {
     const bar = document.getElementById('loadingProgress');
-    const text = document.getElementById('loadingStatusText');
-    if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `Carregando módulos... ${percent}%`;
-}
-
-function showMainInterface() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const mainContainer = document.getElementById('mainContainer');
-    
-    if (loadingOverlay && mainContainer) {
-        loadingOverlay.style.opacity = '0';
-        setTimeout(() => {
-            loadingOverlay.style.display = 'none';
-            mainContainer.style.display = 'block';
-            setTimeout(() => { mainContainer.style.opacity = '1'; }, 50);
-        }, 500);
-    }
-    logAudit('SISTEMA VDC v11.6 GATEKEEPER ONLINE', 'success');
+    const txt = document.getElementById('loadingStatusText');
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = `Iniciando... ${pct}%`;
 }
 
 // ==========================================
-// 4. GESTÃO DE UTILIZADORES E DADOS
+// 4. EVENTOS E UTILIDADES
 // ==========================================
-
-function populateYears() {
-    const yearSelect = document.getElementById('selYearFixed');
-    if (!yearSelect) return;
-    
-    yearSelect.innerHTML = '';
-    const currentYear = new Date().getFullYear();
-    
-    for (let year = 2018; year <= 2036; year++) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) option.selected = true;
-        yearSelect.appendChild(option);
-    }
-}
-
-function startClockAndDate() {
-    const update = () => {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('pt-PT');
-        const timeStr = now.toLocaleTimeString('pt-PT');
-        
-        const dateEl = document.getElementById('currentDate');
-        const timeEl = document.getElementById('currentTime');
-        
-        if (dateEl) dateEl.textContent = dateStr;
-        if (timeEl) timeEl.textContent = timeStr;
-    };
-    update();
-    setInterval(update, 1000);
-}
 
 function setupMainListeners() {
-    // Registo de Cliente
-    const registerBtn = document.getElementById('registerClientBtnFixed');
-    if (registerBtn) registerBtn.addEventListener('click', registerClient);
-    
-    // Demo Mode
-    const demoBtn = document.getElementById('demoModeBtn');
-    if (demoBtn) demoBtn.addEventListener('click', activateDemoMode);
-    
-    // Modal Evidências
-    const openModalBtn = document.getElementById('openEvidenceModalBtn');
-    if (openModalBtn) openModalBtn.addEventListener('click', openEvidenceModal);
-    
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const closeAndSaveBtn = document.getElementById('closeAndSaveBtn');
-    
-    const closeModalHandler = () => {
-        closeEvidenceModal();
-        updateAnalysisButton(); // Verifica estado
-    };
-    
-    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModalHandler);
-    if (closeAndSaveBtn) closeAndSaveBtn.addEventListener('click', closeModalHandler);
+    // Registo
+    document.getElementById('registerClientBtnFixed').addEventListener('click', registerClient);
+    // Modal
+    const closeModalHandler = () => { document.getElementById('evidenceModal').style.display = 'none'; updateAnalysisButton(); };
+    document.getElementById('openEvidenceModalBtn').addEventListener('click', () => { document.getElementById('evidenceModal').style.display = 'flex'; updateEvidenceSummary(); });
+    document.getElementById('closeModalBtn').addEventListener('click', closeModalHandler);
+    document.getElementById('closeAndSaveBtn').addEventListener('click', closeModalHandler);
     
     // Uploads
-    setupUploadListeners();
+    ['dac7', 'control', 'saft', 'invoices', 'statements'].forEach(type => {
+        document.getElementById(`${type}UploadBtnModal`).addEventListener('click', () => document.getElementById(`${type}FileModal`).click());
+        document.getElementById(`${type}FileModal`).addEventListener('change', (e) => handleFileUpload(e, type));
+    });
+    
+    document.getElementById('clearAllBtn').addEventListener('click', clearAllEvidence);
     
     // Ações Principais
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    if (analyzeBtn) analyzeBtn.addEventListener('click', performAudit);
+    document.getElementById('analyzeBtn').addEventListener('click', performAudit);
+    document.getElementById('exportJSONBtn').addEventListener('click', exportDataJSON);
+    document.getElementById('resetBtn').addEventListener('click', resetSystem);
     
-    const exportJSONBtn = document.getElementById('exportJSONBtn');
-    if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportDataJSON);
-    
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) resetBtn.addEventListener('click', resetSystem);
-    
-    const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-    if (clearConsoleBtn) clearConsoleBtn.addEventListener('click', clearConsole);
-    
-    // Fechar modal ao clicar fora
-    const modal = document.getElementById('evidenceModal');
-    if (modal) modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModalHandler();
-    });
+    // IDs Sincronizados
+    document.getElementById('exportPDFBtn').addEventListener('click', exportPDF);
+    document.getElementById('clearConsoleBtn').addEventListener('click', clearConsole);
 }
-
-function setupUploadListeners() {
-    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
-    types.forEach(type => {
-        const btn = document.getElementById(`${type}UploadBtnModal`);
-        const input = document.getElementById(`${type}FileModal`);
-        if (btn && input) {
-            btn.addEventListener('click', () => input.click());
-            input.addEventListener('change', (e) => handleFileUpload(e, type));
-        }
-    });
-    
-    const clearAllBtn = document.getElementById('clearAllBtn');
-    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllEvidence);
-}
-
-// ==========================================
-// 5. LÓGICA DE CLIENTES
-// ==========================================
 
 function registerClient() {
-    const nameInput = document.getElementById('clientNameFixed');
-    const nifInput = document.getElementById('clientNIFFixed');
-    const name = nameInput?.value.trim();
-    const nif = nifInput?.value.trim();
+    const name = document.getElementById('clientNameFixed').value.trim();
+    const nif = document.getElementById('clientNIFFixed').value.trim();
     
-    if (!name || name.length < 3) {
-        showToast('Nome inválido', 'error');
-        return;
-    }
+    if (!name || name.length < 3) { showToast('Nome inválido', 'error'); return; }
+    if (!nif || !/^\d{9}$/.test(nif)) { showToast('NIF inválido', 'error'); return; }
     
-    if (!nif || !/^\d{9}$/.test(nif)) {
-        showToast('NIF inválido (9 dígitos)', 'error');
-        return;
-    }
-    
-    VDCSystem.client = {
-        name: name,
-        nif: nif,
-        platform: VDCSystem.selectedPlatform,
-        timestamp: new Date().toISOString()
-    };
-    
-    // Atualiza UI
+    VDCSystem.client = { name, nif, timestamp: new Date().toISOString() };
     const statusEl = document.getElementById('clientStatusFixed');
-    const nameDisplay = document.getElementById('clientNameDisplayFixed');
-    const nifDisplay = document.getElementById('clientNifDisplayFixed');
-    
-    if (statusEl) statusEl.style.display = 'flex';
-    if (nameDisplay) nameDisplay.textContent = name;
-    if (nifDisplay) nifDisplay.textContent = nif;
-    
-    logAudit(`Cliente registado: ${name} (${nif})`, 'success');
+    if (statusEl) {
+        statusEl.style.display = 'flex';
+        statusEl.textContent = `${name} (${nif})`;
+    }
+    logAudit(`Cliente registado: ${name}`, 'success');
     updateAnalysisButton();
 }
 
-// ==========================================
-// 6. GESTÃO DE MODAL E EVIDÊNCIAS
-// ==========================================
-
-function openEvidenceModal() {
-    const modal = document.getElementById('evidenceModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        updateEvidenceSummary();
-    }
+function updateAnalysisButton() {
+    const btn = document.getElementById('analyzeBtn');
+    const hasClient = VDCSystem.client !== null;
+    const hasControl = VDCSystem.documents.control.files.length > 0;
+    const hasSaft = VDCSystem.documents.saft.files.length > 0;
+    if (btn) btn.disabled = !(hasClient && hasControl && hasSaft);
 }
 
-function closeEvidenceModal() {
-    const modal = document.getElementById('evidenceModal');
-    if (modal) modal.style.display = 'none';
-}
+// ==========================================
+// 5. GESTÃO DE MODAL E EVIDÊNCIAS
+// ==========================================
+
+function openEvidenceModal() { document.getElementById('evidenceModal').style.display = 'flex'; updateEvidenceSummary(); }
+function closeEvidenceModal() { document.getElementById('evidenceModal').style.display = 'none'; }
 
 async function handleFileUpload(event, type) {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
     
-    const btn = document.querySelector(`#${type}UploadBtnModal`);
-    if (btn) {
-        btn.classList.add('processing');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO BIG DATA...';
-    }
+    const btn = document.getElementById(`${type}UploadBtnModal`);
+    if (btn) { btn.classList.add('processing'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...'; }
     
     try {
-        // Processa cada ficheiro
         for (const file of files) {
             await processFile(file, type);
         }
-        
-        logAudit(`${files.length} ficheiro(s) ${type} carregado(s).`, 'success');
         updateEvidenceSummary();
         updateCounters();
         generateMasterHash();
-    } catch (error) {
-        console.error(error);
-        logAudit(`Erro no upload: ${error.message}`, 'error');
+        logAudit(`${files.length} ficheiros ${type} carregados.`, 'success');
+    } catch (e) {
+        console.error(e);
+        logAudit(`Erro no upload: ${e.message}`, 'error');
     } finally {
-        if (btn) {
-            btn.classList.remove('processing');
-            // Restaura texto original baseado no tipo
-            const iconMap = { dac7: 'fa-file-contract', control: 'fa-file-shield', saft: 'fa-file-code', invoices: 'fa-file-invoice-dollar', statements: 'fa-file-contract' };
-            btn.innerHTML = `<i class="fas ${iconMap[type]}"></i> SELECIONAR FICHEIROS`;
-        }
-        event.target.value = ''; // Limpa input
+        if (btn) { btn.classList.remove('processing'); btn.innerHTML = 'SELECIONAR FICHEIROS'; }
+        event.target.value = '';
     }
 }
 
-/**
- * processFile
- * Lógica de Parsing Big Data (PapaParse) e Extração de Valores
- */
 async function processFile(file, type) {
     const text = await readFileAsText(file);
     const hash = CryptoJS.SHA256(text).toString();
     
-    // Regista na estrutura de dados
-    if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: {}, hashes: {} };
+    if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: { records: 0, rendimentosBrutos: 0, comissaoApp: 0 }, hashes: {} };
     
     VDCSystem.documents[type].files.push(file);
     VDCSystem.documents[type].hashes[file.name] = hash;
-    VDCSystem.documents[type].totals.records = (VDCSystem.documents[type].totals.records || 0) + 1;
+    VDCSystem.documents[type].totals.records++;
     
-    // Adiciona à Cadeia de Custódia
-    VDCSystem.analysis.chainOfCustody.push({
-        filename: file.name,
-        type: type,
-        hash: hash.substring(0, 16) + '...',
-        timestamp: new Date().toLocaleString()
-    });
-    
-    // --- PARSING DE BIG DATA (LÓGICA FUNCIONAL) ---
-    let extractedData = { filename: file.name, size: file.size };
-    
+    // --- BIG DATA PARSING (PapaParse) ---
     if (type === 'statements' || type === 'saft' || type === 'invoices') {
         try {
-            // Tenta fazer parse CSV
-            const parsed = Papa.parse(text, {
-                header: true,
-                skipEmptyLines: true,
-                dynamicTyping: true
-            });
-            
+            const parsed = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
             if (parsed.data && parsed.data.length > 0) {
-                let grossRevenue = 0;
-                let platformFees = 0;
+                let gross = 0;
+                let fees = 0;
                 
                 parsed.data.forEach(row => {
-                    // Busca chaves comuns em extratos Bolt/Uber
-                    const keys = Object.keys(row);
-                    keys.forEach(key => {
+                    Object.keys(row).forEach(key => {
                         const val = toForensicNumber(row[key]);
-                        const keyLower = key.toLowerCase();
-                        
-                        // Extrai Gross Revenue (Total Payout / Earnings / Total)
-                        if (keyLower.includes('total') || keyLower.includes('earnings') || keyLower.includes('payout')) {
-                            grossRevenue += val;
-                        }
-                        
-                        // Extrai Platform Fees (Commission / Fee / Service)
-                        if (keyLower.includes('commission') || keyLower.includes('fee') || keyLower.includes('service')) {
-                            platformFees += Math.abs(val);
-                        }
-                        
-                        // Específico para Invoices se for o caso
-                        if (type === 'invoices' && keyLower.includes('amount') || keyLower.includes('total')) {
-                            VDCSystem.documents.invoices.totals.invoiceValue += val;
-                        }
+                        const k = key.toLowerCase();
+                        if (k.includes('total') || k.includes('earnings')) gross += val;
+                        if (k.includes('commission') || k.includes('fee')) fees += Math.abs(val);
+                        if (type === 'invoices' && k.includes('amount')) VDCSystem.documents.invoices.totals.invoiceValue += val;
                     });
                 });
                 
-                // Armazena os valores extraídos para uso posterior
                 if (type === 'statements') {
-                    VDCSystem.documents.statements.totals.rendimentosBrutos = grossRevenue;
-                    VDCSystem.documents.statements.totals.comissaoApp = platformFees;
+                    VDCSystem.documents.statements.totals.rendimentosBrutos = gross;
+                    VDCSystem.documents.statements.totals.comissaoApp = fees;
                 }
                 if (type === 'saft') {
-                    VDCSystem.documents.saft.totals.gross = grossRevenue;
+                    VDCSystem.documents.saft.totals.gross = gross;
                 }
-                
-                extractedData.grossRevenue = grossRevenue;
-                extractedData.platformFees = platformFees;
             }
-        } catch (e) {
-            console.error('Erro no parse CSV:', e);
-        }
+        } catch (e) { console.warn('Parse falhou para ' + file.name, e); }
     }
     
-    VDCSystem.documents[type].parsedData.push(extractedData);
-    
-    // Atualiza UI da lista
-    const listId = `${type}FileListModal`;
-    const listEl = document.getElementById(listId);
+    // UI Update
+    const listEl = document.getElementById(`${type}FileListModal`);
     if (listEl) {
         listEl.style.display = 'block';
         const item = document.createElement('div');
         item.className = 'file-item-modal';
-        item.innerHTML = `
-            <i class="fas fa-check-circle" style="color: var(--success-primary)"></i>
-            <span class="file-name-modal">${file.name}</span>
-            <span class="file-status-modal">${formatBytes(file.size)}</span>
-            <span class="file-hash-modal">${hash.substring(0,8)}...</span>
-        `;
+        item.innerHTML = `<i class="fas fa-check-circle" style="color:#00cc88"></i> ${file.name} (${formatBytes(file.size)})`;
         listEl.appendChild(item);
     }
 }
 
 function clearAllEvidence() {
-    if (!confirm('Tem a certeza? Isto apagará todos os dados carregados.')) return;
-    
-    // Reset estrutura de documentos
-    Object.keys(VDCSystem.documents).forEach(key => {
-        VDCSystem.documents[key] = { files: [], parsedData: [], totals: { records: 0, rendimentosBrutos: 0, comissaoApp: 0 }, hashes: {} };
+    if (!confirm('Limpar tudo?')) return;
+    Object.keys(VDCSystem.documents).forEach(k => {
+        VDCSystem.documents[k] = { files: [], parsedData: [], totals: { records: 0, rendimentosBrutos: 0, comissaoApp: 0 }, hashes: {} };
     });
-    
-    // Limpa UI de listas
-    const lists = document.querySelectorAll('.file-list-modal');
-    lists.forEach(l => l.innerHTML = '');
-    
+    document.querySelectorAll('.file-list-modal').forEach(el => el.innerHTML = '');
     updateEvidenceSummary();
     updateCounters();
-    generateMasterHash();
-    logAudit('Todas as evidências limpas.', 'warn');
+    logAudit('Evidências limpas.', 'warn');
 }
 
 function updateEvidenceSummary() {
-    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
-    let totalFiles = 0;
-    
-    types.forEach(type => {
-        const count = VDCSystem.documents[type]?.files?.length || 0;
-        totalFiles += count;
-        const el = document.getElementById(`summary${type.charAt(0).toUpperCase() + type.slice(1)}`);
-        if (el) el.textContent = `${count} ficheiros`;
+    ['Dac7', 'Control', 'Saft', 'Invoices', 'Statements'].forEach(type => {
+        const count = VDCSystem.documents[type.toLowerCase()].files.length;
+        const el = document.getElementById(`summary${type}`);
+        if (el) el.textContent = count;
     });
-    
     const totalEl = document.getElementById('summaryTotal');
-    if (totalEl) totalEl.textContent = `${totalFiles} ficheiros`;
+    if (totalEl) totalEl.textContent = Object.values(VDCSystem.documents).reduce((a, b) => a + b.files.length, 0);
 }
 
 function updateCounters() {
-    const types = ['dac7', 'control', 'saft', 'invoices', 'statements'];
-    types.forEach(type => {
-        const count = VDCSystem.documents[type]?.files?.length || 0;
+    ['dac7', 'control', 'saft', 'invoices', 'statements'].forEach(type => {
         const el = document.getElementById(`${type}CountCompact`);
-        if (el) el.textContent = count;
+        if (el) el.textContent = VDCSystem.documents[type].files.length;
     });
 }
 
 // ==========================================
-// 7. MOTOR DE AUDITORIA & CÁLCULOS FISCAIS
+// 6. MOTOR DE TRIANGULAÇÃO FORENSE (CORE)
 // ==========================================
 
-function activateDemoMode() {
-    if (VDCSystem.processing) return;
-    VDCSystem.demoMode = true;
-    VDCSystem.processing = true;
-    
-    logAudit('ATIVANDO MODO DEMO...', 'info');
-    
-    // Regista Cliente Demo
-    document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
-    document.getElementById('clientNIFFixed').value = '123456789';
-    registerClient();
-    
-    // Simula Uploads
-    simulateUpload('dac7', 1);
-    simulateUpload('control', 1);
-    simulateUpload('saft', 1);
-    simulateUpload('invoices', 1);
-    simulateUpload('statements', 1);
-    
-    setTimeout(() => {
-        // Injeta valores de auditoria simulados
-        VDCSystem.analysis.extractedValues = {
-            saftGross: 5000.00, saftIVA6: 300.00, saftNet: 4700.00,
-            rendimentosBrutos: 5000.00, comissaoApp: -1200.00, rendimentosLiquidos: 3800.00,
-            faturaPlataforma: 200.00, // Diferencial flagrante
-            diferencialCusto: 1000.00,
-            ivaAutoliquidacao: 230.00, // 23% de 1000
-            jurosMora: 40.00, // 4% de 1000
-            taxaRegulacao: 60.00 // 5% de 1200
-        };
-        
-        VDCSystem.analysis.crossings.deltaB = 1000.00;
-        VDCSystem.analysis.crossings.diferencialAlerta = true;
-        
-        updateDashboard();
-        renderChart();
-        showAlerts();
-        
-        logAudit('Auditoria Demo concluída.', 'success');
-        VDCSystem.processing = false;
-    },1000);
-}
-
-function simulateUpload(type, count) {
-    // Simula apenas contadores e UI
-    for(let i=0; i<count; i++) {
-        if (!VDCSystem.documents[type]) VDCSystem.documents[type] = { files: [], parsedData: [], totals: { records: 0, rendimentosBrutos: 0, comissaoApp: 0 }, hashes: {} };
-        VDCSystem.documents[type].files.push({ name: `demo_${type}_${i}.txt` });
-        VDCSystem.documents[type].totals.records++;
-    }
-    updateCounters();
-    updateEvidenceSummary();
-}
-
-/**
- * performAudit
- * Coordena o motor de cálculo fiscal e cruzamento de dados
- */
 function performAudit() {
-    if (!VDCSystem.client) {
-        showToast('Registe um cliente primeiro.', 'error');
-        return;
-    }
+    if (!VDCSystem.client) { showToast('Registe cliente.', 'error'); return; }
     
-    logAudit('INICIANDO CRUZAMENTO DE DADOS...', 'info');
+    logAudit('INICIANDO TRIANGULAÇÃO...', 'info');
     
-    // 1. Recolhe Valores Extraídos dos CSVs (via Parsing)
-    const stmtGross = VDCSystem.documents.statements.totals.rendimentosBrutos || 0;
-    const stmtCommission = VDCSystem.documents.statements.totals.comissaoApp || 0;
-    const saftGross = VDCSystem.documents.saft.totals.gross || 0;
-    const invoiceVal = VDCSystem.documents.invoices.totals.invoiceValue || 0;
+    // 1. Coleta de Dados Extraídos (do CSV)
+    const extractedGross = VDCSystem.documents.statements.totals.rendimentosBrutos;
+    const extractedFees = VDCSystem.documents.statements.totals.comissaoApp;
+    const extractedInvoice = VDCSystem.documents.invoices.totals.invoiceValue;
     
-    // Se estiver em modo Demo, usa os valores mockados, senão tenta usar os extraídos
-    // Para garantir funcionamento visual se o parser for simples:
-    const grossRevenue = VDCSystem.demoMode ? VDCSystem.analysis.extractedValues.rendimentosBrutos : stmtGross;
-    const platformCommission = VDCSystem.demoMode ? VDCSystem.analysis.extractedValues.comissaoApp : stmtCommission;
-    const faturaPlataforma = VDCSystem.demoMode ? VDCSystem.analysis.extractedValues.faturaPlataforma : invoiceVal;
+    // 2. Chamada ao Motor de Cálculo
+    performForensicCrossings(extractedGross, extractedFees, extractedInvoice);
     
-    // 2. Executa Cruzamento Forense
-    performForensicCrossings(grossRevenue, platformCommission, faturaPlataforma);
-    
+    // 3. Atualização UI
     updateDashboard();
     renderChart();
     showAlerts();
     
-    logAudit('AUDITORIA CONCLUÍDA.', 'success');
+    logAudit('TRIANGULAÇÃO CONCLUÍDA.', 'success');
 }
 
 /**
  * performForensicCrossings
- * Motor de Cálculo Fiscal: IVA 23%, Juros 4%, Taxa Reg 5%
+ * Tarefa Mandatória: Comparar extractedValues com manualInput (se houver)
+ * Calcular IVA 23% e Juros 4%
  */
-function performForensicCrossings(grossRevenue, platformCommission, faturaPlataforma) {
+function performForensicCrossings(gross, commission, invoice) {
     const ev = VDCSystem.analysis.extractedValues;
     const cross = VDCSystem.analysis.crossings;
     
-    // Atualiza valores base
-    ev.rendimentosBrutos = grossRevenue;
-    ev.comissaoApp = platformCommission;
-    ev.faturaPlataforma = faturaPlataforma;
+    // Atualiza valores extraídos
+    ev.rendimentosBrutos = gross;
+    ev.comissaoApp = commission;
+    ev.faturaPlataforma = invoice;
     
-    // Cálculo de Diferencial de Custo (Discrepância entre Comissão Retida e Fatura)
-    // Se a plataforma retém 1000€ de comissão, mas só fatura 200€, há 800€ em risco.
-    const comissaoAbs = Math.abs(platformCommission);
-    const diferencial = Math.abs(comissaoAbs - faturaPlataforma);
+    // Cálculo do Diferencial (Comissão Retida vs. Fatura Emitida)
+    const absComm = Math.abs(commission);
+    const diferencial = Math.abs(absComm - invoice);
     
     ev.diferencialCusto = diferencial;
     cross.deltaB = diferencial;
     
-    // 1. Cálculo de IVA de Autoliquidação (23% sobre o diferencial não faturado)
+    // 1. Cálculo de IVA Autoliquidação (23% sobre o diferencial não justificado)
     ev.ivaAutoliquidacao = diferencial * 0.23;
     
-    // 2. Cálculo de Juros de Mora (4% sobre o IVA em falta)
+    // 2. Cálculo de Juros de Mora (4% sobre o IVA)
     ev.jurosMora = ev.ivaAutoliquidacao * 0.04;
     
-    // 3. Cálculo de Risco Regulatório (Taxa de Regulação 5% sobre a comissão total)
-    ev.taxaRegulacao = comissaoAbs * 0.05;
-    ev.riscoRegulatorio = ev.taxaRegulacao;
-    
-    // Lógica de Alertas
+    // Deteta Alertas
     if (diferencial > 0.01) {
         cross.diferencialAlerta = true;
-        cross.bigDataAlertActive = true;
-        logAudit(`DISCREPÂNCIA DETETADA: ${diferencial.toFixed(2)}€`, 'warn');
+        logAudit(`DISCREPÂNCIA: ${diferencial.toFixed(2)}€ (IVA 23%: ${ev.ivaAutoliquidacao.toFixed(2)}€)`, 'warn');
     } else {
         cross.diferencialAlerta = false;
-        cross.bigDataAlertActive = false;
     }
 }
 
 // ==========================================
-// 8. UI DE RESULTADOS & ALERTAS
+// 7. UI E ALERTAS (SINCRONIZAÇÃO)
 // ==========================================
 
 function updateDashboard() {
     const ev = VDCSystem.analysis.extractedValues;
-    const format = (val) => val.toLocaleString('pt-PT', { minimumFractionDigits:2, maximumFractionDigits:2 }) + '€';
+    const fmt = (n) => n.toLocaleString('pt-PT', { minimumFractionDigits:2, maximumFractionDigits:2 }) + '€';
     
     const map = {
-        'netVal': ev.saftNet,
-        'iva6Val': ev.saftIVA6,
-        'commissionVal': ev.comissaoApp,
-        'iva23Val': ev.ivaAutoliquidacao,
         'kpiGanhos': ev.rendimentosBrutos,
         'kpiComm': ev.comissaoApp,
-        'kpiNet': (ev.rendimentosBrutos + ev.comissaoApp), // Líquido Aproximado
-        'kpiInvoice': ev.faturaPlataforma
+        'kpiInvoice': ev.faturaPlataforma,
+        'iva23Val': ev.ivaAutoliquidacao
     };
     
     for (const [id, val] of Object.entries(map)) {
         const el = document.getElementById(id);
-        if (el) el.textContent = format(val);
+        if (el) el.textContent = fmt(val);
     }
     
-    // Juros Especiais
-    const jurosCard = document.getElementById('jurosCard');
-    const jurosVal = document.getElementById('jurosVal');
-    if (jurosCard && jurosVal && ev.jurosMora > 0) {
-        jurosCard.style.display = 'flex';
-        jurosVal.textContent = format(ev.jurosMora);
+    // Juros
+    const jCard = document.getElementById('jurosCard');
+    const jVal = document.getElementById('jurosVal');
+    if (ev.jurosMora > 0 && jCard && jVal) {
+        jCard.style.display = 'flex';
+        jVal.textContent = fmt(ev.jurosMora);
     }
 }
 
@@ -760,22 +393,18 @@ function renderChart() {
     
     const ev = VDCSystem.analysis.extractedValues;
     
-    const data = {
-        labels: ['Bruto', 'Comissão', 'Fatura', 'IVA 23%', 'Juros 4%'],
-        datasets: [{
-            label: 'Euros (€)',
-            data: [ev.rendimentosBrutos, Math.abs(ev.comissaoApp), ev.faturaPlataforma, ev.ivaAutoliquidacao, ev.jurosMora],
-            backgroundColor: ['#00a8ff', '#e84118', '#44bd32', '#fbc531', '#ff9f1a'],
-            borderWidth:1
-        }]
-    };
-    
     VDCSystem.chart = new Chart(ctx, {
         type: 'bar',
-        data: data,
+        data: {
+            labels: ['Bruto', 'Comissão', 'Fatura', 'IVA 23%'],
+            datasets: [{
+                label: '€',
+                data: [ev.rendimentosBrutos, Math.abs(ev.comissaoApp), ev.faturaPlataforma, ev.ivaAutoliquidacao],
+                backgroundColor: ['#00a8ff', '#e84118', '#44bd32', '#fbc531']
+            }]
+        },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true } }
         }
@@ -786,89 +415,65 @@ function showAlerts() {
     const ev = VDCSystem.analysis.extractedValues;
     const cross = VDCSystem.analysis.crossings;
     
-    // Alerta Big Data (Classe CSS disparada se > 0.01)
-    const bigDataAlert = document.getElementById('bigDataAlert');
-    if (cross.bigDataAlertActive && bigDataAlert) {
-        bigDataAlert.style.display = 'flex';
-        document.getElementById('alertInvoiceVal').textContent = ev.faturaPlataforma.toFixed(2) + '€';
-        document.getElementById('alertCommVal').textContent = Math.abs(ev.comissaoApp).toFixed(2) + '€';
-    } else if (bigDataAlert) {
-        bigDataAlert.style.display = 'none';
-    }
-    
-    // Alerta Layering
-    const omissionAlert = document.getElementById('omissionAlert');
-    if (ev.diferencialCusto > 0 && omissionAlert) {
-        omissionAlert.style.display = 'flex';
-        document.getElementById('omissionValue').textContent = ev.diferencialCusto.toFixed(2) + '€';
-    } else if (omissionAlert) {
-        omissionAlert.style.display = 'none';
+    // ALERTA: Se diferença > 0.01€, ativa o elemento
+    const alertEl = document.getElementById('bigDataAlert');
+    if (alertEl) {
+        if (cross.diferencialAlerta) {
+            alertEl.style.display = 'flex';
+            // Sincronização de valores exatos
+            const diffValEl = document.getElementById('alertDiffVal');
+            if (diffValEl) diffValEl.textContent = ev.diferencialCusto.toFixed(2) + '€';
+        } else {
+            alertEl.style.display = 'none';
+        }
     }
 }
 
 // ==========================================
-// 9. EXPORTAÇÃO & RESET
+// 8. EXPORTAÇÃO & RESET
 // ==========================================
 
 function exportDataJSON() {
-    const data = {
-        session: VDCSystem.sessionId,
-        client: VDCSystem.client,
-        analysis: VDCSystem.analysis,
-        timestamp: new Date().toISOString()
-    };
-    
+    const data = { session: VDCSystem.sessionId, analysis: VDCSystem.analysis, timestamp: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null,2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `VDC_AUDIT_${VDCSystem.sessionId}.json`;
+    link.download = `VDC_Report_${VDCSystem.sessionId}.json`;
     link.click();
-    URL.revokeObjectURL(url);
-    
-    logAudit('Relatório JSON exportado.', 'success');
+    logAudit('JSON exportado.', 'success');
 }
 
 function exportPDF() {
     logAudit('Gerando PDF...', 'info');
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
     doc.setFontSize(16);
-    doc.text("VDC FORENSIC REPORT", 20, 20);
+    doc.text("RELATÓRIO FORENSE VDC", 20, 20);
     doc.setFontSize(12);
-    doc.text(`Session ID: ${VDCSystem.sessionId}`, 20, 30);
-    doc.text(`Client: ${VDCSystem.client?.name || 'N/A'}`, 20, 40);
-    
+    doc.text(`Sessão: ${VDCSystem.sessionId}`, 20, 30);
+    doc.text(`Cliente: ${VDCSystem.client?.name || 'N/A'}`, 20, 40);
     doc.save(`VDC_Report_${VDCSystem.sessionId}.pdf`);
     logAudit('PDF gerado.', 'success');
 }
 
 function resetSystem() {
-    if (!confirm('Repor o sistema para o estado inicial?')) return;
+    if (!confirm('Resetar sistema?')) return;
     
     VDCSystem.client = null;
     VDCSystem.analysis.extractedValues = {
         saftGross: 0, saftIVA6: 0, saftNet: 0,
-        platformCommission: 0, bankTransfer: 0, iva23Due: 0,
-        rendimentosBrutos: 0, comissaoApp: 0, rendimentosLiquidos: 0,
-        faturaPlataforma: 0, diferencialCusto: 0,
-        prejuizoFiscal: 0, ivaAutoliquidacao: 0,
-        dac7Revenue: 0,
-        jurosMora: 0, taxaRegulacao: 0
+        platformCommission: 0, iva23Due: 0,
+        rendimentosBrutos: 0, comissaoApp: 0, faturaPlataforma: 0,
+        diferencialCusto: 0, ivaAutoliquidacao: 0,
+        jurosMora: 0
     };
     
-    // Limpa UI de texto
-    const ids = [
-        'netVal', 'iva6Val', 'commissionVal', 'iva23Val',
-        'kpiGanhos', 'kpiComm', 'kpiNet', 'kpiInvoice'
-    ];
-    ids.forEach(id => {
+    ['kpiGanhos', 'kpiComm', 'kpiInvoice', 'iva23Val'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '0,00€';
     });
     
-    // Limpa inputs
     document.getElementById('clientNameFixed').value = '';
     document.getElementById('clientNIFFixed').value = '';
     document.getElementById('clientStatusFixed').style.display = 'none';
@@ -876,25 +481,12 @@ function resetSystem() {
     clearAllEvidence();
     clearConsole();
     generateMasterHash();
-    
-    logAudit('Sistema reiniciado.', 'info');
+    logAudit('Sistema resetado.', 'info');
 }
 
 // ==========================================
-// 10. FUNÇÕES AUXILIARES GERAIS
+// 9. AUXILIARES & BINDING GLOBAL
 // ==========================================
-
-function updateAnalysisButton() {
-    const btn = document.getElementById('analyzeBtn');
-    if (!btn) return;
-    
-    const hasClient = VDCSystem.client !== null;
-    const hasControl = VDCSystem.documents.control?.files?.length > 0;
-    const hasSaft = VDCSystem.documents.saft?.files?.length > 0;
-    
-    // Requer: Cliente + Controlo + SAFT
-    btn.disabled = !(hasClient && hasControl && hasSaft);
-}
 
 function readFileAsText(file) {
     return new Promise((resolve, reject) => {
@@ -906,39 +498,34 @@ function readFileAsText(file) {
 }
 
 function formatBytes(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 B';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function generateSessionId() {
-    return 'VDC-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    return 'VDC-' + Date.now().toString(36).toUpperCase();
 }
 
 function generateMasterHash() {
-    // Cria hash baseado no estado atual para garantir integridade
     const payload = JSON.stringify(VDCSystem.analysis.extractedValues) + VDCSystem.sessionId + Date.now();
     const hash = CryptoJS.SHA256(payload).toString();
-    
     const el = document.getElementById('masterHashValue');
     if (el) el.textContent = hash;
-    
-    return hash;
 }
 
-function logAudit(msg, type = 'info') {
+function logAudit(msg, type) {
     const output = document.getElementById('auditOutput');
     if (!output) return;
-    
     const time = new Date().toLocaleTimeString('pt-PT');
     const entry = document.createElement('div');
-    entry.className = `log-entry log-${type}`;
-    entry.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
-    
+    entry.className = `log-entry`;
+    entry.innerHTML = `<span style="color:#666">[${time}]</span> <span style="font-weight:bold">${type.toUpperCase()}</span> ${msg}`;
     output.appendChild(entry);
     output.scrollTop = output.scrollHeight;
+    VDCSystem.logs.push({ time, msg, type });
 }
 
 function clearConsole() {
@@ -946,31 +533,25 @@ function clearConsole() {
     if (output) output.innerHTML = '';
 }
 
-function showToast(message, type = 'info') {
+function showToast(msg, type) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-    
     const toast = document.createElement('div');
     toast.className = `toast-notification ${type}`;
-    
-    const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
-    
-    toast.innerHTML = `<i class="fas ${icon}"></i> <p>${message}</p>`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : 'fa-info'}"></i> ${msg}`;
     container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => { toast.style.opacity = 0; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
 // ==========================================
-// 11. BINDING GLOBAL (WINDOW)
-// Garante o acesso global para debug e integração externa
+// 10. GARANTIA DE ESTABILIDADE (BINDING)
+// Todas as funções vinculadas a window para evitar erros
 // ==========================================
 
 window.clearConsole = clearConsole;
-window.startSession = startGatekeeperSession;
+window.startGatekeeperSession = startGatekeeperSession;
 window.exportPDF = exportPDF;
+window.logAudit = logAudit;
+window.generateMasterHash = generateMasterHash;
 window.VDCSystem = VDCSystem;
 window.performForensicCrossings = performForensicCrossings;
