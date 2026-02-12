@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>VDC | Sistema de Peritagem Forense · v11.9</title>
+    <title>VDC | Sistema de Peritagem Forense · v11.9 Final</title>
     <link rel="shortcut icon" href="#">
     
     <!-- Fontes e Ícones -->
@@ -13,16 +13,17 @@
     <!-- Ficheiros Locais -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Dependências Externas (Segurança e Parsing) -->
+    <!-- Dependências Externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF via unpkg para maior estabilidade de fonte -->
+    
+    <!-- MOVED JSPDF TO HEAD FOR SAFETY & GLOBAL SCOPE -->
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     
-    <meta name="vdc-protocol" content="GATEKEEPER v11.9 · FORENSIC PRO">
+    <meta name="vdc-protocol" content="GATEKEEPER v11.9 · FORENSIC PRO FINAL">
     <meta name="security-mode" content="strict">
-    <meta name="core-version" content="v12.4-Engine-Final">
+    <meta name="core-version" content="v12.4-Engine-Corrected">
 </head>
 <body>
 
@@ -44,7 +45,7 @@
             </button>
             <div class="splash-footer">
                 <p>VDC Systems International &copy; 2024</p>
-                <p class="version">Build: v11.9.0-FORENSIC-PRO | Final</p>
+                <p class="version">Build: v11.9.0-FINAL-CORRECTED</p>
             </div>
         </div>
     </div>
@@ -119,9 +120,9 @@
                         <div id="invoiceFileListModal" class="file-list-modal"></div>
                         <div id="count-invoices" class="file-badge">0</div>
                     </div>
-                    <!-- EXTRATOS -->
+                    <!-- EXTRATOS (Corrigido texto do Label) -->
                     <div class="upload-group-modal">
-                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS</label>
+                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
                             <i class="fas fa-file-contract"></i> <span id="uploadStatementText">SELECIONAR EXTRATOS</span>
                         </button>
@@ -172,7 +173,7 @@
         </div>
     </div>
 
-    <!-- 5. MAIN CONTAINER (Inicialização controlada) -->
+    <!-- 5. MAIN CONTAINER -->
     <div id="mainContainer" class="main-container" style="display: none; opacity: 0;">
         <header class="main-header">
             <div class="header-content">
@@ -399,7 +400,6 @@
 
         <footer class="action-footer">
             <div class="system-info">
-                <!-- Verificação de integridade de bloco: ID masterHashValue -->
                 <div class="master-hash">
                     <strong><i class="fas fa-fingerprint"></i> <span id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v11.9)</span></strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
