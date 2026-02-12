@@ -668,7 +668,7 @@ body {
     width: 100%;
 }
 
-/* Alerts */
+/* Alerts - CLASSES CSS DE ALERTA ATIVADAS PELO JS */
 .analysis-results {
     margin-bottom: 1.5rem;
 }
@@ -687,7 +687,7 @@ body {
 .bigdata-alert {
     background: rgba(255, 159, 26, 0.1);
     border-color: var(--warn-secondary);
-    animation: pulse-red 2s infinite;
+    animation: pulse-red 2s infinite; /* Animação ativa quando detetado */
 }
 
 .alert-icon {
