@@ -1,18 +1,24 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 CORRIGIDO FINAL
+ * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 FINAL
  * STRICT MODE ACTIVATED
  * 
- * CORREÇÃO FINAL:
- * 1. 'logs' movido para o raiz do objeto VDCSystem.
- * 2. Correção de Fontes no PDF (Font Crash fix).
- * 3. Verificação robusta da biblioteca jsPDF.
+ * CORREÇÕES E FINALIZAÇÃO:
+ * - Implementação de forensicRound (Precisão Fiscal).
+ * - Correção de Fontes PDF (Helvetica/Times Only).
+ * - Logs VDCSystem.logs no raiz.
+ * - Tratamento de Erros Robusto.
  */
 
 'use strict';
 
 // ============================================================================
-//1. UTILITÁRIOS E TRADUÇÕES
+//1. UTILITÁRIOS, ARREDONDAMENTO E TRADUÇÕES
 // ============================================================================
+
+// Precisão Forense: Arredondamento rigoroso para 2 casas decimais
+const forensicRound = (num) => {
+    return +(Math.round(num + "e+2") + "e-2");
+};
 
 const toForensicNumber = (v) => {
     if (v === null || v === undefined || v === '') return 0;
@@ -125,7 +131,7 @@ const translations = {
         pdfLabelJuros: "Juros de Mora (4%)",
         pdfLabelComp: "Juros Compensatórios (RGIT Art. 114)",
         pdfLabelMulta: "Multa Estimada (Dolo Algorítmico)",
-        pdfMethodText: "Metodologia Científica: Foram aplicados os procedimentos da ISO/IEC 27037 para preservação de evidência digital e análise forense. Parsing estruturado (v12.3) para validação de integridade de ficheiros CSV/XML.",
+        pdfMethodText: "Metodologia Científica: Foram aplicados os procedimentos da ISO/IEC 27037 para preservação de evidência digital e análise forense. Parsing estruturado (v12.4) para validação de integridade de ficheiros CSV/XML.",
         pdfConclusionText: "Conclusão Pericial: Há evidência forense robusta de discrepâncias na contabilização de receitas e impostos. Ficou provada a omissão de valores tributários e uso de algoritmos opacos.",
         pdfQuestions: [
             "1. Qual a lógica algorítmica exata aplicada ao cálculo da taxa de serviço no período auditado?",
@@ -204,7 +210,7 @@ const translations = {
         pdfLabelJuros: "Default Interest (4%)",
         pdfLabelComp: "Compensatory Interest (RGIT Art. 114)",
         pdfLabelMulta: "Estimated Fine (Algorithmic Intent)",
-        pdfMethodText: "Scientific Methodology: ISO/IEC 27037 procedures were applied for digital evidence preservation and forensic analysis. Structured Parsing (v12.3) for CSV/XML file integrity validation.",
+        pdfMethodText: "Scientific Methodology: ISO/IEC 27037 procedures were applied for digital evidence preservation and forensic analysis. Structured Parsing (v12.4) for CSV/XML file integrity validation.",
         pdfConclusionText: "Forensic Conclusion: There is robust forensic evidence of discrepancies in revenue accounting and taxation. Omission of tax values and use of opaque algorithms is proven.",
         pdfQuestions: [
             "1. What is the exact algorithmic logic applied to the service fee calculation in the audited period?",
@@ -212,7 +218,7 @@ const translations = {
             "3. Are there records of 'Shadow Entries' (entries without transaction ID) in the system?",
             "4. Does the platform provide the source code or technical documentation of the pricing algorithm for external audit?",
             "5. How are 'Tips' values treated in invoicing and VAT declaration?",
-            "6. How is the geographical origin of service provision determined for VAT purposes in TVDE transactions?",
+            "6. How is the geographical origin of the service provision determined for VAT purposes in TVDE transactions?",
             "7. Were dynamic fluctuating rate rules applied without prior notification to the end user?",
             "8. Do the bank statements provided correspond exactly to the transaction records in the platform's database?",
             "9. What is the methodology for retaining self-billed VAT when the invoice does not itemize the service fee?",
@@ -224,7 +230,7 @@ const translations = {
 let currentLang = 'pt';
 
 // ============================================================================
-//2. ESTADO GLOBAL DO SISTEMA v11.9
+//2. ESTADO GLOBAL DO SISTEMA v11.9 (INTEGRIDADE TOTAL)
 // ============================================================================
 
 const VDCSystem = {
@@ -236,7 +242,7 @@ const VDCSystem = {
     demoMode: false,
     processing: false,
     
-    // CORREÇÃO: Logs no raiz
+    // CORREÇÃO DE BLOCO: Logs no Raiz do Objeto (Cadeia de Custódia)
     logs: [],
     
     documents: {
@@ -271,13 +277,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSystemRecursively();
 });
 
-// CORREÇÃO: Verificação mais robusta de jsPDF
 window.onload = () => {
     if (typeof CryptoJS === 'undefined') alert('CRITICAL: CryptoJS failed.');
     if (typeof Papa === 'undefined') alert('CRITICAL: PapaParse failed.');
     if (typeof Chart === 'undefined') alert('CRITICAL: Chart.js failed.');
-    // Verifica explicitamente se window.jspdf existe antes de alertar erro fatal
-    if (typeof window.jspdf === 'undefined') alert('CRITICAL: jsPDF failed to load from CDN.');
+    if (typeof jsPDF === 'undefined') alert('CRITICAL: jsPDF failed.');
 };
 
 function setupStaticListeners() {
@@ -297,7 +301,7 @@ function startGatekeeperSession() {
                 splashScreen.style.display = 'none';
                 loadingOverlay.style.display = 'flex';
                 loadSystemCore();
-            },500);
+            }, 500);
         }
     } catch (error) { console.error('Error startGatekeeperSession:', error); alert('Erro ao iniciar sessão.'); }
 }
@@ -353,7 +357,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `FORENSIC ENGINE v12.3... ${percent}%`;
+    if (text) text.textContent = `FORENSIC ENGINE v12.4... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -502,6 +506,7 @@ function setupMainListeners() {
     
     const modal = document.getElementById('evidenceModal');
     if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModalHandler(); });
+    // Verificação de integridade de bloco: setupMainListeners fechado corretamente
 }
 
 function setupUploadListeners() {
@@ -594,7 +599,13 @@ async function processFile(file, type) {
     
     if (type === 'statements' || type === 'saft') {
         try {
+            // Parsing com tratamento de erros robusto
             const papaParsed = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
+            if (papaParsed.errors && papaParsed.errors.length > 0) {
+                logAudit(`Erro de Parsing em ${file.name}: ${papaParsed.errors[0].message}`, 'error');
+                return;
+            }
+            
             if (papaParsed.data && papaParsed.data.length > 0) {
                 papaParsed.data.forEach(row => {
                     const keys = Object.keys(row);
@@ -619,7 +630,10 @@ async function processFile(file, type) {
                     VDCSystem.analysis.extractedValues.portagens = extra.tolls;
                 }
             }
-        } catch (e) { console.warn('Parse falhou para ' + file.name, e); }
+        } catch (e) { 
+            console.warn('Parse falhou para ' + file.name, e); 
+            logAudit(`Erro fatal no parsing CSV: ${file.name}`, 'error');
+        }
     }
     
     const listId = `${type}FileListModal`;
@@ -769,11 +783,12 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
     ev.diferencialCusto = diferencial;
     cross.delta = diferencial;
     
-    ev.iva23 = diferencial * 0.23;
-    ev.jurosMora = ev.iva23 * 0.04;
-    ev.jurosCompensatorios = ev.iva23 * 0.06;
-    ev.taxaRegulacao = comissaoAbs * 0.05;
-    ev.multaDolo = diferencial * 0.10;
+    // Aplicação de forensicRound (Precisão Fiscal)
+    ev.iva23 = forensicRound(diferencial * 0.23);
+    ev.jurosMora = forensicRound(ev.iva23 * 0.04);
+    ev.jurosCompensatorios = forensicRound(ev.iva23 * 0.06);
+    ev.taxaRegulacao = forensicRound(comissaoAbs * 0.05);
+    ev.multaDolo = forensicRound(diferencial * 0.10);
     
     if (diferencial > 0.01) {
         cross.diferencialAlerta = true;
@@ -867,7 +882,7 @@ function showAlerts() {
 }
 
 // ============================================================================
-//8. EXPORTAÇÃO PDF (CORRIGIDO - FONT FIX)
+//8. EXPORTAÇÃO PDF (CORRIGIDO - FONTS E PRECISÃO)
 // ============================================================================
 
 function exportDataJSON() {
@@ -892,7 +907,7 @@ function exportDataJSON() {
 function exportPDF() {
     if (!VDCSystem.client) { showToast(currentLang === 'pt' ? 'Sem cliente para gerar relatório.' : 'No client for report.', 'error'); return; }
     
-    // CORREÇÃO CRÍTICA: Verificação de disponibilidade do jsPDF
+    // Tratamento de erros robusto
     if (typeof window.jspdf === 'undefined') {
         logAudit('Erro: jsPDF não carregado.', 'error');
         showToast('Erro de sistema (jsPDF)', 'error');
@@ -907,7 +922,6 @@ function exportPDF() {
         const t = translations[currentLang];
         const ev = VDCSystem.analysis.extractedValues;
         
-        // Helper function for safe text wrapping
         const safeText = (txt, x, y, maxWidth = 170) => {
             try {
                 const split = doc.splitTextToSize(txt, maxWidth);
@@ -927,7 +941,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, 42, 190, 42);
         
-        // ---1. IDENTIFICATION ---
         let currentY = 50;
         doc.setTextColor(0, 0, 0); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
         doc.text(t.pdfSection1, 20, currentY); currentY += 8;
@@ -979,8 +992,8 @@ function exportPDF() {
         
         // --- 5. EVIDENCE ANNEX ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection5, 20, currentY); currentY += 8;
-        // CORREÇÃO: Alterado para 'times' para evitar erro 'courier monospace'
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setFont('times', 'normal');
+        // CORREÇÃO: Fonte Helvetica para evitar crashes
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         
         if (VDCSystem.analysis.evidenceIntegrity && VDCSystem.analysis.evidenceIntegrity.length > 0) {
             VDCSystem.analysis.evidenceIntegrity.forEach(item => {
@@ -992,7 +1005,7 @@ function exportPDF() {
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
         // --- 6. INTERROGATION ---
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
+        doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         
         t.pdfQuestions.forEach(q => {
@@ -1012,19 +1025,19 @@ function exportPDF() {
         const logs = VDCSystem.logs.slice(-10);
         logs.forEach(l => {
             if(currentY > 280) { doc.addPage(); currentY = 20; }
-            doc.setTextColor(l.type === 'error' ? 255 : (l.type === 'warn' ?255 : 0), l.type === 'warn' ? 165 : 0, 0);
-            // CORREÇÃO: Fonte para Logs
-            doc.setFont('times', 'normal'); 
+            doc.setTextColor(l.type === 'error' ? 255 : (l.type === 'warn' ? 255 : 0), l.type === 'warn' ? 165 : 0, 0);
+            // CORREÇÃO: Fonte Helvetica para Logs
+            doc.setFont('helvetica', 'normal');
             const logHeight = safeText(`[${l.time}] ${l.msg}`, 25, currentY, 170);
             currentY += logHeight + 4;
         });
-        
+
         // --- FOOTER & HASH ---
         doc.setDrawColor(200, 200, 200); doc.line(20, 285, 190, 285);
         doc.setFontSize(10); doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold');
         doc.text(`${t.footerHashTitle}`, 20, 290);
-        // CORREÇÃO: Fonte para Hash
-        doc.setFont('times', 'normal'); doc.setFontSize(8); doc.setTextColor(50, 50, 50);
+        // CORREÇÃO: Fonte Helvetica para Hash
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(50, 50, 50);
         const hashEl = document.getElementById('masterHashValue');
         const hashText = hashEl ? hashEl.textContent : 'N/A';
         safeText(hashText, 20, 295, 170);
