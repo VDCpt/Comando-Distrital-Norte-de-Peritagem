@@ -1,19 +1,15 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 FINAL
+ * VDC SISTEMA DE PERITAGEM FORENSE · v11.9 CORRIGIDO
  * STRICT MODE ACTIVATED
  * 
- * FEATURES v11.9:
- * - Multilingual Support (PT/EN) Real-time.
- * - Evidence Integrity Verification (SHA-256 per file).
- * - Forensic Calculation Engine (IVA 23%, Juros, Multa).
- * - High-Fidelity PDF Report (Methodology, Conclusions, Custody Chain).
- * - Syntax Error Free.
+ * CORREÇÃO: Movido a propriedade 'logs' para o raiz do objeto VDCSystem
+ * para evitar erros de "undefined" ao tentar adicionar logs.
  */
 
 'use strict';
 
 // ============================================================================
-// 1. UTILITÁRIOS E TRADUÇÕES
+//1. UTILITÁRIOS E TRADUÇÕES
 // ============================================================================
 
 const toForensicNumber = (v) => {
@@ -214,7 +210,7 @@ const translations = {
             "3. Are there records of 'Shadow Entries' (entries without transaction ID) in the system?",
             "4. Does the platform provide the source code or technical documentation of the pricing algorithm for external audit?",
             "5. How are 'Tips' values treated in invoicing and VAT declaration?",
-            "6. How is the geographical origin of service provision determined for VAT purposes in TVDE transactions?",
+            "6. How is the geographical origin of the service provision determined for VAT purposes in TVDE transactions?",
             "7. Were dynamic fluctuating rate rules applied without prior notification to the end user?",
             "8. Do the bank statements provided correspond exactly to the transaction records in the platform's database?",
             "9. What is the methodology for retaining self-billed VAT when the invoice does not itemize the service fee?",
@@ -226,7 +222,7 @@ const translations = {
 let currentLang = 'pt';
 
 // ============================================================================
-// 2. ESTADO GLOBAL DO SISTEMA v11.9
+//2. ESTADO GLOBAL DO SISTEMA v11.9 (CORRIGIDO)
 // ============================================================================
 
 const VDCSystem = {
@@ -237,6 +233,9 @@ const VDCSystem = {
     client: null,
     demoMode: false,
     processing: false,
+    
+    // CORREÇÃO CRÍTICA: Logs movidos para o raiz do objeto
+    logs: [],
     
     documents: {
         dac7: { files: [], parsedData: [], hashes: {} },
@@ -255,15 +254,15 @@ const VDCSystem = {
             campanhas: 0, gorjetas: 0, portagens: 0
         },
         crossings: { delta: 0, omission: 0, diferencialAlerta: false, bigDataAlertActive: false, shadowAlertActive: false },
-        evidenceIntegrity: [],
-        logs: []
+        evidenceIntegrity: []
+        // Logs foi removido daqui para evitar conflito
     },
     
     chart: null
 };
 
 // ============================================================================
-// 3. LÓGICA DE INICIALIZAÇÃO E EVENTOS
+//3. LÓGICA DE INICIALIZAÇÃO E EVENTOS
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -369,7 +368,7 @@ function showMainInterface() {
 }
 
 // ============================================================================
-// 4. MULTILINGUAGEM
+//4. MULTILINGUAGEM
 // ============================================================================
 
 function switchLanguage() {
@@ -430,7 +429,7 @@ function switchLanguage() {
 }
 
 // ============================================================================
-// 5. FUNÇÕES DO SISTEMA (CLIENTE, UPLOAD, PARSE)
+//5. FUNÇÕES DO SISTEMA (CLIENTE, UPLOAD, PARSE)
 // ============================================================================
 
 function populateYears() {
@@ -585,7 +584,7 @@ async function processFile(file, type) {
     
     VDCSystem.analysis.evidenceIntegrity.push({ filename: file.name, type: type, hash: hashSHA256.substring(0, 16) + '...', timestamp: new Date().toLocaleString() });
     
-    // Parsing logic (Simplified for v11.9 stability, focusing on Hashing and PDF output)
+    // Parsing logic (Simplified)
     let grossRevenue = 0;
     let platformFees = 0;
     let extra = { tips: 0, tolls: 0 };
@@ -611,7 +610,7 @@ async function processFile(file, type) {
                 
                 if (type === 'statements') {
                     VDCSystem.analysis.extractedValues.rendimentosBrutos = grossRevenue;
-                    VDCSystem.analysis.extractedValues.comissaoApp = -platformFees; // Negative for cash out
+                    VDCSystem.analysis.extractedValues.comissaoApp = -platformFees;
                     VDCSystem.analysis.extractedValues.rendimentosLiquidos = grossRevenue - platformFees;
                     VDCSystem.analysis.extractedValues.gorjetas = extra.tips;
                     VDCSystem.analysis.extractedValues.portagens = extra.tolls;
@@ -678,7 +677,7 @@ function updateAnalysisButton() {
 }
 
 // ============================================================================
-// 6. MOTOR DE AUDITORIA E CÁLCULOS FORENSES v11.9
+//6. MOTOR DE AUDITORIA E CÁLCULOS FORENSES v11.9
 // ============================================================================
 
 function activateDemoMode() {
@@ -767,12 +766,11 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
     ev.diferencialCusto = diferencial;
     cross.delta = diferencial;
     
-    // v11.9 Forensic Calculation Engine
     ev.iva23 = diferencial * 0.23;
-    ev.jurosMora = ev.iva23 * 0.04; // 4% Art 102 CC
-    ev.jurosCompensatorios = ev.iva23 * 0.06; // v11.9 Juros Compensatórios
-    ev.taxaRegulacao = comissaoAbs * 0.05; // 5% AMT/IMT
-    ev.multaDolo = diferencial * 0.10; // 10% Estimada
+    ev.jurosMora = ev.iva23 * 0.04;
+    ev.jurosCompensatorios = ev.iva23 * 0.06;
+    ev.taxaRegulacao = comissaoAbs * 0.05;
+    ev.multaDolo = diferencial * 0.10;
     
     if (diferencial > 0.01) {
         cross.diferencialAlerta = true;
@@ -785,7 +783,7 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
 }
 
 // ============================================================================
-// 7. UI DE RESULTADOS E ALERTAS
+//7. UI DE RESULTADOS E ALERTAS
 // ============================================================================
 
 function updateDashboard() {
@@ -866,7 +864,7 @@ function showAlerts() {
 }
 
 // ============================================================================
-// 8. EXPORTAÇÃO PDF (CORRIGIDO E COMPLETO)
+//8. EXPORTAÇÃO PDF
 // ============================================================================
 
 function exportDataJSON() {
@@ -899,18 +897,16 @@ function exportPDF() {
         const t = translations[currentLang];
         const ev = VDCSystem.analysis.extractedValues;
         
-        // Helper function for safe text wrapping
         const safeText = (txt, x, y, maxWidth = 170) => {
             try {
                 const split = doc.splitTextToSize(txt, maxWidth);
                 doc.text(split, x, y);
-                return split.length * 7; // Approx height per line
+                return split.length * 7; 
             } catch(e) { return 0; }
         };
 
-        // --- HEADER ---
         doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 45, 'F');
-        doc.setFontSize(16); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16); doc.setTextColor(255,255,255); doc.setFont('helvetica', 'bold');
         doc.text(t.pdfTitle, 105, 20, { align: 'center' });
         
         doc.setFontSize(10);
@@ -919,7 +915,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, 42, 190, 42);
         
-        // --- 1. IDENTIFICATION ---
         let currentY = 50;
         doc.setTextColor(0, 0, 0); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
         doc.text(t.pdfSection1, 20, currentY); currentY += 8;
@@ -931,7 +926,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 2. FINANCIAL ANALYSIS ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection2, 20, currentY); currentY += 8;
         const fmt = (n) => n.toLocaleString(currentLang === 'pt' ? 'pt-PT' : 'en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
         
@@ -953,7 +947,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 3. SCIENTIFIC METHODOLOGY ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection3, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         const methodHeight = safeText(t.pdfMethodText, 25, currentY, 170);
@@ -961,7 +954,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 4. CONCLUSIONS ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection4, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         const concHeight = safeText(t.pdfConclusionText, 25, currentY, 170);
@@ -969,21 +961,19 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 5. EVIDENCE ANNEX ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection5, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setFont('courier', 'monospace');
         
         if (VDCSystem.analysis.evidenceIntegrity && VDCSystem.analysis.evidenceIntegrity.length > 0) {
             VDCSystem.analysis.evidenceIntegrity.forEach(item => {
-                if(currentY > 270) { doc.addPage(); currentY = 20; } // New page if full
+                if(currentY > 270) { doc.addPage(); currentY = 20; } 
                 doc.text(`${item.type}: ${item.filename} | HASH: ${item.hash}`, 25, currentY); currentY += 6;
             });
         }
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 6. INTERROGATION ---
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
+        doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection6, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
         
         t.pdfQuestions.forEach(q => {
@@ -994,7 +984,6 @@ function exportPDF() {
         
         doc.setDrawColor(200, 200, 200); doc.line(20, currentY, 190, currentY); currentY += 8;
         
-        // --- 7. CHAIN OF CUSTODY ---
         doc.setFont('helvetica', 'bold'); doc.text(t.pdfSection7, 20, currentY); currentY += 8;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
@@ -1007,8 +996,7 @@ function exportPDF() {
             const logHeight = safeText(`[${l.time}] ${l.msg}`, 25, currentY, 170);
             currentY += logHeight + 4;
         });
-        
-        // --- FOOTER & HASH ---
+
         doc.setDrawColor(200, 200, 200); doc.line(20, 285, 190, 285);
         doc.setFontSize(10); doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold');
         doc.text(`${t.footerHashTitle}`, 20, 290);
@@ -1027,7 +1015,7 @@ function exportPDF() {
 }
 
 // ============================================================================
-// 9. FUNÇÕES AUXILIARES E BINDING GLOBAL
+//9. FUNÇÕES AUXILIARES E BINDING GLOBAL
 // ============================================================================
 
 function generateMasterHash() {
@@ -1107,6 +1095,6 @@ window.logAudit = logAudit;
 window.generateMasterHash = generateMasterHash;
 window.VDCSystem = VDCSystem;
 window.performForensicCrossings = performForensicCrossings;
-window.verifyEvidenceIntegrity = () => { return VDCSystem.analysis.evidenceIntegrity; }; // Helper
+window.verifyEvidenceIntegrity = () => { return VDCSystem.analysis.evidenceIntegrity; }; 
 window.switchLanguage = switchLanguage;
 window.currentLang = () => currentLang;
