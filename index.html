@@ -1,649 +1,482 @@
-// ============================================
-// VDC SISTEMA DE PERITAGEM FORENSE v11.6 GATEKEEPER
-// AUDITORIA FISCAL BIG DATA - THE CHECKMATE
-// CORREÇÃO CIRÚRGICA: SPLASH MANUAL + PARSING BOLT/CSV + EVENTOS ATIVOS
-// ============================================
-
-// ============================================
-// NÚCLEO DO SISTEMA - ESTADO GLOBAL (RETIFICADO)
-// ============================================
-const VDCSystem = {
-    documents: [],
-    currentClient: { 
-        name: '', 
-        nif: '', 
-        year: new Date().getFullYear() 
-    },
-    analysis: { 
-        gross: 0, 
-        transfer: 0, 
-        difference: 0, 
-        marketValue: 0 
-    },
-    chart: null
-};
-
-// ============================================
-// MÓDULO 1: GATEKEEPER - CONTROLO DE SPLASH SCREEN MANUAL
-// ============================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("🔐 VDC v11.6 GATEKEEPER: Sistema Inicializado.");
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>VDC | Sistema de Peritagem Forense v11.5 - Auditoria Fiscal Big Data</title>
+    <link rel="shortcut icon" href="#">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
     
-    // GATEKEEPER: ACESSO VIA CLIQUE (RETIFICADO)
-    const startBtn = document.getElementById('startSessionBtn');
-    const splashScreen = document.getElementById('splashScreen');
-    const mainContainer = document.getElementById('mainContainer');
-    
-    if (startBtn && splashScreen && mainContainer) {
-        startBtn.addEventListener('click', () => {
-            logAudit("🔓 ACESSO AUTORIZADO: Sessão Iniciada.", "success");
-            
-            splashScreen.style.opacity = '0';
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-                mainContainer.style.display = 'block';
-                setTimeout(() => {
-                    mainContainer.style.opacity = '1';
-                    generateMasterHash();
-                }, 50);
-            }, 500);
+    <!-- PROTOCOLO DE ATIVAÇÃO AUTOMÁTICA VDC v11.5 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("🔧 VDC v11.5: DOM Carregado. Iniciando protocolos de segurança...");
+            // O JS principal irá cuidar do populateYears
         });
-    } else {
-        console.error("❌ ERRO CRÍTICO: Elementos GATEKEEPER não encontrados!");
-    }
-    
-    // INICIALIZAÇÃO DE COMPONENTES ADICIONAIS
-    initializeSystem();
-    populateYears();
-    setupEventListeners();
-    startClock();
-});
+    </script>
+</head>
+<body>
 
-// ============================================
-// MÓDULO 2: INICIALIZAÇÃO DO SISTEMA
-// ============================================
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>VDC FORENSIC SYSTEM v11.5</h1>
+            <h2>BIG DATA AUDITORIA FISCAL - THE CHECKMATE</h2>
+            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5%</p>
+            <p class="splash-warning">
+                <i class="fas fa-lock"></i> Sistema de Peritagem Forense - Extração de Dados Estruturados
+            </p>
+            <button id="startSessionBtn" class="splash-btn">
+                <i class="fas fa-fingerprint"></i> INICIAR AUDITORIA BIG DATA
+            </button>
+            <div class="splash-footer">
+                <p>Protocolo de Integridade Digital | Extração RegEx ISO | Auditoria Fiscal em Tempo Real</p>
+                <p class="version">v11.5 - Auditoria Fiscal Big Data "THE CHECKMATE"</p>
+            </div>
+        </div>
+    </div>
 
-function initializeSystem() {
-    logAudit("🛡️ SISTEMA VDC v11.6 GATEKEEPER: Protocolo de Integridade Ativo.", "success");
-    logAudit("📋 ISO/IEC 27037 | NIST SP 800-86 | SHA-256 Hash Protocol", "info");
-}
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-fingerprint fa-spin"></i>
+            </div>
+            <h2>VDC FORENSIC SYSTEM v11.5 - AUDITORIA FISCAL</h2>
+            <p>ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação AMT/IMT</p>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="loadingProgress"></div>
+            </div>
+        </div>
+    </div>
 
-function populateYears() {
-    const select = document.getElementById('auditYear');
-    if (!select) return;
-    
-    const currentYear = new Date().getFullYear();
-    select.innerHTML = '';
-    
-    for (let year = currentYear; year >= currentYear - 10; year--) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) option.selected = true;
-        select.appendChild(option);
-    }
-}
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer"></div>
 
-function startClock() {
-    function updateTime() {
-        const now = new Date();
-        const dateElement = document.getElementById('currentDate');
-        const timeElement = document.getElementById('currentTime');
-        
-        if (dateElement) {
-            dateElement.textContent = now.toLocaleDateString('pt-PT', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-        }
-        
-        if (timeElement) {
-            timeElement.textContent = now.toLocaleTimeString('pt-PT', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
-    }
-    
-    updateTime();
-    setInterval(updateTime, 1000);
-}
+    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS -->
+    <div id="evidenceModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content evidence-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA (EXTRAÇÃO ESTRUTURADA)</h3>
+                <button id="closeModalBtn" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-section-modal">
+                    <!-- DAC7 -->
+                    <div class="upload-group-modal">
+                        <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas (HTML/Email/PDF)</label>
+                        <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
+                            <i class="fas fa-file-contract"></i> SELECIONAR FICHEIROS DAC7
+                        </button>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
+                        <div id="dac7FileListModal" class="file-list-modal"></div>
+                    </div>
 
-// ============================================
-// MÓDULO 3: SETUP DE EVENT LISTENERS - REATIVADO
-// ============================================
+                    <!-- FICHEIRO DE CONTROLO -->
+                    <div class="upload-group-modal">
+                        <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
+                        <button id="controlUploadBtnModal" class="upload-btn modal-btn">
+                            <i class="fas fa-file-shield"></i> SELECIONAR FICHEIRO DE CONTROLO
+                        </button>
+                        <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.xml,.pdf,.txt" hidden>
+                        <div id="controlFileListModal" class="file-list-modal"></div>
+                    </div>
 
-function setupEventListeners() {
-    // BOTÕES PRINCIPAIS
-    setupButton('uploadBtn', openEvidenceModal);
-    setupButton('demoModeBtn', activateDemoMode);
-    setupButton('analyzeBtn', executeAnalysis);
-    setupButton('reportBtn', generateReport);
-    setupButton('exportBtn', exportData);
-    setupButton('resetBtn', resetSystem);
-    
-    // MODAL DE EVIDÊNCIAS
-    setupButton('closeModalBtn', closeEvidenceModal);
-    setupButton('closeModalFooterBtn', closeEvidenceModal);
-    
-    // CONSOLA
-    setupButton('clearConsoleBtn', clearConsole);
-    setupButton('toggleConsoleBtn', toggleConsole);
-    setupButton('custodyBtn', showCustodyChain);
-    
-    // UPLOAD DE FICHEIROS - CORREÇÃO CRÍTICA
-    setupFileUpload('dac7UploadBtnModal', 'dac7FileModal', 'dac7');
-    setupFileUpload('controlUploadBtnModal', 'controlFileModal', 'control');
-    setupFileUpload('saftUploadBtnModal', 'saftFileModal', 'saft');
-    setupFileUpload('invoiceUploadBtnModal', 'invoiceFileModal', 'invoice');
-    setupFileUpload('statementUploadBtnModal', 'statementFileModal', 'statement');
-    
-    logAudit("✅ Event Listeners Configurados com Sucesso.", "success");
-}
+                    <!-- SAF-T -->
+                    <div class="upload-group-modal">
+                        <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV (MÚLTIPLOS)</label>
+                        <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-code"></i> SELECIONAR FICHEIROS SAF-T/XML/CSV
+                        </button>
+                        <input type="file" id="saftFileModal" class="file-input-modal" multiple accept=".xml,.csv" hidden>
+                        <div id="saftFileListModal" class="file-list-modal"></div>
+                    </div>
 
-function setupButton(id, handler) {
-    const btn = document.getElementById(id);
-    if (btn && handler) {
-        btn.addEventListener('click', handler);
-    }
-}
+                    <!-- FATURAS -->
+                    <div class="upload-group-modal">
+                        <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
+                        <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
+                        </button>
+                        <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
+                        <div id="invoiceFileListModal" class="file-list-modal"></div>
+                        <div id="faturasList" class="file-list-modal" style="margin-top: 0.5rem;"></div>
+                    </div>
 
-function setupFileUpload(buttonId, inputId, type) {
-    const button = document.getElementById(buttonId);
-    const input = document.getElementById(inputId);
-    
-    if (button && input) {
-        button.addEventListener('click', () => {
-            input.click();
-        });
-        
-        input.addEventListener('change', (e) => {
-            handleFileUploadModal(e, type);
-        });
-    }
-}
+                    <!-- EXTRATOS -->
+                    <div class="upload-group-modal">
+                        <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS</label>
+                        <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
+                            <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
+                        </button>
+                        <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.txt,.ofx,.qif,.mt940" hidden>
+                        <div id="statementFileListModal" class="file-list-modal"></div>
+                        <div id="extratosList" class="file-list-modal" style="margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
 
-// ============================================
-// MÓDULO 4: GESTÃO DE MODAL
-// ============================================
+                <!-- RESUMO DE PROCESSAMENTO -->
+                <div class="processing-summary">
+                    <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">DAC7</span>
+                            <span id="summaryDac7" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">CONTROLO</span>
+                            <span id="summaryControl" class="summary-value">0 ficheiros</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">SAF-T</span>
+                            <span id="summarySaft" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">FATURAS</span>
+                            <span id="summaryInvoices" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">EXTRATOS</span>
+                            <span id="summaryStatements" class="summary-value">0 ficheiros | 0 registos</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">TOTAL</span>
+                            <span id="summaryTotal" class="summary-value total">0 ficheiros | 0 registos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeAndSaveBtn" class="btn-primary">
+                    <i class="fas fa-save"></i> FECHAR E GUARDAR EVIDÊNCIAS
+                </button>
+                <button id="clearAllBtn" class="btn-secondary">
+                    <i class="fas fa-trash"></i> LIMPAR TODAS AS EVIDÊNCIAS
+                </button>
+            </div>
+        </div>
+    </div>
 
-function openEvidenceModal() {
-    const modal = document.getElementById('evidenceModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        logAudit("📂 Modal de Evidências Aberto.", "info");
-    }
-}
+    <!-- MAIN CONTAINER -->
+    <div id="mainContainer" class="main-container" style="display: none;">
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h1>VDC FORENSIC SYSTEM <span class="version-badge">v11.5 AF</span></h1>
+                        <p class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | Taxa Regulação 5%</p>
+                    </div>
+                </div>
+                
+                <div class="demo-section">
+                    <button id="demoModeBtn" class="btn-demo-nav">
+                        <i class="fas fa-vial"></i> CARREGAR DADOS DEMO
+                    </button>
+                </div>
+                
+                <div class="session-info">
+                    <div class="timestamp-fbi">
+                        <span class="session-id">Sessão: <strong id="sessionIdDisplay">VDC-XXXXXX</strong></span> | 
+                        <span>Data: <strong id="currentDate">DD/MM/AAAA</strong></span> | 
+                        <span><i class="fas fa-clock"></i> <strong id="currentTime">00:00:00</strong></span>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-function closeEvidenceModal() {
-    const modal = document.getElementById('evidenceModal');
-    if (modal) {
-        modal.style.display = 'none';
-        logAudit("📂 Modal de Evidências Fechado.", "info");
-    }
-}
+        <div class="app-container">
+            <!-- SIDEBAR ESQUERDA -->
+            <aside class="sidebar">
+                <div class="sidebar-header-fixed">
+                    <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO DO CLIENTE</h3>
+                    
+                    <div class="client-identification-fixed">
+                        <div class="form-group-fixed">
+                            <label for="clientNameFixed"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
+                            <input type="text" id="clientNameFixed" placeholder="Ex: Momento Eficaz Unipessoal, Lda" list="clientSuggestions">
+                        </div>
+                        <div class="form-group-fixed">
+                            <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> Número de Contribuinte (NIF)</label>
+                            <input type="text" id="clientNIFFixed" placeholder="Ex: 517905450" maxlength="9">
+                        </div>
+                        
+                        <datalist id="clientSuggestions"></datalist>
+                        
+                        <div class="btn-group-fixed">
+                            <button id="registerClientBtnFixed" class="btn-primary">
+                                <i class="fas fa-user-check"></i> REGISTAR CLIENTE
+                            </button>
+                        </div>
+                        
+                        <div class="info-fixed">
+                            <div class="info-item">
+                                <span class="info-label"><i class="fas fa-calendar-check"></i> Ano Fiscal</span>
+                                <select id="selYearFixed" class="year-select-fixed"></select>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
+                                <select id="selPlatformFixed" class="platform-select-fixed">
+                                    <option value="bolt">Bolt Operations OÜ (Estónia) - Alvo Principal</option>
+                                    <option value="uber">Uber B.V. (Holanda) - Alvo Secundário</option>
+                                    <option value="freenow">FREE NOW (Alemanha) - Monitorização</option>
+                                    <option value="other">Outra Plataforma - Investigação</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Cliente registado: <strong id="clientNameDisplayFixed"></strong> (NIF: <span id="clientNifDisplayFixed"></span>)</span>
+                        </div>
+                    </div>
+                </div>
 
-// ============================================
-// MÓDULO 5: PROCESSAMENTO DE UPLOADS - PARSING BOLT/CSV
-// ============================================
+                <!-- GESTÃO DE EVIDÊNCIAS -->
+                <div class="evidence-management-section-solid">
+                    <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
+                        <i class="fas fa-cloud-upload-alt"></i> GESTÃO DE EVIDÊNCIAS BIG DATA
+                        <span class="evidence-count-solid">0 ficheiros</span>
+                    </button>
+                    
+                    <!-- CONTADORES COMPACTOS -->
+                    <div class="counters-compact">
+                        <div class="counter-item-compact">
+                            <span class="counter-label-compact">CONTROLO</span>
+                            <span id="controlCountCompact" class="counter-value-compact">0</span>
+                        </div>
+                        <div class="counter-item-compact">
+                            <span class="counter-label-compact">SAF-T</span>
+                            <span id="saftCountCompact" class="counter-value-compact">0</span>
+                        </div>
+                        <div class="counter-item-compact">
+                            <span class="counter-label-compact">FATURAS</span>
+                            <span id="invoiceCountCompact" class="counter-value-compact">0</span>
+                        </div>
+                        <div class="counter-item-compact">
+                            <span class="counter-label-compact">EXTRATOS</span>
+                            <span id="statementCountCompact" class="counter-value-compact">0</span>
+                        </div>
+                        <div class="counter-item-compact">
+                            <span class="counter-label-compact">DAC7</span>
+                            <span id="dac7CountCompact" class="counter-value-compact">0</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
-function handleFileUploadModal(event, type) {
-    const files = Array.from(event.target.files);
-    if (files.length === 0) return;
-    
-    const listId = `${type}FileListModal`;
-    const listElement = document.getElementById(listId);
-    
-    logAudit(`📤 Upload Iniciado: ${files.length} ficheiro(s) de tipo ${type.toUpperCase()}`, "info");
-    
-    files.forEach(file => {
-        processFile(file, type);
-        
-        if (listElement) {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <span class="file-name">${file.name}</span>
-                <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
-            `;
-            listElement.appendChild(fileItem);
-        }
-    });
-    
-    updateDashboard();
-    updateSummary();
-}
+            <!-- ÁREA PRINCIPAL DE ANÁLISE -->
+            <main class="analysis-area">
+                <!-- BARRA DE FERRAMENTAS -->
+                <section class="toolbar-section">
+                    <div class="toolbar-grid">
+                        <button id="analyzeBtn" class="btn-forensic" disabled>
+                            <i class="fas fa-search"></i> EXECUTAR AUDITORIA BIG DATA
+                        </button>
+                        <button id="exportJSONBtn" class="btn-tool">
+                            <i class="fas fa-file-code"></i> EXPORTAR JSON
+                        </button>
+                        <button id="exportPDFBtn" class="btn-tool">
+                            <i class="fas fa-file-pdf"></i> RELATÓRIO PERICIAL
+                        </button>
+                        <button id="resetBtn" class="btn-tool">
+                            <i class="fas fa-redo"></i> NOVA SESSÃO
+                        </button>
+                    </div>
+                </section>
 
-function processFile(file, type) {
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-        const content = e.target.result;
-        
-        if (type === 'invoice' && file.type === 'application/pdf') {
-            parseInvoiceBolt(content, file.name);
-        } else if (type === 'statement' && (file.name.endsWith('.csv') || file.name.endsWith('.txt'))) {
-            parseStatementCSV(content, file.name);
-        } else if (type === 'saft' && file.name.endsWith('.csv')) {
-            parseSaftCSV(content, file.name);
-        } else if (type === 'dac7') {
-            parseDAC7(content, file.name);
-        } else {
-            VDCSystem.documents.push({
-                type,
-                name: file.name,
-                content,
-                hash: generateHash(content),
-                timestamp: new Date().toISOString()
-            });
-        }
-        
-        logAudit(`✅ Ficheiro processado: ${file.name} [${type.toUpperCase()}]`, "success");
-    };
-    
-    if (file.type === 'application/pdf') {
-        reader.readAsDataURL(file);
-    } else {
-        reader.readAsText(file);
-    }
-}
+                <!-- DASHBOARD PRINCIPAL -->
+                <section class="dashboard-fixed">
+                    <div class="stat-card">
+                        <h4><i class="fas fa-euro-sign"></i> VALOR ILÍQUIDO</h4>
+                        <p id="netVal">0,00€</p>
+                        <small>Base tributável SAF-T</small>
+                    </div>
+                    <div class="stat-card">
+                        <h4><i class="fas fa-percentage"></i> IVA 6%</h4>
+                        <p id="iva6Val">0,00€</p>
+                        <small>Taxa reduzida Portugal</small>
+                    </div>
+                    <div class="stat-card">
+                        <h4><i class="fas fa-hand-holding-usd"></i> COMISSÃO PLATAFORMA</h4>
+                        <p id="commissionVal">0,00€</p>
+                        <small>Serviço de intermediação</small>
+                    </div>
+                    <div class="stat-card alert">
+                        <h4><i class="fas fa-gavel"></i> IVA 23% AUTOLIQUIDAÇÃO</h4>
+                        <p id="iva23Val" class="alert-text">0,00€</p>
+                        <small>Dívida ao Estado Português</small>
+                    </div>
+                    <div class="stat-card regulatory" id="jurosCard" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> JUROS DE MORA (4%)</h4>
+                        <p id="jurosVal" class="regulatory-text">0,00€</p>
+                        <small>Base anual civil (RGRC)</small>
+                    </div>
+                </section>
 
-// ============================================
-// MÓDULO 6: PARSING ESPECÍFICO - BOLT/CSV OTIMIZADO
-// ============================================
+                <!-- PARECER TÉCNICO -->
+                <section class="kpi-section">
+                    <h3><i class="fas fa-chart-network"></i> PARECER TÉCNICO-FORENSE BIG DATA</h3>
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <h4><i class="fas fa-money-bill-wave"></i> RENDIMENTOS BRUTOS</h4>
+                            <p id="kpiGanhos">0,00€</p>
+                            <small>Valor real do extrato</small>
+                        </div>
+                        <div class="kpi-card">
+                            <h4><i class="fas fa-percentage"></i> COMISSÃO APP</h4>
+                            <p id="kpiComm">0,00€</p>
+                            <small>Taxa retida pela plataforma</small>
+                        </div>
+                        <div class="kpi-card highlight">
+                            <h4><i class="fas fa-hand-holding-usd"></i> LÍQUIDO A RECEBER</h4>
+                            <p id="kpiNet">0,00€</p>
+                            <small>Transferência bancária real</small>
+                        </div>
+                        <div class="kpi-card danger">
+                            <h4><i class="fas fa-file-invoice-dollar"></i> FATURA PLATAFORMA</h4>
+                            <p id="kpiInvoice">0,00€</p>
+                            <small>Valor faturado (documento)</small>
+                        </div>
+                    </div>
+                    <div class="secondary-stats">
+                        <span><i class="fas fa-gift"></i> Campanhas: <b id="valCamp">0,00€</b></span> | 
+                        <span><i class="fas fa-coins"></i> Gorjetas: <b id="valTips">0,00€</b></span> | 
+                        <span><i class="fas fa-ban"></i> Cancelamentos: <b id="valCanc">0,00€</b></span> |
+                        <span><i class="fas fa-road"></i> Portagens: <b id="valTolls">0,00€</b></span>
+                    </div>
+                </section>
 
-function parseInvoiceBolt(content, filename) {
-    const totalRegex = /Total\s+com\s+IVA[:\s]*€?\s*(\d+[.,]\d+)/i;
-    const match = content.match(totalRegex);
-    
-    if (match) {
-        const value = parseFloat(match[1].replace(',', '.'));
-        
-        VDCSystem.documents.push({
-            type: 'invoice',
-            name: filename,
-            value,
-            hash: generateHash(content),
-            timestamp: new Date().toISOString()
-        });
-        
-        logAudit(`💰 Fatura BOLT: ${filename} = €${value.toFixed(2)}`, "success");
-    } else {
-        logAudit(`⚠️ Fatura BOLT não parseada: ${filename}`, "warn");
-    }
-}
+                <!-- GRÁFICO -->
+                <section class="chart-section">
+                    <h3><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO FINANCEIRA (% e €)</h3>
+                    <div class="chart-container">
+                        <canvas id="forensicChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="fas fa-square" style="color: #00f2ff;"></i> Valor Ilíquido</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #3b82f6;"></i> IVA 6%</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff3e3e;"></i> Comissão Plataforma</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #f59e0b;"></i> IVA 23% Devido</span>
+                        <span class="legend-item"><i class="fas fa-square" style="color: #ff6b35;"></i> Juros de Mora (4%)</span>
+                    </div>
+                </section>
 
-function parseStatementCSV(content, filename) {
-    Papa.parse(content, {
-        delimiter: ';',
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-            const rows = results.data;
-            let total = 0;
-            
-            rows.forEach(row => {
-                if (row['Total']) {
-                    const value = parseFloat(row['Total'].replace(',', '.'));
-                    if (!isNaN(value)) total += value;
-                } else if (row['Valor']) {
-                    const value = parseFloat(row['Valor'].replace(',', '.'));
-                    if (!isNaN(value)) total += value;
-                }
-            });
-            
-            VDCSystem.documents.push({
-                type: 'statement',
-                name: filename,
-                rows: rows.length,
-                total,
-                hash: generateHash(content),
-                timestamp: new Date().toISOString()
-            });
-            
-            logAudit(`📊 Extrato CSV: ${filename} | ${rows.length} linhas | Total: €${total.toFixed(2)}`, "success");
-        },
-        error: (error) => {
-            logAudit(`❌ Erro ao parsear CSV: ${filename} - ${error.message}`, "error");
-        }
-    });
-}
+                <!-- RESULTADOS -->
+                <section class="analysis-results">
+                    <h3><i class="fas fa-search-dollar"></i> AUDITORIA BIG DATA DE LAYERING</h3>
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <h5>BRUTO SAF-T</h5>
+                            <p id="grossResult" class="result-value">0,00€</p>
+                            <div class="result-bar">
+                                <div class="bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <h5>TRANSFERÊNCIA BANCÁRIA</h5>
+                            <p id="transferResult" class="result-value">0,00€</p>
+                            <div class="result-bar">
+                                <div class="bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <h5>DIFERENÇA (CRUZAMENTO)</h5>
+                            <p id="differenceResult" class="result-value">0,00€</p>
+                            <div class="result-bar">
+                                <div class="bar-fill" id="differenceBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <h5>QUANTUM BENEFÍCIO ILÍCITO</h5>
+                            <p id="marketResult" class="result-value">0,00M€</p>
+                            <div class="result-bar">
+                                <div class="bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
 
-function parseSaftCSV(content, filename) {
-    Papa.parse(content, {
-        delimiter: ';',
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-            const rows = results.data;
-            
-            VDCSystem.documents.push({
-                type: 'saft',
-                name: filename,
-                rows: rows.length,
-                data: rows,
-                hash: generateHash(content),
-                timestamp: new Date().toISOString()
-            });
-            
-            logAudit(`📋 SAF-T CSV: ${filename} | ${rows.length} registos`, "success");
-        }
-    });
-}
+                    <!-- ALERTAS FORENSES -->
+                    <div id="omissionAlert" class="omission-alert" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>ALERTA BIG DATA DE LAYERING DETETADO (ISO/IEC 27037)</strong>
+                            <p>Discrepância entre faturação e recebimento. Valor oculto: <span id="omissionValue">0,00€</span></p>
+                        </div>
+                    </div>
 
-function parseDAC7(content, filename) {
-    VDCSystem.documents.push({
-        type: 'dac7',
-        name: filename,
-        content,
-        hash: generateHash(content),
-        timestamp: new Date().toISOString()
-    });
-    
-    logAudit(`📄 DAC7 Processado: ${filename}`, "success");
-}
+                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
+                        <i class="fas fa-radiation-alt"></i>
+                        <div>
+                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
+                            <p>FATURA (<span id="alertInvoiceVal">0,00€</span>) ≠ COMISSÃO (<span id="alertCommVal">0,00€</span>) | Δ = <span id="alertDeltaVal">0,00€</span></p>
+                        </div>
+                    </div>
+                    
+                    <div id="diferencialAlert" class="diferencial-alert" style="display: none;">
+                        <i class="fas fa-balance-scale"></i>
+                        <div>
+                            <strong>🔴 EVIDÊNCIA BIG DATA: DIFERENCIAL DE CUSTO DETETADO</strong>
+                            <p>Comissão Retida > Fatura Emitida | Layering Financeiro Confirmado (NIST SP 800-86)</p>
+                        </div>
+                    </div>
 
-// ============================================
-// MÓDULO 7: MODO DEMO - LIMPEZA DE MEMÓRIA
-// ============================================
+                    <div id="jurosAlert" class="regulatory-alert" style="display: none;">
+                        <i class="fas fa-percent"></i>
+                        <div>
+                            <strong>⚖️ JUROS DE MORA CALCULADOS (RGRC 4%)</strong>
+                            <p>Juros civis acumulados sobre valor em dívida: <span id="jurosValue">0,00€</span></p>
+                        </div>
+                    </div>
+                </section>
 
-function activateDemoMode() {
-    logAudit("🧪 MODO DEMO ATIVADO: Dados da Momento Eficaz Lda.", "warn");
-    
-    VDCSystem.documents = [];
-    
-    VDCSystem.currentClient = {
-        name: 'Momento Eficaz Lda',
-        nif: '123456789',
-        year: 2023
-    };
-    
-    document.getElementById('clientName').value = 'Momento Eficaz Lda';
-    document.getElementById('clientNif').value = '123456789';
-    document.getElementById('auditYear').value = '2023';
-    
-    VDCSystem.documents.push(
-        {
-            type: 'dac7',
-            name: 'DAC7_MomentoEficaz_2023.html',
-            hash: 'demo-hash-001',
-            timestamp: new Date().toISOString()
-        },
-        {
-            type: 'invoice',
-            name: 'Fatura_Bolt_2023_001.pdf',
-            value: 5420.50,
-            hash: 'demo-hash-002',
-            timestamp: new Date().toISOString()
-        },
-        {
-            type: 'statement',
-            name: 'Extrato_Bancario_2023.csv',
-            total: 5100.00,
-            rows: 45,
-            hash: 'demo-hash-003',
-            timestamp: new Date().toISOString()
-        }
-    );
-    
-    updateDashboard();
-    updateSummary();
-    logAudit("✅ Modo Demo Pronto para Análise.", "success");
-}
+                <!-- CONSOLA -->
+                <section class="console-section">
+                    <div class="console-header">
+                        <h3><i class="fas fa-terminal"></i> CONSOLA DE AUDITORIA BIG DATA (ISO/IEC 27037)</h3>
+                        <div class="console-controls">
+                            <button id="clearConsoleBtn" class="icon-btn" title="Limpar consola">
+                                <i class="fas fa-broom"></i>
+                            </button>
+                            <button id="toggleConsoleBtn" class="icon-btn" title="Alternar tamanho">
+                                <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button id="custodyBtn" class="icon-btn" title="Cadeia de Custódia">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="auditOutput" class="console-output"></div>
+                </section>
+            </main>
+        </div>
 
-// ============================================
-// MÓDULO 8: ANÁLISE E RELATÓRIOS
-// ============================================
+        <!-- RODAPÉ -->
+        <footer class="action-footer">
+            <div class="system-info">
+                <div class="master-hash">
+                    <strong><i class="fas fa-fingerprint"></i> PROTOCOLO DE INTEGRIDADE: ISO/IEC 27037 | NIST SP 800-86 | MASTER HASH SHA-256 | AUDITORIA FISCAL BIG DATA</strong>
+                    <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
+                </div>
+                <div class="copyright">
+                    <i class="fas fa-shield-alt"></i> VDC Sistema de Peritagem Forense v11.5 - Auditoria Fiscal Big Data "THE CHECKMATE" | © 2024
+                </div>
+            </div>
+        </footer>
+    </div>
 
-function executeAnalysis() {
-    logAudit("🔬 EXECUTANDO AUDITORIA BIG DATA...", "info");
-    
-    const invoices = VDCSystem.documents.filter(d => d.type === 'invoice');
-    const statements = VDCSystem.documents.filter(d => d.type === 'statement');
-    
-    const totalInvoices = invoices.reduce((sum, inv) => sum + (inv.value || 0), 0);
-    const totalStatements = statements.reduce((sum, stmt) => sum + (stmt.total || 0), 0);
-    const difference = totalInvoices - totalStatements;
-    
-    VDCSystem.analysis.gross = totalInvoices;
-    VDCSystem.analysis.transfer = totalStatements;
-    VDCSystem.analysis.difference = difference;
-    VDCSystem.analysis.marketValue = totalInvoices * 1.5;
-    
-    document.getElementById('grossResult').textContent = `€${totalInvoices.toFixed(2)}`;
-    document.getElementById('transferResult').textContent = `€${totalStatements.toFixed(2)}`;
-    document.getElementById('differenceResult').textContent = `€${difference.toFixed(2)}`;
-    document.getElementById('marketResult').textContent = `€${(VDCSystem.analysis.marketValue / 1000000).toFixed(2)}M`;
-    
-    if (Math.abs(difference) > 100) {
-        const alert = document.getElementById('omissionAlert');
-        if (alert) {
-            alert.style.display = 'flex';
-            document.getElementById('omissionValue').textContent = `€${Math.abs(difference).toFixed(2)}`;
-        }
-    }
-    
-    updateChart();
-    logAudit(`✅ AUDITORIA CONCLUÍDA: Diferença = €${difference.toFixed(2)}`, "success");
-}
-
-function updateChart() {
-    const ctx = document.getElementById('forensicChart');
-    if (!ctx) return;
-    
-    if (VDCSystem.chart) {
-        VDCSystem.chart.destroy();
-    }
-    
-    VDCSystem.chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Faturação', 'Transferências', 'Diferença'],
-            datasets: [{
-                label: 'Valores (€)',
-                data: [
-                    VDCSystem.analysis.gross,
-                    VDCSystem.analysis.transfer,
-                    VDCSystem.analysis.difference
-                ],
-                backgroundColor: [
-                    'rgba(0, 242, 255, 0.6)',
-                    'rgba(59, 130, 246, 0.6)',
-                    'rgba(255, 62, 62, 0.6)'
-                ],
-                borderColor: [
-                    '#00f2ff',
-                    '#3b82f6',
-                    '#ff3e3e'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: '#b8c6e0'
-                    }
-                },
-                x: {
-                    ticks: {
-                        color: '#b8c6e0'
-                    }
-                }
-            }
-        }
-    });
-}
-
-function generateReport() {
-    logAudit("📄 Gerando Relatório PDF...", "info");
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    doc.setFontSize(16);
-    doc.text('VDC SISTEMA DE PERITAGEM FORENSE', 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${VDCSystem.currentClient.name}`, 20, 35);
-    doc.text(`NIF: ${VDCSystem.currentClient.nif}`, 20, 45);
-    doc.text(`Ano: ${VDCSystem.currentClient.year}`, 20, 55);
-    doc.text(`Faturação Total: €${VDCSystem.analysis.gross.toFixed(2)}`, 20, 70);
-    doc.text(`Transferências: €${VDCSystem.analysis.transfer.toFixed(2)}`, 20, 80);
-    doc.text(`Diferença: €${VDCSystem.analysis.difference.toFixed(2)}`, 20, 90);
-    
-    doc.save(`Relatorio_VDC_${VDCSystem.currentClient.nif}_${Date.now()}.pdf`);
-    logAudit("✅ Relatório PDF Gerado.", "success");
-}
-
-function exportData() {
-    logAudit("💾 Exportando Dados...", "info");
-    
-    const exportData = {
-        client: VDCSystem.currentClient,
-        analysis: VDCSystem.analysis,
-        documents: VDCSystem.documents.map(d => ({
-            type: d.type,
-            name: d.name,
-            hash: d.hash,
-            timestamp: d.timestamp
-        }))
-    };
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Export_VDC_${Date.now()}.json`;
-    a.click();
-    
-    logAudit("✅ Dados Exportados com Sucesso.", "success");
-}
-
-function resetSystem() {
-    if (!confirm('⚠️ Tem a certeza que deseja resetar todo o sistema?')) return;
-    
-    VDCSystem.documents = [];
-    VDCSystem.currentClient = { name: '', nif: '', year: new Date().getFullYear() };
-    VDCSystem.analysis = { gross: 0, transfer: 0, difference: 0, marketValue: 0 };
-    
-    document.getElementById('clientName').value = '';
-    document.getElementById('clientNif').value = '';
-    clearConsole();
-    updateDashboard();
-    updateSummary();
-    
-    if (VDCSystem.chart) VDCSystem.chart.destroy();
-    
-    logAudit("🔄 SISTEMA RESETADO.", "warn");
-}
-
-// ============================================
-// MÓDULO 9: ATUALIZAÇÃO DE DASHBOARD
-// ============================================
-
-function updateDashboard() {
-    const dac7Count = VDCSystem.documents.filter(d => d.type === 'dac7').length;
-    const saftCount = VDCSystem.documents.filter(d => d.type === 'saft').length;
-    const invoicesCount = VDCSystem.documents.filter(d => d.type === 'invoice').length;
-    const statementsCount = VDCSystem.documents.filter(d => d.type === 'statement').length;
-    const totalRecords = VDCSystem.documents.length;
-    
-    document.getElementById('dac7Count').textContent = dac7Count;
-    document.getElementById('saftCount').textContent = saftCount;
-    document.getElementById('invoicesCount').textContent = invoicesCount;
-    document.getElementById('statementsCount').textContent = statementsCount;
-    document.getElementById('totalRecords').textContent = totalRecords;
-    document.getElementById('hashStatus').textContent = totalRecords > 0 ? 'VERIFICADO' : 'AGUARDANDO';
-}
-
-function updateSummary() {
-    const dac7Docs = VDCSystem.documents.filter(d => d.type === 'dac7');
-    const saftDocs = VDCSystem.documents.filter(d => d.type === 'saft');
-    const invoiceDocs = VDCSystem.documents.filter(d => d.type === 'invoice');
-    const statementDocs = VDCSystem.documents.filter(d => d.type === 'statement');
-    
-    document.getElementById('summaryDac7').textContent = `${dac7Docs.length} ficheiros | ${dac7Docs.length} registos`;
-    document.getElementById('summarySaft').textContent = `${saftDocs.length} ficheiros | ${saftDocs.reduce((sum, d) => sum + (d.rows || 0), 0)} registos`;
-    document.getElementById('summaryInvoices').textContent = `${invoiceDocs.length} ficheiros | ${invoiceDocs.length} registos`;
-    document.getElementById('summaryStatements').textContent = `${statementDocs.length} ficheiros | ${statementDocs.reduce((sum, d) => sum + (d.rows || 0), 0)} registos`;
-}
-
-// ============================================
-// MÓDULO 10: CONSOLA DE AUDITORIA
-// ============================================
-
-function logAudit(message, type = 'info') {
-    const consoleOutput = document.getElementById('auditOutput');
-    if (!consoleOutput) return;
-    
-    const entry = document.createElement('div');
-    entry.className = `log-entry log-${type}`;
-    entry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString('pt-PT')}]</span> ${message}`;
-    
-    consoleOutput.appendChild(entry);
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-}
-
-function clearConsole() {
-    const console = document.getElementById('auditOutput');
-    if (console) {
-        console.innerHTML = '';
-        logAudit("🧹 Consola Limpa.", "info");
-    }
-}
-
-function toggleConsole() {
-    const console = document.getElementById('auditOutput');
-    if (console) {
-        console.classList.toggle('expanded');
-    }
-}
-
-function showCustodyChain() {
-    logAudit("🔗 CADEIA DE CUSTÓDIA:", "regulatory");
-    VDCSystem.documents.forEach((doc, index) => {
-        logAudit(`  ${index + 1}. ${doc.name} | Hash: ${doc.hash ? doc.hash.substring(0, 16) : 'N/A'}...`, "info");
-    });
-}
-
-// ============================================
-// MÓDULO 11: HASH GENERATION
-// ============================================
-
-function generateHash(content) {
-    return CryptoJS.SHA256(content).toString();
-}
-
-function generateMasterHash() {
-    const systemState = JSON.stringify(VDCSystem);
-    const masterHash = CryptoJS.SHA256(systemState).toString();
-    
-    const hashElement = document.getElementById('masterHashValue');
-    if (hashElement) {
-        hashElement.textContent = masterHash;
-    }
-    
-    return masterHash;
-}
-
-// ============================================
-// EXPOSIÇÃO DE FUNÇÕES GLOBAIS
-// ============================================
-
-window.populateYears = populateYears;
-window.generateMasterHash = generateMasterHash;
-window.logAudit = logAudit;
-
-console.log("✅ VDC v11.6 GATEKEEPER: Todos os Módulos Carregados com Sucesso.");
+    <!-- SCRIPT PRINCIPAL -->
+    <script src="script.js"></script>
+</body>
+</html>
