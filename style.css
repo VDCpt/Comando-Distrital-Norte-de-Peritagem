@@ -1,3 +1,6 @@
+Recebido. Aqui está o **Bloco 3: style.css** (Estilos Finais para Sincronização Visual).
+
+```css
 /* ============================================
    VDC SISTEMA DE PERITAGEM FORENSE v11.6
    Estilos Finais
@@ -78,6 +81,10 @@ body {
 .kpi-card { background: var(--bg-secondary); padding: 1rem; border-radius: 4px; }
 .kpi-card p { font-size: 1.2rem; font-weight: bold; font-family: var(--font-mono); color: var(--text-primary); }
 
+/* --- CHART SECTION --- */
+.chart-section { background: var(--bg-secondary); padding: 1.5rem; border-radius: 6px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+.chart-container { position: relative; height: 320px; width: 100%; }
+
 /* --- ALERTAS (SINCRONIZAÇÃO) --- */
 .bigdata-alert {
     background: rgba(232, 65, 24, 0.1); border: 1px solid var(--warn-primary);
@@ -116,3 +123,4 @@ body {
     .sidebar { border-right: none; border-bottom: 1px solid var(--border-color); }
     .toolbar-section { flex-direction: column; }
 }
+```
