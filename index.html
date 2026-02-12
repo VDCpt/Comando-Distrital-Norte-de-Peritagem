@@ -24,6 +24,7 @@
 <body>
 
     <!-- 1. GATEKEEPER: SPLASH SCREEN MANUAL -->
+    <!-- Esta camada bloqueia o acesso à UI principal até autorização explícita -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
@@ -180,7 +181,6 @@
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>EXECUTAR TRIANGULAÇÃO</button>
                         <button id="exportJSONBtn" class="btn-tool">JSON</button>
-                        <!-- Alinhamento de IDs solicitado -->
                         <button id="exportPDFBtn" class="btn-tool">PDF</button>
                         <button id="resetBtn" class="btn-tool">RESET</button>
                     </div>
@@ -234,7 +234,6 @@
                 </section>
 
                 <section class="analysis-results">
-                    <!-- Alerta Big Data - Sincronização com JS -->
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation"></i>
                         <div>
@@ -248,7 +247,6 @@
                     <div class="console-header">
                         <h3><i class="fas fa-terminal"></i> LOG</h3>
                         <div class="console-controls">
-                            <!-- Alinhamento de IDs solicitado -->
                             <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
                         </div>
                     </div>
