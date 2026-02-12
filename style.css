@@ -1,6 +1,6 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · CONSOLIDAÇÃO OFICIAL
-   Versões: v11.6 GATEKEEPER · v11.7 HYBRID · SMART PARSING v12.1
+   VDC SISTEMA DE PERITAGEM FORENSE · CONSOLIDAÇÃO OFICIAL v11.8
+   Versões: v11.6 GATEKEEPER · v11.7 HYBRID · v11.8 COMPLIANCE
    ISO/IEC 27037 | NIST SP 800-86
    ===================================================================== */
 
@@ -13,20 +13,23 @@
     --bg-secondary: #0c1629;
     --bg-tertiary: #111b2d;
     --bg-sidebar: #0a1322;
-    --bg-3d: #111b2d;          /* Compatibilidade com versão híbrida */
+    --bg-3d: #111b2d;
     
     --text-primary: #e4eaf7;
     --text-secondary: #b8c6e0;
     --text-tertiary: #8a9bb8;
     
-    /* Cores de Ação e Alerta - Todas as variáveis preservadas */
-    --accent-primary: #00a8ff; /* Azul Ciano Forense */
+    /* Cores de Ação e Alerta - v11.8 Adicionais */
+    --accent-primary: #00a8ff;
     --accent-secondary: #0097e6;
-    --warn-primary: #e84118;    /* Vermelho Crítico */
-    --warn-secondary: #ff9f1a;  /* Laranja Alerta */
-    --success-primary: #44bd32; /* Verde ISO */
+    --warn-primary: #e84118;
+    --warn-secondary: #ff9f1a;
+    --success-primary: #44bd32;
     --regulatory-orange: #ff6b35;
-    --info-primary: #8c7ae6;    /* híbrido */
+    --info-primary: #8c7ae6;
+    
+    /* v11.8 Shadow Entry Color */
+    --shadow-entry: #9b59b6;
     
     /* Cores Institucionais */
     --iso-blue: #0066cc;
@@ -78,7 +81,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   2. SPLASH SCREEN (GATEKEEPER) · VERSÃO CONSOLIDADA v11.6/v11.7
+   2. SPLASH SCREEN (GATEKEEPER) · VERSÃO CONSOLIDADA v11.6/v11.7/v11.8
    --------------------------------------------------------------------- */
 .splash-screen {
     position: fixed;
@@ -326,7 +329,7 @@ body {
 }
 
 /* Botão Demo - Consolidado */
-.btn-demo-nav {
+.btn-demo-nav, .btn-litigation-nav {
     background: linear-gradient(90deg, #ff9f1a 0%, #ffaf40 100%);
     color: #0a0f1d;
     border: none;
@@ -342,11 +345,21 @@ body {
     font-family: var(--font-mono);
     letter-spacing: 0.5px;
     white-space: nowrap;
+    margin-left: 0.5rem;
 }
 
-.btn-demo-nav:hover {
+.btn-demo-nav:hover, .btn-litigation-nav:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
+}
+
+/* v11.8 Specific: Litigation Button */
+.btn-litigation-nav {
+    background: linear-gradient(90deg, var(--shadow-entry) 0%, #8e44ad 100%);
+    color: #fff;
+}
+.btn-litigation-nav:hover {
+    box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4);
 }
 
 /* Session Info */
@@ -883,7 +896,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   7. ALERTAS · CONSOLIDAÇÃO COMPLETA
+   7. ALERTAS v11.8 (SHADOW ENTRY DETECTION)
    --------------------------------------------------------------------- */
 .analysis-results {
     background: rgba(30, 42, 68, 0.5);
@@ -893,8 +906,7 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.omission-alert,
-.bigdata-alert {
+.omission-alert, .bigdata-alert, .shadow-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(232, 65, 24, 0.05) 100%);
     border: 1px solid var(--warn-primary);
     border-radius: var(--border-radius);
@@ -909,6 +921,19 @@ body {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
     border: 2px solid var(--warn-primary);
     animation: pulse-red 2s infinite;
+}
+
+.shadow-alert {
+    /* v11.8 New Style */
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.05) 100%);
+    border: 2px solid var(--shadow-entry);
+    color: var(--shadow-entry);
+    animation: pulse-purple 2s infinite;
+}
+
+.shadow-alert i {
+    color: var(--shadow-entry) !important;
+    font-size: 1.5rem !important;
 }
 
 .alert-icon {
@@ -953,7 +978,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   8. CONSOLE SECTION · LOG DE AUDITORIA
+   8. CONSOLE SECTION · LOG DE AUDITORIA v11.8
    --------------------------------------------------------------------- */
 .console-section {
     background: #000;
@@ -1032,33 +1057,15 @@ body {
     overflow: visible;
 }
 
-.log-info {
-    color: var(--iso-blue);
-    border-left: 2px solid var(--iso-blue);
-}
-
-.log-success {
-    color: var(--nist-green);
-    border-left: 2px solid var(--nist-green);
-}
-
-.log-warn {
-    color: var(--warn-secondary);
-    border-left: 2px solid var(--warn-secondary);
-}
-
-.log-error {
-    color: var(--warn-primary);
-    border-left: 2px solid var(--warn-primary);
-}
-
-.log-regulatory {
-    color: var(--regulatory-orange);
-    border-left: 2px solid var(--regulatory-orange);
-}
+.log-info { color: var(--iso-blue); border-left: 2px solid var(--iso-blue); }
+.log-success { color: var(--nist-green); border-left: 2px solid var(--nist-green); }
+.log-warn { color: var(--warn-secondary); border-left: 2px solid var(--warn-secondary); }
+.log-error { color: var(--warn-primary); border-left: 2px solid var(--warn-primary); }
+.log-regulatory { color: var(--regulatory-orange); border-left: 2px solid var(--regulatory-orange); }
+.log-shadow { color: var(--shadow-entry); border-left: 2px solid var(--shadow-entry); }
 
 /* ---------------------------------------------------------------------
-   9. FOOTER · INTEGRIDADE DO SISTEMA
+   9. FOOTER · INTEGRIDADE DO SISTEMA v11.8
    --------------------------------------------------------------------- */
 .action-footer {
     background: var(--bg-primary);
@@ -1114,7 +1121,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   10. MODAL · GESTÃO DE EVIDÊNCIAS (CONSOLIDADO)
+   10. MODAL · GESTÃO DE EVIDÊNCIAS (CONSOLIDADO v11.8)
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1217,8 +1224,7 @@ body {
     text-align: left;
 }
 
-.upload-btn,
-.modal-btn {
+.upload-btn, .modal-btn {
     width: 100%;
     padding: 1rem;
     background: rgba(20, 30, 48, 0.9);
@@ -1236,15 +1242,13 @@ body {
     border-radius: var(--border-radius-sm);
 }
 
-.upload-btn:hover,
-.modal-btn:hover {
+.upload-btn:hover, .modal-btn:hover {
     border-color: var(--iso-blue);
     background: rgba(0, 168, 255, 0.1);
     transform: translateY(-2px);
 }
 
-.upload-btn.processing,
-.modal-btn.processing {
+.upload-btn.processing, .modal-btn.processing {
     background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
     color: white;
     border-color: var(--iso-blue);
@@ -1309,7 +1313,7 @@ body {
     gap: 0.3rem;
 }
 
-/* File Badges (v11.7) */
+/* File Badges (v11.7/v11.8) */
 .file-badge {
     background: var(--accent-primary);
     color: #000;
@@ -1396,8 +1400,7 @@ body {
     gap: var(--spacing-md);
 }
 
-.modal-footer .btn-primary,
-.modal-footer .btn-secondary {
+.modal-footer .btn-primary, .modal-footer .btn-secondary {
     flex: 1;
     padding: 0.8rem 1.2rem;
     border-radius: var(--border-radius-sm);
@@ -1485,12 +1488,18 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   12. ANIMAÇÕES · CONSOLIDADAS
+   12. ANIMAÇÕES · CONSOLIDADAS v11.8
    --------------------------------------------------------------------- */
 @keyframes pulse-red {
     0% { box-shadow: 0 0 0 0 rgba(232, 65, 24, 0.4); }
     70% { box-shadow: 0 0 0 10px rgba(232, 65, 24, 0); }
     100% { box-shadow: 0 0 0 0 rgba(232, 65, 24, 0); }
+}
+
+@keyframes pulse-purple {
+    0% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(155, 89, 182, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(155, 89, 182, 0); }
 }
 
 @keyframes slideIn {
@@ -1522,8 +1531,7 @@ body {
         border-bottom: 1px solid var(--border-color);
     }
     
-    .sidebar-header-fixed,
-    .info-fixed {
+    .sidebar-header-fixed, .info-fixed {
         position: static;
     }
     
@@ -1570,9 +1578,11 @@ body {
         margin-top: var(--spacing-sm);
     }
     
-    .btn-demo-nav {
+    .btn-demo-nav, .btn-litigation-nav {
         width: 100%;
         justify-content: center;
+        margin-left: 0;
+        margin-top: 0.5rem;
     }
     
     .toolbar-grid {
@@ -1610,7 +1620,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   FIM · CONSOLIDAÇÃO TOTAL DOS FICHEIROS STYLE.CSS
+   FIM · CONSOLIDAÇÃO TOTAL DOS FICHEIROS STYLE.CSS v11.8
    TODAS AS PROPRIEDADES PRESERVADAS, SEM ALTERAÇÕES
    FECHO DE CHAVES PERFEITO
    --------------------------------------------------------------------- */
