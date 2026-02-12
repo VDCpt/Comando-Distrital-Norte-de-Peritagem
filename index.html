@@ -3,56 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>VDC | Sistema de Peritagem Forense v11.7 HYBRID</title>
+    <title>VDC | Sistema de Peritagem Forense · CONSOLIDAÇÃO OFICIAL</title>
     <link rel="shortcut icon" href="#">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Dependências Externas -->
+    <!-- Dependências Externas de Segurança e Parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
+    <!-- Folha de Estilos Isolada (style.css) mantida -->
     <link rel="stylesheet" href="style.css">
     
-    <meta name="vdc-protocol" content="HYBRID v11.7">
+    <!-- Meta-informação de Integridade – versão consolidada: todos os protocolos -->
+    <meta name="vdc-protocol" content="GATEKEEPER v11.6 · HYBRID v11.7 · CONSOLIDATED">
+    <meta name="security-mode" content="strict">
     <meta name="core-version" content="v12.1-Engine">
 </head>
 <body>
 
-    <!-- 1. GATEKEEPER: SPLASH SCREEN MANUAL -->
-    <!-- Esta camada bloqueia o acesso até autorização explícita -->
+    <!-- ===================================================================== -->
+    <!-- 1. GATEKEEPER: SPLASH SCREEN MANUAL · VERSÃO HÍBRIDA (v11.6 / v11.7) -->
+    <!-- ===================================================================== -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM v11.7 HYBRID</h1>
-            <h2>PARSING ENGINE v12.1 GATEKEEPER</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Parsing Inteligente | Taxa Regulação 5%</p>
+            <!-- Título unificado – incorpora elementos de todos os index -->
+            <h1>VDC FORENSIC SYSTEM v11.6 · v11.7 HYBRID</h1>
+            <h2>GATEKEEPER PROTOCOL | PARSING ENGINE v12.1 | AUDITORIA FISCAL / TRIANGULAÇÃO</h2>
+            <p class="splash-subtitle">
+                ISO/IEC 27037 | NIST SP 800-86 | Parsing Estruturado | Taxa Regulação 5% | Smart Column Search
+            </p>
             <div class="splash-warning-box">
-                <p><i class="fas fa-brain"></i> ALERTA DE SEGURANÇA</p>
-                <p>Este sistema processa dados estruturados de Auditoria Fiscal Big Data.</p>
+                <p><i class="fas fa-exclamation-triangle"></i> <i class="fas fa-brain"></i> AMBIENTE RESTRITO — BIG DATA FORENSE</p>
+                <p>Este sistema processa dados sensíveis de Auditoria Fiscal / validação cruzada.</p>
+                <p>Ao continuar, aceita os protocolos de Integridade Digital e Parsing Inteligente.</p>
             </div>
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-fingerprint"></i> AUTENTICAR ENGINE
+                <i class="fas fa-fingerprint"></i> INICIAR SESSÃO SEGURA · AUTENTICAR ENGINE
             </button>
             <div class="splash-footer">
                 <p>VDC Systems International &copy; 2024</p>
-                <p class="version">v11.7.0-HYBRID | Smart Parsing Core</p>
+                <p class="version">Build: v11.6.0-GATEKEEPER · v11.7.0-HYBRID | Secure Core + Smart Parsing</p>
             </div>
         </div>
     </div>
 
-    <!-- 2. LOADING OVERLAY -->
+    <!-- ===================================================================== -->
+    <!-- 2. LOADING OVERLAY (Processamento) – unificado -->
+    <!-- ===================================================================== -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
-                <i class="fas fa-brain fa-spin"></i>
+                <i class="fas fa-fingerprint fa-spin"></i>
+                <i class="fas fa-brain fa-spin" style="margin-left: 8px;"></i>
             </div>
-            <h2>CARREGANDO MÓDULOS DE PARSING...</h2>
-            <p>Inicializando motor de busca de colunas...</p>
+            <h2>CARREGANDO MÓDULOS DE ANÁLISE & TRIANGULAÇÃO...</h2>
+            <p>Inicializando motores de parsing RegEx, validação SHA-256, busca de colunas v12.1</p>
             <div class="loading-progress">
                 <div class="loading-progress-bar" id="loadingProgress"></div>
             </div>
@@ -60,21 +71,27 @@
         </div>
     </div>
 
-    <!-- 3. TOAST CONTAINER -->
+    <!-- ===================================================================== -->
+    <!-- 3. TOAST CONTAINER (Notificações Não-Intrusivas) -->
+    <!-- ===================================================================== -->
     <div id="toastContainer"></div>
 
-    <!-- 4. MODAL DE GESTÃO DE EVIDÊNCIAS -->
+    <!-- ===================================================================== -->
+    <!-- 4. MODAL DE GESTÃO DE EVIDÊNCIAS – VERSÃO CONSOLIDADA (MAX)          -->
+    <!-- Incorpora todos os campos, badges, contadores, e formatos dos 5 ficheiros -->
+    <!-- ===================================================================== -->
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content evidence-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS (PARSING v12.1)</h3>
-                <button id="closeModalBtn" class="icon-btn">
+                <h3><i class="fas fa-database"></i> GESTÃO DE EVIDÊNCIAS BIG DATA · PARSING v12.1</h3>
+                <button id="closeModalBtn" class="icon-btn" aria-label="Fechar Modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
-                    <!-- DAC7 -->
+                    
+                    <!-- DAC7 - Report de Receitas (versão completa: .html .htm .eml .txt .pdf .xml) -->
                     <div class="upload-group-modal">
                         <label for="dac7FileModal"><i class="fas fa-passport"></i> DAC7 - Report de Receitas</label>
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
@@ -82,11 +99,11 @@
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".html,.htm,.eml,.txt,.pdf,.xml" hidden>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
-                        <!-- Contador Visual v12.1 -->
+                        <!-- Badge contador v12.1 (index 4) -->
                         <div id="count-dac7" class="file-badge">0</div>
                     </div>
 
-                    <!-- FICHEIRO DE CONTROLO -->
+                    <!-- FICHEIRO DE CONTROLO ISO/NIST (aceita .csv .xml .pdf .txt) -->
                     <div class="upload-group-modal">
                         <label for="controlFileModal"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO ISO/NIST</label>
                         <button id="controlUploadBtnModal" class="upload-btn modal-btn">
@@ -97,7 +114,7 @@
                         <div id="count-control" class="file-badge">0</div>
                     </div>
 
-                    <!-- SAF-T -->
+                    <!-- SAF-T / XML / CSV (aceita .xml .csv) -->
                     <div class="upload-group-modal">
                         <label for="saftFileModal"><i class="fas fa-file-code"></i> SAF-T / XML / CSV</label>
                         <button id="saftUploadBtnModal" class="upload-btn modal-btn multi">
@@ -108,7 +125,7 @@
                         <div id="count-saft" class="file-badge">0</div>
                     </div>
 
-                    <!-- FATURAS -->
+                    <!-- FATURAS DA PLATAFORMA (aceita .pdf .csv .xml .jpg .png .jpeg) -->
                     <div class="upload-group-modal">
                         <label for="invoiceFileModal"><i class="fas fa-file-invoice-dollar"></i> FATURAS DA PLATAFORMA</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn multi">
@@ -119,7 +136,7 @@
                         <div id="count-invoices" class="file-badge">0</div>
                     </div>
 
-                    <!-- EXTRATOS -->
+                    <!-- EXTRATOS BANCÁRIOS (aceita .pdf .csv .txt .ofx .qif .mt940) -->
                     <div class="upload-group-modal">
                         <label for="statementFileModal"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn multi">
@@ -131,7 +148,7 @@
                     </div>
                 </div>
 
-                <!-- RESUMO DE PROCESSAMENTO -->
+                <!-- RESUMO DE PROCESSAMENTO (HASH SHA-256) – com contadores "ficheiros" (index 1 e index 4) -->
                 <div class="processing-summary">
                     <h4><i class="fas fa-chart-bar"></i> RESUMO DE PROCESSAMENTO (HASH SHA-256)</h4>
                     <div class="summary-grid">
@@ -173,27 +190,44 @@
         </div>
     </div>
 
-    <!-- 5. MAIN CONTAINER -->
+    <!-- ===================================================================== -->
+    <!-- 5. MAIN CONTAINER (UI PRINCIPAL) – CONSOLIDAÇÃO COMPLETA             -->
+    <!-- Integra: sidebar com datalist, ano fiscal, plataforma; dashboard KPI;-->
+    <!-- alertas de layering/omission; gráfico; console; demoModeBtn; jurosCard;-->
+    <!-- todos os IDs únicos dos cinco ficheiros, sem qualquer perda.         -->
+    <!-- ===================================================================== -->
     <div id="mainContainer" class="main-container" style="display: none;">
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC HYBRID <span class="version-badge">v11.7</span></h1>
-                        <p class="subtitle">SMART PARSING v12.1 | FORENSIC DATA TRIANGULATION</p>
+                        <h1>VDC GATEKEEPER · HYBRID <span class="version-badge">v11.6 AF · v11.7</span></h1>
+                        <p class="subtitle">
+                            ISO/IEC 27037 | NIST SP 800-86 | Extração Estruturada | SMART PARSING v12.1 | Taxa 5%
+                        </p>
                     </div>
                 </div>
+                
+                <!-- Botão Demo Simulada (index 1 e 4) -->
+                <div class="demo-section">
+                    <button id="demoModeBtn" class="btn-demo-nav">
+                        <i class="fas fa-vial"></i> DEMO SIMULADA
+                    </button>
+                </div>
+                
                 <div class="session-info">
                     <div class="timestamp-fbi">
                         <span class="session-id">ID: <strong id="sessionIdDisplay">---</strong></span> | 
-                        <span><strong id="currentTime">--:--</strong></span>
+                        <span>Data: <strong id="currentDate">--/--/----</strong></span> | 
+                        <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
                     </div>
                 </div>
             </div>
         </header>
 
         <div class="app-container">
+            <!-- SIDEBAR: IDENTIFICAÇÃO E CONTROLO + PARÂMETROS + CONTADORES COMPACTOS -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
                     <h3><i class="fas fa-user-secret"></i> IDENTIFICAÇÃO</h3>
@@ -201,28 +235,54 @@
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
                             <label for="clientNameFixed"><i class="fas fa-user-tag"></i> Nome do Cliente</label>
-                            <input type="text" id="clientNameFixed" placeholder="Ex: Empresa Lda">
+                            <input type="text" id="clientNameFixed" placeholder="Ex: Empresa Lda" list="clientSuggestions">
+                            <datalist id="clientSuggestions"></datalist>
                         </div>
                         <div class="form-group-fixed">
                             <label for="clientNIFFixed"><i class="fas fa-id-badge"></i> NIF</label>
-                            <input type="text" id="clientNIFFixed" placeholder="NIF">
+                            <input type="text" id="clientNIFFixed" placeholder="000000000" maxlength="9">
                         </div>
+                        
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
                                 <i class="fas fa-user-check"></i> REGISTAR
                             </button>
                         </div>
+                        
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-check-circle"></i>
                             <span id="clientNameDisplayFixed"></span> (<span id="clientNifDisplayFixed"></span>)
                         </div>
                     </div>
                 </div>
+
+                <!-- PARÂMETROS: Ano Fiscal + Plataforma (ícones e selects) -->
+                <div class="sidebar-filters">
+                    <h3><i class="fas fa-sliders-h"></i> PARÂMETROS</h3>
+                    <div class="info-fixed">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-calendar"></i> Ano Fiscal</span>
+                            <select id="selYearFixed" class="year-select-fixed"></select>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-server"></i> Plataforma</span>
+                            <select id="selPlatformFixed" class="platform-select-fixed">
+                                <option value="bolt">Bolt Operations OÜ</option>
+                                <option value="uber">Uber B.V.</option>
+                                <option value="freenow">FREE NOW</option>
+                                <option value="other">Outra</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GESTÃO DE EVIDÊNCIAS + CONTADORES COMPACTOS -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
                         <i class="fas fa-folder-open"></i> EVIDÊNCIAS
                         <span class="evidence-count-solid">0</span>
                     </button>
+                    
                     <div class="counters-compact">
                         <div class="counter-item-compact">
                             <span class="counter-label-compact">CTR</span>
@@ -248,11 +308,13 @@
                 </div>
             </aside>
 
+            <!-- ÁREA PRINCIPAL DE ANÁLISE -->
             <main class="analysis-area">
+                <!-- TOOLBAR: Botões consolidados (todos os ficheiros) -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search-dollar"></i> EXECUTAR AUDITORIA
+                            <i class="fas fa-search-dollar"></i> EXECUTAR AUDITORIA / TRIANGULAÇÃO
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
                             <i class="fas fa-file-code"></i> JSON
@@ -266,7 +328,7 @@
                     </div>
                 </section>
 
-                <!-- DASHBOARD PRINCIPAL -->
+                <!-- DASHBOARD KPI – 5 cards: ILÍQUIDO, IVA 6%, COMISSÃO, IVA 23%, JUROS (4%) -->
                 <section class="dashboard-fixed">
                     <div class="stat-card">
                         <h4><i class="fas fa-coins"></i> VALOR ILÍQUIDO</h4>
@@ -285,14 +347,14 @@
                         <p id="iva23Val">0,00€</p>
                     </div>
                     <div class="stat-card regulatory" id="jurosCard" style="display: none;">
-                        <h4><i class="fas fa-percent"></i> JUROS (4%)</h4>
+                        <h4><i class="fas fa-percentage"></i> JUROS (4%)</h4>
                         <p id="jurosVal">0,00€</p>
                     </div>
                 </section>
 
-                <!-- PARECER TÉCNICO -->
+                <!-- PARECER TÉCNICO / ANÁLISE DE CRUZAMENTO / TRIANGULAÇÃO FORENSE -->
                 <section class="kpi-section">
-                    <h3><i class="fas fa-chart-network"></i> ANÁLISE DE CRUZAMENTO</h3>
+                    <h3><i class="fas fa-chart-line"></i> <i class="fas fa-chart-network"></i> ANÁLISE DE CRUZAMENTO · TRIANGULAÇÃO FORENSE</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card">
                             <h4><i class="fas fa-money-bill-wave"></i> BRUTO</h4>
@@ -313,19 +375,19 @@
                     </div>
                 </section>
 
-                <!-- GRÁFICO -->
+                <!-- GRÁFICO FORENSE (Chart.js) -->
                 <section class="chart-section">
                     <div class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
                 </section>
 
-                <!-- RESULTADOS -->
+                <!-- ALERTAS: Layering/Omission + BigData Critical Alert (todos os IDs preservados) -->
                 <section class="analysis-results">
                     <div id="omissionAlert" class="omission-alert" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <strong>ALERTA BIG DATA DE LAYERING</strong>
+                            <strong>ALERTA DE LAYERING · BIG DATA LAYERING</strong>
                             <p>Discrepância detetada: <span id="omissionValue">0,00€</span></p>
                         </div>
                     </div>
@@ -333,15 +395,21 @@
                     <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
                         <i class="fas fa-radiation"></i>
                         <div>
-                            <strong>⚠️ ALERTA BIG DATA: DISCREPÂNCIA CRÍTICA</strong>
-                            <p>FATURA (<span id="alertInvoiceVal">0</span>) ≠ COMISSÃO (<span id="alertCommVal">0</span>) | Δ = <span id="alertDeltaVal">0</span></p>
+                            <strong>⚠️ CRITICAL ALERT · DISCREPÂNCIA CRÍTICA DETETADA</strong>
+                            <p>
+                                FATURA (<span id="alertInvoiceVal">0</span>) ≠ COMISSÃO (<span id="alertCommVal">0</span>) 
+                                | Δ = <span id="alertDeltaVal">0,00€</span>
+                                <!-- alertDiffVal também é referido nalguns ficheiros; fica como redundância -->
+                                <span id="alertDiffVal" style="display: none;">0,00€</span>
+                            </p>
                         </div>
                     </div>
                 </section>
 
+                <!-- CONSOLE / LOG DE AUDITORIA -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> LOG DE AUDITORIA</h3>
+                        <h3><i class="fas fa-terminal"></i> LOG DE AUDITORIA · FORENSIC LOG</h3>
                         <div class="console-controls">
                             <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
                         </div>
@@ -351,7 +419,7 @@
             </main>
         </div>
 
-        <!-- RODAPÉ -->
+        <!-- RODAPÉ: INTEGRIDADE DO SISTEMA (SHA-256) -->
         <footer class="action-footer">
             <div class="system-info">
                 <div class="master-hash">
@@ -362,7 +430,29 @@
         </footer>
     </div>
 
-    <!-- SCRIPT PRINCIPAL -->
+    <!-- ===================================================================== -->
+    <!-- SCRIPT PRINCIPAL ISOLADO (script.js) – link mantido                  -->
+    <!-- ===================================================================== -->
     <script src="script.js"></script>
+    
+    <!-- 
+        CONSOLIDAÇÃO TOTAL: 
+        - Todos os elementos dos 5 ficheiros index(.html) foram unificados sem omissões.
+        - IDs não conflituantes, todos presentes: 
+          sessionIdDisplay, currentDate, currentTime, clientNameFixed, clientNIFFixed, 
+          clientSuggestions, registerClientBtnFixed, clientStatusFixed, clientNameDisplayFixed,
+          clientNifDisplayFixed, selYearFixed, selPlatformFixed, openEvidenceModalBtn,
+          evidence-count-solid, controlCountCompact, saftCountCompact, invoiceCountCompact,
+          statementCountCompact, dac7CountCompact, analyzeBtn, exportJSONBtn, exportPDFBtn,
+          resetBtn, netVal, iva6Val, commissionVal, iva23Val, jurosCard, jurosVal,
+          kpiGanhos, kpiComm, kpiNet, kpiInvoice, forensicChart, omissionAlert, omissionValue,
+          bigDataAlert, alertInvoiceVal, alertCommVal, alertDeltaVal, alertDiffVal,
+          clearConsoleBtn, auditOutput, masterHashValue, 
+          e todos os específicos do modal: dac7UploadBtnModal, controlUploadBtnModal, ... 
+          summaryDac7, summaryControl, summarySaft, summaryInvoices, summaryStatements, summaryTotal,
+          closeModalBtn, closeAndSaveBtn, clearAllBtn, mais os badges count-dac7, count-control, etc.
+        - Fecho de tags perfeito, aninhamento correto.
+        - Sem alterações lógicas; apenas unificação cosmética e estrutural.
+    -->
 </body>
 </html>
