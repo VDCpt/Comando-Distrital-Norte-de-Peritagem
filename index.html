@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>VDC | Sistema de Peritagem Forense · v11.9</title>
     <link rel="shortcut icon" href="#">
+    
     <!-- Fontes e Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,12 +17,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- CORREÇÃO v11.9: CDN do jsPDF atualizado para unpkg para garantir estabilidade -->
+    <!-- jsPDF via unpkg para maior estabilidade de fonte -->
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     
     <meta name="vdc-protocol" content="GATEKEEPER v11.9 · FORENSIC PRO">
     <meta name="security-mode" content="strict">
-    <meta name="core-version" content="v12.3-Engine">
+    <meta name="core-version" content="v12.4-Engine-Final">
 </head>
 <body>
 
@@ -43,7 +44,7 @@
             </button>
             <div class="splash-footer">
                 <p>VDC Systems International &copy; 2024</p>
-                <p class="version">Build: v11.9.0-FORENSIC-PRO | Multilang Ready</p>
+                <p class="version">Build: v11.9.0-FORENSIC-PRO | Final</p>
             </div>
         </div>
     </div>
@@ -171,14 +172,14 @@
         </div>
     </div>
 
-    <!-- 5. MAIN CONTAINER -->
-    <div id="mainContainer" class="main-container" style="display: none;">
+    <!-- 5. MAIN CONTAINER (Inicialização controlada) -->
+    <div id="mainContainer" class="main-container" style="display: none; opacity: 0;">
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <h1>VDC FORENSIC PRO <span class="version-badge">v11.9 ML</span></h1>
+                        <h1>VDC FORENSIC PRO <span class="version-badge">v11.9</span></h1>
                         <p class="subtitle" id="headerSubtitle">
                             ISO/IEC 27037 | NIST SP 800-86 | Juros Compensatórios | Cadeia de Custódia
                         </p>
@@ -189,7 +190,6 @@
                     <button id="demoModeBtn" class="btn-demo-nav">
                         <i class="fas fa-vial"></i> <span id="demoBtnText">DEMO SIMULADA</span>
                     </button>
-                    <!-- v11.9 Language Toggle -->
                     <button id="langToggleBtn" class="btn-lang-toggle">
                         <i class="fas fa-language"></i> <span id="currentLangLabel">EN</span>
                     </button>
@@ -372,7 +372,7 @@
                             <p id="omissionValue">0,00€</p>
                         </div>
                     </div>
-                    <div id="bigDataAlert" class="bigdata-alert" style="display: none;">
+                    <div id="bigDataAlert" class="bigdata-alert alert-active" style="display: none;">
                         <i class="fas fa-radiation"></i>
                         <div>
                             <strong>⚠️ CRITICAL ALERT · <span id="alertCriticalTitle">DISCREPÂNCIA CRÍTICA DETETADA</span></strong>
@@ -391,6 +391,7 @@
                             <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
                         </div>
                     </div>
+                    <!-- Verificação de integridade de bloco: ID auditOutput -->
                     <div id="auditOutput" class="console-output"></div>
                 </section>
             </main>
@@ -398,6 +399,7 @@
 
         <footer class="action-footer">
             <div class="system-info">
+                <!-- Verificação de integridade de bloco: ID masterHashValue -->
                 <div class="master-hash">
                     <strong><i class="fas fa-fingerprint"></i> <span id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v11.9)</span></strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
