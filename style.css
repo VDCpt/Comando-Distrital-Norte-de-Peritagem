@@ -7,7 +7,7 @@ Recebido. Aqui está o **Bloco 3: style.css** (Estilos Finais para Sincronizaç�
    ============================================ */
 
 :root {
-    --bg-primary: #0a0f1d; --bg-secondary: #0c1629; --bg-tertiary: #111b2d;
+    --bg-primary: #0a0f1d; --bg-secondary: #0c1629; --bg-3D #111b2d;
     --text-primary: #e4eaf7; --text-secondary: #b8c6e0; --text-tertiary: #8a9bb8;
     --accent-primary: #00a8ff; --warn-primary: #e84118; --success-primary: #44bd32;
     --border-color: #1e2a44; --font-mono: 'JetBrains Mono', monospace;
