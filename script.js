@@ -12,8 +12,9 @@
  * - Cadeia de Custódia com SHA-256 e Timestamp Unix
  * - Veredicto de Risco Automático (CSI) com 3 níveis
  * - Marca de Água "CÓPIA CONTROLADA" no PDF
- * - Upload real de faturas e extratos com processamento (handleInvoiceUpload / handleStatementUpload)
+ * - Upload real de faturas e extratos com processamento
  * - Fundamentos Legais: Art. 114.º RGIT, Art. 35.º LGT, ISO/IEC 27037
+ * - PDF CORRIGIDO: Função addFooter definida antes de ser usada
  * ====================================================================
  */
 
@@ -232,6 +233,7 @@ const translations = {
         pdfMethodText: "Metodologia: Análise forense baseada em triangulação de dados (Extrato, Fatura, Algoritmo). Aplicação de validação checksum para integridade de ficheiros e dedução fiscal reversa. Conformidade com ISO/IEC 27037 e NIST SP 800-86.",
         pdfConclusionText: "Conclusão: Os dados apresentam indícios de desvio entre valores transacionados e valores declarados. Recomenda-se a notificação da entidade para esclarecimento e eventual procedimento de inspeção tributária.",
         pdfRiskVerdict: "VEREDICTO DE RISCO",
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.0 | Todos os Direitos Reservados | EM",
         pdfQuestions: [
             "1. Qual a lógica algorítmica exata aplicada ao cálculo da taxa de serviço no período auditado?",
             "2. Como é justificada a discrepância de valor entre o registo interno de comissão e a fatura emitida?",
@@ -309,6 +311,7 @@ const translations = {
         pdfMethodText: "Methodology: Forensic analysis based on data triangulation. Checksum validation for file integrity and reverse fiscal deduction applied. Compliance with ISO/IEC 27037 and NIST SP 800-86.",
         pdfConclusionText: "Conclusion: Data indicates deviations between transacted and declared values. Entity notification recommended for clarification and potential tax inspection procedure.",
         pdfRiskVerdict: "RISK VERDICT",
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.0 | All Rights Reserved | EM",
         pdfQuestions: [
             "1. What is the exact algorithmic logic for the service fee in the audited period?",
             "2. How is the discrepancy between internal commission and invoice justified?",
@@ -843,7 +846,7 @@ async function processFile(file, type) {
     let platformFees = 0;
     let invoiceTotal = 0;
     
-    // PROCESSAMENTO REAL DE FATURAS (handleInvoiceUpload)
+    // PROCESSAMENTO REAL DE FATURAS
     if (type === 'invoice' || type === 'invoices') {
         try {
             if (file.name.toLowerCase().endsWith('.csv')) {
@@ -889,7 +892,7 @@ async function processFile(file, type) {
         }
     }
     
-    // PROCESSAMENTO REAL DE EXTRATOS (handleStatementUpload)
+    // PROCESSAMENTO REAL DE EXTRATOS
     if (type === 'statement' || type === 'statements') {
         try {
             const papaParsed = Papa.parse(text, { 
@@ -1467,7 +1470,7 @@ function renderChart() {
 }
 
 // ============================================================================
-// 11. EXPORTAÇÕES · JSON E PDF COM FUNDAMENTOS LEGAIS
+// 11. EXPORTAÇÕES · JSON E PDF COM FUNDAMENTOS LEGAIS (VERSÃO CORRIGIDA)
 // ============================================================================
 
 function exportDataJSON() {
@@ -1546,12 +1549,15 @@ function exportPDF() {
         
         let y = 20;
         const left = 15;
+        const right = 195;
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         
+        // Função auxiliar para adicionar texto com quebra de linha
         const addWrappedText = (text, x, yPos, maxWidth = 170) => {
             try {
-                const split = doc.splitTextToSize(text, maxWidth);
+                if (!text) return 0;
+                const split = doc.splitTextToSize(text.toString(), maxWidth);
                 doc.text(split, x, yPos);
                 return split.length * 5;
             } catch(e) {
@@ -1560,17 +1566,7 @@ function exportPDF() {
             }
         };
         
-        const checkPageBreak = (neededSpace) => {
-            if (y + neededSpace >= pageHeight - 30) {
-                addFooter(doc, t, pageWidth, pageHeight);
-                doc.addPage();
-                y = 20;
-                addWatermark(doc, t, pageWidth, pageHeight);
-                return true;
-            }
-            return false;
-        };
-        
+        // Função para adicionar marca de água
         const addWatermark = () => {
             doc.saveGraphicsState();
             doc.setTextColor(220, 220, 220);
@@ -1578,23 +1574,36 @@ function exportPDF() {
             doc.setFont('helvetica', 'bold');
             doc.text('CÓPIA CONTROLADA', pageWidth / 2, pageHeight / 2, { 
                 align: 'center', 
-                angle: 45 
+                angle: 45,
+                renderingMode: 'fill'
             });
             doc.restoreGraphicsState();
         };
         
-        const addFooter = () => {
-            const pageCount = doc.internal.getNumberOfPages();
+        // Função para verificar quebra de página
+        const checkPageBreak = (neededSpace) => {
+            if (y + neededSpace >= pageHeight - 20) {
+                doc.addPage();
+                y = 20;
+                addWatermark();
+                return true;
+            }
+            return false;
+        };
+        
+        // Função para adicionar rodapé (DEFINIDA ANTES DE SER USADA)
+        const addFooter = (currentDoc, translation, pWidth, pHeight) => {
+            const pageCount = currentDoc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setDrawColor(200, 200, 200);
-                doc.line(10, pageHeight - 15, pageWidth - 10, pageHeight - 15);
-                doc.setFontSize(6);
-                doc.setTextColor(100, 100, 100);
-                doc.text(VDCSystem.masterHash.substring(0, 24) + '...', 10, pageHeight - 10);
-                doc.setFontSize(7);
-                doc.setTextColor(120, 120, 120);
-                doc.text(t.pdfFooter, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                currentDoc.setPage(i);
+                currentDoc.setDrawColor(200, 200, 200);
+                currentDoc.line(10, pHeight - 15, pWidth - 10, pHeight - 15);
+                currentDoc.setFontSize(6);
+                currentDoc.setTextColor(100, 100, 100);
+                currentDoc.text(VDCSystem.masterHash ? VDCSystem.masterHash.substring(0, 24) + '...' : 'HASH NÃO GERADA', 10, pHeight - 10);
+                currentDoc.setFontSize(7);
+                currentDoc.setTextColor(120, 120, 120);
+                currentDoc.text(translation.pdfFooter || 'VDC Systems International', pWidth / 2, pHeight - 10, { align: 'center' });
             }
         };
         
@@ -1604,123 +1613,135 @@ function exportPDF() {
         doc.setFontSize(18);
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.text(t.pdfTitle, pageWidth / 2, 18, { align: 'center' });
+        doc.text(t.pdfTitle || 'PARECER PERICIAL', pageWidth / 2, 18, { align: 'center' });
+        
         doc.setFontSize(9);
         doc.setTextColor(200, 200, 200);
-        doc.text(`Session: ${VDCSystem.sessionId}`, left, 30);
+        doc.text(`Session: ${VDCSystem.sessionId || 'N/A'}`, left, 30);
         doc.text(`Date: ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()}`, left, 36);
-        doc.text(`Unix Timestamp: ${meta.timestampUnix}`, left, 42);
+        doc.text(`Unix Timestamp: ${meta.timestampUnix || Math.floor(Date.now() / 1000)}`, left, 42);
+        
         doc.setDrawColor(100, 100, 100);
-        doc.line(left, 45, pageWidth - left, 45);
+        doc.line(left, 45, right, 45);
         
         y = 52;
         
         // Seção 1: Metadados
-        checkPageBreak(30);
+        checkPageBreak(40);
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'bold');
-        doc.text(t.pdfSection1, left, y);
+        doc.text(t.pdfSection1 || '1. IDENTIFICAÇÃO', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`${t.pdfLabelName}: ${VDCSystem.client.name}`, left + 5, y);
+        doc.text(`${t.pdfLabelName || 'Nome'}: ${VDCSystem.client.name || 'N/A'}`, left + 5, y);
         y += 5;
-        doc.text(`${t.pdfLabelNIF}: ${VDCSystem.client.nif}`, left + 5, y);
+        doc.text(`${t.pdfLabelNIF || 'NIF'}: ${VDCSystem.client.nif || 'N/A'}`, left + 5, y);
         y += 5;
-        doc.text(`User Agent: ${meta.userAgent.substring(0, 60)}...`, left + 5, y);
+        doc.text(`User Agent: ${meta.userAgent ? meta.userAgent.substring(0, 60) : 'N/A'}...`, left + 5, y);
         y += 5;
-        doc.text(`Timezone: ${meta.timezone} | IP Simulado: ${meta.ipSimulated}`, left + 5, y);
+        doc.text(`Timezone: ${meta.timezone || 'N/A'} | IP Simulado: ${meta.ipSimulated || 'N/A'}`, left + 5, y);
         y += 10;
-        doc.line(left, y, pageWidth - left, y);
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 2: Análise Financeira
-        checkPageBreak(40);
+        checkPageBreak(60);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfSection2, left, y);
-        y += 8;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.text(`${t.pdfLabelGross}: ${formatCurrency(ev.rendimentosBrutos)}`, left + 5, y);
-        y += 6;
-        doc.text(`${t.pdfLabelComm}: ${formatCurrency(Math.abs(ev.comissaoApp))}`, left + 5, y);
-        y += 6;
-        doc.text(`${t.pdfLabelInv}: ${formatCurrency(ev.faturaPlataforma)}`, left + 5, y);
+        doc.text(t.pdfSection2 || '2. ANÁLISE FINANCEIRA', left, y);
         y += 8;
         
-        if (ev.diferencialCusto > 0.01) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(`${t.pdfLabelGross || 'Bruto'}: ${formatCurrency(ev.rendimentosBrutos || 0)}`, left + 5, y);
+        y += 6;
+        doc.text(`${t.pdfLabelComm || 'Comissão'}: ${formatCurrency(Math.abs(ev.comissaoApp || 0))}`, left + 5, y);
+        y += 6;
+        doc.text(`${t.pdfLabelInv || 'Fatura'}: ${formatCurrency(ev.faturaPlataforma || 0)}`, left + 5, y);
+        y += 8;
+        
+        if ((ev.diferencialCusto || 0) > 0.01) {
             doc.setTextColor(200, 50, 50);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${t.pdfLabelDiff}: ${formatCurrency(ev.diferencialCusto)}`, left + 5, y);
+            doc.text(`${t.pdfLabelDiff || 'Discrepância'}: ${formatCurrency(ev.diferencialCusto || 0)}`, left + 5, y);
             y += 8;
+            
             doc.setTextColor(0, 0, 0);
             doc.setFont('helvetica', 'normal');
-            doc.text(`${t.pdfLabelIVA23}: ${formatCurrency(ev.iva23)}`, left + 5, y);
+            doc.text(`${t.pdfLabelIVA23 || 'IVA 23%'}: ${formatCurrency(ev.iva23 || 0)}`, left + 5, y);
             y += 6;
-            doc.text(`${t.pdfLabelJuros}: ${formatCurrency(ev.jurosMora)}`, left + 5, y);
+            doc.text(`${t.pdfLabelJuros || 'Juros'}: ${formatCurrency(ev.jurosMora || 0)}`, left + 5, y);
             y += 6;
-            doc.text(`${t.pdfLabelComp}: ${formatCurrency(ev.jurosCompensatorios)}`, left + 5, y);
+            doc.text(`${t.pdfLabelComp || 'Juros Compensatórios'}: ${formatCurrency(ev.jurosCompensatorios || 0)}`, left + 5, y);
             y += 6;
-            doc.text(`${t.pdfLabelMulta}: ${formatCurrency(ev.multaDolo)}`, left + 5, y);
+            doc.text(`${t.pdfLabelMulta || 'Multa'}: ${formatCurrency(ev.multaDolo || 0)}`, left + 5, y);
             y += 8;
         }
-        doc.line(left, y, pageWidth - left, y);
+        
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 3: Veredicto de Risco
         checkPageBreak(30);
         doc.setFillColor(240, 240, 240);
         doc.rect(left, y - 3, pageWidth - 30, 30, 'F');
+        
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
-        doc.text(t.pdfRiskVerdict, left + 2, y + 2);
+        doc.text(t.pdfRiskVerdict || 'VEREDICTO', left + 2, y + 2);
+        
         doc.setFontSize(14);
         doc.setTextColor(verdict.color);
         doc.text(verdict.level, left + 2, y + 12);
-        y += 20;
+        y += 25;
         
-        // Seção 4: Fundamentos Legais (Art. 114.º RGIT, Art. 35.º LGT, ISO 27037)
+        // Seção 4: Fundamentos Legais
         checkPageBreak(30);
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfLegalTitle, left, y);
+        doc.text(t.pdfLegalTitle || 'FUNDAMENTAÇÃO LEGAL', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text('• ' + t.pdfLegalRGIT, left + 5, y);
+        doc.text('• ' + (t.pdfLegalRGIT || 'Art. 114.º RGIT'), left + 5, y);
         y += 5;
-        doc.text('• ' + t.pdfLegalLGT, left + 5, y);
+        doc.text('• ' + (t.pdfLegalLGT || 'Art. 35.º LGT'), left + 5, y);
         y += 5;
-        doc.text('• ' + t.pdfLegalISO, left + 5, y);
+        doc.text('• ' + (t.pdfLegalISO || 'ISO/IEC 27037'), left + 5, y);
         y += 8;
-        doc.line(left, y, pageWidth - left, y);
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 5: Conclusões
         checkPageBreak(30);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfSection4, left, y);
+        doc.text(t.pdfSection4 || '4. CONCLUSÕES', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        y += addWrappedText(t.pdfConclusionText, left + 5, y, 170);
+        y += addWrappedText(t.pdfConclusionText || 'Conclusão não disponível.', left + 5, y, 170);
         y += 8;
-        doc.line(left, y, pageWidth - left, y);
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 6: Cadeia de Custódia
         checkPageBreak(40);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfSection5, left, y);
+        doc.text(t.pdfSection5 || '5. CADEIA DE CUSTÓDIA', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
+        
         doc.setFillColor(30, 42, 68);
         doc.rect(left, y, pageWidth - 30, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -1729,12 +1750,19 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         y += 10;
         
-        if (VDCSystem.analysis.evidenceIntegrity.length > 0) {
-            VDCSystem.analysis.evidenceIntegrity.slice(-5).forEach(item => {
-                if (y > 270) { doc.addPage(); y = 20; addWatermark(); }
-                doc.text(item.filename.substring(0, 25) + '...', left + 2, y);
+        if (VDCSystem.analysis.evidenceIntegrity && VDCSystem.analysis.evidenceIntegrity.length > 0) {
+            const evidenceToShow = VDCSystem.analysis.evidenceIntegrity.slice(-5);
+            
+            evidenceToShow.forEach(item => {
+                if (y > 260) {
+                    doc.addPage();
+                    y = 20;
+                    addWatermark();
+                }
+                
+                doc.text(item.filename ? (item.filename.substring(0, 25) + (item.filename.length > 25 ? '...' : '')) : 'N/A', left + 2, y);
                 doc.setFontSize(6.5);
-                doc.text(item.hash, left + 70, y);
+                doc.text(item.hash ? item.hash.substring(0, 24) + '...' : 'N/A', left + 70, y);
                 doc.setFontSize(8);
                 y += 6;
             });
@@ -1742,46 +1770,67 @@ function exportPDF() {
             doc.text('Nenhuma evidência carregada.', left + 5, y);
             y += 6;
         }
+        
         y += 4;
-        doc.line(left, y, pageWidth - left, y);
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 7: Interrogatório Estratégico
         checkPageBreak(40);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfSection6, left, y);
+        doc.text(t.pdfSection6 || '6. INTERROGATÓRIO', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        t.pdfQuestions.slice(0, 3).forEach(q => {
-            if (y > 270) { doc.addPage(); y = 20; addWatermark(); }
+        
+        const questionsToShow = t.pdfQuestions ? t.pdfQuestions.slice(0, 3) : [];
+        questionsToShow.forEach(q => {
+            if (y > 260) {
+                doc.addPage();
+                y = 20;
+                addWatermark();
+            }
             y += addWrappedText(q, left + 5, y, 170);
             y += 2;
         });
+        
         y += 6;
-        doc.line(left, y, pageWidth - left, y);
+        doc.line(left, y, right, y);
         y += 8;
         
         // Seção 8: Assinatura
         checkPageBreak(30);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
-        doc.text(t.pdfSection7, left, y);
+        doc.text(t.pdfSection7 || '7. ASSINATURA', left, y);
         y += 8;
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text(`Perito: VDC Forensic System ${VDCSystem.version}`, left + 5, y);
+        doc.text(`Perito: VDC Forensic System ${VDCSystem.version || 'v12.0'}`, left + 5, y);
         y += 6;
         doc.text(`Data: ${new Date().toLocaleDateString()}`, left + 5, y);
         y += 6;
-        doc.text(`Assinatura Digital: ${VDCSystem.masterHash.substring(0, 16)}...`, left + 5, y);
         
-        addWatermark();
-        addFooter();
+        const masterHash = VDCSystem.masterHash || generateMasterHash();
+        doc.text(`Assinatura Digital: ${masterHash.substring(0, 16)}...`, left + 5, y);
         
-        doc.save(`Parecer_Pericial_${VDCSystem.sessionId}.pdf`);
-        logAudit('PDF gerado com fundamentos legais.', 'success');
+        // Adicionar marca de água em todas as páginas
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            addWatermark();
+        }
+        
+        // Adicionar rodapé em todas as páginas
+        addFooter(doc, t, pageWidth, pageHeight);
+        
+        // Salvar o PDF
+        doc.save(`Parecer_Pericial_${VDCSystem.sessionId || 'NOVA_SESSAO'}.pdf`);
+        
+        logAudit('PDF gerado com fundamentos legais e cadeia de custódia.', 'success');
         showToast(currentLang === 'pt' ? 'PDF gerado com sucesso' : 'PDF generated successfully', 'success');
         
     } catch (e) {
