@@ -2,6 +2,7 @@
    VDC SISTEMA DE PERITAGEM FORENSE · v12.0 CSI EDITION FINAL
    ISO/IEC 27037:2022 | NIST SP 800-86 | INTERPOL DIGITAL FORENSICS
    RETIFICAÇÃO FINAL: SCAN ANIMATION + FOOTER + BUTTON ALIGNMENT
+   TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -327,7 +328,6 @@ body {
     font-weight: 500;
 }
 
-/* CORREÇÃO: Alinhamento de botões na mesma linha */
 .demo-section {
     display: flex;
     align-items: center;
@@ -371,14 +371,10 @@ body {
     white-space: nowrap;
 }
 
-.btn-demo-nav:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
-}
-
+.btn-demo-nav:hover,
 .btn-lang-toggle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
 }
 
 .session-info {
@@ -992,7 +988,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   9. CHART SECTION & EFEITO SCAN (RETIFICADO)
+   9. CHART SECTION & EFEITO SCAN
    --------------------------------------------------------------------- */
 .chart-section {
     background: rgba(30, 42, 68, 0.5);
@@ -1031,19 +1027,18 @@ body {
     display: block;
 }
 
-/* CORREÇÃO: Efeito Scan CSI Ativado */
 .scan-line {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 2px; /* Altura fina */
+    height: 2px;
     background: linear-gradient(90deg, transparent, var(--scan-color), transparent);
     box-shadow: 0 0 15px var(--scan-color), 0 0 30px var(--scan-color);
     opacity: 0;
     z-index: 10;
     pointer-events: none;
-    display: none; /* Escondido por defeito */
+    display: none;
 }
 
 .scanning .scan-line {
@@ -1160,7 +1155,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   11. FOOTER (RETIFICADO)
+   11. FOOTER
    --------------------------------------------------------------------- */
 .action-footer {
     background: var(--bg-primary);
@@ -1185,6 +1180,7 @@ body {
     display: inline-block;
     box-shadow: var(--shadow-inset);
     margin-bottom: 0.5rem;
+    max-width: 90%;
 }
 
 .master-hash strong {
@@ -1207,7 +1203,6 @@ body {
     word-break: break-all;
 }
 
-/* CORREÇÃO: Rodapé Final Atualizado */
 .copyright {
     color: var(--text-tertiary);
     font-size: 0.8rem;
@@ -1612,6 +1607,10 @@ body {
     .chart-container {
         height: 250px;
     }
+
+    .toolbar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1626,10 +1625,18 @@ body {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .demo-section {
         width: 100%;
         justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .btn-demo-nav,
+    .btn-lang-toggle {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
         margin-top: 0.5rem;
     }
 
@@ -1697,4 +1704,5 @@ body {
 
 /* =====================================================================
    FIM DO FICHEIRO STYLE.CSS · v12.0 CSI FINAL
+   TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
