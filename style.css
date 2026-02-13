@@ -148,6 +148,11 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.splash-warning-box small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
 .splash-btn {
     background: linear-gradient(90deg, var(--iso-blue) 0%, var(--nist-green) 100%);
     color: white;
@@ -217,6 +222,10 @@ body {
 @keyframes rotate-glow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+.loading-spinner i.fa-brain {
+    margin-left: 0.5rem;
 }
 
 .loading-content h2 {
@@ -327,7 +336,6 @@ body {
     font-weight: 500;
 }
 
-/* CORREÇÃO: Alinhamento de botões na mesma linha */
 .demo-section {
     display: flex;
     align-items: center;
@@ -371,14 +379,10 @@ body {
     white-space: nowrap;
 }
 
-.btn-demo-nav:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
-}
-
+.btn-demo-nav:hover,
 .btn-lang-toggle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    box-shadow: 0 5px 15px rgba(255, 159, 26, 0.4);
 }
 
 .session-info {
@@ -952,15 +956,17 @@ body {
     animation: pulse-border 2s infinite;
 }
 
-@keyframes pulse-border {
-    0% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(232, 65, 24, 0.4); }
-    50% { border-color: var(--warn-secondary); box-shadow: 0 0 0 10px rgba(232, 65, 24, 0); }
-    100% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(232, 65, 24, 0); }
-}
-
 /* ---------------------------------------------------------------------
    8. ALERTAS & ANIMAÇÕES
    --------------------------------------------------------------------- */
+.analysis-results {
+    background: rgba(30, 42, 68, 0.5);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
 .bigdata-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
     border: 2px solid var(--warn-primary);
@@ -991,47 +997,12 @@ body {
     animation: pulse-border 2s infinite;
 }
 
-/* ---------------------------------------------------------------------
-   9. CHART SECTION & EFEITO SCAN
-   --------------------------------------------------------------------- */
-.chart-section {
-    background: rgba(30, 42, 68, 0.5);
-    padding: 1.5rem;
-    border-radius: var(--border-radius);
-    margin-bottom: 1.5rem;
-    min-height: 400px;
-    border: 1px solid var(--border-color);
-    position: relative;
-    overflow: hidden;
+@keyframes pulse-border {
+    0% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(232, 65, 24, 0.4); }
+    50% { border-color: var(--warn-secondary); box-shadow: 0 0 0 10px rgba(232, 65, 24, 0); }
+    100% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(232, 65, 24, 0); }
 }
 
-.chart-section h3 {
-    color: var(--iso-blue);
-    font-size: 1rem;
-    margin-bottom: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 800;
-}
-
-.chart-container {
-    position: relative;
-    height: 320px;
-    width: 100%;
-    background: rgba(20, 30, 48, 0.8);
-    border-radius: var(--border-radius-sm);
-    padding: 15px;
-    border: 1px solid var(--border-color);
-}
-
-.chart-container canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-
-/* CORREÇÃO: Efeito Scan CSI */
 .scan-line {
     position: absolute;
     top: 0;
@@ -1058,7 +1029,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   10. CONSOLE SECTION
+   9. CONSOLE SECTION
    --------------------------------------------------------------------- */
 .console-section {
     background: #000;
@@ -1158,7 +1129,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   11. FOOTER
+   10. FOOTER
    --------------------------------------------------------------------- */
 .action-footer {
     background: var(--bg-primary);
@@ -1183,6 +1154,7 @@ body {
     display: inline-block;
     box-shadow: var(--shadow-inset);
     margin-bottom: 0.5rem;
+    max-width: 90%;
 }
 
 .master-hash strong {
@@ -1205,7 +1177,6 @@ body {
     word-break: break-all;
 }
 
-/* CORREÇÃO: Rodapé atualizado */
 .copyright {
     color: var(--text-tertiary);
     font-size: 0.8rem;
@@ -1216,7 +1187,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   12. MODAL
+   11. MODAL
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1403,6 +1374,12 @@ body {
     font-weight: 500;
 }
 
+.file-status-modal {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+}
+
 .file-hash-modal {
     color: var(--text-tertiary);
     font-size: 0.7rem;
@@ -1525,7 +1502,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   13. TOAST NOTIFICATIONS
+   12. TOAST NOTIFICATIONS
    --------------------------------------------------------------------- */
 #toastContainer {
     position: fixed;
@@ -1579,7 +1556,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   14. RESPONSIVIDADE
+   13. RESPONSIVIDADE
    --------------------------------------------------------------------- */
 @media (max-width: 1024px) {
     .app-container {
@@ -1610,6 +1587,10 @@ body {
     .chart-container {
         height: 250px;
     }
+
+    .toolbar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1624,10 +1605,18 @@ body {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .demo-section {
         width: 100%;
         justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .btn-demo-nav,
+    .btn-lang-toggle {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
         margin-top: 0.5rem;
     }
 
@@ -1658,7 +1647,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   15. PRINT OPTIMIZATION
+   14. PRINT OPTIMIZATION
    --------------------------------------------------------------------- */
 @media print {
     .splash-screen,
