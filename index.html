@@ -11,9 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- === DEPENDÊNCIAS EXTERNAS (ORDEM CRÍTICA) === -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- === CSS LOCAL === -->
@@ -307,7 +307,7 @@
                     <strong id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.0)</strong>
                     <span id="masterHashValue">AGUARDANDO GERAÇÃO...</span>
                 </div>
-                <div class="copyright">VDC Systems International © 2024 | Forensic Compliance Module CSI v12.0</div>
+                <div class="copyright">VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.0 | Todos os Direitos Reservados | EM</div>
             </div>
         </footer>
     </div>
@@ -331,7 +331,7 @@
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-contract"></i> SELECIONAR DAC7
                         </button>
-                        <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".csv,.xml,.json,.html" hidden>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" multiple accept=".csv,.xml,.json" hidden>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
                     
@@ -340,7 +340,7 @@
                         <button id="controlUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-shield"></i> SELECIONAR CONTROLO
                         </button>
-                        <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.pdf,.xml,.txt" hidden>
+                        <input type="file" id="controlFileModal" class="file-input-modal" multiple accept=".csv,.xml,.txt" hidden>
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
                     
@@ -358,15 +358,18 @@
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
                         </button>
+                        <!-- CORREÇÃO: ID do input alterado para 'invoiceFileModal' (singular) para consistência com o script consolidado -->
                         <input type="file" id="invoiceFileModal" class="file-input-modal" multiple accept=".pdf,.csv,.xml,.jpg,.png,.jpeg" hidden>
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
                     </div>
                     
                     <div class="upload-group-modal">
+                        <!-- CORREÇÃO: Label alterado para 'EXTRATOS' conforme solicitado -->
                         <label><i class="fas fa-university"></i> <span id="uploadStatementText">EXTRATOS</span></label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
                         </button>
+                        <!-- CORREÇÃO: ID do input alterado para 'statementFileModal' (singular) para consistência com o script consolidado -->
                         <input type="file" id="statementFileModal" class="file-input-modal" multiple accept=".csv,.pdf,.ofx,.qif,.mt940" hidden>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
                     </div>
