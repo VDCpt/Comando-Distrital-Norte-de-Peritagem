@@ -944,6 +944,12 @@ function simulateUpload(type, count) {
 function performAudit() {
     if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
 
+    // Verificação de segurança: ambos os requisitos são obrigatórios
+    const hasFiles = Object.values(VDCSystem.documents).some(d => d.files && d.files.length > 0);
+    if (!hasFiles) {
+        return showToast('Carregue pelo menos um ficheiro de evidência antes de executar a perícia.', 'error');
+    }
+
     VDCSystem.forensicMetadata = getForensicMetadata();
     VDCSystem.performanceTiming.start = performance.now();
 
@@ -980,6 +986,7 @@ function performAudit() {
         } catch(error) {
             console.error('Erro na perícia:', error);
             logAudit(`ERRO CRÍTICO NA PERÍCIA: ${error.message}`, 'error');
+            showToast('Erro durante a execução da perícia. Verifique os ficheiros carregados.', 'error');
         } finally {
             if(analyzeBtn) {
                 analyzeBtn.disabled = false;
@@ -1372,6 +1379,7 @@ function updateAnalysisButton() {
     if (btn) {
         const hasFiles = Object.values(VDCSystem.documents).some(d => d.files && d.files.length > 0);
         const hasClient = VDCSystem.client !== null;
+        // CORREÇÃO: Mudar || para && para rigor forense - ambos os requisitos são obrigatórios
         btn.disabled = !(hasFiles && hasClient);
     }
 }
