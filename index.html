@@ -3,134 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC Sistema de Peritagem Forense v12.3</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>VDC SISTEMA DE PERITAGEM FORENSE v12.3</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-    <!-- SPLASH SCREEN COM LASERS -->
+
+    <!-- 1. SPLASH SCREEN -->
     <div id="splashScreen" class="splash-screen">
         <div class="laser-line laser-1"></div>
         <div class="laser-line laser-2"></div>
-        <div class="laser-line laser-3"></div>
-        <div class="laser-line laser-4"></div>
         
         <div class="splash-content">
-            <div class="splash-logo">
-                <i class="fas fa-fingerprint"></i>
-            </div>
-            <h1>VDC Forensic Systems</h1>
-            <h2>Sistema de Peritagem Forense Digital</h2>
-            <p class="splash-subtitle">ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</p>
+            <div class="splash-logo"><i class="fas fa-fingerprint"></i></div>
+            <h1>VDC SYSTEMS</h1>
+            <h2>FORENSIC INTELLIGENCE</h2>
+            <div class="splash-subtitle">MÓDULO DE AUDITORIA E PERÍCIA DIGITAL</div>
             
             <div class="splash-warning-box">
-                <p><i class="fas fa-exclamation-triangle"></i> AVISO DE UTILIZACAO RESTRITA</p>
-                <small>Este sistema destina-se exclusivamente a peritos forenses credenciados. O acesso nao autorizado constitui crime previsto no Art. 174 do Codigo Penal.</small>
+                <p><i class="fas fa-exclamation-triangle"></i> AVISO DE ACESSO RESTRITO</p>
+                <small>Este sistema contém dados sensíveis protegidos por lei. O acesso não autorizado é crime previsto no Art. 173º do Código Penal.</small>
             </div>
-            
+
             <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-terminal"></i>
-                <span id="splashStartBtnText">INICIAR SESSAO CSI v12.3</span>
+                <span id="splashStartBtnText">INICIAR SESSÃO CSI v12.3</span>
+                <i class="fas fa-arrow-right"></i>
             </button>
             
             <div class="splash-footer">
-                <p>VDC Systems International</p>
-                <p class="version">Build 12.3.0 | SHA-256 Verified</p>
+                <div class="version">v12.3 FORENSIC AUDIT EDITION</div>
+                © 2024 VDC Systems International
             </div>
         </div>
     </div>
 
-    <!-- LOADING OVERLAY -->
+    <!-- 2. LOADING OVERLAY -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
-            <div class="loading-spinner">
-                <i class="fas fa-cog"></i>
-            </div>
-            <h2>A Inicializar Motor Forense</h2>
-            <p>Carregamento de modulos de analise...</p>
+            <div class="loading-spinner"><i class="fas fa-cog"></i></div>
+            <h2>INICIALIZANDO MÓDULO CSI</h2>
+            <p>CARREGANDO KERNEL FORENSE...</p>
             <div class="loading-progress">
                 <div id="loadingProgress" class="loading-progress-bar"></div>
             </div>
-            <p id="loadingStatusText" class="loading-status">0%</p>
+            <div id="loadingStatusText" class="loading-status">0%</div>
         </div>
     </div>
 
-    <!-- MAIN CONTAINER -->
+    <!-- 3. MAIN CONTAINER -->
     <div id="mainContainer" class="main-container">
-        <!-- HEADER -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
                     <i class="fas fa-shield-virus"></i>
                     <div>
-                        <h1>VDC FORENSIC <span class="version-badge">v12.3</span></h1>
-                        <p id="headerSubtitle" class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</p>
+                        <h1>VDC FORENSICS <span class="version-badge">v12.3</span></h1>
+                        <div id="headerSubtitle" class="subtitle">ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</div>
                     </div>
                 </div>
                 
                 <div class="control-group">
                     <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i>
-                        <span id="demoBtnText">SIMULACAO CSI</span>
+                        <i class="fas fa-vial"></i> <span id="demoBtnText">SIMULAÇÃO CSI</span>
                     </button>
                     <button id="langToggleBtn" class="btn-lang-toggle">
-                        <i class="fas fa-globe"></i>
-                        <span id="currentLangLabel">EN</span>
+                        <i class="fas fa-globe"></i> <span id="currentLangLabel">EN</span>
                     </button>
                 </div>
-                
+
                 <div class="session-info">
                     <div class="timestamp-fbi">
-                        <strong>SESSAO:</strong> <span id="sessionIdDisplay" class="session-id">---NEED-INIT---</span>
-                        <span class="separator">|</span>
-                        <span id="currentDate"></span>
-                        <span class="separator">-</span>
-                        <span id="currentTime"></span>
+                        <span id="currentDate">--/--/----</span> | <strong id="currentTime">--:--:--</strong>
+                        <span style="margin-left: 1rem;">SESSÃO: <span id="sessionIdDisplay" class="session-id">N/A</span></span>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- APP CONTAINER -->
         <div class="app-container">
-            <!-- SIDEBAR 320px -->
+            <!-- SIDEBAR AJUSTADA (320px) -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
-                    <h3><i class="fas fa-user-secret"></i> <span id="sidebarIdTitle">IDENTIFICACAO DO SUJEITO</span></h3>
+                    <h3><i class="fas fa-user-secret"></i> <span id="sidebarIdTitle">IDENTIFICAÇÃO DO SUJEITO</span></h3>
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
-                            <label id="lblClientName"><i class="fas fa-user"></i> Nome do Contribuinte</label>
+                            <label id="lblClientName"><i class="fas fa-id-card"></i> Nome do Contribuinte</label>
                             <input type="text" id="clientNameFixed" placeholder="Nome completo">
                         </div>
                         <div class="form-group-fixed">
-                            <label id="lblNIF"><i class="fas fa-id-card"></i> NIF / ID Fiscal</label>
-                            <input type="text" id="clientNIFFixed" placeholder="123456789" maxlength="9">
+                            <label id="lblNIF"><i class="fas fa-hashtag"></i> NIF / ID Fiscal</label>
+                            <input type="text" id="clientNIFFixed" placeholder="9 dígitos" maxlength="9">
                         </div>
                         <div class="btn-group-fixed">
                             <button id="registerClientBtnFixed" class="btn-primary">
-                                <i class="fas fa-user-check"></i>
-                                <span id="btnRegister">VALIDAR IDENTIDADE</span>
+                                <i class="fas fa-user-check"></i> <span id="btnRegister">VALIDAR IDENTIDADE</span>
                             </button>
                         </div>
                         <div id="clientStatusFixed" class="client-status-fixed">
                             <i class="fas fa-check-circle"></i>
-                            <span id="clientNameDisplayFixed"></span> | <span id="clientNifDisplayFixed"></span>
+                            <span id="clientNameDisplayFixed"></span> | NIF: <span id="clientNifDisplayFixed"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="sidebar-filters">
-                    <h3><span id="sidebarParamTitle">PARAMETROS DE AUDITORIA</span></h3>
+                    <h3><i class="fas fa-sliders-h"></i> <span id="sidebarParamTitle">PARÂMETROS DE AUDITORIA</span></h3>
                     <div class="info-fixed">
                         <div class="info-item">
-                            <label class="info-label" id="lblYear"><i class="fas fa-calendar"></i> Ano Fiscal</label>
+                            <label id="lblDate" class="info-label"><i class="fas fa-calendar-alt"></i> Data</label>
+                            <input type="date" id="auditDate" class="info-input">
+                        </div>
+                        <div class="info-item">
+                            <label id="lblYear" class="info-label"><i class="fas fa-calendar"></i> Ano Fiscal</label>
                             <select id="selYearFixed"></select>
                         </div>
                         <div class="info-item">
-                            <label class="info-label" id="lblPlatform"><i class="fas fa-mobile-alt"></i> Plataforma</label>
+                            <label id="lblPlatform" class="info-label"><i class="fas fa-server"></i> Plataforma</label>
                             <select id="selPlatformFixed">
                                 <option value="bolt">Bolt Operations OÜ</option>
                                 <option value="uber">Uber B.V.</option>
@@ -143,18 +138,18 @@
                 </div>
 
                 <div class="evidence-management-section-solid">
+                    <!-- BOTÃO COM COR UNIFICADA -->
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
-                        <span><i class="fas fa-database"></i> <span id="btnEvidence">EVIDENCIAS DIGITAIS BIGDATA IA</span></span>
+                        <span><i class="fas fa-folder-open"></i> <span id="btnEvidence">EVIDÊNCIAS DIGITAIS BIGDATA IA</span></span>
                         <span id="evidenceCountTotal" class="evidence-count-solid">0</span>
                     </button>
-                    
                     <div class="counters-compact">
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">CTRL</span>
+                            <span class="counter-label-compact">CTR</span>
                             <span id="controlCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">SAFT</span>
+                            <span class="counter-label-compact">SAF-T</span>
                             <span id="saftCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
@@ -162,103 +157,91 @@
                             <span id="invoiceCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">EXTR</span>
+                            <span class="counter-label-compact">EXT</span>
                             <span id="statementCountCompact" class="counter-value-compact">0</span>
                         </div>
                     </div>
                 </div>
 
-                <button id="analyzeBtn" class="btn-forensic" disabled>
-                    <i class="fas fa-search-dollar"></i>
-                    <span id="btnAnalyze">EXECUTAR ANALISE FORENSE</span>
+                <button id="analyzeBtn" class="btn-forensic">
+                    <i class="fas fa-search-dollar"></i> <span id="btnAnalyze">EXECUTAR ANÁLISE FORENSE</span>
                 </button>
             </aside>
 
-            <!-- ANALYSIS AREA - AMBIENTE ESTATICO -->
+            <!-- DASHBOARD LIMPO (SEM SCAN OVERLAY) -->
             <main class="analysis-area">
                 <div class="toolbar-section">
                     <div class="toolbar-grid">
-                        <button id="exportPDFBtn" class="btn-tool" disabled>
-                            <i class="fas fa-file-pdf"></i>
-                            <span id="btnPDF">EXPORTAR PARECER PERICIAL</span>
-                        </button>
-                        <button id="exportJSONBtn" class="btn-tool" disabled>
-                            <i class="fas fa-file-code"></i> JSON
-                        </button>
-                        <button id="resetBtn" class="btn-tool">
-                            <i class="fas fa-redo"></i> RESET
-                        </button>
+                        <button id="exportPDFBtn" class="btn-tool"><i class="fas fa-file-pdf"></i> <span id="btnPDF">EXPORTAR PARECER PERICIAL</span></button>
+                        <button id="exportJSONBtn" class="btn-tool"><i class="fas fa-file-code"></i> JSON</button>
+                        <button id="resetBtn" class="btn-tool"><i class="fas fa-redo-alt"></i> RESET</button>
                     </div>
                 </div>
 
                 <div class="dashboard-fixed">
-                    <div class="stat-card">
-                        <h4><i class="fas fa-coins"></i> <span id="cardNet">VALOR LIQUIDO RECONSTRUIDO</span></h4>
-                        <p id="statNet">0,00 EUR</p>
-                        <span class="stat-desc">Receita liquida apurada</span>
-                    </div>
                     <div class="stat-card success">
-                        <h4><i class="fas fa-percentage"></i> <span id="cardComm">COMISSAO DETETADA</span></h4>
-                        <p id="statComm">0,00 EUR</p>
-                        <span class="stat-desc">Taxa de servico plataforma</span>
+                        <h4><i class="fas fa-coins"></i> <span id="cardNet">VALOR LÍQUIDO RECONSTRUÍDO</span></h4>
+                        <p id="statNet">0,00€</p>
                     </div>
-                    <div class="stat-card alert" id="jurosCard" style="display:none;">
+                    <div class="stat-card">
+                        <h4><i class="fas fa-percentage"></i> <span id="cardComm">COMISSÃO DETETADA</span></h4>
+                        <p id="statComm">0,00€</p>
+                    </div>
+                    <div id="jurosCard" class="stat-card alert" style="display: none;">
                         <h4><i class="fas fa-exclamation-circle"></i> <span id="cardJuros">FOSSO FISCAL</span></h4>
-                        <p id="statJuros">0,00 EUR</p>
-                        <span class="stat-desc">Discrepancia transacional</span>
+                        <p id="statJuros">0,00€</p>
                     </div>
                 </div>
 
                 <div class="kpi-section">
-                    <h3><i class="fas fa-project-diagram"></i> <span id="kpiTitle">ANALISE DE TRIANGULACAO · ALGORITMO CSI v12.3</span></h3>
+                    <h3><i class="fas fa-project-diagram"></i> <span id="kpiTitle">ANÁLISE DE TRIANGULAÇÃO · ALGORITMO CSI v12.3</span></h3>
                     <div class="kpi-grid">
                         <div class="kpi-card highlight">
                             <h4 id="kpiGross">BRUTO REAL</h4>
-                            <p id="kpiGrossValue">0,00 EUR</p>
+                            <p id="kpiGrossValue">0,00€</p>
                         </div>
                         <div class="kpi-card">
-                            <h4 id="kpiCommText">COMISSAO</h4>
-                            <p id="kpiCommValue">0,00 EUR</p>
+                            <h4 id="kpiCommText">COMISSÃO</h4>
+                            <p id="kpiCommValue">0,00€</p>
                         </div>
                         <div class="kpi-card highlight">
-                            <h4 id="kpiNetText">LIQUIDO</h4>
-                            <p id="kpiNetValue">0,00 EUR</p>
+                            <h4 id="kpiNetText">LÍQUIDO</h4>
+                            <p id="kpiNetValue">0,00€</p>
                         </div>
                         <div class="kpi-card danger">
                             <h4 id="kpiInvText">FATURA</h4>
-                            <p id="kpiInvValue">0,00 EUR</p>
+                            <p id="kpiInvValue">0,00€</p>
                         </div>
                     </div>
                 </div>
 
                 <div id="verdictSection" class="verdict-display">
-                    <p class="verdict-title"><i class="fas fa-gavel"></i> VEREDICTO DE RISCO</p>
-                    <p id="verdictLevel" class="verdict-level">--</p>
-                    <p id="verdictDesc" class="verdict-desc">Execute a analise forense para obter o veredicto.</p>
+                    <div class="verdict-title">VEREDICTO DE RISCO</div>
+                    <div id="verdictLevel" class="verdict-level">BAIXO RISCO</div>
+                    <div id="verdictDesc" class="verdict-desc">Aguardando análise...</div>
                 </div>
 
                 <div id="bigDataAlert" class="bigdata-alert">
                     <i class="fas fa-radiation"></i>
                     <div>
-                        <h4 id="alertCriticalTitle">ANOMALIA ALGORITMICA CRITICA</h4>
-                        <p><span id="alertOmissionText">Discrepancia transacional nao justificada:</span> <strong id="alertDeltaValue">0,00 EUR</strong></p>
+                        <h4 id="alertCriticalTitle">ANOMALIA ALGORÍTMICA CRÍTICA</h4>
+                        <p id="alertOmissionText">Discrepância transacional não justificada:</p>
+                        <strong id="alertDeltaValue" style="font-size: 1.2rem; color: var(--warn-primary);">0,00€</strong>
                     </div>
                 </div>
 
                 <div class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> Visualizacao Forense</h3>
-                    <div class="chart-container">
+                    <h3><i class="fas fa-chart-bar"></i> GRÁFICO FORENSE</h3>
+                    <div id="chartWrapper" class="chart-container">
                         <canvas id="forensicChart"></canvas>
                     </div>
                 </div>
 
                 <div class="console-section">
                     <div class="console-header">
-                        <h3><i class="fas fa-terminal"></i> <span id="consoleTitle">LOG DE CUSTODIA · FORENSIC LOG</span></h3>
+                        <h3><i class="fas fa-terminal"></i> <span id="consoleTitle">LOG DE CUSTÓDIA · FORENSIC LOG</span></h3>
                         <div class="console-controls">
-                            <button id="clearConsoleBtn" class="icon-btn" title="Limpar">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button id="clearConsoleBtn" class="icon-btn"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
                     <div id="consoleOutput" class="console-output"></div>
@@ -266,71 +249,64 @@
             </main>
         </div>
 
-        <!-- FOOTER -->
         <footer class="action-footer">
             <div class="system-info">
-                <div class="master-hash">
-                    <strong><i class="fas fa-fingerprint"></i> <span id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)</span></strong>
-                    <span id="masterHashDisplay">A gerar hash de integridade...</span>
+                <div id="footerHashTitle" class="master-hash">
+                    <strong>INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)</strong>
+                    <span id="masterHashDisplay">A GUARDAR...</span>
                 </div>
-                <p class="copyright">VDC Systems International 2024/2026 | Forensic Compliance Module CSI v12.3 | Todos os Direitos Reservados</p>
+                <div class="copyright">VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | Todos os Direitos Reservados</div>
             </div>
         </footer>
     </div>
 
-    <!-- EVIDENCE MODAL -->
+    <!-- MODAL DE EVIDÊNCIAS -->
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-folder-open"></i> <span id="modalTitle">GESTAO DE EVIDENCIAS BIG DATA</span></h3>
-                <button id="closeModalBtn" class="icon-btn">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h3><i class="fas fa-database"></i> <span id="modalTitle">GESTÃO DE EVIDÊNCIAS BIG DATA</span></h3>
+                <button id="closeModalBtn" class="icon-btn"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
+                    
+                    <!-- Controlo -->
                     <div class="upload-group-modal">
-                        <label id="uploadControlText"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO</label>
-                        <button id="controlUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-folder-open"></i> SELECIONAR CONTROLO
-                        </button>
-                        <input type="file" id="controlFileModal" class="file-input-modal" accept=".csv,.txt,.json">
+                        <label><i class="fas fa-file-shield"></i> <span id="uploadControlText">FICHEIRO DE CONTROLO</span></label>
+                        <button type="button" id="controlUploadBtnModal" class="upload-btn"><i class="fas fa-upload"></i> SELECIONAR</button>
+                        <input type="file" id="controlFileModal" class="file-input-modal" multiple>
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
 
+                    <!-- SAF-T -->
                     <div class="upload-group-modal">
-                        <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T</label>
-                        <button id="saftUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-folder-open"></i> SELECIONAR SAF-T
-                        </button>
-                        <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.txt,.csv" multiple>
+                        <label><i class="fas fa-file-code"></i> <span id="uploadSaftText">FICHEIROS SAF-T</span></label>
+                        <button type="button" id="saftUploadBtnModal" class="upload-btn"><i class="fas fa-upload"></i> SELECIONAR</button>
+                        <input type="file" id="saftFileModal" class="file-input-modal" multiple>
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
 
+                    <!-- Faturas -->
                     <div class="upload-group-modal">
-                        <label id="uploadInvoiceText"><i class="fas fa-file-invoice-dollar"></i> FATURAS (PDF/CSV)</label>
-                        <button id="invoiceUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-folder-open"></i> SELECIONAR FATURAS
-                        </button>
-                        <input type="file" id="invoiceFileModal" class="file-input-modal" accept=".pdf,.csv,.txt" multiple>
+                        <label><i class="fas fa-file-invoice-dollar"></i> <span id="uploadInvoiceText">FATURAS (PDF/CSV)</span></label>
+                        <button type="button" id="invoiceUploadBtnModal" class="upload-btn"><i class="fas fa-upload"></i> SELECIONAR</button>
+                        <input type="file" id="invoiceFileModal" class="file-input-modal" multiple>
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
                     </div>
 
+                    <!-- Extratos de Dados -->
                     <div class="upload-group-modal">
-                        <label id="uploadStatementText"><i class="fas fa-file-contract"></i> EXTRATOS DE DADOS</label>
-                        <button id="statementUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-folder-open"></i> SELECIONAR EXTRATOS
-                        </button>
-                        <input type="file" id="statementFileModal" class="file-input-modal" accept=".csv,.txt,.xlsx,.json" multiple>
+                        <label><i class="fas fa-file-contract"></i> <span id="uploadStatementText">EXTRATOS DE DADOS</span></label>
+                        <button type="button" id="statementUploadBtnModal" class="upload-btn"><i class="fas fa-upload"></i> SELECIONAR</button>
+                        <input type="file" id="statementFileModal" class="file-input-modal" multiple>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
                     </div>
 
+                    <!-- DAC7 -->
                     <div class="upload-group-modal">
-                        <label><i class="fas fa-envelope-open-text"></i> DAC7 / Reporting Fiscal</label>
-                        <button id="dac7UploadBtnModal" class="upload-btn">
-                            <i class="fas fa-folder-open"></i> SELECIONAR DAC7
-                        </button>
-                        <input type="file" id="dac7FileModal" class="file-input-modal" accept=".csv,.txt,.xml,.json" multiple>
+                        <label><i class="fas fa-envelope-open-text"></i> DAC7 (E-MAIL/PORTAL)</label>
+                        <button type="button" id="dac7UploadBtnModal" class="upload-btn"><i class="fas fa-upload"></i> SELECIONAR</button>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" multiple>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
                 </div>
@@ -366,27 +342,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="closeAndSaveBtn" class="btn-primary">
-                    <i class="fas fa-lock"></i>
-                    <span id="modalSaveBtn">SELAR EVIDENCIAS</span>
-                </button>
-                <button id="cancelModalBtn" class="btn-secondary">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
+                <button id="closeAndSaveBtn" class="btn-primary"><i class="fas fa-lock"></i> <span id="modalSaveBtn">SELAR EVIDÊNCIAS</span></button>
             </div>
         </div>
     </div>
 
-    <!-- TOAST CONTAINER -->
     <div id="toastContainer"></div>
-
-    <!-- EXTERNAL LIBRARIES -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- MAIN SCRIPT -->
     <script src="script.js"></script>
 </body>
 </html>
