@@ -1,6 +1,6 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.3 LASER CROSS EDITION
-   ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER + GLASSMORPHISM
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.4 RETA FINAL FORENSE
+   ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    CONSOLIDAÇÃO FINAL · TODOS OS BLOCOS FECHADOS · PT-PT FORENSE
    ===================================================================== */
 
@@ -8,15 +8,15 @@
    1. VARIÁVEIS GLOBAIS (ELITE DARK MODE)
    --------------------------------------------------------------------- */
 :root {
-    --bg-primary: #020617; /* Black Hole */
-    --bg-secondary: #0f172a; /* Deep Navy */
+    --bg-primary: #020617;
+    --bg-secondary: #0f172a;
     --bg-tertiary: #1e293b;
 
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     --text-tertiary: #64748b;
 
-    --accent-primary: #00e5ff; /* Cyber Cyan */
+    --accent-primary: #00e5ff;
     --accent-secondary: #0ea5e9;
     --warn-primary: #ef4444;
     --warn-secondary: #f59e0b;
@@ -64,7 +64,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   2. SPLASH SCREEN PANORÂMICO (ANIMAÇÃO LASER CROSS COMPLETA)
+   2. SPLASH SCREEN PANORÂMICO (APENAS LASER H + V)
    --------------------------------------------------------------------- */
 .splash-screen {
     position: fixed;
@@ -81,7 +81,7 @@ body {
     transition: opacity 0.5s ease;
 }
 
-/* CRUZAMENTO LASER COMPLETO: H + V + DIAGONAIS */
+/* CRUZAMENTO LASER APENAS HORIZONTAL E VERTICAL */
 .laser-h {
     position: absolute;
     width: 100%;
@@ -108,35 +108,7 @@ body {
     pointer-events: none;
 }
 
-.laser-d1 {
-    position: absolute;
-    width: 150%;
-    height: 2px;
-    background: var(--warn-primary);
-    box-shadow: 0 0 30px var(--warn-primary), 0 0 60px var(--warn-primary);
-    top: -50%;
-    left: -50%;
-    transform: rotate(45deg);
-    transform-origin: center;
-    animation: scanD1 6s infinite linear;
-    z-index: 10;
-    pointer-events: none;
-}
-
-.laser-d2 {
-    position: absolute;
-    width: 150%;
-    height: 2px;
-    background: var(--warn-primary);
-    box-shadow: 0 0 30px var(--warn-primary), 0 0 60px var(--warn-primary);
-    top: -50%;
-    right: -50%;
-    transform: rotate(-45deg);
-    transform-origin: center;
-    animation: scanD2 6s infinite linear;
-    z-index: 10;
-    pointer-events: none;
-}
+/* LASERS DIAGONAIS REMOVIDOS - LIMPEZA DE INTERFACE */
 
 @keyframes scanH {
     0% { top: 0; opacity: 0; }
@@ -150,20 +122,6 @@ body {
     5% { opacity: 1; }
     95% { opacity: 1; }
     100% { left: 100%; opacity: 0; }
-}
-
-@keyframes scanD1 {
-    0% { top: -50%; left: -50%; opacity: 0; }
-    5% { opacity: 0.8; }
-    95% { opacity: 0.8; }
-    100% { top: 150%; left: 150%; opacity: 0; }
-}
-
-@keyframes scanD2 {
-    0% { top: -50%; right: -50%; opacity: 0; }
-    5% { opacity: 0.8; }
-    95% { opacity: 0.8; }
-    100% { top: 150%; right: 150%; opacity: 0; }
 }
 
 .splash-content {
@@ -718,7 +676,7 @@ body {
 
 .counters-compact {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 2px;
     background: var(--border-color);
     border: 1px solid var(--border-color);
@@ -776,7 +734,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD (GLASSMORPHISM CARDS)
+   6. DASHBOARD (GLASSMORPHISM CARDS) - MÓDULOS SAF-T/DAC7/EXTRATOS
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
@@ -786,6 +744,111 @@ body {
     height: calc(100vh - 60px);
     width: 100%;
     max-width: 100%;
+}
+
+/* MÓDULOS DE EXTRAÇÃO */
+.extraction-modules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.module-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: var(--border-radius-sm);
+    position: relative;
+}
+
+.module-card h4 {
+    font-size: 0.75rem;
+    color: var(--accent-primary);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+}
+
+.module-values {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.module-value-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.module-value-item:last-child {
+    border-bottom: none;
+}
+
+.module-value-label {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.module-value-amount {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.module-value-amount.highlight {
+    color: var(--success-primary);
+}
+
+.module-value-amount.alert {
+    color: var(--warn-primary);
+    animation: blink-alert 1s infinite;
+}
+
+@keyframes blink-alert {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* DAC7 QUARTERLY BREAKDOWN */
+.dac7-breakdown {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.quarter-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem;
+    text-align: center;
+    border-radius: var(--border-radius-sm);
+}
+
+.quarter-label {
+    font-size: 0.6rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.quarter-value {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 700;
 }
 
 .toolbar-section {
@@ -935,6 +998,40 @@ body {
     border-top-color: var(--warn-primary);
 }
 
+/* QUANTUM BENEFÍCIO ILÍCITO BOX */
+.quantum-box {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+    border: 2px solid var(--warn-primary);
+    border-radius: var(--border-radius-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.quantum-box h4 {
+    color: var(--warn-primary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.quantum-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--warn-primary);
+    font-family: var(--font-mono);
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.quantum-formula {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+}
+
 .verdict-display {
     display: none;
     text-align: center;
@@ -963,6 +1060,12 @@ body {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.verdict-percent {
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
     margin-bottom: 0.5rem;
 }
 
@@ -1554,6 +1657,16 @@ body {
 /* ---------------------------------------------------------------------
    9. RESPONSIVIDADE
    --------------------------------------------------------------------- */
+@media (max-width: 1200px) {
+    .extraction-modules {
+        grid-template-columns: 1fr;
+    }
+    
+    .dac7-breakdown {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
     .app-container {
         grid-template-columns: 1fr;
@@ -1629,7 +1742,7 @@ body {
     }
 
     .counters-compact {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .modal-content {
@@ -1675,6 +1788,10 @@ body {
     .splash-screen h2 {
         font-size: 1rem;
     }
+    
+    .quantum-value {
+        font-size: 1.8rem;
+    }
 }
 
 /* ---------------------------------------------------------------------
@@ -1693,9 +1810,7 @@ body {
     .console-controls,
     .toolbar-section,
     .laser-h,
-    .laser-v,
-    .laser-d1,
-    .laser-d2 {
+    .laser-v {
         display: none !important;
     }
 
@@ -1744,6 +1859,6 @@ body {
 }
 
 /* =====================================================================
-   FIM DO FICHEIRO STYLE.CSS · v12.3 LASER CROSS FINAL
+   FIM DO FICHEIRO STYLE.CSS · v12.4 RETA FINAL FORENSE
    TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
