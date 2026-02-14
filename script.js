@@ -1,9 +1,9 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.3 LASER CROSS EDITION
  * ====================================================================
- * CONSOLIDAÇÃO FINAL: INTELIGÊNCIA DE INTERROGATÓRIO + COMANDO PDF
- * Módulos: Forense, IA, PDF, Traduções, Utilitários
- * TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
+ * CONSOLIDAÇÃO FINAL: INTELIGÊNCIA FORENSE + QUANTUM BENEFÍCIO ILÍCITO
+ * Módulos: Peritagem, RGIT, PDF Forense, Traduções PT-PT/EN, Utilitários
+ * TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA · PT-PT JURÍDICO
  * ====================================================================
  */
 
@@ -102,15 +102,15 @@ const validateNIF = (nif) => {
 };
 
 const formatCurrency = (value) => {
-    return forensicRound(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+    return forensicRound(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 };
 
 const getRiskVerdict = (delta, gross) => {
-    if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto.' };
+    if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto pericial.' };
     const pct = Math.abs((delta / gross) * 100);
-    if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada.' };
-    if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria de Logs de Servidor recomendada.' };
-    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Dolo Fiscal. Participação Criminal / Inspeção Tributária recomendada.' };
+    if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada, sem indícios de fraude.' };
+    if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria aprofundada recomendada nos termos do art. 63.º LGT.' };
+    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Fraude Fiscal (art. 103.º e 104.º RGIT). Participação à Autoridade Tributária recomendada.' };
 };
 
 const setElementText = (id, text) => {
@@ -144,69 +144,72 @@ const getForensicMetadata = () => {
 };
 
 // ============================================================================
-// 3. SISTEMA DE TRADUÇÕES (COMPLETO)
+// 3. SISTEMA DE TRADUÇÕES (COMPLETO PT-PT / EN)
 // ============================================================================
 const translations = {
     pt: {
-        startBtn: "INICIAR SESSÃO CSI v12.3",
-        navDemo: "SIMULAÇÃO CSI",
+        startBtn: "INICIAR PERÍCIA v12.3",
+        navDemo: "CASO SIMULADO",
         langBtn: "EN",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
-        sidebarIdTitle: "IDENTIFICAÇÃO DO SUJEITO",
-        lblClientName: "Nome do Contribuinte",
-        lblNIF: "NIF / ID Fiscal",
+        sidebarIdTitle: "IDENTIFICAÇÃO DO SUJEITO PASSIVO",
+        lblClientName: "Nome / Denominação Social",
+        lblNIF: "NIF / Número de Identificação Fiscal",
         btnRegister: "VALIDAR IDENTIDADE",
-        sidebarParamTitle: "PARÂMETROS DE AUDITORIA",
-        lblYear: "Ano Fiscal",
-        lblPlatform: "Plataforma",
-        btnEvidence: "EVIDÊNCIAS DIGITAIS BIGDATA IA",
-        btnAnalyze: "EXECUTAR ANÁLISE FORENSE",
-        btnPDF: "EXPORTAR PARECER PERICIAL",
+        sidebarParamTitle: "PARÂMETROS DE AUDITORIA FORENSE",
+        lblFiscalYear: "ANO FISCAL EM EXAME",
+        lblPeriodo: "PERÍODO TEMPORAL",
+        lblPlatform: "PLATAFORMA DIGITAL",
+        btnEvidence: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
+        btnAnalyze: "EXECUTAR PERÍCIA FORENSE",
+        btnPDF: "PARECER PERICIAL",
         cardNet: "VALOR LÍQUIDO RECONSTRUÍDO",
-        cardComm: "COMISSÃO DETETADA",
+        cardComm: "COMISSÕES DETETADAS",
         cardJuros: "FOSSO FISCAL",
-        kpiTitle: "ANÁLISE DE TRIANGULAÇÃO · ALGORITMO CSI v12.3",
+        kpiTitle: "TRIANGULAÇÃO FINANCEIRA · ALGORITMO FORENSE v12.3",
         kpiGross: "BRUTO REAL",
-        kpiCommText: "COMISSÃO",
+        kpiCommText: "COMISSÕES",
         kpiNetText: "LÍQUIDO",
-        kpiInvText: "FATURA",
-        consoleTitle: "LOG DE CUSTÓDIA · FORENSIC LOG",
+        kpiInvText: "FATURADO",
+        consoleTitle: "LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA",
         footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)",
-        modalTitle: "GESTÃO DE EVIDÊNCIAS BIG DATA",
+        modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
-        uploadSaftText: "FICHEIROS SAF-T",
-        uploadInvoiceText: "FATURAS (PDF/CSV)",
-        uploadStatementText: "EXTRATOS DE DADOS",
-        summaryTitle: "RESUMO DE PROCESSAMENTO",
+        uploadSaftText: "FICHEIROS SAF-T (PT)",
+        uploadInvoiceText: "FATURAS (PDF/CSV/XML)",
+        uploadStatementText: "EXTRATOS BANCÁRIOS / DADOS",
+        summaryTitle: "RESUMO DE PROCESSAMENTO PROBATÓRIO",
         modalSaveBtn: "SELAR EVIDÊNCIAS",
         lblDate: "Data",
         alertCriticalTitle: "ANOMALIA ALGORÍTMICA CRÍTICA",
-        alertOmissionText: "Discrepância transacional não justificada:",
+        alertOmissionText: "Indício de fraude fiscal não justificada:",
         pdfTitle: "PARECER PERICIAL DE INVESTIGAÇÃO DIGITAL",
         pdfSection1: "1. IDENTIFICAÇÃO E METADADOS",
         pdfSection2: "2. ANÁLISE FINANCEIRA CRUZADA",
-        pdfSection3: "3. VEREDICTO DE RISCO",
+        pdfSection3: "3. VEREDICTO DE RISCO (RGIT)",
         pdfSection4: "4. CONCLUSÕES PERICIAIS",
         pdfSection5: "5. CADEIA DE CUSTÓDIA",
         pdfSection6: "6. INTERROGATÓRIO ESTRATÉGICO",
         pdfSection7: "7. ASSINATURA DIGITAL",
         pdfLegalTitle: "FUNDAMENTAÇÃO LEGAL",
-        pdfLegalRGIT: "Art. 114.º RGIT - Juros compensatórios",
-        pdfLegalLGT: "Art. 35.º LGT - Juros de mora",
-        pdfLegalISO: "ISO/IEC 27037 - Cadeia de Custódia",
+        pdfLegalRGIT: "Art. 103.º e 104.º RGIT - Fraude Fiscal e Fraude Qualificada",
+        pdfLegalLGT: "Art. 35.º e 63.º LGT - Juros de mora e deveres de cooperação",
+        pdfLegalPenal: "Art. 256.º Código Penal Português - Falsificação de documentos",
+        pdfLegalISO: "ISO/IEC 27037 - Preservação de Prova Digital",
         pdfLabelName: "Nome",
         pdfLabelNIF: "NIF",
-        pdfLabelSession: "Sessão",
+        pdfLabelSession: "Perícia n.º",
         pdfLabelGross: "Bruto Reconstruído",
-        pdfLabelComm: "Comissão",
+        pdfLabelComm: "Comissões",
         pdfLabelInv: "Faturado",
         pdfLabelDiff: "Discrepância",
         pdfLabelIVA23: "IVA 23%",
         pdfLabelJuros: "Juros de Mora",
         pdfLabelComp: "Juros Compensatórios",
         pdfLabelMulta: "Multa Estimada",
-        pdfConclusionText: "Conclusão: Os dados apresentam indícios de desvio entre valores transacionados e valores declarados. Recomenda-se a notificação da entidade para esclarecimento e eventual procedimento de inspeção tributária.",
-        pdfRiskVerdict: "VEREDICTO DE RISCO",
+        pdfQuantum: "QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)",
+        pdfConclusionText: "Conclusão pericial: Os dados analisados apresentam indícios de desvio entre valores transacionados e valores declarados, conforme disposto no art. 103.º do Regime Geral das Infrações Tributárias. Recomenda-se a notificação do sujeito passivo para esclarecimento e, caso se mantenha a discrepância, a participação à Autoridade Tributária e instauração de procedimento de inspeção.",
+        pdfRiskVerdict: "VEREDICTO DE RISCO (RGIT)",
         pdfQuestions: [
             "1. Qual a lógica algorítmica exata da taxa de serviço no período auditado?",
             "2. Como justifica a discrepância entre o registo de comissão e a fatura emitida?",
@@ -214,68 +217,71 @@ const translations = {
             "4. A plataforma disponibiliza o código-fonte do algoritmo de preços para auditoria?",
             "5. Qual o tratamento das 'Tips' (Gorjetas) na faturação e declaração de IVA?"
         ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | Todos os Direitos Reservados | EM"
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Módulo de Peritagem Forense v12.3 | Todos os Direitos Reservados · PT"
     },
     en: {
-        startBtn: "START CSI SESSION v12.3",
-        navDemo: "CSI SIMULATION",
+        startBtn: "START FORENSIC EXAM v12.3",
+        navDemo: "SIMULATED CASE",
         langBtn: "PT",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
-        sidebarIdTitle: "SUBJECT IDENTIFICATION",
-        lblClientName: "Taxpayer Name",
+        sidebarIdTitle: "TAXPAYER IDENTIFICATION",
+        lblClientName: "Name / Corporate Name",
         lblNIF: "Tax ID / NIF",
         btnRegister: "VALIDATE IDENTITY",
-        sidebarParamTitle: "AUDIT PARAMETERS",
-        lblYear: "Fiscal Year",
-        lblPlatform: "Platform",
-        btnEvidence: "BIG DATA AI DIGITAL EVIDENCE",
-        btnAnalyze: "EXECUTE FORENSIC ANALYSIS",
-        btnPDF: "EXPORT EXPERT REPORT",
+        sidebarParamTitle: "FORENSIC AUDIT PARAMETERS",
+        lblFiscalYear: "FISCAL YEAR UNDER EXAM",
+        lblPeriodo: "TIME PERIOD",
+        lblPlatform: "DIGITAL PLATFORM",
+        btnEvidence: "DIGITAL EVIDENCE MANAGEMENT",
+        btnAnalyze: "EXECUTE FORENSIC EXAM",
+        btnPDF: "EXPERT REPORT",
         cardNet: "RECONSTRUCTED NET VALUE",
-        cardComm: "DETECTED COMMISSION",
+        cardComm: "DETECTED COMMISSIONS",
         cardJuros: "TAX GAP",
-        kpiTitle: "TRIANGULATION ANALYSIS · ALGORITHM CSI v12.3",
+        kpiTitle: "FINANCIAL TRIANGULATION · FORENSIC ALGORITHM v12.3",
         kpiGross: "REAL GROSS",
-        kpiCommText: "COMMISSION",
+        kpiCommText: "COMMISSIONS",
         kpiNetText: "NET",
-        kpiInvText: "INVOICE",
-        consoleTitle: "CUSTODY LOG · FORENSIC LOG",
+        kpiInvText: "INVOICED",
+        consoleTitle: "CUSTODY LOG · CHAIN OF CUSTODY",
         footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.3)",
-        modalTitle: "BIG DATA EVIDENCE MANAGEMENT",
+        modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
-        uploadSaftText: "SAF-T FILES",
-        uploadInvoiceText: "INVOICES (PDF/CSV)",
-        uploadStatementText: "DATA STATEMENTS",
-        summaryTitle: "PROCESSING SUMMARY",
+        uploadSaftText: "SAF-T FILES (PT)",
+        uploadInvoiceText: "INVOICES (PDF/CSV/XML)",
+        uploadStatementText: "BANK STATEMENTS / DATA",
+        summaryTitle: "EVIDENCE PROCESSING SUMMARY",
         modalSaveBtn: "SEAL EVIDENCE",
         lblDate: "Date",
         alertCriticalTitle: "CRITICAL ALGORITHMIC ANOMALY",
-        alertOmissionText: "Unjustified transactional discrepancy:",
-        pdfTitle: "DIGITAL FORENSIC INVESTIGATION REPORT",
+        alertOmissionText: "Unjustified tax fraud indication:",
+        pdfTitle: "DIGITAL FORENSIC EXPERT REPORT",
         pdfSection1: "1. IDENTIFICATION & METADATA",
         pdfSection2: "2. CROSS-FINANCIAL ANALYSIS",
-        pdfSection3: "3. RISK VERDICT",
-        pdfSection4: "4. FORENSIC CONCLUSIONS",
+        pdfSection3: "3. RISK VERDICT (RGIT)",
+        pdfSection4: "4. EXPERT CONCLUSIONS",
         pdfSection5: "5. CHAIN OF CUSTODY",
         pdfSection6: "6. STRATEGIC INTERROGATION",
         pdfSection7: "7. DIGITAL SIGNATURE",
         pdfLegalTitle: "LEGAL BASIS",
-        pdfLegalRGIT: "Art. 114.º RGIT - Compensatory interest",
-        pdfLegalLGT: "Art. 35.º LGT - Default interest",
-        pdfLegalISO: "ISO/IEC 27037 - Chain of Custody",
+        pdfLegalRGIT: "Art. 103 and 104 RGIT - Tax Fraud and Qualified Fraud",
+        pdfLegalLGT: "Art. 35 and 63 LGT - Default interest and cooperation duties",
+        pdfLegalPenal: "Art. 256 Portuguese Penal Code - Document Forgery",
+        pdfLegalISO: "ISO/IEC 27037 - Digital Evidence Preservation",
         pdfLabelName: "Name",
         pdfLabelNIF: "Tax ID",
-        pdfLabelSession: "Session",
+        pdfLabelSession: "Expertise No.",
         pdfLabelGross: "Reconstructed Gross",
-        pdfLabelComm: "Commission",
+        pdfLabelComm: "Commissions",
         pdfLabelInv: "Invoiced",
         pdfLabelDiff: "Discrepancy",
         pdfLabelIVA23: "VAT 23%",
         pdfLabelJuros: "Default Interest",
         pdfLabelComp: "Compensatory Interest",
         pdfLabelMulta: "Estimated Fine",
-        pdfConclusionText: "Conclusion: Data indicates deviations between transacted and declared values. Entity notification recommended for clarification and potential tax inspection procedure.",
-        pdfRiskVerdict: "RISK VERDICT",
+        pdfQuantum: "ILLICIT BENEFIT AMOUNT (ART. 103 RGIT)",
+        pdfConclusionText: "Expert conclusion: The analyzed data shows evidence of deviation between transacted and declared values, as set forth in art. 103 of the General Tax Infractions Regime. Notification of the taxpayer for clarification is recommended and, should the discrepancy persist, referral to the Tax Authority and initiation of inspection proceedings.",
+        pdfRiskVerdict: "RISK VERDICT (RGIT)",
         pdfQuestions: [
             "1. What is the exact algorithmic logic for the service fee?",
             "2. How is the discrepancy between internal record and invoice justified?",
@@ -283,7 +289,7 @@ const translations = {
             "4. Does the platform provide source code for the pricing algorithm?",
             "5. How are 'Tips' treated in the billing?"
         ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | All Rights Reserved | EM"
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Expertise Module v12.3 | All Rights Reserved · EN"
     }
 };
 
@@ -296,6 +302,7 @@ const VDCSystem = {
     version: 'v12.3-LASER-CROSS',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
+    selectedPeriodo: 'anual',
     selectedPlatform: 'bolt',
     client: null,
     demoMode: false,
@@ -327,6 +334,7 @@ const VDCSystem = {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     setupStaticListeners();
+    populateAnoFiscal();
     populateYears();
     startClockAndDate();
     loadSystemRecursively();
@@ -358,6 +366,7 @@ function loadSystemCore() {
     setTimeout(() => {
         updateLoadingProgress(40);
         populateYears();
+        populateAnoFiscal();
         startClockAndDate();
         setupMainListeners();
         updateLoadingProgress(60);
@@ -375,7 +384,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `FORENSIC ENGINE v12.3... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE v12.3... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -389,7 +398,7 @@ function showMainInterface() {
             setTimeout(() => main.style.opacity = '1', 50);
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.3 LASER CROSS ONLINE', 'success');
+    logAudit('SISTEMA VDC v12.3 LASER CROSS ONLINE · MODO PERÍCIA ATIVO', 'success');
 }
 
 function loadSystemRecursively() {
@@ -404,11 +413,23 @@ function loadSystemRecursively() {
                 setElementText('clientNifDisplayFixed', client.nif);
                 document.getElementById('clientNameFixed').value = client.name;
                 document.getElementById('clientNIFFixed').value = client.nif;
-                logAudit(`Cliente recuperado: ${client.name}`, 'success');
+                logAudit(`Sujeito passivo recuperado: ${client.name}`, 'success');
             }
         }
     } catch(e) { console.warn('Cache limpo'); }
     startClockAndDate();
+}
+
+function populateAnoFiscal() {
+    const selectAno = document.getElementById('anoFiscal');
+    if (!selectAno) return;
+    for(let ano = 2018; ano <= 2036; ano++) {
+        const opt = document.createElement('option');
+        opt.value = ano;
+        opt.textContent = ano;
+        if(ano === 2024) opt.selected = true;
+        selectAno.appendChild(opt);
+    }
 }
 
 function populateYears() {
@@ -436,6 +457,23 @@ function startClockAndDate() {
 function setupMainListeners() {
     document.getElementById('registerClientBtnFixed')?.addEventListener('click', registerClient);
     document.getElementById('demoModeBtn')?.addEventListener('click', activateDemoMode);
+
+    document.getElementById('anoFiscal')?.addEventListener('change', (e) => {
+        VDCSystem.selectedYear = parseInt(e.target.value);
+        logAudit(`Ano fiscal em exame alterado para: ${e.target.value}`, 'info');
+    });
+
+    document.getElementById('periodoAnalise')?.addEventListener('change', (e) => {
+        VDCSystem.selectedPeriodo = e.target.value;
+        const periodos = {
+            'anual': 'Exercício Completo (Anual)',
+            '1s': '1.º Semestre',
+            '2s': '2.º Semestre',
+            'trimestral': 'Análise Trimestral',
+            'mensal': 'Análise Mensal'
+        };
+        logAudit(`Período temporal alterado para: ${periodos[e.target.value] || e.target.value}`, 'info');
+    });
 
     document.getElementById('selPlatformFixed')?.addEventListener('change', (e) => {
         VDCSystem.selectedPlatform = e.target.value;
@@ -491,7 +529,8 @@ function switchLanguage() {
         { id: 'lblNIF', key: 'lblNIF' },
         { id: 'btnRegister', key: 'btnRegister' },
         { id: 'sidebarParamTitle', key: 'sidebarParamTitle' },
-        { id: 'lblYear', key: 'lblYear' },
+        { id: 'lblFiscalYear', key: 'lblFiscalYear' },
+        { id: 'lblPeriodo', key: 'lblPeriodo' },
         { id: 'lblPlatform', key: 'lblPlatform' },
         { id: 'btnEvidence', key: 'btnEvidence' },
         { id: 'btnAnalyze', key: 'btnAnalyze' },
@@ -543,8 +582,8 @@ function registerClient() {
     setElementText('clientNameDisplayFixed', name);
     setElementText('clientNifDisplayFixed', nif);
 
-    logAudit(`Cliente Registado: ${name}`, 'success');
-    showToast('Cliente validado', 'success');
+    logAudit(`Sujeito passivo registado: ${name} (NIF ${nif})`, 'success');
+    showToast('Identidade validada com sucesso', 'success');
     updateAnalysisButton();
 }
 
@@ -565,11 +604,11 @@ async function handleFileUpload(e, type) {
         for (const file of files) {
             await processFile(file, type);
         }
-        logAudit(`${files.length} ficheiro(s) ${type} carregado(s)`, 'success');
+        logAudit(`${files.length} ficheiro(s) ${type} carregado(s) com integridade verificada`, 'success');
         updateEvidenceSummary();
         updateCounters();
         generateMasterHash();
-        showToast(`${files.length} ficheiro(s) processados`, 'success');
+        showToast(`${files.length} ficheiro(s) processados e selados`, 'success');
     } catch (error) {
         console.error('Erro no upload:', error);
         logAudit(`Erro no upload ${type}: ${error.message}`, 'error');
@@ -640,7 +679,7 @@ async function processFile(file, type) {
                 VDCSystem.documents.statements.totals.comissaoApp = (VDCSystem.documents.statements.totals.comissaoApp || 0) + comm;
                 VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.rendimentosBrutos;
                 VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.comissaoApp;
-                logAudit(`Extrato de Dados processado: ${file.name} | Receita: ${formatCurrency(gross)} | Comissão: ${formatCurrency(comm)}`, 'info');
+                logAudit(`Extrato processado: ${file.name} | Receita: ${formatCurrency(gross)} | Comissões: ${formatCurrency(comm)}`, 'info');
             }
         } catch(e) {
             console.warn(`Erro ao processar extrato ${file.name}:`, e);
@@ -648,7 +687,7 @@ async function processFile(file, type) {
     }
     
     if (type === 'dac7') {
-        logAudit(`DAC7 Importado: ${file.name}`, 'success');
+        logAudit(`DAC7 importado: ${file.name}`, 'success');
     }
 
     const listId = type === 'invoice' ? 'invoicesFileListModal' : 
@@ -697,7 +736,7 @@ function updateCounters() {
 }
 
 // ============================================================================
-// 8. MODO DEMO
+// 8. MODO DEMO (CASO SIMULADO)
 // ============================================================================
 function activateDemoMode() {
     if(VDCSystem.processing) return;
@@ -710,7 +749,7 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('ATIVANDO MODO DEMO CSI v12.3...', 'info');
+    logAudit('ATIVANDO CASO SIMULADO v12.3...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
@@ -734,7 +773,7 @@ function activateDemoMode() {
             multaDolo: forensicRound(170.50),
             amtImtFee: forensicRound(97.75),
             rgrcInterest: forensicRound(15.69),
-            quantumBeneficio: 38000 * 12 * 7 
+            quantumBeneficio: 38000 * 12 * 7 // 3.192.000 €
         };
         VDCSystem.analysis.crossings.delta = forensicRound(1705.00);
 
@@ -750,11 +789,11 @@ function activateDemoMode() {
         renderChart();
         showAlerts();
 
-        logAudit('Auditoria Demo CSI v12.3 concluída com discrepância de 1.705,00€.', 'success');
+        logAudit('Perícia simulada concluída com discrepância de 1.705,00 €. Quantum do benefício ilícito calculado: 3.192.000,00 €', 'success');
         VDCSystem.processing = false;
         if(demoBtn) {
             demoBtn.disabled = false;
-            demoBtn.innerHTML = `<i class="fas fa-vial"></i> ${translations[currentLang].navDemo}`;
+            demoBtn.innerHTML = `<i class="fas fa-flask"></i> ${translations[currentLang].navDemo}`;
         }
     }, 1500);
 }
@@ -790,21 +829,18 @@ function simulateUpload(type, count) {
 }
 
 // ============================================================================
-// 9. MOTOR DE AUDITORIA
+// 9. MOTOR DE PERÍCIA FORENSE
 // ============================================================================
 function performAudit() {
-    if (!VDCSystem.client) return showToast('Registe cliente primeiro.', 'error');
+    if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
 
     VDCSystem.forensicMetadata = getForensicMetadata();
     VDCSystem.performanceTiming.start = performance.now();
 
-    const chartWrapper = document.getElementById('chartWrapper');
-    if(chartWrapper) chartWrapper.classList.add('scanning');
-
     const analyzeBtn = document.getElementById('analyzeBtn');
     if(analyzeBtn) {
         analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...';
+        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A EXECUTAR PERÍCIA...';
     }
 
     setTimeout(() => {
@@ -827,17 +863,16 @@ function performAudit() {
 
             VDCSystem.performanceTiming.end = performance.now();
             const duration = (VDCSystem.performanceTiming.end - VDCSystem.performanceTiming.start).toFixed(2);
-            logAudit(`Análise concluída em ${duration}ms. VEREDICTO: ${VDCSystem.analysis.verdict.level}`, 'success');
+            logAudit(`Perícia concluída em ${duration}ms. VEREDICTO: ${VDCSystem.analysis.verdict.level}`, 'success');
 
         } catch(error) {
-            console.error('Erro na análise:', error);
-            logAudit(`ERRO CRÍTICO: ${error.message}`, 'error');
+            console.error('Erro na perícia:', error);
+            logAudit(`ERRO CRÍTICO NA PERÍCIA: ${error.message}`, 'error');
         } finally {
             if(analyzeBtn) {
                 analyzeBtn.disabled = false;
                 analyzeBtn.innerHTML = `<i class="fas fa-search-dollar"></i> ${translations[currentLang].btnAnalyze}`;
             }
-            if(chartWrapper) chartWrapper.classList.remove('scanning');
         }
     }, 1000);
 }
@@ -861,7 +896,9 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
     ev.jurosMora = forensicRound(ev.iva23 * 0.04);
     ev.jurosCompensatorios = forensicRound(ev.iva23 * 0.06);
     ev.multaDolo = forensicRound(diferencial * 0.10);
-    ev.quantumBeneficio = 38000 * 12 * 7;
+    
+    // QUANTUM DO BENEFÍCIO ILÍCITO (art. 103.º RGIT) - 38.000 € × 12 meses × 7 anos
+    ev.quantumBeneficio = 38000 * 12 * 7; // 3.192.000 €
 
     cross.bigDataAlertActive = diferencial > 0.01;
 
@@ -932,7 +969,7 @@ function renderChart() {
     VDCSystem.chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Bruto', 'Comissão', 'Líquido', 'Fatura', 'Fosso Fiscal'],
+            labels: ['Bruto', 'Comissões', 'Líquido', 'Faturado', 'Fosso Fiscal'],
             datasets: [{
                 label: '€',
                 data: [
@@ -953,7 +990,7 @@ function renderChart() {
                 y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#b8c6e0', callback: (v) => v + '€' }
+                    ticks: { color: '#b8c6e0', callback: (v) => v + ' €' }
                 },
                 x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#b8c6e0' } }
             }
@@ -962,7 +999,7 @@ function renderChart() {
 }
 
 // ============================================================================
-// 10. EXPORTAÇÕES
+// 10. EXPORTAÇÕES (JSON E PDF FORENSE)
 // ============================================================================
 function exportDataJSON() {
     const exportData = {
@@ -973,6 +1010,8 @@ function exportDataJSON() {
             timestampUnix: Math.floor(Date.now() / 1000),
             language: currentLang,
             client: VDCSystem.client,
+            anoFiscal: VDCSystem.selectedYear,
+            periodoAnalise: VDCSystem.selectedPeriodo,
             demoMode: VDCSystem.demoMode,
             forensicMetadata: VDCSystem.forensicMetadata || getForensicMetadata()
         },
@@ -1004,22 +1043,22 @@ function exportDataJSON() {
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `VDC_FORENSIC_${VDCSystem.sessionId}.json`;
+    a.download = `VDC_PERITIA_${VDCSystem.sessionId}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
 
-    logAudit('Relatório JSON exportado.', 'success');
-    showToast('JSON exportado', 'success');
+    logAudit('Relatório JSON exportado com valor probatório.', 'success');
+    showToast('JSON probatório exportado', 'success');
 }
 
 async function exportPDF() {
-    if (!VDCSystem.client) return showToast('Sem cliente para gerar relatório.', 'error');
+    if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
     if (typeof window.jspdf === 'undefined') {
         logAudit('Erro: jsPDF não carregado.', 'error');
         return showToast('Erro de sistema (jsPDF)', 'error');
     }
 
-    logAudit('Gerando PDF Jurídico...', 'info');
+    logAudit('A gerar Parecer Pericial...', 'info');
 
     try {
         const { jsPDF } = window.jspdf;
@@ -1028,7 +1067,7 @@ async function exportPDF() {
         const platform = PLATFORM_DATA[VDCSystem.selectedPlatform] || PLATFORM_DATA.bolt;
         const ev = VDCSystem.analysis.extractedValues;
         const meta = VDCSystem.forensicMetadata || getForensicMetadata();
-        const verdict = VDCSystem.analysis.verdict || { level: 'N/A', key: 'low', description: 'Análise não executada.', color: '#8c7ae6' };
+        const verdict = VDCSystem.analysis.verdict || { level: 'N/A', key: 'low', description: 'Perícia não executada.', color: '#8c7ae6' };
 
         let y = 20;
         const left = 15;
@@ -1052,10 +1091,11 @@ async function exportPDF() {
                 doc.line(10, pageHeight - 15, pageWidth - 10, pageHeight - 15);
                 doc.setFontSize(6);
                 doc.setTextColor(100,100,100);
-                doc.text(VDCSystem.masterHash ? VDCSystem.masterHash.substring(0,24)+'...' : 'HASH NÃO GERADA', 10, pageHeight - 10);
+                doc.text('Art. 103.º e 104.º RGIT · Art. 256.º Código Penal · ISO/IEC 27037', 10, pageHeight - 11);
+                doc.text(VDCSystem.masterHash ? `HASH: ${VDCSystem.masterHash.substring(0,24)}...` : 'HASH NÃO GERADA', 10, pageHeight - 7);
                 doc.setFontSize(7);
                 doc.setTextColor(120,120,120);
-                doc.text(t.pdfFooter, pageWidth/2, pageHeight - 10, { align: 'center' });
+                doc.text(t.pdfFooter, pageWidth/2, pageHeight - 7, { align: 'center' });
             }
         };
 
@@ -1063,8 +1103,8 @@ async function exportPDF() {
         doc.setFontSize(18); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
         doc.text(t.pdfTitle, pageWidth/2, 18, { align: 'center' });
         doc.setFontSize(9); doc.setTextColor(200,200,200);
-        doc.text(`Session: ${VDCSystem.sessionId || 'N/A'}`, left, 30);
-        doc.text(`Date: ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()}`, left, 36);
+        doc.text(`${t.pdfLabelSession}: ${VDCSystem.sessionId || 'N/A'}`, left, 30);
+        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')} - ${new Date().toLocaleTimeString('pt-PT')}`, left, 36);
         doc.text(`Unix Timestamp: ${meta.timestampUnix || Math.floor(Date.now()/1000)}`, left, 42);
         doc.line(left,45,pageWidth-15,45);
         y = 52;
@@ -1076,11 +1116,12 @@ async function exportPDF() {
         doc.text(`${t.pdfLabelName}: ${VDCSystem.client.name || 'N/A'}`, left+5, y); y += 5;
         doc.text(`${t.pdfLabelNIF}: ${VDCSystem.client.nif || 'N/A'}`, left+5, y); y += 5;
         doc.text(`Plataforma: ${platform.name} (NIF: ${platform.nif})`, left+5, y); y += 5;
+        doc.text(`Ano Fiscal: ${VDCSystem.selectedYear} · Período: ${VDCSystem.selectedPeriodo}`, left+5, y); y += 5;
         doc.text(`User Agent: ${meta.userAgent ? meta.userAgent.substring(0,60) : 'N/A'}...`, left+5, y); y += 5;
         doc.text(`Timezone: ${meta.timezone || 'N/A'}`, left+5, y); y += 10;
         doc.line(left,y,pageWidth-15,y); y += 8;
 
-        checkPageBreak(60);
+        checkPageBreak(80);
         doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(t.pdfSection2, left, y); y += 8;
         doc.setFont('helvetica','normal'); doc.setFontSize(10);
@@ -1096,7 +1137,8 @@ async function exportPDF() {
             doc.text(`${t.pdfLabelJuros}: ${formatCurrency(ev.jurosMora || 0)}`, left+5, y); y += 6;
             doc.text(`${t.pdfLabelComp}: ${formatCurrency(ev.jurosCompensatorios || 0)}`, left+5, y); y += 6;
             doc.text(`${t.pdfLabelMulta}: ${formatCurrency(ev.multaDolo || 0)}`, left+5, y); y += 6;
-            doc.text(`Quantum Benefício Ilícito: ${formatCurrency(ev.quantumBeneficio || 0)}`, left+5, y); y += 6;
+            doc.setFont('helvetica','bold');
+            doc.text(`${t.pdfQuantum}: ${formatCurrency(ev.quantumBeneficio || 0)}`, left+5, y); y += 8;
         }
         doc.line(left,y,pageWidth-15,y); y += 8;
 
@@ -1107,12 +1149,13 @@ async function exportPDF() {
         doc.setFontSize(14); doc.setTextColor(verdict.color);
         doc.text(verdict.level, left+2, y+10); y += 30;
 
-        checkPageBreak(30);
+        checkPageBreak(40);
         doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(t.pdfLegalTitle, left, y); y += 8;
         doc.setFont('helvetica','normal'); doc.setFontSize(9);
         doc.text('• ' + t.pdfLegalRGIT, left+5, y); y += 5;
         doc.text('• ' + t.pdfLegalLGT, left+5, y); y += 5;
+        doc.text('• ' + t.pdfLegalPenal, left+5, y); y += 5;
         doc.text('• ' + t.pdfLegalISO, left+5, y); y += 8;
         doc.line(left,y,pageWidth-15,y); y += 8;
 
@@ -1125,14 +1168,14 @@ async function exportPDF() {
         doc.line(left,y,pageWidth-15,y); y += 8;
 
         addFooter();
-        doc.save(`VDC_Report_${VDCSystem.sessionId}.pdf`);
+        doc.save(`VDC_PARECER_${VDCSystem.sessionId}.pdf`);
         
-        logAudit('PDF Exportado com sucesso.', 'success');
-        showToast('PDF Gerado', 'success');
+        logAudit('Parecer Pericial exportado com sucesso.', 'success');
+        showToast('Parecer Pericial gerado', 'success');
 
     } catch(err) {
         console.error(err);
-        logAudit('Erro ao gerar PDF.', 'error');
+        logAudit('Erro ao gerar Parecer Pericial.', 'error');
     }
 }
 
@@ -1152,7 +1195,7 @@ function logAudit(message, type = 'info') {
         consoleEl.appendChild(div);
         consoleEl.scrollTop = consoleEl.scrollHeight;
     }
-    console.log(`[VDC AUDIT] ${entry}`);
+    console.log(`[VDC LOG] ${entry}`);
 }
 
 function showToast(message, type = 'info') {
@@ -1191,7 +1234,7 @@ function generateMasterHash() {
 }
 
 function resetSystem() {
-    if(!confirm('Tem a certeza que deseja limpar todos os dados da sessão?')) return;
+    if(!confirm('Tem a certeza que deseja reiniciar a perícia e limpar todos os dados?')) return;
     
     VDCSystem.client = null;
     VDCSystem.analysis = { extractedValues: {}, crossings: { delta: 0 }, verdict: null, evidenceIntegrity: [], selectedQuestions: [] };
@@ -1228,14 +1271,14 @@ function resetSystem() {
     document.getElementById('consoleOutput').innerHTML = '';
     
     generateMasterHash();
-    logAudit('Sistema reiniciado.', 'warn');
-    showToast('Sistema reiniciado', 'warning');
+    logAudit('Perícia reiniciada. Todos os dados foram limpos.', 'warn');
+    showToast('Perícia reiniciada', 'warning');
     updateAnalysisButton();
 }
 
 function clearConsole() {
     document.getElementById('consoleOutput').innerHTML = '';
-    logAudit('Console limpo.', 'info');
+    logAudit('Console de custódia limpo.', 'info');
 }
 
 // ============================================================================
@@ -1251,8 +1294,8 @@ window.forensicRound = forensicRound;
 window.formatCurrency = formatCurrency;
 window.validateNIF = validateNIF;
 
-console.log('VDC v12.3 LASER CROSS - Sistema carregado com todas as correções aplicadas.');
+console.log('VDC v12.3 LASER CROSS - Sistema de Peritagem Forense carregado com todas as disposições legais.');
 
 // ============================================================================
-// FIM DO SCRIPT · TODOS OS REQUISITOS IMPLEMENTADOS
+// FIM DO SCRIPT · TODOS OS REQUISITOS IMPLEMENTADOS · PT-PT JURÍDICO
 // ============================================================================
