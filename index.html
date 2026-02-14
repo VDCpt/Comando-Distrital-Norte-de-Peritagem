@@ -30,7 +30,7 @@
             
             <div class="splash-warning-box">
                 <p><i class="fas fa-exclamation-triangle"></i> AVISO DE UTILIZAÇÃO RESTRITA</p>
-                <small>Este sistema é destinado exclusivamente a Consultores, Peritos e Analistas Forenses. O acesso é exclusivo.</small>
+                <small>Este sistema é destinado exclusivamente a peritos forenses, autoridades judiciárias e auditores fiscais credenciados. O acesso não autorizado constitui crime previsto no art. 191.º do Código Penal.</small>
             </div>
             
             <button id="startSessionBtn" class="splash-btn">
@@ -39,7 +39,7 @@
             </button>
             
             <div class="splash-footer">
-                <p>VDC Systems International © 2024/2026 | EM</p>
+                <p>VDC Systems International © 2024/2026</p>
                 <p class="version">v12.5 RETA FINAL FORENSE</p>
             </div>
         </div>
@@ -433,7 +433,7 @@
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
                     
-                    <!-- SAF-T - ACEITA TUDO -->
+                    <!-- SAF-T -->
                     <div class="upload-group-modal">
                         <label><i class="fas fa-file-code"></i> <span id="uploadSaftText">FICHEIROS SAF-T (PT)</span></label>
                         <button id="saftUploadBtnModal" class="upload-btn">
@@ -443,7 +443,7 @@
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
                     
-                    <!-- FATURAS - ACEITA TUDO -->
+                    <!-- FATURAS -->
                     <div class="upload-group-modal">
                         <label><i class="fas fa-file-invoice-dollar"></i> <span id="uploadInvoiceText">FATURAS (PDF/CSV/XML)</span></label>
                         <button id="invoiceUploadBtnModal" class="upload-btn">
@@ -453,7 +453,7 @@
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
                     </div>
                     
-                    <!-- EXTRATOS - ACEITA TUDO -->
+                    <!-- EXTRATOS -->
                     <div class="upload-group-modal">
                         <label><i class="fas fa-file-contract"></i> <span id="uploadStatementText">EXTRATOS BANCÁRIOS / DADOS</span></label>
                         <button id="statementUploadBtnModal" class="upload-btn">
@@ -463,7 +463,7 @@
                         <div id="statementsFileListModal" class="file-list-modal"></div>
                     </div>
                     
-                    <!-- DAC7 - ACEITA TUDO -->
+                    <!-- DAC7 -->
                     <div class="upload-group-modal">
                         <label><i class="fas fa-envelope-open-text"></i> <span id="uploadDac7Text">DECLARAÇÃO DAC7</span></label>
                         <button id="dac7UploadBtnModal" class="upload-btn">
@@ -523,6 +523,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- RETIFICAÇÃO: Adicionar jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
