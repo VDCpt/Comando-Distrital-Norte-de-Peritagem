@@ -1,8 +1,8 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v12.3 LASER CROSS EDITION
+ * VDC SISTEMA DE PERITAGEM FORENSE · v12.4 RETA FINAL FORENSE
  * ====================================================================
  * CONSOLIDAÇÃO FINAL: INTELIGÊNCIA FORENSE + QUANTUM BENEFÍCIO ILÍCITO
- * Módulos: Peritagem, RGIT, PDF Forense, Traduções PT-PT/EN, Utilitários
+ * Módulos: SAF-T, DAC7, Extratos, RGIT, PDF Forense, Traduções PT-PT/EN
  * TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA · PT-PT JURÍDICO
  * ====================================================================
  */
@@ -15,7 +15,7 @@
 const PLATFORM_DATA = {
     bolt: {
         name: 'Bolt Operations OÜ',
-        address: 'Vana-Lõuna 15, Tallinn, Estónia',
+        address: 'Vana-Lõuna 15, 10134 Tallinn, Estónia',
         nif: 'EE102090374'
     },
     uber: {
@@ -106,11 +106,12 @@ const formatCurrency = (value) => {
 };
 
 const getRiskVerdict = (delta, gross) => {
-    if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto pericial.' };
+    if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto pericial.', percent: '0.00%' };
     const pct = Math.abs((delta / gross) * 100);
-    if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada, sem indícios de fraude.' };
-    if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria aprofundada recomendada nos termos do art. 63.º LGT.' };
-    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Fraude Fiscal (art. 103.º e 104.º RGIT). Participação à Autoridade Tributária recomendada.' };
+    const pctFormatted = pct.toFixed(2) + '%';
+    if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada, sem indícios de fraude.', percent: pctFormatted };
+    if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria aprofundada recomendada nos termos do art. 63.º LGT.', percent: pctFormatted };
+    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Fraude Fiscal (art. 103.º e 104.º RGIT). Participação à Autoridade Tributária recomendada.', percent: pctFormatted };
 };
 
 const setElementText = (id, text) => {
@@ -148,7 +149,7 @@ const getForensicMetadata = () => {
 // ============================================================================
 const translations = {
     pt: {
-        startBtn: "INICIAR PERÍCIA v12.3",
+        startBtn: "INICIAR PERÍCIA v12.4",
         navDemo: "CASO SIMULADO",
         langBtn: "EN",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
@@ -166,61 +167,69 @@ const translations = {
         cardNet: "VALOR LÍQUIDO RECONSTRUÍDO",
         cardComm: "COMISSÕES DETETADAS",
         cardJuros: "FOSSO FISCAL",
-        kpiTitle: "TRIANGULAÇÃO FINANCEIRA · ALGORITMO FORENSE v12.3",
+        kpiTitle: "TRIANGULAÇÃO FINANCEIRA · ALGORITMO FORENSE v12.4",
         kpiGross: "BRUTO REAL",
         kpiCommText: "COMISSÕES",
         kpiNetText: "LÍQUIDO",
         kpiInvText: "FATURADO",
         consoleTitle: "LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA",
-        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)",
+        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.4)",
         modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
         uploadSaftText: "FICHEIROS SAF-T (PT)",
         uploadInvoiceText: "FATURAS (PDF/CSV/XML)",
         uploadStatementText: "EXTRATOS BANCÁRIOS / DADOS",
+        uploadDac7Text: "DECLARAÇÃO DAC7",
         summaryTitle: "RESUMO DE PROCESSAMENTO PROBATÓRIO",
         modalSaveBtn: "SELAR EVIDÊNCIAS",
         lblDate: "Data",
         alertCriticalTitle: "ANOMALIA ALGORÍTMICA CRÍTICA",
         alertOmissionText: "Indício de fraude fiscal não justificada:",
+        moduleSaftTitle: "MÓDULO SAF-T (EXTRAÇÃO)",
+        moduleStatementTitle: "MÓDULO EXTRATOS (MAPEAMENTO)",
+        moduleDac7Title: "MÓDULO DAC7 (DECOMPOSIÇÃO)",
+        saftIliquido: "Valor Ilíquido Total",
+        saftIva: "Total IVA (6%)",
+        saftBruto: "Valor Bruto Total",
+        stmtGanhos: "Ganhos na App",
+        stmtCampanhas: "Campanhas",
+        stmtGorjetas: "Gorjetas",
+        stmtPortagens: "Portagens",
+        stmtTaxasCancel: "Taxas Cancelamento",
+        dac7Q1: "1.º Trimestre",
+        dac7Q2: "2.º Trimestre",
+        dac7Q3: "3.º Trimestre",
+        dac7Q4: "4.º Trimestre",
+        quantumTitle: "QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)",
+        quantumFormula: "Fórmula: 38.000 motoristas × 12 meses × 7 anos",
+        quantumNote: "Impacto Global Estimado de Mercado (Acumulado 7 Anos)",
+        verdictPercent: "Desvio Calculado",
         pdfTitle: "PARECER PERICIAL DE INVESTIGAÇÃO DIGITAL",
+        pdfHeaderTag1: "[FORENSE]",
+        pdfHeaderTag2: "[FINANCEIRO]",
         pdfSection1: "1. IDENTIFICAÇÃO E METADADOS",
         pdfSection2: "2. ANÁLISE FINANCEIRA CRUZADA",
         pdfSection3: "3. VEREDICTO DE RISCO (RGIT)",
         pdfSection4: "4. CONCLUSÕES PERICIAIS",
         pdfSection5: "5. CADEIA DE CUSTÓDIA",
-        pdfSection6: "6. INTERROGATÓRIO ESTRATÉGICO",
+        pdfSection6: "6. INTERROGATÓRIO ESTRATÉGICO (30 QUESTÕES)",
         pdfSection7: "7. ASSINATURA DIGITAL",
         pdfLegalTitle: "FUNDAMENTAÇÃO LEGAL",
         pdfLegalRGIT: "Art. 103.º e 104.º RGIT - Fraude Fiscal e Fraude Qualificada",
         pdfLegalLGT: "Art. 35.º e 63.º LGT - Juros de mora e deveres de cooperação",
-        pdfLegalPenal: "Art. 256.º Código Penal Português - Falsificação de documentos",
         pdfLegalISO: "ISO/IEC 27037 - Preservação de Prova Digital",
+        pdfConclusionText: "Os dados analisados apresentam indícios de desconformidade fiscal. Atendendo à natureza dos factos, compete ao mandatário legal a utilização deste parecer para apuramento de veracidade em sede judicial e solicitação de auditoria inspetiva às entidades competentes.",
+        pdfFooterLine1: "Art. 103.º e 104.º RGIT · ISO/IEC 27037",
+        pdfFooterLine3: "VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.4 | EM · PT",
         pdfLabelName: "Nome",
         pdfLabelNIF: "NIF",
         pdfLabelSession: "Perícia n.º",
-        pdfLabelGross: "Bruto Reconstruído",
-        pdfLabelComm: "Comissões",
-        pdfLabelInv: "Faturado",
-        pdfLabelDiff: "Discrepância",
-        pdfLabelIVA23: "IVA 23%",
-        pdfLabelJuros: "Juros de Mora",
-        pdfLabelComp: "Juros Compensatórios",
-        pdfLabelMulta: "Multa Estimada",
-        pdfQuantum: "QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)",
-        pdfConclusionText: "Conclusão pericial: Os dados analisados apresentam indícios de desvio entre valores transacionados e valores declarados, conforme disposto no art. 103.º do Regime Geral das Infrações Tributárias. Recomenda-se a notificação do sujeito passivo para esclarecimento e, caso se mantenha a discrepância, a participação à Autoridade Tributária e instauração de procedimento de inspeção.",
-        pdfRiskVerdict: "VEREDICTO DE RISCO (RGIT)",
-        pdfQuestions: [
-            "1. Qual a lógica algorítmica exata da taxa de serviço no período auditado?",
-            "2. Como justifica a discrepância entre o registo de comissão e a fatura emitida?",
-            "3. Existem registos de 'Shadow Entries' (entradas sem ID) no sistema?",
-            "4. A plataforma disponibiliza o código-fonte do algoritmo de preços para auditoria?",
-            "5. Qual o tratamento das 'Tips' (Gorjetas) na faturação e declaração de IVA?"
-        ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Módulo de Peritagem Forense v12.3 | Todos os Direitos Reservados · PT"
+        pdfLabelTimestamp: "Unix Timestamp",
+        pdfLabelPlatform: "Plataforma",
+        pdfLabelAddress: "Morada"
     },
     en: {
-        startBtn: "START FORENSIC EXAM v12.3",
+        startBtn: "START FORENSIC EXAM v12.4",
         navDemo: "SIMULATED CASE",
         langBtn: "PT",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
@@ -238,58 +247,66 @@ const translations = {
         cardNet: "RECONSTRUCTED NET VALUE",
         cardComm: "DETECTED COMMISSIONS",
         cardJuros: "TAX GAP",
-        kpiTitle: "FINANCIAL TRIANGULATION · FORENSIC ALGORITHM v12.3",
+        kpiTitle: "FINANCIAL TRIANGULATION · FORENSIC ALGORITHM v12.4",
         kpiGross: "REAL GROSS",
         kpiCommText: "COMMISSIONS",
         kpiNetText: "NET",
         kpiInvText: "INVOICED",
         consoleTitle: "CUSTODY LOG · CHAIN OF CUSTODY",
-        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.3)",
+        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.4)",
         modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
         uploadSaftText: "SAF-T FILES (PT)",
         uploadInvoiceText: "INVOICES (PDF/CSV/XML)",
         uploadStatementText: "BANK STATEMENTS / DATA",
+        uploadDac7Text: "DAC7 DECLARATION",
         summaryTitle: "EVIDENCE PROCESSING SUMMARY",
         modalSaveBtn: "SEAL EVIDENCE",
         lblDate: "Date",
         alertCriticalTitle: "CRITICAL ALGORITHMIC ANOMALY",
         alertOmissionText: "Unjustified tax fraud indication:",
+        moduleSaftTitle: "SAF-T MODULE (EXTRACTION)",
+        moduleStatementTitle: "STATEMENT MODULE (MAPPING)",
+        moduleDac7Title: "DAC7 MODULE (BREAKDOWN)",
+        saftIliquido: "Total Net Value",
+        saftIva: "Total VAT (6%)",
+        saftBruto: "Total Gross Value",
+        stmtGanhos: "App Earnings",
+        stmtCampanhas: "Campaigns",
+        stmtGorjetas: "Tips",
+        stmtPortagens: "Tolls",
+        stmtTaxasCancel: "Cancellation Fees",
+        dac7Q1: "1st Quarter",
+        dac7Q2: "2nd Quarter",
+        dac7Q3: "3rd Quarter",
+        dac7Q4: "4th Quarter",
+        quantumTitle: "ILLICIT BENEFIT AMOUNT (ART. 103 RGIT)",
+        quantumFormula: "Formula: 38,000 drivers × 12 months × 7 years",
+        quantumNote: "Estimated Global Market Impact (7-Year Cumulative)",
+        verdictPercent: "Calculated Deviation",
         pdfTitle: "DIGITAL FORENSIC EXPERT REPORT",
+        pdfHeaderTag1: "[FORENSIC]",
+        pdfHeaderTag2: "[FINANCIAL]",
         pdfSection1: "1. IDENTIFICATION & METADATA",
         pdfSection2: "2. CROSS-FINANCIAL ANALYSIS",
         pdfSection3: "3. RISK VERDICT (RGIT)",
         pdfSection4: "4. EXPERT CONCLUSIONS",
         pdfSection5: "5. CHAIN OF CUSTODY",
-        pdfSection6: "6. STRATEGIC INTERROGATION",
+        pdfSection6: "6. STRATEGIC INTERROGATION (30 QUESTIONS)",
         pdfSection7: "7. DIGITAL SIGNATURE",
         pdfLegalTitle: "LEGAL BASIS",
         pdfLegalRGIT: "Art. 103 and 104 RGIT - Tax Fraud and Qualified Fraud",
         pdfLegalLGT: "Art. 35 and 63 LGT - Default interest and cooperation duties",
-        pdfLegalPenal: "Art. 256 Portuguese Penal Code - Document Forgery",
         pdfLegalISO: "ISO/IEC 27037 - Digital Evidence Preservation",
+        pdfConclusionText: "The analyzed data shows evidence of fiscal non-conformity. Given the nature of the facts, it is incumbent upon the legal mandator to use this opinion for the determination of veracity in court and to request inspection audit to the competent entities.",
+        pdfFooterLine1: "Art. 103 and 104 RGIT · ISO/IEC 27037",
+        pdfFooterLine3: "VDC Systems International © 2024/2026 | Forensic Expertise Module v12.4 | EM · EN",
         pdfLabelName: "Name",
         pdfLabelNIF: "Tax ID",
         pdfLabelSession: "Expertise No.",
-        pdfLabelGross: "Reconstructed Gross",
-        pdfLabelComm: "Commissions",
-        pdfLabelInv: "Invoiced",
-        pdfLabelDiff: "Discrepancy",
-        pdfLabelIVA23: "VAT 23%",
-        pdfLabelJuros: "Default Interest",
-        pdfLabelComp: "Compensatory Interest",
-        pdfLabelMulta: "Estimated Fine",
-        pdfQuantum: "ILLICIT BENEFIT AMOUNT (ART. 103 RGIT)",
-        pdfConclusionText: "Expert conclusion: The analyzed data shows evidence of deviation between transacted and declared values, as set forth in art. 103 of the General Tax Infractions Regime. Notification of the taxpayer for clarification is recommended and, should the discrepancy persist, referral to the Tax Authority and initiation of inspection proceedings.",
-        pdfRiskVerdict: "RISK VERDICT (RGIT)",
-        pdfQuestions: [
-            "1. What is the exact algorithmic logic for the service fee?",
-            "2. How is the discrepancy between internal record and invoice justified?",
-            "3. Are there records of 'Shadow Entries'?",
-            "4. Does the platform provide source code for the pricing algorithm?",
-            "5. How are 'Tips' treated in the billing?"
-        ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Expertise Module v12.3 | All Rights Reserved · EN"
+        pdfLabelTimestamp: "Unix Timestamp",
+        pdfLabelPlatform: "Platform",
+        pdfLabelAddress: "Address"
     }
 };
 
@@ -299,7 +316,7 @@ let currentLang = 'pt';
 // 4. ESTADO GLOBAL
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.3-LASER-CROSS',
+    version: 'v12.4-RETA-FINAL',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPeriodo: 'anual',
@@ -312,10 +329,10 @@ const VDCSystem = {
     masterHash: '',
     documents: {
         control: { files: [], hashes: {}, totals: { records: 0 } },
-        saft: { files: [], hashes: {}, totals: { records: 0 } },
+        saft: { files: [], hashes: {}, totals: { records: 0, iliquido: 0, iva: 0, bruto: 0 } },
         invoices: { files: [], hashes: {}, totals: { invoiceValue: 0, records: 0 } },
-        statements: { files: [], hashes: {}, totals: { rendimentosBrutos: 0, comissaoApp: 0, records: 0 } },
-        dac7: { files: [], hashes: {}, totals: { records: 0 } }
+        statements: { files: [], hashes: {}, totals: { records: 0, ganhosApp: 0, campanhas: 0, gorjetas: 0, portagens: 0, taxasCancelamento: 0, despesasComissao: 0 } },
+        dac7: { files: [], hashes: {}, totals: { records: 0, q1: 0, q2: 0, q3: 0, q4: 0, servicosQ1: 0, servicosQ2: 0, servicosQ3: 0, servicosQ4: 0 } }
     },
     analysis: {
         extractedValues: {},
@@ -384,7 +401,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE v12.3... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE v12.4... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -398,12 +415,12 @@ function showMainInterface() {
             setTimeout(() => main.style.opacity = '1', 50);
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.3 LASER CROSS ONLINE · MODO PERÍCIA ATIVO', 'success');
+    logAudit('SISTEMA VDC v12.4 RETA FINAL ONLINE · MODO PERÍCIA ATIVO', 'success');
 }
 
 function loadSystemRecursively() {
     try {
-        const stored = localStorage.getItem('vdc_client_data_bd_v12_3');
+        const stored = localStorage.getItem('vdc_client_data_bd_v12_4');
         if (stored) {
             const client = JSON.parse(stored);
             if (client && client.name && client.nif) {
@@ -550,11 +567,31 @@ function switchLanguage() {
         { id: 'uploadSaftText', key: 'uploadSaftText' },
         { id: 'uploadInvoiceText', key: 'uploadInvoiceText' },
         { id: 'uploadStatementText', key: 'uploadStatementText' },
+        { id: 'uploadDac7Text', key: 'uploadDac7Text' },
         { id: 'summaryTitle', key: 'summaryTitle' },
         { id: 'modalSaveBtn', key: 'modalSaveBtn' },
         { id: 'lblDate', key: 'lblDate' },
         { id: 'alertCriticalTitle', key: 'alertCriticalTitle' },
-        { id: 'alertOmissionText', key: 'alertOmissionText' }
+        { id: 'alertOmissionText', key: 'alertOmissionText' },
+        { id: 'moduleSaftTitle', key: 'moduleSaftTitle' },
+        { id: 'moduleStatementTitle', key: 'moduleStatementTitle' },
+        { id: 'moduleDac7Title', key: 'moduleDac7Title' },
+        { id: 'saftIliquidoLabel', key: 'saftIliquido' },
+        { id: 'saftIvaLabel', key: 'saftIva' },
+        { id: 'saftBrutoLabel', key: 'saftBruto' },
+        { id: 'stmtGanhosLabel', key: 'stmtGanhos' },
+        { id: 'stmtCampanhasLabel', key: 'stmtCampanhas' },
+        { id: 'stmtGorjetasLabel', key: 'stmtGorjetas' },
+        { id: 'stmtPortagensLabel', key: 'stmtPortagens' },
+        { id: 'stmtTaxasCancelLabel', key: 'stmtTaxasCancel' },
+        { id: 'dac7Q1Label', key: 'dac7Q1' },
+        { id: 'dac7Q2Label', key: 'dac7Q2' },
+        { id: 'dac7Q3Label', key: 'dac7Q3' },
+        { id: 'dac7Q4Label', key: 'dac7Q4' },
+        { id: 'quantumTitle', key: 'quantumTitle' },
+        { id: 'quantumFormula', key: 'quantumFormula' },
+        { id: 'quantumNote', key: 'quantumNote' },
+        { id: 'verdictPercentLabel', key: 'verdictPercent' }
     ];
 
     elements.forEach(el => {
@@ -576,7 +613,7 @@ function registerClient() {
     if (!validateNIF(nif)) return showToast('NIF inválido (checksum falhou)', 'error');
 
     VDCSystem.client = { name, nif, platform: VDCSystem.selectedPlatform };
-    localStorage.setItem('vdc_client_data_bd_v12_3', JSON.stringify(VDCSystem.client));
+    localStorage.setItem('vdc_client_data_bd_v12_4', JSON.stringify(VDCSystem.client));
 
     document.getElementById('clientStatusFixed').style.display = 'flex';
     setElementText('clientNameDisplayFixed', name);
@@ -635,11 +672,6 @@ async function processFile(file, type) {
 
     if(!VDCSystem.documents[type]) {
         VDCSystem.documents[type] = { files: [], hashes: {}, totals: { records: 0 } };
-        if(type === 'invoice') VDCSystem.documents[type].totals.invoiceValue = 0;
-        if(type === 'statement') {
-            VDCSystem.documents[type].totals.rendimentosBrutos = 0;
-            VDCSystem.documents[type].totals.comissaoApp = 0;
-        }
     }
 
     VDCSystem.documents[type].files.push(file);
@@ -653,6 +685,7 @@ async function processFile(file, type) {
         timestampUnix: Math.floor(Date.now() / 1000)
     });
 
+    // Processamento específico por tipo
     if (type === 'invoice') {
         const val = toForensicNumber(text.match(/(\d+[.,]\d{2})/)?.[0] || 0);
         VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
@@ -660,26 +693,70 @@ async function processFile(file, type) {
         logAudit(`Fatura processada: ${file.name} | Valor: ${formatCurrency(val)}`, 'success');
     }
 
+    if (type === 'saft') {
+        // Simulação de extração SAF-T (em produção faria parsing XML real)
+        try {
+            // Procurar padrões de valores no XML/texto
+            const grossMatch = text.match(/<TotalGross>?[\s\S]*?<Amount>(\d+[.,]\d{2})/i);
+            const netMatch = text.match(/<NetTotal>?[\s\S]*?<Amount>(\d+[.,]\d{2})/i);
+            const vatMatch = text.match(/<TaxPayable>?[\s\S]*?<Amount>(\d+[.,]\d{2})/i);
+            
+            const bruto = grossMatch ? toForensicNumber(grossMatch[1]) : 0;
+            const iliquido = netMatch ? toForensicNumber(netMatch[1]) : bruto;
+            const iva = vatMatch ? toForensicNumber(vatMatch[1]) : 0;
+            
+            VDCSystem.documents.saft.totals.bruto = (VDCSystem.documents.saft.totals.bruto || 0) + bruto;
+            VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + iliquido;
+            VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + iva;
+            
+            VDCSystem.analysis.extractedValues.saftBruto = VDCSystem.documents.saft.totals.bruto;
+            VDCSystem.analysis.extractedValues.saftIliquido = VDCSystem.documents.saft.totals.iliquido;
+            VDCSystem.analysis.extractedValues.saftIva = VDCSystem.documents.saft.totals.iva;
+            
+            logAudit(`SAF-T processado: ${file.name} | Bruto: ${formatCurrency(bruto)} | IVA: ${formatCurrency(iva)}`, 'info');
+        } catch(e) {
+            console.warn(`Erro ao processar SAF-T ${file.name}:`, e);
+        }
+    }
+
     if (type === 'statement') {
         try {
             const papaParsed = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
             if (papaParsed.data && papaParsed.data.length > 0) {
-                let gross = 0, comm = 0;
+                let ganhos = 0, campanhas = 0, gorjetas = 0, portagens = 0, taxasCancel = 0, comissao = 0;
+                
                 papaParsed.data.forEach(row => {
                     Object.keys(row).forEach(key => {
                         const val = toForensicNumber(row[key]);
                         const keyLower = key.toLowerCase();
-                        if (keyLower.includes('total') || keyLower.includes('earnings') || keyLower.includes('gross') || keyLower.includes('rendimento')) gross += val;
-                        if (keyLower.includes('commission') || keyLower.includes('fee') || keyLower.includes('comissao')) comm += Math.abs(val);
+                        
+                        // Mapeamento de campos de extrato
+                        if (keyLower.includes('earnings') || keyLower.includes('ganhos') || keyLower.includes('rendimento')) {
+                            if (keyLower.includes('app')) ganhos += val;
+                            else if (keyLower.includes('campaign') || keyLower.includes('campanha')) campanhas += val;
+                            else if (keyLower.includes('tip') || keyLower.includes('gorjeta')) gorjetas += val;
+                            else if (keyLower.includes('toll') || keyLower.includes('portagem')) portagens += val;
+                            else if (keyLower.includes('cancel') || keyLower.includes('cancelamento')) taxasCancel += val;
+                            else ganhos += val;
+                        }
+                        
+                        if (keyLower.includes('commission') || keyLower.includes('comissao') || keyLower.includes('fee') || keyLower.includes('service fee')) {
+                            comissao += Math.abs(val);
+                        }
                     });
                 });
-                gross = forensicRound(gross);
-                comm = forensicRound(comm);
-                VDCSystem.documents.statements.totals.rendimentosBrutos = (VDCSystem.documents.statements.totals.rendimentosBrutos || 0) + gross;
-                VDCSystem.documents.statements.totals.comissaoApp = (VDCSystem.documents.statements.totals.comissaoApp || 0) + comm;
-                VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.rendimentosBrutos;
-                VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.comissaoApp;
-                logAudit(`Extrato processado: ${file.name} | Receita: ${formatCurrency(gross)} | Comissões: ${formatCurrency(comm)}`, 'info');
+                
+                VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
+                VDCSystem.documents.statements.totals.campanhas = (VDCSystem.documents.statements.totals.campanhas || 0) + campanhas;
+                VDCSystem.documents.statements.totals.gorjetas = (VDCSystem.documents.statements.totals.gorjetas || 0) + gorjetas;
+                VDCSystem.documents.statements.totals.portagens = (VDCSystem.documents.statements.totals.portagens || 0) + portagens;
+                VDCSystem.documents.statements.totals.taxasCancelamento = (VDCSystem.documents.statements.totals.taxasCancelamento || 0) + taxasCancel;
+                VDCSystem.documents.statements.totals.despesasComissao = (VDCSystem.documents.statements.totals.despesasComissao || 0) + comissao;
+                
+                VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.ganhosApp;
+                VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.despesasComissao;
+                
+                logAudit(`Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Comissões: ${formatCurrency(comissao)}`, 'info');
             }
         } catch(e) {
             console.warn(`Erro ao processar extrato ${file.name}:`, e);
@@ -687,9 +764,25 @@ async function processFile(file, type) {
     }
     
     if (type === 'dac7') {
-        logAudit(`DAC7 importado: ${file.name}`, 'success');
+        // Simulação de decomposição trimestral DAC7
+        try {
+            const q1Match = text.match(/Q1[^\d]*(\d+[.,]\d{2})/i);
+            const q2Match = text.match(/Q2[^\d]*(\d+[.,]\d{2})/i);
+            const q3Match = text.match(/Q3[^\d]*(\d+[.,]\d{2})/i);
+            const q4Match = text.match(/Q4[^\d]*(\d+[.,]\d{2})/i);
+            
+            if (q1Match) VDCSystem.documents.dac7.totals.q1 = toForensicNumber(q1Match[1]);
+            if (q2Match) VDCSystem.documents.dac7.totals.q2 = toForensicNumber(q2Match[1]);
+            if (q3Match) VDCSystem.documents.dac7.totals.q3 = toForensicNumber(q3Match[1]);
+            if (q4Match) VDCSystem.documents.dac7.totals.q4 = toForensicNumber(q4Match[1]);
+            
+            logAudit(`DAC7 importado: ${file.name}`, 'success');
+        } catch(e) {
+            console.warn(`Erro ao processar DAC7 ${file.name}:`, e);
+        }
     }
 
+    // Atualizar lista de ficheiros no modal
     const listId = type === 'invoice' ? 'invoicesFileListModal' : 
                    type === 'statement' ? 'statementsFileListModal' : 
                    type === 'dac7' ? 'dac7FileListModal' :
@@ -749,12 +842,13 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('ATIVANDO CASO SIMULADO v12.3...', 'info');
+    logAudit('ATIVANDO CASO SIMULADO v12.4...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
     registerClient();
 
+    // Simular uploads
     simulateUpload('control', 1);
     simulateUpload('saft', 1);
     simulateUpload('invoices', 2);
@@ -762,19 +856,42 @@ function activateDemoMode() {
     simulateUpload('dac7', 1);
 
     setTimeout(() => {
+        // Dados simulados completos
+        VDCSystem.documents.saft.totals.bruto = forensicRound(12500.00);
+        VDCSystem.documents.saft.totals.iliquido = forensicRound(11792.45);
+        VDCSystem.documents.saft.totals.iva = forensicRound(707.55);
+        
+        VDCSystem.documents.statements.totals.ganhosApp = forensicRound(8500.00);
+        VDCSystem.documents.statements.totals.campanhas = forensicRound(500.00);
+        VDCSystem.documents.statements.totals.gorjetas = forensicRound(150.00);
+        VDCSystem.documents.statements.totals.portagens = forensicRound(200.00);
+        VDCSystem.documents.statements.totals.taxasCancelamento = forensicRound(75.00);
+        VDCSystem.documents.statements.totals.despesasComissao = forensicRound(3125.00);
+        
+        VDCSystem.documents.dac7.totals.q1 = forensicRound(2800.00);
+        VDCSystem.documents.dac7.totals.q2 = forensicRound(3200.00);
+        VDCSystem.documents.dac7.totals.q3 = forensicRound(2950.00);
+        VDCSystem.documents.dac7.totals.q4 = forensicRound(3100.00);
+        
         VDCSystem.analysis.extractedValues = {
-            rendimentosBrutos: forensicRound(8500.00),
-            comissaoApp: forensicRound(-1955.00),
+            rendimentosBrutos: VDCSystem.documents.statements.totals.ganhosApp,
+            comissaoApp: -VDCSystem.documents.statements.totals.despesasComissao,
             faturaPlataforma: forensicRound(250.00),
-            diferencialCusto: forensicRound(1705.00),
+            saftBruto: VDCSystem.documents.saft.totals.bruto,
+            saftIliquido: VDCSystem.documents.saft.totals.iliquido,
+            saftIva: VDCSystem.documents.saft.totals.iva,
+            ganhosApp: VDCSystem.documents.statements.totals.ganhosApp,
+            campanhas: VDCSystem.documents.statements.totals.campanhas,
+            gorjetas: VDCSystem.documents.statements.totals.gorjetas,
+            portagens: VDCSystem.documents.statements.totals.portagens,
+            taxasCancelamento: VDCSystem.documents.statements.totals.taxasCancelamento,
             iva23: forensicRound(392.15),
             jurosMora: forensicRound(15.69),
             jurosCompensatorios: forensicRound(23.53),
             multaDolo: forensicRound(170.50),
-            amtImtFee: forensicRound(97.75),
-            rgrcInterest: forensicRound(15.69),
-            quantumBeneficio: 38000 * 12 * 7 // 3.192.000 €
+            quantumBeneficio: 38000 * 12 * 7
         };
+        
         VDCSystem.analysis.crossings.delta = forensicRound(1705.00);
 
         performForensicCrossings(
@@ -786,10 +903,11 @@ function activateDemoMode() {
         selectQuestions(VDCSystem.analysis.verdict.key);
 
         updateDashboard();
+        updateModulesUI();
         renderChart();
         showAlerts();
 
-        logAudit('Perícia simulada concluída com discrepância de 1.705,00 €. Quantum do benefício ilícito calculado: 3.192.000,00 €', 'success');
+        logAudit('Perícia simulada concluída. Quantum do benefício ilícito calculado: 3.192.000,00 €', 'success');
         VDCSystem.processing = false;
         if(demoBtn) {
             demoBtn.disabled = false;
@@ -809,20 +927,6 @@ function simulateUpload(type, count) {
 
         const demoHash = 'DEMO-' + CryptoJS.SHA256(Date.now().toString() + i).toString().substring(0, 8) + '...';
         VDCSystem.analysis.evidenceIntegrity.push({ filename: fileName, type, hash: demoHash, timestamp: new Date().toLocaleString(), size: 1024 * (i + 1), timestampUnix: Math.floor(Date.now() / 1000) });
-
-        if (type === 'invoices') {
-            const demoInvoiceValue = i === 0 ? 150.00 : 100.00;
-            VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + demoInvoiceValue;
-            VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
-        }
-        if (type === 'statements') {
-            const demoGross = i === 0 ? 5000.00 : 3500.00;
-            const demoCommission = i === 0 ? 1150.00 : 805.00;
-            VDCSystem.documents.statements.totals.rendimentosBrutos = (VDCSystem.documents.statements.totals.rendimentosBrutos || 0) + demoGross;
-            VDCSystem.documents.statements.totals.comissaoApp = (VDCSystem.documents.statements.totals.comissaoApp || 0) + demoCommission;
-            VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.rendimentosBrutos;
-            VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.comissaoApp;
-        }
     }
     updateCounters();
     updateEvidenceSummary();
@@ -845,9 +949,10 @@ function performAudit() {
 
     setTimeout(() => {
         try {
-            const stmtGross = VDCSystem.documents.statements?.totals?.rendimentosBrutos || 0;
-            const stmtCommission = VDCSystem.documents.statements?.totals?.comissaoApp || 0;
+            const stmtGross = VDCSystem.documents.statements?.totals?.ganhosApp || 0;
+            const stmtCommission = VDCSystem.documents.statements?.totals?.despesasComissao || 0;
             const invoiceVal = VDCSystem.documents.invoices?.totals?.invoiceValue || 0;
+            const saftBruto = VDCSystem.documents.saft?.totals?.bruto || 0;
 
             const grossRevenue = VDCSystem.demoMode ? VDCSystem.analysis.extractedValues.rendimentosBrutos : stmtGross;
             const platformCommission = VDCSystem.demoMode ? VDCSystem.analysis.extractedValues.comissaoApp : -stmtCommission;
@@ -858,6 +963,7 @@ function performAudit() {
             selectQuestions(VDCSystem.analysis.verdict.key);
 
             updateDashboard();
+            updateModulesUI();
             renderChart();
             showAlerts();
 
@@ -891,6 +997,15 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
     ev.diferencialCusto = diferencial;
     cross.delta = diferencial;
 
+    // Verificação: Comissão vs Fatura (ALERTA INTERMITENTE)
+    cross.invoiceDivergence = Math.abs(comissaoAbs - ev.faturaPlataforma) > 0.01;
+
+    // Cálculo de verificação
+    // Regra: Comissão incide sobre Viagens e Taxas de Cancelamento, NÃO sobre Campanhas, Gorjetas ou Portagens
+    const baseComissao = (ev.ganhosApp || ev.rendimentosBrutos) + (ev.taxasCancelamento || 0);
+    const comissaoEsperada = baseComissao * 0.25; // Máx. 25%
+    cross.comissaoDivergencia = Math.abs(comissaoAbs - comissaoEsperada);
+
     ev.iva23 = forensicRound(diferencial * 0.23);
     ev.amtImtFee = forensicRound(comissaoAbs * 0.05);
     ev.jurosMora = forensicRound(ev.iva23 * 0.04);
@@ -906,16 +1021,8 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
 }
 
 function selectQuestions(riskKey) {
-    let pool = QUESTIONS_CACHE.filter(q => q.type === riskKey);
-    if (pool.length < 6) {
-        const others = QUESTIONS_CACHE.filter(q => q.type !== riskKey);
-        pool = [...pool, ...others];
-    }
-    for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    VDCSystem.analysis.selectedQuestions = pool.slice(0, 6);
+    // Selecionar TODAS as 30 perguntas para o relatório PDF
+    VDCSystem.analysis.selectedQuestions = [...QUESTIONS_CACHE];
 }
 
 function updateDashboard() {
@@ -931,8 +1038,46 @@ function updateDashboard() {
     setElementText('kpiNetValue', formatCurrency(netValue));
     setElementText('kpiInvValue', formatCurrency(ev.faturaPlataforma || 0));
 
+    // QUANTUM BOX
+    setElementText('quantumValue', formatCurrency(ev.quantumBeneficio || 0));
+
     const jurosCard = document.getElementById('jurosCard');
     if(jurosCard) jurosCard.style.display = (ev.diferencialCusto > 0) ? 'block' : 'none';
+}
+
+function updateModulesUI() {
+    const ev = VDCSystem.analysis.extractedValues;
+    const doc = VDCSystem.documents;
+    
+    // SAF-T Module
+    setElementText('saftIliquidoValue', formatCurrency(doc.saft?.totals?.iliquido || ev.saftIliquido || 0));
+    setElementText('saftIvaValue', formatCurrency(doc.saft?.totals?.iva || ev.saftIva || 0));
+    setElementText('saftBrutoValue', formatCurrency(doc.saft?.totals?.bruto || ev.saftBruto || 0));
+    
+    // Statement Module
+    setElementText('stmtGanhosValue', formatCurrency(doc.statements?.totals?.ganhosApp || ev.ganhosApp || 0));
+    setElementText('stmtCampanhasValue', formatCurrency(doc.statements?.totals?.campanhas || ev.campanhas || 0));
+    setElementText('stmtGorjetasValue', formatCurrency(doc.statements?.totals?.gorjetas || ev.gorjetas || 0));
+    setElementText('stmtPortagensValue', formatCurrency(doc.statements?.totals?.portagens || ev.portagens || 0));
+    setElementText('stmtTaxasCancelValue', formatCurrency(doc.statements?.totals?.taxasCancelamento || ev.taxasCancelamento || 0));
+    
+    // Comissão vs Fatura ALERT
+    const comissaoEl = document.getElementById('stmtComissaoValue');
+    if (comissaoEl) {
+        const comissao = doc.statements?.totals?.despesasComissao || 0;
+        comissaoEl.textContent = formatCurrency(comissao);
+        if (VDCSystem.analysis.crossings?.invoiceDivergence) {
+            comissaoEl.classList.add('alert');
+        } else {
+            comissaoEl.classList.remove('alert');
+        }
+    }
+    
+    // DAC7 Quarterly
+    setElementText('dac7Q1Value', formatCurrency(doc.dac7?.totals?.q1 || 0));
+    setElementText('dac7Q2Value', formatCurrency(doc.dac7?.totals?.q2 || 0));
+    setElementText('dac7Q3Value', formatCurrency(doc.dac7?.totals?.q3 || 0));
+    setElementText('dac7Q4Value', formatCurrency(doc.dac7?.totals?.q4 || 0));
 }
 
 function showAlerts() {
@@ -945,6 +1090,7 @@ function showAlerts() {
         verdictSection.className = `verdict-display active verdict-${VDCSystem.analysis.verdict.key}`;
         setElementText('verdictLevel', VDCSystem.analysis.verdict.level);
         setElementText('verdictDesc', VDCSystem.analysis.verdict.description);
+        setElementText('verdictPercentValue', VDCSystem.analysis.verdict.percent);
     }
 
     const bigDataAlert = document.getElementById('bigDataAlert');
@@ -1030,11 +1176,25 @@ function exportDataJSON() {
             },
             statements: {
                 count: VDCSystem.documents.statements?.files?.length || 0,
-                gross: VDCSystem.documents.statements?.totals?.rendimentosBrutos || 0,
-                commission: VDCSystem.documents.statements?.totals?.comissaoApp || 0
+                ganhos: VDCSystem.documents.statements?.totals?.ganhosApp || 0,
+                campanhas: VDCSystem.documents.statements?.totals?.campanhas || 0,
+                gorjetas: VDCSystem.documents.statements?.totals?.gorjetas || 0,
+                portagens: VDCSystem.documents.statements?.totals?.portagens || 0,
+                taxasCancelamento: VDCSystem.documents.statements?.totals?.taxasCancelamento || 0,
+                comissao: VDCSystem.documents.statements?.totals?.despesasComissao || 0
+            },
+            saft: {
+                count: VDCSystem.documents.saft?.files?.length || 0,
+                bruto: VDCSystem.documents.saft?.totals?.bruto || 0,
+                iliquido: VDCSystem.documents.saft?.totals?.iliquido || 0,
+                iva: VDCSystem.documents.saft?.totals?.iva || 0
             },
             dac7: {
-                count: VDCSystem.documents.dac7?.files?.length || 0
+                count: VDCSystem.documents.dac7?.files?.length || 0,
+                q1: VDCSystem.documents.dac7?.totals?.q1 || 0,
+                q2: VDCSystem.documents.dac7?.totals?.q2 || 0,
+                q3: VDCSystem.documents.dac7?.totals?.q3 || 0,
+                q4: VDCSystem.documents.dac7?.totals?.q4 || 0
             }
         },
         auditLog: VDCSystem.logs.slice(-20)
@@ -1067,7 +1227,7 @@ async function exportPDF() {
         const platform = PLATFORM_DATA[VDCSystem.selectedPlatform] || PLATFORM_DATA.bolt;
         const ev = VDCSystem.analysis.extractedValues;
         const meta = VDCSystem.forensicMetadata || getForensicMetadata();
-        const verdict = VDCSystem.analysis.verdict || { level: 'N/A', key: 'low', description: 'Perícia não executada.', color: '#8c7ae6' };
+        const verdict = VDCSystem.analysis.verdict || { level: 'N/A', key: 'low', description: 'Perícia não executada.', color: '#8c7ae6', percent: '0.00%' };
 
         let y = 20;
         const left = 15;
@@ -1075,7 +1235,7 @@ async function exportPDF() {
         const pageHeight = doc.internal.pageSize.getHeight();
 
         const checkPageBreak = (neededSpace) => {
-            if (y + neededSpace >= pageHeight - 20) {
+            if (y + neededSpace >= pageHeight - 30) {
                 doc.addPage();
                 y = 20;
                 return true;
@@ -1083,119 +1243,310 @@ async function exportPDF() {
             return false;
         };
 
-        const addFooter = () => {
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setDrawColor(100,100,100);
-                doc.line(10, pageHeight - 15, pageWidth - 10, pageHeight - 15);
-                doc.setFontSize(6);
-                doc.setTextColor(100,100,100);
-                doc.text('Art. 103.º e 104.º RGIT · Art. 256.º Código Penal · ISO/IEC 27037', 10, pageHeight - 11);
-                doc.text(VDCSystem.masterHash ? `HASH: ${VDCSystem.masterHash.substring(0,24)}...` : 'HASH NÃO GERADA', 10, pageHeight - 7);
-                doc.setFontSize(7);
-                doc.setTextColor(120,120,120);
-                doc.text(t.pdfFooter, pageWidth/2, pageHeight - 7, { align: 'center' });
-            }
-        };
-
-        doc.setFillColor(15,23,42); doc.rect(0,0,pageWidth,45,'F');
-        doc.setFontSize(18); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
-        doc.text(t.pdfTitle, pageWidth/2, 18, { align: 'center' });
-        doc.setFontSize(9); doc.setTextColor(200,200,200);
-        doc.text(`${t.pdfLabelSession}: ${VDCSystem.sessionId || 'N/A'}`, left, 30);
-        doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')} - ${new Date().toLocaleTimeString('pt-PT')}`, left, 36);
-        doc.text(`Unix Timestamp: ${meta.timestampUnix || Math.floor(Date.now()/1000)}`, left, 42);
-        doc.line(left,45,pageWidth-15,45);
-        y = 52;
-
-        checkPageBreak(40);
-        doc.setFontSize(12); doc.setTextColor(0,0,0); doc.setFont('helvetica','bold');
-        doc.text(t.pdfSection1, left, y); y += 8;
-        doc.setFont('helvetica','normal'); doc.setFontSize(9);
-        doc.text(`${t.pdfLabelName}: ${VDCSystem.client.name || 'N/A'}`, left+5, y); y += 5;
-        doc.text(`${t.pdfLabelNIF}: ${VDCSystem.client.nif || 'N/A'}`, left+5, y); y += 5;
-        doc.text(`Plataforma: ${platform.name} (NIF: ${platform.nif})`, left+5, y); y += 5;
-        doc.text(`Ano Fiscal: ${VDCSystem.selectedYear} · Período: ${VDCSystem.selectedPeriodo}`, left+5, y); y += 5;
-        doc.text(`User Agent: ${meta.userAgent ? meta.userAgent.substring(0,60) : 'N/A'}...`, left+5, y); y += 5;
-        doc.text(`Timezone: ${meta.timezone || 'N/A'}`, left+5, y); y += 10;
-        doc.line(left,y,pageWidth-15,y); y += 8;
-
-        checkPageBreak(80);
-        doc.setFont('helvetica','bold'); doc.setFontSize(12);
-        doc.text(t.pdfSection2, left, y); y += 8;
-        doc.setFont('helvetica','normal'); doc.setFontSize(10);
-        doc.text(`${t.pdfLabelGross}: ${formatCurrency(ev.rendimentosBrutos || 0)}`, left+5, y); y += 6;
-        doc.text(`${t.pdfLabelComm}: ${formatCurrency(Math.abs(ev.comissaoApp || 0))}`, left+5, y); y += 6;
-        doc.text(`${t.pdfLabelInv}: ${formatCurrency(ev.faturaPlataforma || 0)}`, left+5, y); y += 6;
-        if ((ev.diferencialCusto || 0) > 0.01) {
-            doc.setTextColor(200,50,50); doc.setFont('helvetica','bold');
-            doc.text(`${t.pdfLabelDiff}: ${formatCurrency(ev.diferencialCusto || 0)}`, left+5, y); y += 8;
-            doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
-            doc.text(`${t.pdfLabelIVA23}: ${formatCurrency(ev.iva23 || 0)}`, left+5, y); y += 6;
-            doc.text(`Taxa Regulação (5%): ${formatCurrency(ev.amtImtFee || 0)}`, left+5, y); y += 6;
-            doc.text(`${t.pdfLabelJuros}: ${formatCurrency(ev.jurosMora || 0)}`, left+5, y); y += 6;
-            doc.text(`${t.pdfLabelComp}: ${formatCurrency(ev.jurosCompensatorios || 0)}`, left+5, y); y += 6;
-            doc.text(`${t.pdfLabelMulta}: ${formatCurrency(ev.multaDolo || 0)}`, left+5, y); y += 6;
-            doc.setFont('helvetica','bold');
-            doc.text(`${t.pdfQuantum}: ${formatCurrency(ev.quantumBeneficio || 0)}`, left+5, y); y += 8;
-        }
-        doc.line(left,y,pageWidth-15,y); y += 8;
-
-        checkPageBreak(30);
-        doc.setFillColor(240,240,240); doc.rect(left, y-3, pageWidth-30, 25, 'F');
-        doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(0,0,0);
-        doc.text(t.pdfRiskVerdict, left+2, y);
-        doc.setFontSize(14); doc.setTextColor(verdict.color);
-        doc.text(verdict.level, left+2, y+10); y += 30;
-
-        checkPageBreak(40);
-        doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(12);
-        doc.text(t.pdfLegalTitle, left, y); y += 8;
-        doc.setFont('helvetica','normal'); doc.setFontSize(9);
-        doc.text('• ' + t.pdfLegalRGIT, left+5, y); y += 5;
-        doc.text('• ' + t.pdfLegalLGT, left+5, y); y += 5;
-        doc.text('• ' + t.pdfLegalPenal, left+5, y); y += 5;
-        doc.text('• ' + t.pdfLegalISO, left+5, y); y += 8;
-        doc.line(left,y,pageWidth-15,y); y += 8;
-
-        checkPageBreak(40);
-        doc.setFont('helvetica','bold'); doc.setFontSize(12);
-        doc.text(t.pdfSection4, left, y); y += 8;
-        doc.setFont('helvetica','normal'); doc.setFontSize(9);
-        const lines = doc.splitTextToSize(t.pdfConclusionText, pageWidth - 30);
-        doc.text(lines, left+5, y); y += (lines.length * 5) + 5;
-        doc.line(left,y,pageWidth-15,y); y += 8;
-
-        addFooter();
-        doc.save(`VDC_PARECER_${VDCSystem.sessionId}.pdf`);
+        // ==================== HEADER PROFISSIONAL ====================
+        // Box branco com bordas duplas pretas
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.5);
+        doc.rect(10, 10, pageWidth - 20, 35, 'FD'); // Outer border
         
-        logAudit('Parecer Pericial exportado com sucesso.', 'success');
-        showToast('Parecer Pericial gerado', 'success');
+        doc.setLineWidth(0.3);
+        doc.rect(12, 12, pageWidth - 24, 31, 'D'); // Inner border
 
-    } catch(err) {
-        console.error(err);
-        logAudit('Erro ao gerar Parecer Pericial.', 'error');
+        // Título
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfTitle, pageWidth / 2, 22, { align: 'center' });
+
+        // Tags [FORENSE] [FINANCEIRO]
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 139);
+        doc.text(t.pdfHeaderTag1, 15, 38);
+        doc.setTextColor(0, 100, 0);
+        doc.text(t.pdfHeaderTag2, pageWidth - 15, 38, { align: 'right' });
+
+        y = 55;
+
+        // ==================== LINHA DE PROTOCOLO ====================
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.2);
+        doc.line(10, y, pageWidth - 10, y);
+        y += 5;
+
+        doc.setFontSize(8);
+        doc.setTextColor(60, 60, 60);
+        doc.setFont(undefined, 'normal');
+        const protocolLine = `${t.pdfLabelSession}: ${VDCSystem.sessionId} | ${t.lblDate}: ${new Date().toLocaleDateString(currentLang === 'pt' ? 'pt-PT' : 'en-GB')} | ${t.pdfLabelTimestamp}: ${meta.timestampUnix}`;
+        doc.text(protocolLine, pageWidth / 2, y, { align: 'center' });
+
+        y += 10;
+
+        // ==================== 1. IDENTIFICAÇÃO E METADADOS ====================
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection1, left, y);
+        y += 7;
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(40, 40, 40);
+
+        doc.text(`${t.pdfLabelName}: ${VDCSystem.client.name}`, left, y); y += 5;
+        doc.text(`${t.pdfLabelNIF}: ${VDCSystem.client.nif}`, left, y); y += 5;
+        doc.text(`${t.pdfLabelPlatform}: ${platform.name}`, left, y); y += 5;
+        doc.text(`${t.pdfLabelAddress}: ${platform.address}`, left, y); y += 5;
+        doc.text(`NIF Plataforma: ${platform.nif}`, left, y); y += 5;
+        doc.text(`Ano Fiscal em Exame: ${VDCSystem.selectedYear}`, left, y); y += 5;
+        doc.text(`Versão do Sistema: ${VDCSystem.version}`, left, y); y += 10;
+
+        // ==================== 2. ANÁLISE FINANCEIRA CRUZADA ====================
+        checkPageBreak(50);
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text(t.pdfSection2, left, y);
+        y += 7;
+
+        // Módulos de Extração
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.text('MÓDULO SAF-T:', left, y); y += 5;
+        doc.setFont(undefined, 'normal');
+        doc.text(`  Valor Ilíquido Total: ${formatCurrency(VDCSystem.documents.saft?.totals?.iliquido || ev.saftIliquido || 0)}`, left, y); y += 4;
+        doc.text(`  Total IVA (6%): ${formatCurrency(VDCSystem.documents.saft?.totals?.iva || ev.saftIva || 0)}`, left, y); y += 4;
+        doc.text(`  Valor Bruto Total: ${formatCurrency(VDCSystem.documents.saft?.totals?.bruto || ev.saftBruto || 0)}`, left, y); y += 7;
+
+        doc.setFont(undefined, 'bold');
+        doc.text('MÓDULO EXTRATOS:', left, y); y += 5;
+        doc.setFont(undefined, 'normal');
+        doc.text(`  Ganhos na App: ${formatCurrency(VDCSystem.documents.statements?.totals?.ganhosApp || ev.ganhosApp || 0)}`, left, y); y += 4;
+        doc.text(`  Campanhas: ${formatCurrency(VDCSystem.documents.statements?.totals?.campanhas || ev.campanhas || 0)}`, left, y); y += 4;
+        doc.text(`  Gorjetas: ${formatCurrency(VDCSystem.documents.statements?.totals?.gorjetas || ev.gorjetas || 0)}`, left, y); y += 4;
+        doc.text(`  Portagens: ${formatCurrency(VDCSystem.documents.statements?.totals?.portagens || ev.portagens || 0)}`, left, y); y += 4;
+        doc.text(`  Taxas Cancelamento: ${formatCurrency(VDCSystem.documents.statements?.totals?.taxasCancelamento || ev.taxasCancelamento || 0)}`, left, y); y += 7;
+
+        doc.setFont(undefined, 'bold');
+        doc.text('MÓDULO DAC7 (DECOMPOSIÇÃO TRIMESTRAL):', left, y); y += 5;
+        doc.setFont(undefined, 'normal');
+        doc.text(`  1.º Trimestre: ${formatCurrency(VDCSystem.documents.dac7?.totals?.q1 || 0)}`, left, y); y += 4;
+        doc.text(`  2.º Trimestre: ${formatCurrency(VDCSystem.documents.dac7?.totals?.q2 || 0)}`, left, y); y += 4;
+        doc.text(`  3.º Trimestre: ${formatCurrency(VDCSystem.documents.dac7?.totals?.q3 || 0)}`, left, y); y += 4;
+        doc.text(`  4.º Trimestre: ${formatCurrency(VDCSystem.documents.dac7?.totals?.q4 || 0)}`, left, y); y += 10;
+
+        // KPIs
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.text('INDICADORES-CHAVE:', left, y); y += 6;
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(9);
+        doc.text(`Bruto Reconstruído: ${formatCurrency(ev.rendimentosBrutos || 0)}`, left, y); y += 4;
+        doc.text(`Comissões Detetadas: ${formatCurrency(Math.abs(ev.comissaoApp || 0))}`, left, y); y += 4;
+        doc.text(`Líquido Calculado: ${formatCurrency((ev.rendimentosBrutos || 0) + (ev.comissaoApp || 0))}`, left, y); y += 4;
+        doc.text(`Faturado pela Plataforma: ${formatCurrency(ev.faturaPlataforma || 0)}`, left, y); y += 4;
+        doc.text(`Discrepância (Fosso Fiscal): ${formatCurrency(ev.diferencialCusto || 0)}`, left, y); y += 10;
+
+        // ==================== QUANTUM BENEFÍCIO ILÍCITO ====================
+        checkPageBreak(30);
+        doc.setFillColor(255, 240, 240);
+        doc.setDrawColor(200, 0, 0);
+        doc.setLineWidth(0.3);
+        doc.rect(left, y - 3, pageWidth - 30, 25, 'FD');
+        
+        doc.setFontSize(10);
+        doc.setTextColor(180, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.quantumTitle, left + 5, y + 3);
+        y += 8;
+        
+        doc.setFontSize(14);
+        doc.text(formatCurrency(ev.quantumBeneficio || 0), left + 5, y + 4);
+        y += 8;
+        
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text(t.quantumFormula, left + 5, y + 2);
+        y += 4;
+        doc.text(t.quantumNote, left + 5, y + 2);
+        y += 15;
+
+        // ==================== 3. VEREDICTO DE RISCO ====================
+        checkPageBreak(25);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection3, left, y);
+        y += 7;
+
+        // Box colorido do veredicto
+        const verdictColor = {
+            'low': [76, 175, 80],
+            'med': [245, 158, 11],
+            'high': [239, 68, 68]
+        }[verdict.key] || [100, 100, 100];
+
+        doc.setFillColor(verdictColor[0], verdictColor[1], verdictColor[2]);
+        doc.rect(left, y - 2, pageWidth - 30, 15, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text(`${verdict.level} | ${t.verdictPercent}: ${verdict.percent}`, pageWidth / 2, y + 5, { align: 'center' });
+        y += 18;
+
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text(verdict.description, left, y, { maxWidth: pageWidth - 30 });
+        y += 15;
+
+        // ==================== 4. CONCLUSÕES PERICIAIS ====================
+        checkPageBreak(30);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection4, left, y);
+        y += 7;
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(40, 40, 40);
+        
+        const conclusionLines = doc.splitTextToSize(t.pdfConclusionText, pageWidth - 30);
+        doc.text(conclusionLines, left, y);
+        y += (conclusionLines.length * 4) + 10;
+
+        // ==================== 5. CADEIA DE CUSTÓDIA ====================
+        checkPageBreak(20);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection5, left, y);
+        y += 7;
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(60, 60, 60);
+        
+        const evidence = VDCSystem.analysis.evidenceIntegrity || [];
+        evidence.slice(0, 5).forEach(e => {
+            checkPageBreak(8);
+            doc.text(`• ${e.filename} | SHA-256: ${e.hash.substring(0, 16)}... | ${e.timestamp}`, left, y);
+            y += 4;
+        });
+        y += 5;
+
+        // ==================== 6. INTERROGATÓRIO ESTRATÉGICO (30 QUESTÕES) ====================
+        checkPageBreak(20);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection6, left, y);
+        y += 7;
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(40, 40, 40);
+
+        // IMPRIMIR TODAS AS 30 PERGUNTAS
+        QUESTIONS_CACHE.forEach((q, i) => {
+            checkPageBreak(6);
+            doc.text(`${i + 1}. ${q.text}`, left, y, { maxWidth: pageWidth - 30 });
+            y += 4;
+        });
+        y += 5;
+
+        // ==================== 7. ASSINATURA DIGITAL ====================
+        checkPageBreak(20);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(t.pdfSection7, left, y);
+        y += 7;
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Master Hash SHA-256: ${VDCSystem.masterHash || 'N/A'}`, left, y);
+        y += 4;
+        doc.text(`Checksum de Integridade: ${CryptoJS.SHA256(JSON.stringify(VDCSystem.analysis.extractedValues)).toString().substring(0, 32)}...`, left, y);
+        y += 10;
+
+        // ==================== FUNDAMENTAÇÃO LEGAL ====================
+        checkPageBreak(25);
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text(t.pdfLegalTitle + ':', left, y);
+        y += 6;
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(60, 60, 60);
+        doc.text(`• ${t.pdfLegalRGIT}`, left, y); y += 4;
+        doc.text(`• ${t.pdfLegalLGT}`, left, y); y += 4;
+        doc.text(`• ${t.pdfLegalISO}`, left, y); y += 10;
+
+        // ==================== RODAPÉ (FOOTER) - 3 LINHAS CENTRADAS ====================
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setDrawColor(150, 150, 150);
+            doc.setLineWidth(0.3);
+            doc.line(10, pageHeight - 22, pageWidth - 10, pageHeight - 22);
+
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont(undefined, 'normal');
+            
+            // Linha 1
+            doc.text(t.pdfFooterLine1, pageWidth / 2, pageHeight - 17, { align: 'center' });
+            
+            // Linha 2 - HASH
+            doc.text(`HASH: ${VDCSystem.masterHash || 'NÃO GERADA'}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+            
+            // Linha 3
+            doc.text(t.pdfFooterLine3, pageWidth / 2, pageHeight - 7, { align: 'center' });
+        }
+
+        doc.save(`VDC_PARECER_PERICIAL_${VDCSystem.sessionId}.pdf`);
+        logAudit('Parecer pericial PDF gerado com sucesso.', 'success');
+        showToast('Parecer pericial exportado', 'success');
+
+    } catch (error) {
+        console.error('Erro PDF:', error);
+        logAudit(`Erro ao gerar PDF: ${error.message}`, 'error');
+        showToast('Erro ao gerar PDF', 'error');
     }
 }
 
 // ============================================================================
-// 11. UTILITÁRIOS DE UI
+// 11. FUNÇÕES AUXILIARES
 // ============================================================================
+function generateMasterHash() {
+    const data = JSON.stringify({
+        client: VDCSystem.client,
+        docs: VDCSystem.documents,
+        session: VDCSystem.sessionId
+    });
+    VDCSystem.masterHash = CryptoJS.SHA256(data).toString();
+    setElementText('masterHashValue', VDCSystem.masterHash);
+}
+
 function logAudit(message, type = 'info') {
-    const time = new Date().toLocaleTimeString();
-    const entry = `[${time}] ${message}`;
+    const timestamp = new Date().toLocaleTimeString('pt-PT');
+    const entry = { timestamp, message, type };
     VDCSystem.logs.push(entry);
-    
-    const consoleEl = document.getElementById('consoleOutput');
-    if(consoleEl) {
-        const div = document.createElement('div');
-        div.className = `log-entry log-${type}`;
-        div.textContent = entry;
-        consoleEl.appendChild(div);
-        consoleEl.scrollTop = consoleEl.scrollHeight;
+
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        const logEl = document.createElement('div');
+        logEl.className = `log-entry log-${type}`;
+        logEl.textContent = `[${timestamp}] ${message}`;
+        consoleOutput.appendChild(logEl);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
     }
-    console.log(`[VDC LOG] ${entry}`);
 }
 
 function showToast(message, type = 'info') {
@@ -1204,98 +1555,49 @@ function showToast(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast-notification ${type}`;
-    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i><p>${message}</p>`;
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-triangle',
+        warning: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+    };
+
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><p>${message}</p>`;
     container.appendChild(toast);
 
     setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s reverse';
+        toast.style.animation = 'slideIn 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 4000);
+}
+
+function clearConsole() {
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        consoleOutput.innerHTML = '';
+    }
+    VDCSystem.logs = [];
+    logAudit('Console limpo pelo utilizador.', 'info');
+}
+
+function resetSystem() {
+    if (!confirm('Tem a certeza que deseja reiniciar o sistema? Todos os dados serão perdidos.')) return;
+
+    localStorage.removeItem('vdc_client_data_bd_v12_4');
+    location.reload();
 }
 
 function updateAnalysisButton() {
     const btn = document.getElementById('analyzeBtn');
-    const client = VDCSystem.client;
-    const hasControl = VDCSystem.documents.control?.files?.length > 0;
-    const hasSaft = VDCSystem.documents.saft?.files?.length > 0;
-    
-    if(btn) {
-        btn.disabled = !(client && hasControl && hasSaft);
+    if (btn) {
+        const hasFiles = Object.values(VDCSystem.documents).some(d => d.files && d.files.length > 0);
+        const hasClient = VDCSystem.client !== null;
+        btn.disabled = !(hasFiles || hasClient);
     }
-
-    const pdfBtn = document.getElementById('exportPDFBtn');
-    if(pdfBtn) pdfBtn.disabled = !client;
 }
 
-function generateMasterHash() {
-    const stateString = JSON.stringify(VDCSystem.documents) + VDCSystem.sessionId + new Date().getTime();
-    VDCSystem.masterHash = CryptoJS.SHA256(stateString).toString();
-    setElementText('masterHashDisplay', VDCSystem.masterHash);
-}
-
-function resetSystem() {
-    if(!confirm('Tem a certeza que deseja reiniciar a perícia e limpar todos os dados?')) return;
-    
-    VDCSystem.client = null;
-    VDCSystem.analysis = { extractedValues: {}, crossings: { delta: 0 }, verdict: null, evidenceIntegrity: [], selectedQuestions: [] };
-    VDCSystem.documents = { 
-        control: { files: [], hashes: {}, totals: { records: 0 } }, 
-        saft: { files: [], hashes: {}, totals: { records: 0 } }, 
-        invoices: { files: [], hashes: {}, totals: { invoiceValue: 0, records: 0 } }, 
-        statements: { files: [], hashes: {}, totals: { rendimentosBrutos: 0, comissaoApp: 0, records: 0 } },
-        dac7: { files: [], hashes: {}, totals: { records: 0 } }
-    };
-    VDCSystem.counts = { total: 0 };
-    
-    localStorage.removeItem('vdc_client_data_bd_v12_3');
-    
-    document.getElementById('clientStatusFixed').style.display = 'none';
-    document.getElementById('clientNameFixed').value = '';
-    document.getElementById('clientNIFFixed').value = '';
-    
-    ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 'statementsFileListModal', 'dac7FileListModal'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) { el.innerHTML = ''; el.style.display = 'none'; }
-    });
-    
-    updateCounters();
-    updateEvidenceSummary();
-    updateDashboard();
-    
-    document.getElementById('verdictSection').style.display = 'none';
-    document.getElementById('bigDataAlert').style.display = 'none';
-    document.getElementById('jurosCard').style.display = 'none';
-    
-    if(VDCSystem.chart) VDCSystem.chart.destroy();
-    
-    document.getElementById('consoleOutput').innerHTML = '';
-    
-    generateMasterHash();
-    logAudit('Perícia reiniciada. Todos os dados foram limpos.', 'warn');
-    showToast('Perícia reiniciada', 'warning');
-    updateAnalysisButton();
-}
-
-function clearConsole() {
-    document.getElementById('consoleOutput').innerHTML = '';
-    logAudit('Console de custódia limpo.', 'info');
-}
-
-// ============================================================================
-// 12. BINDING GLOBAL
-// ============================================================================
-window.VDCSystem = VDCSystem;
-window.switchLanguage = switchLanguage;
-window.exportPDF = exportPDF;
-window.performAudit = performAudit;
-window.resetSystem = resetSystem;
-window.logAudit = logAudit;
-window.forensicRound = forensicRound;
-window.formatCurrency = formatCurrency;
-window.validateNIF = validateNIF;
-
-console.log('VDC v12.3 LASER CROSS - Sistema de Peritagem Forense carregado com todas as disposições legais.');
-
-// ============================================================================
-// FIM DO SCRIPT · TODOS OS REQUISITOS IMPLEMENTADOS · PT-PT JURÍDICO
-// ============================================================================
+/* =====================================================================
+   FIM DO FICHEIRO SCRIPT.JS · v12.4 RETA FINAL FORENSE
+   TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
+   ===================================================================== */
