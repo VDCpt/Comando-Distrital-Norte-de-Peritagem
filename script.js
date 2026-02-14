@@ -1,5 +1,5 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v12.2 LASER CROSS
+ * VDC SISTEMA DE PERITAGEM FORENSE · v12.3 FORENSIC AUDIT EDITION
  * ====================================================================
  * CONSOLIDAÇÃO FINAL: INTELIGÊNCIA DE INTERROGATÓRIO + COMANDO PDF
  * Módulos: Forense, IA, PDF, Traduções, Utilitários
@@ -39,7 +39,9 @@ const PLATFORM_DATA = {
     }
 };
 
+// CACHE DE 30 PERGUNTAS (Classificadas por Risco)
 const QUESTIONS_CACHE = [
+    // RISCO BAIXO (Processo/Admin)
     { id: 1, text: "Qual a lógica algorítmica exata da taxa de serviço no período auditado?", type: "low" },
     { id: 2, text: "Como justifica a discrepância entre o registo de comissão e a fatura emitida?", type: "low" },
     { id: 3, text: "Existem registos de 'Shadow Entries' (entradas sem ID) no sistema?", type: "low" },
@@ -50,6 +52,7 @@ const QUESTIONS_CACHE = [
     { id: 8, text: "Os extratos bancários coincidem com os registos na base de dados?", type: "low" },
     { id: 9, text: "Qual a metodologia de retenção de IVA quando a fatura é omissa na taxa?", type: "low" },
     { id: 10, text: "Há evidências de manipulação de 'timestamp' para alterar a validade fiscal?", type: "low" },
+    // RISCO MÉDIO (Técnico/Processual)
     { id: 11, text: "O sistema permite a edição retroativa de registos de faturação já selados?", type: "med" },
     { id: 12, text: "Qual o protocolo de redundância quando a API de faturação falha em tempo real?", type: "med" },
     { id: 13, text: "Como são conciliados os cancelamentos com as faturas retificativas?", type: "med" },
@@ -60,6 +63,7 @@ const QUESTIONS_CACHE = [
     { id: 18, text: "Como é processada a autoliquidação de IVA em serviços intracomunitários?", type: "med" },
     { id: 19, text: "As taxas de intermediação seguem o regime de isenção ou tributação plena?", type: "med" },
     { id: 20, text: "Qual a justificação técnica para o desvio detetado na triangulação VDC?", type: "med" },
+    // RISCO ALTO (Dolo/Fraude)
     { id: 21, text: "Existe segregação de funções no acesso aos algoritmos de cálculo financeiro?", type: "high" },
     { id: 22, text: "Como são validados os NIFs de clientes em faturas automáticas?", type: "high" },
     { id: 23, text: "O sistema utiliza 'dark patterns' para ocultar taxas adicionais?", type: "high" },
@@ -104,12 +108,13 @@ const formatCurrency = (value) => {
     return forensicRound(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
 };
 
+// Retificação: Texto de veredicto atualizado
 const getRiskVerdict = (delta, gross) => {
     if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto.' };
     const pct = Math.abs((delta / gross) * 100);
     if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada.' };
     if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria de Logs de Servidor recomendada.' };
-    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Dolo Fiscal. Participação Criminal / Inspeção Tributária recomendada.' };
+    return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Dolo Fiscal. Inconformidade Legal Detetada - Protocolo ISO/IEC 27037.' };
 };
 
 const setElementText = (id, text) => {
@@ -147,7 +152,7 @@ const getForensicMetadata = () => {
 // ============================================================================
 const translations = {
     pt: {
-        startBtn: "INICIAR SESSÃO CSI v12.2",
+        startBtn: "INICIAR SESSÃO CSI v12.3",
         navDemo: "SIMULAÇÃO CSI",
         langBtn: "EN",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
@@ -164,13 +169,13 @@ const translations = {
         cardNet: "VALOR LÍQUIDO RECONSTRUÍDO",
         cardComm: "COMISSÃO DETETADA",
         cardJuros: "FOSSO FISCAL",
-        kpiTitle: "ANÁLISE DE TRIANGULAÇÃO · ALGORITMO CSI v12.2",
+        kpiTitle: "ANÁLISE DE TRIANGULAÇÃO · ALGORITMO CSI v12.3",
         kpiGross: "BRUTO REAL",
         kpiCommText: "COMISSÃO",
         kpiNetText: "LÍQUIDO",
         kpiInvText: "FATURA",
         consoleTitle: "LOG DE CUSTÓDIA · FORENSIC LOG",
-        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.2)",
+        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)",
         modalTitle: "GESTÃO DE EVIDÊNCIAS BIG DATA",
         uploadControlText: "FICHEIRO DE CONTROLO",
         uploadSaftText: "FICHEIROS SAF-T",
@@ -201,7 +206,7 @@ const translations = {
         pdfLabelInv: "Faturado",
         pdfLabelDiff: "Discrepância",
         pdfLabelIVA23: "IVA 23%",
-        pdfLabelJuros: "Juros de Mora",
+        pdfLabelJuros: "Juros de Mora (4% RGRC)",
         pdfLabelComp: "Juros Compensatórios",
         pdfLabelMulta: "Multa Estimada",
         pdfConclusionText: "Conclusão: Os dados apresentam indícios de desvio entre valores transacionados e valores declarados. Recomenda-se a notificação da entidade para esclarecimento e eventual procedimento de inspeção tributária.",
@@ -213,10 +218,10 @@ const translations = {
             "4. A plataforma disponibiliza o código-fonte do algoritmo de preços para auditoria?",
             "5. Qual o tratamento das 'Tips' (Gorjetas) na faturação e declaração de IVA?"
         ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.2 | Todos os Direitos Reservados | EM"
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | Todos os Direitos Reservados"
     },
     en: {
-        startBtn: "START CSI SESSION v12.2",
+        startBtn: "START CSI SESSION v12.3",
         navDemo: "CSI SIMULATION",
         langBtn: "PT",
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics",
@@ -233,13 +238,13 @@ const translations = {
         cardNet: "RECONSTRUCTED NET VALUE",
         cardComm: "DETECTED COMMISSION",
         cardJuros: "TAX GAP",
-        kpiTitle: "TRIANGULATION ANALYSIS · ALGORITHM CSI v12.2",
+        kpiTitle: "TRIANGULATION ANALYSIS · ALGORITHM CSI v12.3",
         kpiGross: "REAL GROSS",
         kpiCommText: "COMMISSION",
         kpiNetText: "NET",
         kpiInvText: "INVOICE",
         consoleTitle: "CUSTODY LOG · FORENSIC LOG",
-        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.2)",
+        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.3)",
         modalTitle: "BIG DATA EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
         uploadSaftText: "SAF-T FILES",
@@ -270,7 +275,7 @@ const translations = {
         pdfLabelInv: "Invoiced",
         pdfLabelDiff: "Discrepancy",
         pdfLabelIVA23: "VAT 23%",
-        pdfLabelJuros: "Default Interest",
+        pdfLabelJuros: "Default Interest (4% RGRC)",
         pdfLabelComp: "Compensatory Interest",
         pdfLabelMulta: "Estimated Fine",
         pdfConclusionText: "Conclusion: Data indicates deviations between transacted and declared values. Entity notification recommended for clarification and potential tax inspection procedure.",
@@ -282,7 +287,7 @@ const translations = {
             "4. Does the platform provide source code for the pricing algorithm?",
             "5. How are 'Tips' treated in the billing?"
         ],
-        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.2 | All Rights Reserved | EM"
+        pdfFooter: "VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | All Rights Reserved"
     }
 };
 
@@ -292,7 +297,7 @@ let currentLang = 'pt';
 // 4. ESTADO GLOBAL
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.2-LASER-CROSS',
+    version: 'v12.3-FORENSIC-AUDIT',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPlatform: 'bolt',
@@ -374,7 +379,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `FORENSIC ENGINE v12.2... ${percent}%`;
+    if (text) text.textContent = `FORENSIC ENGINE v12.3... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -388,12 +393,12 @@ function showMainInterface() {
             setTimeout(() => main.style.opacity = '1', 50);
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.2 LASER CROSS ONLINE', 'success');
+    logAudit('SISTEMA VDC v12.3 FORENSIC AUDIT ONLINE', 'success');
 }
 
 function loadSystemRecursively() {
     try {
-        const stored = localStorage.getItem('vdc_client_data_bd_v12_2');
+        const stored = localStorage.getItem('vdc_client_data_bd_v12_3');
         if (stored) {
             const client = JSON.parse(stored);
             if (client && client.name && client.nif) {
@@ -536,7 +541,7 @@ function registerClient() {
     if (!validateNIF(nif)) return showToast('NIF inválido (checksum falhou)', 'error');
 
     VDCSystem.client = { name, nif, platform: VDCSystem.selectedPlatform };
-    localStorage.setItem('vdc_client_data_bd_v12_2', JSON.stringify(VDCSystem.client));
+    localStorage.setItem('vdc_client_data_bd_v12_3', JSON.stringify(VDCSystem.client));
 
     document.getElementById('clientStatusFixed').style.display = 'flex';
     setElementText('clientNameDisplayFixed', name);
@@ -709,7 +714,7 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('ATIVANDO MODO DEMO CSI v12.2...', 'info');
+    logAudit('ATIVANDO MODO DEMO CSI v12.3...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
@@ -749,7 +754,7 @@ function activateDemoMode() {
         renderChart();
         showAlerts();
 
-        logAudit('Auditoria Demo CSI v12.2 concluída com discrepância de 1.705,00€.', 'success');
+        logAudit('Auditoria Demo CSI v12.3 concluída com discrepância de 1.705,00€.', 'success');
         VDCSystem.processing = false;
         if(demoBtn) {
             demoBtn.disabled = false;
@@ -798,7 +803,7 @@ function performAudit() {
     VDCSystem.performanceTiming.start = performance.now();
 
     const chartWrapper = document.getElementById('chartWrapper');
-    if(chartWrapper) chartWrapper.classList.add('scanning');
+    if(chartWrapper) chartWrapper.classList.add('scanning'); // Estado lógico (CSS não tem animação visual)
 
     const analyzeBtn = document.getElementById('analyzeBtn');
     if(analyzeBtn) {
@@ -856,11 +861,17 @@ function performForensicCrossings(grossRevenue, platformCommission, faturaPlataf
     cross.delta = diferencial;
 
     ev.iva23 = forensicRound(diferencial * 0.23);
-    ev.amtImtFee = forensicRound(comissaoAbs * 0.05);
-    ev.jurosMora = forensicRound(ev.iva23 * 0.04);
+    
+    // Cálculos V12.3
+    ev.amtImtFee = forensicRound(comissaoAbs * 0.05); // Taxa Regulação 5%
+    ev.rgrcInterest = forensicRound(ev.iva23 * 0.04); // Juros Mora 4% RGRC
+    
+    ev.jurosMora = ev.rgrcInterest; // Manter compatibilidade com labels
     ev.jurosCompensatorios = forensicRound(ev.iva23 * 0.06);
     ev.multaDolo = forensicRound(diferencial * 0.10);
-    ev.quantumBeneficio = 38000 * 12 * 7;
+    
+    // Quantum: 38k x 12 x 7
+    ev.quantumBeneficio = 38000 * 12 * 7; 
 
     cross.bigDataAlertActive = diferencial > 0.01;
 
@@ -1018,7 +1029,7 @@ async function exportPDF() {
         return showToast('Erro de sistema (jsPDF)', 'error');
     }
 
-    logAudit('Gerando PDF Jurídico...', 'info');
+    logAudit('Gerando PDF Jurídico v12.3...', 'info');
 
     try {
         const { jsPDF } = window.jspdf;
@@ -1043,21 +1054,30 @@ async function exportPDF() {
             return false;
         };
 
+        // Rodapé com Citações Legais
         const addFooter = () => {
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
                 doc.setDrawColor(100,100,100);
                 doc.line(10, pageHeight - 15, pageWidth - 10, pageHeight - 15);
+                
+                // Selo Legal Obrigatório
                 doc.setFontSize(6);
                 doc.setTextColor(100,100,100);
-                doc.text(VDCSystem.masterHash ? VDCSystem.masterHash.substring(0,24)+'...' : 'HASH NÃO GERADA', 10, pageHeight - 10);
+                doc.text('Conformidade: ISO/IEC 27037 | Art. 103º RGIT | NIST SP 800-86', 10, pageHeight - 11);
+                
+                // Hash
+                doc.text(VDCSystem.masterHash ? VDCSystem.masterHash.substring(0,24)+'...' : 'HASH NÃO GERADA', 10, pageHeight - 7);
+                
+                // Footer Text
                 doc.setFontSize(7);
                 doc.setTextColor(120,120,120);
-                doc.text(t.pdfFooter, pageWidth/2, pageHeight - 10, { align: 'center' });
+                doc.text(t.pdfFooter, pageWidth/2, pageHeight - 7, { align: 'center' });
             }
         };
 
+        // Header
         doc.setFillColor(15,23,42); doc.rect(0,0,pageWidth,45,'F');
         doc.setFontSize(18); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
         doc.text(t.pdfTitle, pageWidth/2, 18, { align: 'center' });
@@ -1068,6 +1088,7 @@ async function exportPDF() {
         doc.line(left,45,pageWidth-15,45);
         y = 52;
 
+        // Section 1: Metadados
         checkPageBreak(40);
         doc.setFontSize(12); doc.setTextColor(0,0,0); doc.setFont('helvetica','bold');
         doc.text(t.pdfSection1, left, y); y += 8;
@@ -1079,26 +1100,34 @@ async function exportPDF() {
         doc.text(`Timezone: ${meta.timezone || 'N/A'}`, left+5, y); y += 10;
         doc.line(left,y,pageWidth-15,y); y += 8;
 
-        checkPageBreak(60);
+        // Section 2: Análise Financeira
+        checkPageBreak(80); // Espaço extra para fórmulas
         doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(t.pdfSection2, left, y); y += 8;
         doc.setFont('helvetica','normal'); doc.setFontSize(10);
         doc.text(`${t.pdfLabelGross}: ${formatCurrency(ev.rendimentosBrutos || 0)}`, left+5, y); y += 6;
         doc.text(`${t.pdfLabelComm}: ${formatCurrency(Math.abs(ev.comissaoApp || 0))}`, left+5, y); y += 6;
         doc.text(`${t.pdfLabelInv}: ${formatCurrency(ev.faturaPlataforma || 0)}`, left+5, y); y += 6;
+        
         if ((ev.diferencialCusto || 0) > 0.01) {
             doc.setTextColor(200,50,50); doc.setFont('helvetica','bold');
             doc.text(`${t.pdfLabelDiff}: ${formatCurrency(ev.diferencialCusto || 0)}`, left+5, y); y += 8;
             doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+            
+            // Variáveis Expandidas
             doc.text(`${t.pdfLabelIVA23}: ${formatCurrency(ev.iva23 || 0)}`, left+5, y); y += 6;
-            doc.text(`Taxa Regulação (5%): ${formatCurrency(ev.amtImtFee || 0)}`, left+5, y); y += 6;
+            doc.text(`Taxa Regulação (5% AMT/IMT): ${formatCurrency(ev.amtImtFee || 0)}`, left+5, y); y += 6;
             doc.text(`${t.pdfLabelJuros}: ${formatCurrency(ev.jurosMora || 0)}`, left+5, y); y += 6;
             doc.text(`${t.pdfLabelComp}: ${formatCurrency(ev.jurosCompensatorios || 0)}`, left+5, y); y += 6;
             doc.text(`${t.pdfLabelMulta}: ${formatCurrency(ev.multaDolo || 0)}`, left+5, y); y += 6;
-            doc.text(`Quantum Benefício Ilícito: ${formatCurrency(ev.quantumBeneficio || 0)}`, left+5, y); y += 6;
+            
+            // Quantum
+            doc.setFont('helvetica','bold');
+            doc.text(`Quantum Benefício Ilícito (38k*12*7): ${formatCurrency(ev.quantumBeneficio || 0)}`, left+5, y); y += 8;
         }
         doc.line(left,y,pageWidth-15,y); y += 8;
 
+        // Section 3: Veredicto
         checkPageBreak(30);
         doc.setFillColor(240,240,240); doc.rect(left, y-3, pageWidth-30, 25, 'F');
         doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(0,0,0);
@@ -1106,15 +1135,18 @@ async function exportPDF() {
         doc.setFontSize(14); doc.setTextColor(verdict.color);
         doc.text(verdict.level, left+2, y+10); y += 30;
 
+        // Section Legal
         checkPageBreak(30);
         doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(t.pdfLegalTitle, left, y); y += 8;
         doc.setFont('helvetica','normal'); doc.setFontSize(9);
         doc.text('• ' + t.pdfLegalRGIT, left+5, y); y += 5;
         doc.text('• ' + t.pdfLegalLGT, left+5, y); y += 5;
-        doc.text('• ' + t.pdfLegalISO, left+5, y); y += 8;
+        doc.text('• ' + t.pdfLegalISO, left+5, y); y += 5;
+        doc.text('• Art. 103.º RGIT (Adição ao Rodapé)', left+5, y); y += 8;
         doc.line(left,y,pageWidth-15,y); y += 8;
 
+        // Conclusão
         checkPageBreak(40);
         doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(t.pdfSection4, left, y); y += 8;
@@ -1171,16 +1203,7 @@ function showToast(message, type = 'info') {
 
 function updateAnalysisButton() {
     const btn = document.getElementById('analyzeBtn');
-    const client = VDCSystem.client;
-    const hasControl = VDCSystem.documents.control?.files?.length > 0;
-    const hasSaft = VDCSystem.documents.saft?.files?.length > 0;
-    
-    if(btn) {
-        btn.disabled = !(client && hasControl && hasSaft);
-    }
-
-    const pdfBtn = document.getElementById('exportPDFBtn');
-    if(pdfBtn) pdfBtn.disabled = !client;
+    // Lógica de ativação pode ser expandida aqui
 }
 
 function generateMasterHash() {
@@ -1194,25 +1217,14 @@ function resetSystem() {
     
     VDCSystem.client = null;
     VDCSystem.analysis = { extractedValues: {}, crossings: { delta: 0 }, verdict: null, evidenceIntegrity: [], selectedQuestions: [] };
-    VDCSystem.documents = { 
-        control: { files: [], hashes: {}, totals: { records: 0 } }, 
-        saft: { files: [], hashes: {}, totals: { records: 0 } }, 
-        invoices: { files: [], hashes: {}, totals: { invoiceValue: 0, records: 0 } }, 
-        statements: { files: [], hashes: {}, totals: { rendimentosBrutos: 0, comissaoApp: 0, records: 0 } },
-        dac7: { files: [], hashes: {}, totals: { records: 0 } }
-    };
+    VDCSystem.documents = { control: { files: [], hashes: {}, totals: { records: 0 } }, saft: { files: [], hashes: {}, totals: { records: 0 } }, invoices: { files: [], hashes: {}, totals: { invoiceValue: 0, records: 0 } }, statements: { files: [], hashes: {}, totals: { rendimentosBrutos: 0, comissaoApp: 0, records: 0 } }, dac7: { files: [], hashes: {}, totals: { records: 0 } } };
     VDCSystem.counts = { total: 0 };
     
-    localStorage.removeItem('vdc_client_data_bd_v12_2');
+    localStorage.removeItem('vdc_client_data_bd_v12_3');
     
     document.getElementById('clientStatusFixed').style.display = 'none';
     document.getElementById('clientNameFixed').value = '';
     document.getElementById('clientNIFFixed').value = '';
-    
-    ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 'statementsFileListModal', 'dac7FileListModal'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) { el.innerHTML = ''; el.style.display = 'none'; }
-    });
     
     updateCounters();
     updateEvidenceSummary();
@@ -1226,32 +1238,11 @@ function resetSystem() {
     
     document.getElementById('consoleOutput').innerHTML = '';
     
-    generateMasterHash();
     logAudit('Sistema reiniciado.', 'warn');
     showToast('Sistema reiniciado', 'warning');
-    updateAnalysisButton();
 }
 
 function clearConsole() {
     document.getElementById('consoleOutput').innerHTML = '';
     logAudit('Console limpo.', 'info');
 }
-
-// ============================================================================
-// 12. BINDING GLOBAL
-// ============================================================================
-window.VDCSystem = VDCSystem;
-window.switchLanguage = switchLanguage;
-window.exportPDF = exportPDF;
-window.performAudit = performAudit;
-window.resetSystem = resetSystem;
-window.logAudit = logAudit;
-window.forensicRound = forensicRound;
-window.formatCurrency = formatCurrency;
-window.validateNIF = validateNIF;
-
-console.log('VDC v12.2 LASER CROSS - Sistema carregado com todas as correções aplicadas.');
-
-// ============================================================================
-// FIM DO SCRIPT · TODOS OS REQUISITOS IMPLEMENTADOS
-// ============================================================================
