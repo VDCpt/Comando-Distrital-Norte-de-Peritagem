@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>VDC | SISTEMA DE PERITAGEM FORENSE · v12.3 LASER CROSS</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 
     <!-- FONTES E ÍCONES -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -19,35 +19,39 @@
     <!-- CSS LOCAL -->
     <link rel="stylesheet" href="style.css">
 
-    <meta name="vdc-protocol" content="TERMINAL EDITION v12.3 · FORENSIC PRO · LASER CROSS">
+    <meta name="vdc-protocol" content="TERMINAL EDITION v12.3 · PERITAGEM FORENSE · LASER CROSS">
     <meta name="security-mode" content="strict">
 </head>
 <body>
 
     <!-- SPLASH SCREEN · GATEKEEPER PROTOCOL v12.3 -->
     <div id="splashScreen" class="splash-screen">
-        <div class="laser-line laser-1"></div>
-        <div class="laser-line laser-2"></div>
+        <!-- CRUZAMENTO LASER: H + V + DIAGONAIS -->
+        <div class="laser-h"></div>
+        <div class="laser-v"></div>
+        <div class="laser-d1"></div>
+        <div class="laser-d2"></div>
 
         <div class="splash-content">
             <div class="splash-logo">
-                <i class="fas fa-fingerprint"></i>
+                <i class="fas fa-balance-scale"></i>
             </div>
-            <h1>VDC FORENSIC SYSTEM</h1>
-            <h2>LASER CROSS EDITION v12.3</h2>
+            <h1>VDC PERITAGEM FORENSE</h1>
+            <h2>EDIÇÃO LASER CROSS v12.3</h2>
             <p class="splash-subtitle">
                 ISO/IEC 27037:2022 | NIST SP 800-86 | INTERPOL DIGITAL FORENSICS
             </p>
             <div class="splash-warning-box">
-                <p><i class="fas fa-exclamation-triangle"></i> <i class="fas fa-balance-scale"></i> AMBIENTE RESTRITO — PERÍCIA DIGITAL</p>
-                <p style="font-size: 0.9rem; color: #e4eaf7;">TODAS AS AÇÕES SÃO REGISTADAS COM SHA-256 E TIMESTAMP UNIX</p>
+                <p><i class="fas fa-exclamation-triangle"></i> <i class="fas fa-gavel"></i> ACESSO RESTRITO — ÂMBITO DE PERÍCIA DIGITAL</p>
+                <p style="font-size: 0.9rem; color: #e4eaf7;">AÇÕES REGISTADAS COM SHA-256 · VALOR PROBATÓRIO EM JUÍZO</p>
+                <small>Art. 103.º e 104.º RGIT · Art. 256.º Código Penal Português</small>
             </div>
             <button id="startSessionBtn" class="splash-btn">
                 <i class="fas fa-power-off"></i>
-                <span id="splashStartBtnText">INICIAR SESSÃO CSI v12.3</span>
+                <span id="splashStartBtnText">INICIAR PERÍCIA v12.3</span>
             </button>
             <div class="splash-footer">
-                <p>Chain of Custody · Cadeia de Custódia</p>
+                <p>Chain of Custody · Cadeia de Custódia · Art. 173.º CPP</p>
                 <p class="version">Build: v12.3.0-LASER-CROSS</p>
             </div>
         </div>
@@ -57,8 +61,8 @@
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
             <div class="loading-spinner">
-                <i class="fas fa-shield-alt fa-spin"></i>
-                <i class="fas fa-brain fa-spin"></i>
+                <i class="fas fa-shield-halved fa-spin"></i>
+                <i class="fas fa-scale-balanced fa-spin"></i>
             </div>
             <h2 id="loadingTitle">CARREGANDO MÓDULOS FORENSES...</h2>
             <p id="loadingSub">Verificação de integridade SHA-256 · ISO 27037</p>
@@ -76,9 +80,9 @@
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
-                    <i class="fas fa-user-secret"></i>
+                    <i class="fas fa-file-signature"></i>
                     <div>
-                        <h1>VDC FORENSIC PRO <span class="version-badge">v12.3</span></h1>
+                        <h1>VDC PERITAGEM FORENSE <span class="version-badge">v12.3</span></h1>
                         <p id="headerSubtitle" class="subtitle">
                             ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics
                         </p>
@@ -87,8 +91,8 @@
 
                 <div class="control-group">
                     <button id="demoModeBtn" class="btn-demo-nav">
-                        <i class="fas fa-vial"></i>
-                        <span id="demoBtnText">SIMULAÇÃO CSI</span>
+                        <i class="fas fa-flask"></i>
+                        <span id="demoBtnText">CASO SIMULADO</span>
                     </button>
                     <button id="langToggleBtn" class="btn-lang-toggle">
                         <i class="fas fa-globe"></i>
@@ -98,7 +102,7 @@
 
                 <div class="session-info">
                     <div class="timestamp-fbi">
-                        <span class="session-id">ID: <strong id="sessionIdDisplay">---</strong></span> | 
+                        <span class="session-id">N.º PERÍCIA: <strong id="sessionIdDisplay">---</strong></span> | 
                         <span id="lblDate">Data</span>: <strong id="currentDate">--/--/----</strong> | 
                         <span><i class="fas fa-clock"></i> <strong id="currentTime">--:--:--</strong></span>
                     </div>
@@ -109,18 +113,18 @@
         <!-- APP CONTAINER (SIDEBAR + MAIN) -->
         <div class="app-container">
 
-            <!-- SIDEBAR -->
+            <!-- SIDEBAR 320px -->
             <aside class="sidebar">
                 <div class="sidebar-header-fixed">
-                    <h3 id="sidebarIdTitle"><i class="fas fa-id-card"></i> IDENTIFICAÇÃO DO SUJEITO</h3>
+                    <h3 id="sidebarIdTitle"><i class="fas fa-id-card"></i> IDENTIFICAÇÃO DO SUJEITO PASSIVO</h3>
 
                     <div class="client-identification-fixed">
                         <div class="form-group-fixed">
-                            <label id="lblClientName"><i class="fas fa-user"></i> Nome do Contribuinte</label>
-                            <input type="text" id="clientNameFixed" placeholder="Ex: Empresa Lda">
+                            <label id="lblClientName"><i class="fas fa-user"></i> Nome / Denominação Social</label>
+                            <input type="text" id="clientNameFixed" placeholder="Ex: Empresa, Lda. ou Nome Completo">
                         </div>
                         <div class="form-group-fixed">
-                            <label id="lblNIF"><i class="fas fa-id-badge"></i> NIF / ID Fiscal</label>
+                            <label id="lblNIF"><i class="fas fa-id-badge"></i> NIF / Número de Identificação Fiscal</label>
                             <input type="text" id="clientNIFFixed" placeholder="123456789" maxlength="9">
                         </div>
 
@@ -133,24 +137,33 @@
 
                         <div id="clientStatusFixed" class="client-status-fixed" style="display: none;">
                             <i class="fas fa-shield-alt"></i>
-                            <span id="clientNameDisplayFixed"></span> | <span id="clientNifDisplayFixed"></span>
+                            <span id="clientNameDisplayFixed"></span> | NIF <span id="clientNifDisplayFixed"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="sidebar-filters">
-                    <h3 id="sidebarParamTitle"><i class="fas fa-sliders-h"></i> PARÂMETROS DE AUDITORIA</h3>
+                    <h3 id="sidebarParamTitle"><i class="fas fa-sliders-h"></i> PARÂMETROS DE AUDITORIA FORENSE</h3>
                     <div class="info-fixed">
+                        <!-- ANO FISCAL (2018-2036) -->
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-calendar-alt"></i> <span id="lblDate">Data</span></span>
-                            <input type="date" id="auditDate" class="info-input">
+                            <span class="info-label"><i class="fas fa-calendar-alt"></i> <span id="lblFiscalYear">ANO FISCAL EM EXAME</span></span>
+                            <select id="anoFiscal" class="forensic-input"></select>
                         </div>
+                        <!-- PERÍODO TEMPORAL -->
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-calendar"></i> <span id="lblYear">Ano Fiscal</span></span>
-                            <select id="selYearFixed"></select>
+                            <span class="info-label"><i class="fas fa-chart-line"></i> <span id="lblPeriodo">PERÍODO TEMPORAL</span></span>
+                            <select id="periodoAnalise" class="forensic-input">
+                                <option value="anual">Exercício Completo (Anual)</option>
+                                <option value="1s">1.º Semestre</option>
+                                <option value="2s">2.º Semestre</option>
+                                <option value="trimestral">Análise Trimestral</option>
+                                <option value="mensal">Análise Mensal</option>
+                            </select>
                         </div>
+                        <!-- PLATAFORMA -->
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-building"></i> <span id="lblPlatform">Plataforma</span></span>
+                            <span class="info-label"><i class="fas fa-building"></i> <span id="lblPlatform">PLATAFORMA DIGITAL</span></span>
                             <select id="selPlatformFixed">
                                 <option value="bolt">Bolt Operations OÜ</option>
                                 <option value="uber">Uber B.V.</option>
@@ -164,7 +177,7 @@
 
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
-                        <span><i class="fas fa-folder-open"></i> <span id="btnEvidence">EVIDÊNCIAS DIGITAIS BIGDATA IA</span></span>
+                        <span><i class="fas fa-folder-open"></i> <span id="btnEvidence">GESTÃO DE EVIDÊNCIAS DIGITAIS</span></span>
                         <span id="evidenceCountTotal" class="evidence-count-solid">0</span>
                     </button>
 
@@ -178,7 +191,7 @@
                             <span id="saftCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
-                            <span class="counter-label-compact">INV</span>
+                            <span class="counter-label-compact">FAT</span>
                             <span id="invoiceCountCompact" class="counter-value-compact">0</span>
                         </div>
                         <div class="counter-item-compact">
@@ -187,28 +200,27 @@
                         </div>
                     </div>
                 </div>
+
+                <button id="analyzeBtn" class="btn-forensic" disabled>
+                    <i class="fas fa-search-dollar"></i>
+                    <span id="btnAnalyze">EXECUTAR PERÍCIA FORENSE</span>
+                </button>
             </aside>
 
             <!-- ÁREA DE ANÁLISE (MAIN) -->
             <main class="analysis-area">
-
-                <!-- SCAN OVERLAY (Animações) - removido para versão final estática -->
                 
                 <!-- TOOLBAR -->
                 <section class="toolbar-section">
                     <div class="toolbar-grid">
-                        <button id="analyzeBtn" class="btn-forensic" disabled>
-                            <i class="fas fa-search-dollar"></i>
-                            <span id="btnAnalyze">EXECUTAR ANÁLISE FORENSE</span>
-                        </button>
                         <button id="exportPDFBtn" class="btn-tool" disabled>
-                            <i class="fas fa-file-pdf"></i> <span id="btnPDF">EXPORTAR PARECER PERICIAL</span>
+                            <i class="fas fa-file-pdf"></i> <span id="btnPDF">PARECER PERICIAL</span>
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
-                            <i class="fas fa-file-code"></i> JSON
+                            <i class="fas fa-file-code"></i> JSON PROBATÓRIO
                         </button>
                         <button id="resetBtn" class="btn-tool">
-                            <i class="fas fa-redo-alt"></i> RESET
+                            <i class="fas fa-redo-alt"></i> REINICIAR PERÍCIA
                         </button>
                     </div>
                 </section>
@@ -217,47 +229,47 @@
                 <section class="dashboard-fixed">
                     <div class="stat-card success">
                         <h4 id="cardNet"><i class="fas fa-balance-scale"></i> VALOR LÍQUIDO RECONSTRUÍDO</h4>
-                        <p id="statNet">0,00€</p>
+                        <p id="statNet">0,00 €</p>
                         <span class="stat-desc">Reconstrução Algorítmica</span>
                     </div>
                     <div class="stat-card">
-                        <h4 id="cardComm"><i class="fas fa-percentage"></i> COMISSÃO DETETADA</h4>
-                        <p id="statComm">0,00€</p>
-                        <span class="stat-desc">Taxa de Serviço</span>
+                        <h4 id="cardComm"><i class="fas fa-percentage"></i> COMISSÕES DETETADAS</h4>
+                        <p id="statComm">0,00 €</p>
+                        <span class="stat-desc">Taxas de Serviço</span>
                     </div>
                     <div class="stat-card alert" id="jurosCard" style="display: none;">
                         <h4 id="cardJuros"><i class="fas fa-gavel"></i> FOSSO FISCAL</h4>
-                        <p id="statJuros">0,00€</p>
-                        <span class="stat-desc">Tax Gap Estimado</span>
+                        <p id="statJuros">0,00 €</p>
+                        <span class="stat-desc">Tax Gap · Art. 103.º RGIT</span>
                     </div>
                 </section>
 
                 <!-- KPI SECTION -->
                 <section class="kpi-section">
-                    <h3 id="kpiTitle"><i class="fas fa-project-diagram"></i> ANÁLISE DE TRIANGULAÇÃO · ALGORITMO CSI v12.3</h3>
+                    <h3 id="kpiTitle"><i class="fas fa-project-diagram"></i> TRIANGULAÇÃO FINANCEIRA · ALGORITMO FORENSE v12.3</h3>
                     <div class="kpi-grid">
                         <div class="kpi-card highlight">
                             <h4 id="kpiGross">BRUTO REAL</h4>
-                            <p id="kpiGrossValue">0,00€</p>
+                            <p id="kpiGrossValue">0,00 €</p>
                         </div>
                         <div class="kpi-card">
-                            <h4 id="kpiCommText">COMISSÃO</h4>
-                            <p id="kpiCommValue">0,00€</p>
+                            <h4 id="kpiCommText">COMISSÕES</h4>
+                            <p id="kpiCommValue">0,00 €</p>
                         </div>
                         <div class="kpi-card">
                             <h4 id="kpiNetText">LÍQUIDO</h4>
-                            <p id="kpiNetValue">0,00€</p>
+                            <p id="kpiNetValue">0,00 €</p>
                         </div>
                         <div class="kpi-card danger">
-                            <h4 id="kpiInvText">FATURA</h4>
-                            <p id="kpiInvValue">0,00€</p>
+                            <h4 id="kpiInvText">FATURADO</h4>
+                            <p id="kpiInvValue">0,00 €</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- VEREDICTO DE RISCO CSI -->
+                <!-- VEREDICTO DE RISCO FORENSE -->
                 <section id="verdictSection" class="verdict-display" style="display: none;">
-                    <div class="verdict-title">VEREDICTO DE RISCO CSI</div>
+                    <div class="verdict-title">VEREDICTO · ART. 103.º E 104.º RGIT</div>
                     <div id="verdictLevel" class="verdict-level">---</div>
                     <div id="verdictDesc" class="verdict-desc"></div>
                 </section>
@@ -267,22 +279,23 @@
                     <i class="fas fa-radiation"></i>
                     <div>
                         <h4 id="alertCriticalTitle">ANOMALIA ALGORÍTMICA CRÍTICA</h4>
-                        <p id="alertOmissionText">Discrepância transacional não justificada: <strong id="alertDeltaValue">0,00€</strong></p>
+                        <p id="alertOmissionText">Indício de fraude fiscal não justificada: <strong id="alertDeltaValue">0,00 €</strong></p>
+                        <small>Art. 103.º RGIT - Fraude Fiscal</small>
                     </div>
                 </div>
 
                 <!-- CHART SECTION -->
                 <section class="chart-section">
-                    <h3><i class="fas fa-chart-bar"></i> EVOLUÇÃO DE RENDIMENTOS VS COMISSÕES</h3>
+                    <h3><i class="fas fa-chart-bar"></i> GRÁFICO DE EVOLUÇÃO FINANCEIRA</h3>
                     <div id="chartWrapper" class="chart-container" style="position: relative;">
                         <canvas id="forensicChart"></canvas>
                     </div>
                 </section>
 
-                <!-- CONSOLE DE AUDITORIA -->
+                <!-- CONSOLA DE AUDITORIA -->
                 <section class="console-section">
                     <div class="console-header">
-                        <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · FORENSIC LOG</h3>
+                        <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA</h3>
                         <div class="console-controls">
                             <button id="clearConsoleBtn" class="icon-btn" title="Limpar Console"><i class="fas fa-eraser"></i></button>
                         </div>
@@ -299,7 +312,7 @@
                     <strong>INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.3)</strong>
                     <span id="masterHashDisplay">AGUARDANDO GERAÇÃO...</span>
                 </div>
-                <div class="copyright">VDC Systems International © 2024 / 2026 | Forensic Compliance Module CSI v12.3 | Todos os Direitos Reservados | EM</div>
+                <div class="copyright">VDC Systems International © 2024 / 2026 | Módulo de Peritagem Forense v12.3 | Todos os Direitos Reservados | EM · PT</div>
             </div>
         </footer>
     </div>
@@ -308,7 +321,7 @@
     <div id="evidenceModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-database"></i> <span id="modalTitle">GESTÃO DE EVIDÊNCIAS BIG DATA</span></h3>
+                <h3><i class="fas fa-database"></i> <span id="modalTitle">GESTÃO DE EVIDÊNCIAS DIGITAIS</span></h3>
                 <button id="closeModalBtn" class="icon-btn">
                     <i class="fas fa-times"></i>
                 </button>
@@ -326,7 +339,7 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label><i class="fas fa-file-code"></i> <span id="uploadSaftText">FICHEIROS SAF-T</span> <span style="color: var(--accent-primary);">*</span></label>
+                        <label><i class="fas fa-file-code"></i> <span id="uploadSaftText">FICHEIROS SAF-T (PT)</span> <span style="color: var(--accent-primary);">*</span></label>
                         <button id="saftUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-code"></i> SELECIONAR SAF-T
                         </button>
@@ -335,7 +348,7 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label><i class="fas fa-file-invoice-dollar"></i> <span id="uploadInvoiceText">FATURAS (PDF/CSV)</span></label>
+                        <label><i class="fas fa-file-invoice-dollar"></i> <span id="uploadInvoiceText">FATURAS (PDF/CSV/XML)</span></label>
                         <button id="invoiceUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-invoice-dollar"></i> SELECIONAR FATURAS
                         </button>
@@ -344,7 +357,7 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label><i class="fas fa-university"></i> <span id="uploadStatementText">EXTRATOS DE DADOS</span></label>
+                        <label><i class="fas fa-university"></i> <span id="uploadStatementText">EXTRATOS / DADOS</span></label>
                         <button id="statementUploadBtnModal" class="upload-btn modal-btn">
                             <i class="fas fa-file-contract"></i> SELECIONAR EXTRATOS
                         </button>
@@ -353,9 +366,9 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label><i class="fas fa-envelope-open-text"></i> DAC7 (E-MAIL/PORTAL)</label>
+                        <label><i class="fas fa-envelope-open-text"></i> DAC7 (DECLARAÇÃO)</label>
                         <button id="dac7UploadBtnModal" class="upload-btn modal-btn">
-                            <i class="fas fa-upload"></i> SELECIONAR
+                            <i class="fas fa-upload"></i> SELECIONAR DAC7
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf,.csv,.xml,.eml" multiple hidden>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
@@ -363,7 +376,7 @@
                 </div>
 
                 <div class="processing-summary">
-                    <h4><i class="fas fa-chart-bar"></i> <span id="summaryTitle">RESUMO DE PROCESSAMENTO</span></h4>
+                    <h4><i class="fas fa-chart-bar"></i> <span id="summaryTitle">RESUMO DE PROCESSAMENTO PROBATÓRIO</span></h4>
                     <div class="summary-grid">
                         <div class="summary-item">
                             <span class="summary-label">CONTROLO</span>
