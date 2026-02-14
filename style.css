@@ -10,6 +10,7 @@
     --bg-primary: #020617;
     --bg-secondary: #0f172a;
     --bg-tertiary: #1e293b;
+    --bg-card: rgba(15, 23, 42, 0.7);
 
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
@@ -17,6 +18,7 @@
 
     --accent-primary: #00e5ff;
     --accent-secondary: #0ea5e9;
+    --accent-glow: rgba(0, 229, 255, 0.4);
     --warn-primary: #ef4444;
     --warn-secondary: #f59e0b;
     --success-primary: #10b981;
@@ -118,9 +120,10 @@ body {
     text-align: center;
     z-index: 20;
     padding: 3rem;
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(0, 229, 255, 0.2);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     max-width: 800px;
     border-radius: var(--border-radius-sm);
@@ -733,8 +736,9 @@ body {
 }
 
 .module-card {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     padding: 1rem;
     border-radius: var(--border-radius-sm);
@@ -1337,6 +1341,12 @@ body {
     color: #fff;
     width: 36px;
     height: 36px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .modal-header .icon-btn:hover {
@@ -1419,6 +1429,8 @@ body {
     border-radius: var(--border-radius-sm);
     padding: 0.5rem;
     min-height: 60px;
+    position: relative;
+    z-index: 10;
 }
 
 .file-item-modal {
@@ -1431,6 +1443,7 @@ body {
     background: rgba(0, 229, 255, 0.05);
     border-left: 2px solid var(--accent-primary);
     margin-bottom: 0.3rem;
+    border-radius: var(--border-radius-sm);
 }
 
 .file-name-modal {
@@ -1558,6 +1571,7 @@ body {
     gap: 1rem;
     animation: slideIn 0.3s ease;
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.05);
 }
 
