@@ -1,5 +1,5 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.4 RETA FINAL FORENSE
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.5 RETA FINAL FORENSE
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    CONSOLIDAÇÃO FINAL · TODOS OS BLOCOS FECHADOS · PT-PT FORENSE
    ===================================================================== */
@@ -81,7 +81,6 @@ body {
     transition: opacity 0.5s ease;
 }
 
-/* CRUZAMENTO LASER APENAS HORIZONTAL E VERTICAL */
 .laser-h {
     position: absolute;
     width: 100%;
@@ -107,8 +106,6 @@ body {
     z-index: 10;
     pointer-events: none;
 }
-
-/* LASERS DIAGONAIS REMOVIDOS - LIMPEZA DE INTERFACE */
 
 @keyframes scanH {
     0% { top: 0; opacity: 0; }
@@ -746,7 +743,6 @@ body {
     max-width: 100%;
 }
 
-/* MÓDULOS DE EXTRAÇÃO */
 .extraction-modules {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -820,7 +816,6 @@ body {
     50% { opacity: 0.5; }
 }
 
-/* DAC7 QUARTERLY BREAKDOWN */
 .dac7-breakdown {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -998,7 +993,6 @@ body {
     border-top-color: var(--warn-primary);
 }
 
-/* QUANTUM BENEFÍCIO ILÍCITO BOX */
 .quantum-box {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
     border: 2px solid var(--warn-primary);
@@ -1859,6 +1853,6 @@ body {
 }
 
 /* =====================================================================
-   FIM DO FICHEIRO STYLE.CSS · v12.4 RETA FINAL FORENSE
+   FIM DO FICHEIRO STYLE.CSS · v12.5 RETA FINAL FORENSE
    TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
