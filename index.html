@@ -7,37 +7,26 @@
     <meta name="author" content="VDC Systems International">
     <title>VDC FORENSE · v12.6 RETA FINAL</title>
 
-    <!-- FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
-    <!-- GOOGLE FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- CHART.JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- JSPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- PAPAPARSE -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-    <!-- CRYPTO-JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <!-- STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- =================================================================
-         SPLASH SCREEN (LASER H + V)
-         ================================================================= -->
     <div id="splashScreen" class="splash-screen">
         <div class="laser-h"></div>
         <div class="laser-v"></div>
@@ -67,9 +56,6 @@
         </div>
     </div>
 
-    <!-- =================================================================
-         LOADING OVERLAY
-         ================================================================= -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"><i class="fas fa-atom"></i></div>
@@ -82,12 +68,8 @@
         </div>
     </div>
 
-    <!-- =================================================================
-         MAIN CONTAINER
-         ================================================================= -->
     <div id="mainContainer" class="main-container">
         
-        <!-- HEADER -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
@@ -121,13 +103,10 @@
             </div>
         </header>
 
-        <!-- APP CONTAINER (SIDEBAR + MAIN) -->
         <div class="app-container">
             
-            <!-- SIDEBAR -->
             <aside class="sidebar">
                 
-                <!-- Identificação do Sujeito Passivo -->
                 <div class="sidebar-header-fixed">
                     <h3 id="sidebarIdTitle"><i class="fas fa-user-shield"></i> IDENTIFICAÇÃO DO SUJEITO PASSIVO</h3>
                     <div class="client-identification-fixed">
@@ -151,7 +130,6 @@
                     </div>
                 </div>
 
-                <!-- Parâmetros de Auditoria -->
                 <div class="sidebar-filters">
                     <h3 id="sidebarParamTitle"><i class="fas fa-sliders-h"></i> PARÂMETROS DE AUDITORIA FORENSE</h3>
                     
@@ -183,14 +161,12 @@
                     </div>
                 </div>
 
-                <!-- Gestão de Evidências -->
                 <div class="evidence-management-section-solid">
                     <button id="openEvidenceModalBtn" class="evidence-management-btn-solid">
                         <span><i class="fas fa-folder-open"></i> <span id="btnEvidence">GESTÃO DE EVIDÊNCIAS</span></span>
                         <span id="evidenceCountTotal" class="evidence-count-solid">0</span>
                     </button>
 
-                    <!-- Contadores Compactos (5 itens) -->
                     <div class="counters-compact">
                         <div class="counter-item-compact">
                             <span id="controlCountCompact" class="counter-value-compact">0</span>
@@ -221,10 +197,8 @@
 
             </aside>
 
-            <!-- ÁREA DE ANÁLISE -->
             <main class="analysis-area">
                 
-                <!-- Toolbar -->
                 <div class="toolbar-section">
                     <div class="toolbar-grid">
                         <button id="exportPDFBtn" class="btn-tool" disabled>
@@ -242,9 +216,7 @@
                     </div>
                 </div>
 
-                <!-- MÓDULOS DE EXTRAÇÃO (SAF-T, EXTRATOS, DAC7) -->
                 <div class="extraction-modules">
-                    <!-- MÓDULO SAF-T -->
                     <div class="module-card">
                         <h4 id="moduleSaftTitle"><i class="fas fa-file-code"></i> MÓDULO SAF-T (EXTRAÇÃO)</h4>
                         <div class="module-values">
@@ -263,7 +235,6 @@
                         </div>
                     </div>
 
-                    <!-- MÓDULO EXTRATOS -->
                     <div class="module-card">
                         <h4 id="moduleStatementTitle"><i class="fas fa-file-contract"></i> MÓDULO EXTRATOS (MAPEAMENTO)</h4>
                         <div class="module-values">
@@ -294,7 +265,6 @@
                         </div>
                     </div>
 
-                    <!-- MÓDULO DAC7 -->
                     <div class="module-card">
                         <h4 id="moduleDac7Title"><i class="fas fa-envelope-open-text"></i> MÓDULO DAC7 (DECOMPOSIÇÃO)</h4>
                         <div class="module-values">
@@ -320,7 +290,6 @@
                     </div>
                 </div>
 
-                <!-- QUANTUM DO BENEFÍCIO ILÍCITO -->
                 <div id="quantumBox" class="quantum-box" style="display: none;">
                     <h4 id="quantumTitle"><i class="fas fa-exclamation-triangle"></i> QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)</h4>
                     <div id="quantumValue" class="quantum-value">0,00 €</div>
@@ -328,7 +297,6 @@
                     <p id="quantumNote" class="quantum-formula">Impacto Global Estimado de Mercado (Acumulado 7 Anos)</p>
                 </div>
 
-                <!-- VEREDICTO DE RISCO -->
                 <div id="verdictDisplay" class="verdict-display">
                     <p class="verdict-title" id="verdictPercentLabel">VEREDICTO DE RISCO (RGIT)</p>
                     <p id="verdictLevel" class="verdict-level">AGUARDANDO ANÁLISE</p>
@@ -336,7 +304,6 @@
                     <p id="verdictDesc" class="verdict-desc">Execute a perícia para obter o veredicto.</p>
                 </div>
 
-                <!-- ALERTA BIG DATA -->
                 <div id="bigDataAlert" class="bigdata-alert">
                     <i class="fas fa-radiation"></i>
                     <div>
@@ -346,7 +313,6 @@
                     </div>
                 </div>
 
-                <!-- DASHBOARD STATS -->
                 <div class="dashboard-fixed">
                     <div class="stat-card">
                         <h4 id="cardNet"><i class="fas fa-coins"></i> VALOR LÍQUIDO RECONSTRUÍDO</h4>
@@ -365,7 +331,6 @@
                     </div>
                 </div>
 
-                <!-- KPI SECTION -->
                 <div class="kpi-section">
                     <h3 id="kpiTitle"><i class="fas fa-project-diagram"></i> TRIANGULAÇÃO FINANCEIRA · ALGORITMO FORENSE v12.6</h3>
                     <div class="kpi-grid">
@@ -388,7 +353,6 @@
                     </div>
                 </div>
 
-                <!-- CHART SECTION -->
                 <div class="chart-section">
                     <h3><i class="fas fa-chart-bar"></i> REPRESENTAÇÃO GRÁFICA DA ANÁLISE</h3>
                     <div class="chart-container">
@@ -396,7 +360,6 @@
                     </div>
                 </div>
 
-                <!-- CONSOLE SECTION -->
                 <div class="console-section">
                     <div class="console-header">
                         <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA</h3>
@@ -404,7 +367,6 @@
                     <div id="consoleOutput" class="console-output"></div>
                 </div>
 
-                <!-- FOOTER -->
                 <footer class="action-footer">
                     <div class="system-info">
                         <div class="master-hash">
@@ -419,9 +381,6 @@
         </div>
     </div>
 
-    <!-- =================================================================
-         MODAL: GESTÃO DE EVIDÊNCIAS
-         ================================================================= -->
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -433,7 +392,6 @@
             <div class="modal-body">
                 <div class="upload-section-modal">
                     
-                    <!-- Controlo -->
                     <div class="upload-group-modal">
                         <label id="uploadControlText"><i class="fas fa-file-shield"></i> FICHEIRO DE CONTROLO</label>
                         <button id="controlUploadBtnModal" class="upload-btn">
@@ -443,7 +401,6 @@
                         <div id="controlFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- SAF-T -->
                     <div class="upload-group-modal">
                         <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T (PT)</label>
                         <button id="saftUploadBtnModal" class="upload-btn">
@@ -453,7 +410,6 @@
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Faturas -->
                     <div class="upload-group-modal">
                         <label id="uploadInvoiceText"><i class="fas fa-file-invoice-dollar"></i> FATURAS (PDF/CSV/XML)</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn">
@@ -463,17 +419,15 @@
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Extratos -->
                     <div class="upload-group-modal">
                         <label id="uploadStatementText"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS / DADOS</label>
                         <button id="statementUploadBtnModal" class="upload-btn">
                             <i class="fas fa-upload"></i> SELECIONAR EXTRATOS
                         </button>
-                        <input type="file" id="statementFileModal" class="file-input-modal" accept=".csv,.xlsx,.xls,.txt" multiple>
+                        <input type="file" id="statementFileModal" class="file-input-modal" accept=".csv,.xlsx,.xls,.txt,.pdf" multiple>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- DAC7 -->
                     <div class="upload-group-modal">
                         <label id="uploadDac7Text"><i class="fas fa-envelope-open-text"></i> DECLARAÇÃO DAC7</label>
                         <button id="dac7UploadBtnModal" class="upload-btn">
@@ -483,7 +437,6 @@
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
 
-                    <!-- Resumo -->
                     <div class="processing-summary">
                         <h4 id="summaryTitle"><i class="fas fa-clipboard-list"></i> RESUMO DE PROCESSAMENTO PROBATÓRIO</h4>
                         <div class="summary-grid">
@@ -523,10 +476,8 @@
         </div>
     </div>
 
-    <!-- TOAST CONTAINER -->
     <div id="toastContainer"></div>
 
-    <!-- SCRIPT.JS -->
     <script src="script.js"></script>
 
 </body>
