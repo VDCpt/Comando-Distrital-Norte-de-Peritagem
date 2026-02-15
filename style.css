@@ -759,7 +759,6 @@ body {
     font-family: var(--font-mono);
 }
 
-/* ALTERAÇÃO: Grid para boxes */
 .module-values {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -767,7 +766,6 @@ body {
     flex: 1;
 }
 
-/* ALTERAÇÃO: Estilo Box para cada métrica */
 .module-value-item {
     display: flex;
     flex-direction: column;
@@ -817,7 +815,7 @@ body {
 
 .dac7-breakdown {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2x2 Grid para 4 trimestres */
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.8rem;
     margin-top: 0;
     padding-top: 0;
