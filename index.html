@@ -47,7 +47,7 @@
 
             <div class="splash-version-info">
                 <span class="version-major">v12.8</span>
-                <span class="version-tag">FINAL · EXTRAÇÃO COMPLETA</span>
+                <span class="version-tag">FINAL · EXTRAÇÃO INSTANTÂNEA</span>
             </div>
 
             <button id="startSessionBtn" class="splash-btn">
@@ -57,7 +57,7 @@
 
             <div class="splash-footer">
                 <p>Ao continuar, declara estar autorizado a realizar esta perícia nos termos da legislação aplicável.</p>
-                <p class="version">v12.8 FINAL · EXTRAÇÃO BOLT/DAC7/CSV · SHA-256: 3E9C09A1</p>
+                <p class="version">v12.8 FINAL · EXTRAÇÃO INSTANTÂNEA · SHA-256: 3E9C09A1</p>
             </div>
         </div>
     </div>
@@ -249,7 +249,7 @@
 
                 <div class="upload-area" id="quickUploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Arraste ficheiros PDF, CSV ou XML para análise imediata</p>
+                    <p>Arraste ficheiros PDF, CSV ou XML para extração instantânea</p>
                     <input type="file" id="quickUpload" multiple accept=".pdf,.csv,.xml" style="display: none;">
                     <button id="quickUploadBtn" class="btn-upload"><i class="fas fa-upload"></i> SELECIONAR FICHEIROS</button>
                 </div>
@@ -494,7 +494,7 @@
                             <strong id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.8)</strong>
                             <span id="masterHashValue">A aguardar processamento de evidências...</span>
                         </div>
-                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Extração Completa Bolt/DAC7</p>
+                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Extração Instantânea</p>
                     </div>
                 </footer>
 
@@ -523,9 +523,9 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T (PT) · XML / CSV</label>
+                        <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T (PT) / CSV VIAGENS</label>
                         <button id="saftUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-upload"></i> SELECIONAR FICHEIROS SAF-T
+                            <i class="fas fa-upload"></i> SELECIONAR FICHEIROS
                         </button>
                         <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.csv,.txt" multiple>
                         <div id="saftFileListModal" class="file-list-modal"></div>
@@ -550,11 +550,11 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadDac7Text"><i class="fas fa-envelope-open-text"></i> DECLARAÇÃO DAC7 (PDF/Email)</label>
+                        <label id="uploadDac7Text"><i class="fas fa-envelope-open-text"></i> DECLARAÇÃO DAC7 (PDF)</label>
                         <button id="dac7UploadBtnModal" class="upload-btn">
                             <i class="fas fa-upload"></i> SELECIONAR FICHEIROS DAC7
                         </button>
-                        <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf,.eml,.msg" multiple>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
 
@@ -592,71 +592,4 @@
                                 <span id="summarySaft" class="summary-value">0</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">FATURAS</span>
-                                <span id="summaryInvoices" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">EXTRATOS</span>
-                                <span id="summaryStatements" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">DAC7</span>
-                                <span id="summaryDac7" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">TOTAL</span>
-                                <span id="summaryTotal" class="summary-value total">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="closeAndSaveBtn" class="btn-primary">
-                    <i class="fas fa-check-circle"></i> <span id="modalSaveBtn">SELAR EVIDÊNCIAS E FECHAR</span>
-                </button>
-                <button id="clearAllEvidenceBtn" class="btn-secondary">
-                    <i class="fas fa-trash-alt"></i> LIMPAR TUDO
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="helpModal" class="modal-overlay">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h3><i class="fas fa-question-circle"></i> AJUDA DO SISTEMA</h3>
-                <button id="closeHelpBtn" class="icon-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="help-content">
-                    <h4>Formato dos Ficheiros Suportados:</h4>
-                    <ul>
-                        <li><strong>Extrato Bolt (PDF):</strong> Tabelas "Transações" e "Ganhos líquidos"</li>
-                        <li><strong>Fatura Bolt (PDF):</strong> N.º fatura, Total com IVA, Período</li>
-                        <li><strong>DAC7 (PDF):</strong> Total anual e detalhe por trimestre</li>
-                        <li><strong>CSV Viagens:</strong> Colunas "Preço da viagem (sem IVA)", "IVA", "Preço da viagem"</li>
-                    </ul>
-                    <h4>Campos Extraídos:</h4>
-                    <ul>
-                        <li><strong>Extrato:</strong> Ganhos app, campanhas, gorjetas, portagens, taxas cancelamento, ganhos líquidos</li>
-                        <li><strong>Fatura:</strong> Número, Total com IVA, Autoliquidação</li>
-                        <li><strong>DAC7:</strong> Ganhos, comissões, impostos, serviços por trimestre</li>
-                    </ul>
-                    <h4>Atalhos:</h4>
-                    <ul>
-                        <li><strong>CTRL + O:</strong> Abrir gestão de evidências</li>
-                        <li><strong>CTRL + Enter:</strong> Executar perícia</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toastContainer"></div>
-
-    <script src="script.js"></script>
-</body>
-</html>
+                                <span class="summary-label">FATURAS</span
