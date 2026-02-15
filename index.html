@@ -592,4 +592,72 @@
                                 <span id="summarySaft" class="summary-value">0</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">FATURAS</span
+                                <span class="summary-label">FATURAS</span>
+                                <span id="summaryInvoices" class="summary-value">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">EXTRATOS</span>
+                                <span id="summaryStatements" class="summary-value">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">DAC7</span>
+                                <span id="summaryDac7" class="summary-value">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">TOTAL</span>
+                                <span id="summaryTotal" class="summary-value total">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeAndSaveBtn" class="btn-primary">
+                    <i class="fas fa-check-circle"></i> <span id="modalSaveBtn">SELAR EVIDÊNCIAS E FECHAR</span>
+                </button>
+                <button id="clearAllEvidenceBtn" class="btn-secondary">
+                    <i class="fas fa-trash-alt"></i> LIMPAR TUDO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> AJUDA DO SISTEMA</h3>
+                <button id="closeHelpBtn" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="help-content">
+                    <h4>Formato dos Ficheiros Suportados:</h4>
+                    <ul>
+                        <li><strong>Extrato Bolt (PDF):</strong> "Ganhos na app","3157.94" ou "Ganhos na app 3157.94"</li>
+                        <li><strong>Fatura Bolt (PDF):</strong> "Total com IVA (EUR)","239.00" ou "A pagar: 239.00€"</li>
+                        <li><strong>DAC7 (PDF):</strong> "Total de receitas anuais: 7755.16€"</li>
+                        <li><strong>CSV Viagens:</strong> Colunas "Preço da viagem", "IVA"</li>
+                    </ul>
+                    <h4>Extração Instantânea:</h4>
+                    <ul>
+                        <li>Os dados aparecem automaticamente após carregar os ficheiros</li>
+                        <li>Não é necessário clicar em "Analisar" para ver os valores</li>
+                        <li>O botão "Analisar" serve apenas para o veredicto final</li>
+                    </ul>
+                    <h4>Atalhos:</h4>
+                    <ul>
+                        <li><strong>Drag & Drop:</strong> Arraste ficheiros para área de upload</li>
+                        <li><strong>CTRL + O:</strong> Abrir gestão de evidências</li>
+                        <li><strong>CTRL + Enter:</strong> Executar perícia</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
