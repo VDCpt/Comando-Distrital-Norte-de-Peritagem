@@ -716,7 +716,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD & MÓDULOS
+   6. DASHBOARD & MÓDULOS (RETIFICADO: GRID BOXES)
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
@@ -743,6 +743,8 @@ body {
     padding: 1rem;
     border-radius: var(--border-radius-sm);
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .module-card h4 {
@@ -757,35 +759,46 @@ body {
     font-family: var(--font-mono);
 }
 
+/* ALTERAÇÃO: Grid para boxes */
 .module-values {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    flex: 1;
 }
 
+/* ALTERAÇÃO: Estilo Box para cada métrica */
 .module-value-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
 }
 
-.module-value-item:last-child {
-    border-bottom: none;
+.module-value-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-secondary);
 }
 
 .module-value-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-tertiary);
     font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+    display: block;
 }
 
 .module-value-amount {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
+    word-break: break-all;
 }
 
 .module-value-amount.highlight {
@@ -804,29 +817,35 @@ body {
 
 .dac7-breakdown {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    grid-template-columns: repeat(2, 1fr); /* 2x2 Grid para 4 trimestres */
+    gap: 0.8rem;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    height: 100%;
 }
 
 .quarter-box {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.8rem;
     text-align: center;
     border-radius: var(--border-radius-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .quarter-label {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     color: var(--text-tertiary);
     text-transform: uppercase;
     font-weight: 700;
+    margin-bottom: 0.3rem;
 }
 
 .quarter-value {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
@@ -1612,6 +1631,9 @@ body {
     .dac7-breakdown {
         grid-template-columns: repeat(2, 1fr);
     }
+    .module-values {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -1774,6 +1796,16 @@ body {
     .master-hash {
         border: 1px solid #333;
         color: #333;
+    }
+    .module-values {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .module-value-item {
+        border: 1px solid #000;
+        color: #000;
+        background: #fff;
     }
 }
 
