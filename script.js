@@ -2,8 +2,9 @@
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.6 RETA FINAL
  * ====================================================================
  * CONSOLIDAÇÃO FINAL: INTELIGÊNCIA FORENSE + QUANTUM BENEFÍCIO ILÍCITO
- * Módulos: SAF-T, DAC7, Extratos, RGIT, PDF Forense, Traduções PT-PT/EN
- * CORREÇÃO: REGEX PARA PDFs DA BOLT (CSV EMBUTIDO)
+ * MECANISMO DE LIMPEZA BINÁRIA · PARSER DE FLUXO
+ * Extração robusta de PDFs da Bolt/Uber com caracteres invisíveis
+ * TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA · PT-PT JURÍDICO
  * ====================================================================
  */
 
@@ -82,7 +83,7 @@ const QUESTIONS_CACHE = [
 ];
 
 // ============================================================================
-// 3. UTILITÁRIOS FORENSES (RETIFICADO: NORMALIZAÇÃO DECIMAL PONTO)
+// 3. UTILITÁRIOS FORENSES (COM MECANISMO DE LIMPEZA BINÁRIA)
 // ============================================================================
 const forensicRound = (num) => {
     if (num === null || num === undefined || isNaN(num)) return 0;
@@ -93,15 +94,20 @@ const toForensicNumber = (v) => {
     if (!v) return 0;
     let str = v.toString().trim();
     
+    // Remove todos os caracteres não numéricos exceto vírgula, ponto e hífen
     str = str.replace(/[^\d.,-]/g, '');
     
+    // Deteção automática de formato PT vs EN
     if (str.indexOf(',') > -1 && str.indexOf('.') > -1) {
         if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
+            // Formato PT: 1.000,50 → remove pontos, troca vírgula por ponto
             str = str.replace(/\./g, '').replace(',', '.');
         } else {
+            // Formato EN: 1,000.50 → remove vírgulas
             str = str.replace(/,/g, '');
         }
     } else if (str.indexOf(',') > -1) {
+        // Apenas vírgula: assume decimal PT e troca por ponto
         str = str.replace(',', '.');
     }
     
@@ -652,7 +658,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 8. GESTÃO DE EVIDÊNCIAS
+// 8. GESTÃO DE EVIDÊNCIAS COM MECANISMO DE LIMPEZA BINÁRIA
 // ============================================================================
 async function handleFileUpload(e, type) {
     const files = Array.from(e.target.files);
@@ -701,13 +707,24 @@ async function processFile(file, type) {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = "";
+        
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            fullText += content.items.map(item => item.str).join(" ");
+            fullText += content.items.map(item => item.str).join(" ") + "\n";
         }
-        text = fullText;
-        logAudit(`PDF processado: ${file.name} - Texto extraído (${fullText.length} caracteres)`, 'info');
+        
+        // ====================================================================
+        // MECANISMO DE LIMPEZA BINÁRIA
+        // Remove caracteres de controlo e normaliza quebras de linha
+        // ====================================================================
+        text = fullText
+            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .replace(/[–—−]/g, '-')
+            .replace(/(\d)[\s\n\r]+(\d)/g, '$1$2');
+        
+        logAudit(`PDF processado: ${file.name} - Texto extraído e limpo (${text.length} caracteres)`, 'info');
     } else {
         text = await readFileAsText(file);
     }
@@ -731,29 +748,35 @@ async function processFile(file, type) {
     });
 
     // ========================================================================
-    // CORREÇÃO: NOVAS REGEX PARA PDFs DA BOLT (FORMATO CSV EMBUTIDO)
+    // PROCESSAMENTO ESPECÍFICO POR TIPO DE DOCUMENTO
     // ========================================================================
+    
+    // EXTRATOS BANCÁRIOS / DADOS DA PLATAFORMA
     if (type === 'statement') {
         try {
             // Regex específicas para o formato CSV dentro dos PDFs da Bolt
-            const ganhosRegex = /"Ganhos na app","([\d.,]+)"/i;
-            const comissaoRegex = /"Comissão da app","-?([\d.,]+)"/i;
-            const gorjetasRegex = /"Gorjetas dos passageiros","([\d.,]+)"/i;
-            const portagensRegex = /"Portagens","([\d.,]+)"/i;
-            const cancelamentosRegex = /"Taxas de cancelamento","-?([\d.,]+)"/i;
+            const ganhosRegex = /"Ganhos na app"[,\s]*"?([\d\s,.]+)"?/i;
+            const comissaoRegex = /"Comissão da app"[,\s]*"?-?([\d\s,.]+)"?/i;
+            const gorjetasRegex = /"Gorjetas dos passageiros"[,\s]*"?([\d\s,.]+)"?/i;
+            const portagensRegex = /"Portagens"[,\s]*"?([\d\s,.]+)"?/i;
+            const cancelamentosRegex = /"Taxas de cancelamento"[,\s]*"?-?([\d\s,.]+)"?/i;
+            
+            // Fallback para formatos sem aspas
+            const ganhosFallback = /Ganhos na app\s*[:.]?\s*([\d\s,.]+)/i;
+            const comissaoFallback = /Comissão da app\s*[:.]?\s*-?\s*([\d\s,.]+)/i;
             
             let ganhos = 0, comissao = 0, gorjetas = 0, portagens = 0, cancelamentos = 0;
             
-            const ganhosMatch = text.match(ganhosRegex);
+            const ganhosMatch = text.match(ganhosRegex) || text.match(ganhosFallback);
             if (ganhosMatch) {
                 ganhos = toForensicNumber(ganhosMatch[1]);
-                logAudit(`Ganhos extraídos (Bolt): ${formatCurrency(ganhos)}`, 'success');
+                logAudit(`Ganhos extraídos: ${formatCurrency(ganhos)}`, 'success');
             }
             
-            const comissaoMatch = text.match(comissaoRegex);
+            const comissaoMatch = text.match(comissaoRegex) || text.match(comissaoFallback);
             if (comissaoMatch) {
                 comissao = toForensicNumber(comissaoMatch[1]);
-                logAudit(`Comissão extraída (Bolt): ${formatCurrency(comissao)}`, 'info');
+                logAudit(`Comissão extraída: ${formatCurrency(comissao)}`, 'info');
             }
             
             const gorjetasMatch = text.match(gorjetasRegex);
@@ -791,19 +814,35 @@ async function processFile(file, type) {
         }
     }
 
+    // FATURAS
     if (type === 'invoice') {
-        const val = toForensicNumber(text.match(/(\d+[.,]\d{2})/)?.[0] || 0);
-        VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
-        VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
-        logAudit(`Fatura processada: ${file.name} | Valor: ${formatCurrency(val)}`, 'success');
+        const faturaRegex = /Total com IVA \(EUR\)[,\s]*"?([\d\s,.]+)"?/i;
+        const faturaMatch = text.match(faturaRegex);
+        
+        if (faturaMatch) {
+            const val = toForensicNumber(faturaMatch[1]);
+            VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
+            VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
+            logAudit(`Fatura processada: ${file.name} | Valor: ${formatCurrency(val)}`, 'success');
+        } else {
+            // Fallback para qualquer valor numérico no documento
+            const fallbackMatch = text.match(/(\d+[.,]\d{2})/);
+            if (fallbackMatch) {
+                const val = toForensicNumber(fallbackMatch[1]);
+                VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
+                VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
+                logAudit(`Fatura processada (fallback): ${file.name} | Valor: ${formatCurrency(val)}`, 'info');
+            }
+        }
     }
 
+    // SAF-T (XML)
     if (type === 'saft') {
         try {
-            const creditMatch = text.match(/TotalCredit>\s*([\d\.,]+)/i);
-            const debitMatch = text.match(/TotalDebit>\s*([\d\.,]+)/i);
-            const taxMatch = text.match(/TaxPayable>\s*([\d\.,]+)/i);
-            const netMatch = text.match(/NetTotal>\s*([\d\.,]+)/i);
+            const creditMatch = text.match(/TotalCredit[^>]*>([^<]+)/i);
+            const debitMatch = text.match(/TotalDebit[^>]*>([^<]+)/i);
+            const taxMatch = text.match(/TaxPayable[^>]*>([^<]+)/i);
+            const netMatch = text.match(/NetTotal[^>]*>([^<]+)/i);
             
             let bruto = 0, iva = 0, iliquido = 0;
             
@@ -828,17 +867,35 @@ async function processFile(file, type) {
         }
     }
     
+    // DAC7
     if (type === 'dac7') {
         try {
-            const q1Match = text.match(/Q1[^\d]*(\d+[.,]\d{2})/i);
-            const q2Match = text.match(/Q2[^\d]*(\d+[.,]\d{2})/i);
-            const q3Match = text.match(/Q3[^\d]*(\d+[.,]\d{2})/i);
-            const q4Match = text.match(/Q4[^\d]*(\d+[.,]\d{2})/i);
+            const dac7AnualRegex = /Total de receitas anuais\s*[:.]?\s*([\d\s,.]+)/i;
+            const dac7Q4Regex = /Ganhos do 4\.º trimestre:\s*([\d\s,.]+)/i;
+            const q1Regex = /Q1[^\d]*(\d+[.,]\d{2})/i;
+            const q2Regex = /Q2[^\d]*(\d+[.,]\d{2})/i;
+            const q3Regex = /Q3[^\d]*(\d+[.,]\d{2})/i;
+            const q4Regex = /Q4[^\d]*(\d+[.,]\d{2})/i;
             
+            const anualMatch = text.match(dac7AnualRegex);
+            if (anualMatch) {
+                VDCSystem.documents.dac7.totals.q4 = toForensicNumber(anualMatch[1]);
+                logAudit(`DAC7 anual extraído: ${formatCurrency(anualMatch[1])}`, 'success');
+            }
+            
+            const q4Match = text.match(dac7Q4Regex) || text.match(q4Regex);
+            if (q4Match) {
+                VDCSystem.documents.dac7.totals.q4 = toForensicNumber(q4Match[1]);
+            }
+            
+            const q1Match = text.match(q1Regex);
             if (q1Match) VDCSystem.documents.dac7.totals.q1 = toForensicNumber(q1Match[1]);
+            
+            const q2Match = text.match(q2Regex);
             if (q2Match) VDCSystem.documents.dac7.totals.q2 = toForensicNumber(q2Match[1]);
+            
+            const q3Match = text.match(q3Regex);
             if (q3Match) VDCSystem.documents.dac7.totals.q3 = toForensicNumber(q3Match[1]);
-            if (q4Match) VDCSystem.documents.dac7.totals.q4 = toForensicNumber(q4Match[1]);
             
             logAudit(`DAC7 importado: ${file.name}`, 'success');
         } catch(e) {
@@ -846,6 +903,7 @@ async function processFile(file, type) {
         }
     }
 
+    // Atualizar lista de ficheiros no modal
     const listId = type === 'invoice' ? 'invoicesFileListModal' : 
                    type === 'statement' ? 'statementsFileListModal' : 
                    type === 'dac7' ? 'dac7FileListModal' :
@@ -1438,6 +1496,6 @@ function updateAnalysisButton() {
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.6 RETA FINAL FORENSE
-   CORREÇÃO: REGEX ESPECÍFICAS PARA PDFs DA BOLT
+   MECANISMO DE LIMPEZA BINÁRIA · PARSER DE FLUXO
    TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
    ===================================================================== */
