@@ -133,30 +133,20 @@ const toForensicNumber = (v) => {
     if (!v) return 0;
     let str = v.toString().trim();
     
-    // Remove aspas primeiro (crucial para o formato Bolt)
     str = str.replace(/"/g, '');
-    
-    // Remove espaços
     str = str.replace(/\s/g, '');
-    
-    // Remove caracteres não numéricos exceto vírgula, ponto e hífen
     str = str.replace(/[^\d.,-]/g, '');
     
-    // Deteção automática de formato PT vs EN
     if (str.indexOf(',') > -1 && str.indexOf('.') > -1) {
         if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
-            // Formato PT: 1.000,50 → remove pontos, troca vírgula por ponto
             str = str.replace(/\./g, '').replace(',', '.');
         } else {
-            // Formato EN: 1,000.50 → remove vírgulas
             str = str.replace(/,/g, '');
         }
     } else if (str.indexOf(',') > -1) {
-        // Apenas vírgula: assume decimal PT e troca por ponto
         str = str.replace(',', '.');
     }
     
-    // Remove qualquer ponto restante que seja separador de milhar (ex: 1.234)
     if (str.indexOf('.') !== str.lastIndexOf('.')) {
         const parts = str.split('.');
         const last = parts.pop();
@@ -564,7 +554,7 @@ function setupQuickUpload() {
 
 async function handleQuickUpload(files) {
     for (const file of files) {
-        log(`Quick upload: ${file.name}`);
+        logAudit(`Quick upload: ${file.name}`, 'info');
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
             await processQuickPDF(file);
         } else if (file.name.endsWith('.csv')) {
@@ -574,7 +564,7 @@ async function handleQuickUpload(files) {
         }
     }
     updateQuickResults();
-    log(`Processamento concluído. ${QUICK_EXTRACTION.valuesFound} valores extraídos.`, 'success');
+    logAudit(`Processamento rápido concluído. ${QUICK_EXTRACTION.valuesFound} valores extraídos.`, 'success');
 }
 
 async function processQuickPDF(file) {
@@ -591,17 +581,14 @@ async function processQuickPDF(file) {
             rawText += content.items.map(s => s.str).join(' ') + ' ';
         }
 
-        // NORMALIZAÇÃO CRÍTICA: Remove quebras de linha e múltiplos espaços
-        // Isto "cola" o valor à linha do campo, permitindo a RegEx capturar
         const cleanText = rawText
             .replace(/\s\s+/g, ' ')
             .replace(/"\s*,\s*"/g, '","')
             .replace(/\n/g, ' ')
             .replace(/\r/g, ' ');
 
-        log(`Texto normalizado: ${cleanText.substring(0, 200)}...`, 'info');
+        logAudit(`Texto normalizado: ${cleanText.substring(0, 200)}...`, 'info');
 
-        // 1. EXTRATO BOLT - Formato com aspas
         if (cleanText.includes('Ganhos na app')) {
             const ganhosMatch = cleanText.match(/"Ganhos na app"\s*,\s*"([\d\s.,]+)"/i);
             if (ganhosMatch) {
@@ -610,7 +597,7 @@ async function processQuickPDF(file) {
                 QUICK_EXTRACTION.boltCount++;
                 QUICK_EXTRACTION.valuesFound++;
                 extractionStats.boltFormat++;
-                log(`Ganhos Bolt extraídos: ${formatCurrency(val)}`, 'success');
+                logAudit(`Ganhos Bolt extraídos: ${formatCurrency(val)}`, 'success');
             }
             
             const comissaoMatch = cleanText.match(/"Comissão da app"\s*,\s*"-?([\d\s.,]+)"/i);
@@ -618,11 +605,10 @@ async function processQuickPDF(file) {
                 const val = toForensicNumber(comissaoMatch[1]);
                 QUICK_EXTRACTION.comissoes += val;
                 QUICK_EXTRACTION.valuesFound++;
-                log(`Comissão Bolt extraída: ${formatCurrency(val)}`, 'success');
+                logAudit(`Comissão Bolt extraída: ${formatCurrency(val)}`, 'success');
             }
         }
 
-        // 2. EXTRATO UBER - Formato texto
         if (cleanText.includes('Ganhos totais')) {
             const uberMatch = cleanText.match(/Ganhos totais[:\s]*€?\s*([\d\s.,]+)/i);
             if (uberMatch) {
@@ -631,36 +617,34 @@ async function processQuickPDF(file) {
                 QUICK_EXTRACTION.uberCount++;
                 QUICK_EXTRACTION.valuesFound++;
                 extractionStats.uberFormat++;
-                log(`Ganhos Uber extraídos: ${formatCurrency(val)}`, 'success');
+                logAudit(`Ganhos Uber extraídos: ${formatCurrency(val)}`, 'success');
             }
         }
 
-        // 3. FATURA BOLT
         if (cleanText.includes('Total com IVA (EUR)')) {
             const fatMatch = cleanText.match(/"Total com IVA \(EUR\)"\s*,\s*"([\d\s.,]+)"/i);
             if (fatMatch) {
                 const val = toForensicNumber(fatMatch[1]);
                 QUICK_EXTRACTION.comissoes += val;
                 QUICK_EXTRACTION.valuesFound++;
-                log(`Fatura Bolt processada: ${formatCurrency(val)}`, 'success');
+                logAudit(`Fatura Bolt processada: ${formatCurrency(val)}`, 'success');
             }
         }
 
-        // 4. DAC7
         if (cleanText.includes('receitas anuais')) {
             const dacMatch = cleanText.match(/Total de receitas anuais[:\s]*€?\s*([\d\s.,]+)/i);
             if (dacMatch) {
                 const val = toForensicNumber(dacMatch[1]);
                 QUICK_EXTRACTION.dac7 = val;
                 QUICK_EXTRACTION.valuesFound++;
-                log(`DAC7 extraído: ${formatCurrency(val)}`, 'success');
+                logAudit(`DAC7 extraído: ${formatCurrency(val)}`, 'success');
             }
         }
 
         extractionStats.valuesFound = QUICK_EXTRACTION.valuesFound;
         
     } catch (error) {
-        log(`Erro no PDF: ${error.message}`, 'error');
+        logAudit(`Erro no PDF rápido: ${error.message}`, 'error');
     }
 }
 
@@ -689,7 +673,7 @@ function processQuickCSV(file) {
                 QUICK_EXTRACTION.saft += total;
                 QUICK_EXTRACTION.valuesFound += count;
                 extractionStats.valuesFound = QUICK_EXTRACTION.valuesFound;
-                log(`CSV processado: ${count} registos, total ${formatCurrency(total)}`, 'success');
+                logAudit(`CSV rápido processado: ${count} registos, total ${formatCurrency(total)}`, 'success');
             }
             updateQuickResults();
         }
@@ -706,7 +690,7 @@ function processQuickXML(file) {
             QUICK_EXTRACTION.saft += val;
             QUICK_EXTRACTION.valuesFound++;
             extractionStats.valuesFound = QUICK_EXTRACTION.valuesFound;
-            log(`SAF-T processado: ${formatCurrency(val)}`, 'success');
+            logAudit(`SAF-T rápido processado: ${formatCurrency(val)}`, 'success');
         }
         updateQuickResults();
     };
@@ -719,7 +703,6 @@ function updateQuickResults() {
     setElementText('resDac7', formatCurrency(QUICK_EXTRACTION.dac7));
     setElementText('resSaft', formatCurrency(QUICK_EXTRACTION.saft));
     
-    // Atualizar também nos módulos principais
     VDCSystem.documents.statements.totals.ganhosApp = QUICK_EXTRACTION.ganhos;
     VDCSystem.documents.statements.totals.despesasComissao = QUICK_EXTRACTION.comissoes;
     VDCSystem.documents.dac7.totals.q4 = QUICK_EXTRACTION.dac7;
@@ -1088,6 +1071,23 @@ async function handleFileUpload(e, type) {
 async function processFile(file, type) {
     let text = "";
     let isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    let formatDetected = 'desconhecido';
+    
+    const listId = type === 'invoice' ? 'invoicesFileListModal' : 
+                   type === 'statement' ? 'statementsFileListModal' : 
+                   type === 'dac7' ? 'dac7FileListModal' :
+                   `${type}FileListModal`;
+    const listEl = document.getElementById(listId);
+    
+    const tempId = 'temp-' + Date.now() + '-' + Math.random();
+    if(listEl) {
+        listEl.style.display = 'block';
+        listEl.innerHTML += `<div id="${tempId}" class="file-item-modal processing">
+            <i class="fas fa-spinner fa-spin" style="color: var(--accent-primary);"></i>
+            <span class="file-name-modal">${file.name}</span>
+            <span class="file-hash-modal">processando...</span>
+        </div>`;
+    }
     
     if (isPDF) {
         try {
@@ -1102,7 +1102,6 @@ async function processFile(file, type) {
                 fullText += content.items.map(item => item.str).join(" ") + " ";
             }
             
-            // NORMALIZAÇÃO BINÁRIA AVANÇADA
             text = fullText
                 .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, ' ')
                 .replace(/\s+/g, ' ')
@@ -1114,7 +1113,6 @@ async function processFile(file, type) {
             
             logAudit(`PDF processado: ${file.name} - ${text.length} caracteres normalizados`, 'info');
             
-            // Extração específica
             if (type === 'statement') {
                 const ganhosMatch = text.match(/"Ganhos na app"\s*,\s*"([\d\s.,]+)"/i);
                 if (ganhosMatch) {
@@ -1123,7 +1121,19 @@ async function processFile(file, type) {
                     QUICK_EXTRACTION.ganhos += val;
                     extractionStats.boltFormat++;
                     extractionStats.valuesFound++;
+                    formatDetected = 'bolt';
                     logAudit(`Ganhos extraídos: ${formatCurrency(val)}`, 'success');
+                } else {
+                    const uberMatch = text.match(/Ganhos totais[:\s]*€?\s*([\d\s.,]+)/i);
+                    if (uberMatch) {
+                        const val = toForensicNumber(uberMatch[1]);
+                        VDCSystem.documents.statements.totals.ganhosApp += val;
+                        QUICK_EXTRACTION.ganhos += val;
+                        extractionStats.uberFormat++;
+                        extractionStats.valuesFound++;
+                        formatDetected = 'uber';
+                        logAudit(`Ganhos Uber extraídos: ${formatCurrency(val)}`, 'success');
+                    }
                 }
                 
                 const comissaoMatch = text.match(/"Comissão da app"\s*,\s*"-?([\d\s.,]+)"/i);
@@ -1143,6 +1153,7 @@ async function processFile(file, type) {
                     VDCSystem.documents.invoices.totals.invoiceValue += val;
                     QUICK_EXTRACTION.comissoes += val;
                     extractionStats.valuesFound++;
+                    formatDetected = 'bolt';
                     logAudit(`Fatura processada: ${formatCurrency(val)}`, 'success');
                 }
             }
@@ -1187,6 +1198,66 @@ async function processFile(file, type) {
                 }
             });
         }
+        
+        if (type === 'saft' && file.name.endsWith('.xml')) {
+            try {
+                const creditMatch = text.match(/TotalCredit[^>]*>([^<]+)/i);
+                const taxMatch = text.match(/TaxPayable[^>]*>([^<]+)/i);
+                const netMatch = text.match(/NetTotal[^>]*>([^<]+)/i);
+                
+                let bruto = 0, iva = 0, iliquido = 0;
+                
+                if (creditMatch) bruto = toForensicNumber(creditMatch[1]);
+                if (taxMatch) iva = toForensicNumber(taxMatch[1]);
+                if (netMatch) iliquido = toForensicNumber(netMatch[1]);
+                
+                if (iliquido === 0 && bruto > 0) iliquido = bruto - iva;
+                
+                VDCSystem.documents.saft.totals.bruto = (VDCSystem.documents.saft.totals.bruto || 0) + bruto;
+                VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + iliquido;
+                VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + iva;
+                
+                extractionStats.valuesFound += 3;
+                logAudit(`SAF-T processado: ${file.name} | Bruto: ${formatCurrency(bruto)}`, 'info');
+            } catch(e) {
+                console.warn(`Erro ao processar SAF-T ${file.name}:`, e);
+            }
+        }
+    }
+    
+    const contentToHash = text;
+    const hash = CryptoJS.SHA256(contentToHash || file.name + Date.now()).toString();
+
+    if(!VDCSystem.documents[type]) {
+        VDCSystem.documents[type] = { files: [], hashes: {}, totals: { records: 0 } };
+    }
+
+    VDCSystem.documents[type].files.push(file);
+    VDCSystem.documents[type].hashes[file.name] = hash;
+    VDCSystem.documents[type].totals.records = (VDCSystem.documents[type].totals.records || 0) + 1;
+
+    VDCSystem.analysis.evidenceIntegrity.push({
+        filename: file.name, 
+        type, 
+        hash,
+        timestamp: new Date().toLocaleString(),
+        size: file.size,
+        timestampUnix: Math.floor(Date.now() / 1000),
+        format: formatDetected
+    });
+
+    const tempElement = document.getElementById(tempId);
+    if (tempElement && listEl) {
+        const iconClass = isPDF ? 'fa-file-pdf' : 'fa-check-circle';
+        const iconColor = isPDF ? '#e74c3c' : 'var(--success-primary)';
+        const formatBadge = formatDetected !== 'desconhecido' ? 
+            `<span class="format-badge ${formatDetected}">${formatDetected}</span>` : '';
+        
+        tempElement.outerHTML = `<div class="file-item-modal success">
+            <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
+            <span class="file-name-modal">${file.name}${formatBadge}</span>
+            <span class="file-hash-modal">${hash.substring(0,8)}...</span>
+        </div>`;
     }
     
     updateQuickResults();
