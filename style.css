@@ -1,6 +1,7 @@
 /* =====================================================================
    VDC SISTEMA DE PERITAGEM FORENSE · v12.6 RETA FINAL FORENSE
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
+   MECANISMO DE LIMPEZA BINÁRIA · TODOS OS BLOCOS FECHADOS
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -716,7 +717,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD & MÓDULOS (RETIFICADO: GRID BOXES)
+   6. DASHBOARD & MÓDULOS
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
