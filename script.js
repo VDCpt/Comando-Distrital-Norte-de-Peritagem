@@ -121,7 +121,6 @@ const parseNumericValue = (str) => {
     return forensicRound(result);
 };
 
-// Manter compatibilidade com código existente
 const toForensicNumber = parseNumericValue;
 
 const validateNIF = (nif) => {
@@ -244,7 +243,7 @@ const translations = {
         footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.8)",
         modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
-        uploadSaftText: "FICHEIROS SAF-T (PT) / CSV",
+        uploadSaftText: "FICHEIROS SAF-T (PT) / CSV VIAGENS",
         uploadInvoiceText: "FATURAS BOLT (PDF)",
         uploadStatementText: "EXTRATOS BOLT (PDF)",
         uploadDac7Text: "DECLARAÇÃO DAC7 (PDF)",
@@ -301,7 +300,7 @@ const translations = {
         footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 v12.8)",
         modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
-        uploadSaftText: "SAF-T FILES (PT) / CSV",
+        uploadSaftText: "SAF-T FILES (PT) / CSV TRIPS",
         uploadInvoiceText: "BOLT INVOICES (PDF)",
         uploadStatementText: "BOLT STATEMENTS (PDF)",
         uploadDac7Text: "DAC7 DECLARATION (PDF)",
@@ -388,12 +387,10 @@ async function processBoltStatement(file) {
             fullText += content.items.map(item => item.str).join(' ') + ' ';
         }
         
-        // Normalização crítica para PDFs da Bolt
         const cleanText = fullText.replace(/\s+/g, ' ');
         
         let extracted = false;
         
-        // Padrão 1: Formato com aspas e vírgula (original Bolt)
         const gainsMatch = cleanText.match(/"Ganhos na app"\s*,\s*"([\d\s.,]+)"/i);
         if (gainsMatch) {
             const valor = parseNumericValue(gainsMatch[1]);
@@ -404,7 +401,6 @@ async function processBoltStatement(file) {
             logAudit(`Extrato: Ganhos na app = ${formatCurrency(valor)}`, 'success');
         }
         
-        // Padrão 2: Formato simples (sem aspas)
         if (!gainsMatch) {
             const gainsSimple = cleanText.match(/Ganhos na app\s*([\d\s.,]+)/i);
             if (gainsSimple) {
@@ -417,7 +413,6 @@ async function processBoltStatement(file) {
             }
         }
         
-        // Capturar despesas/comissões
         const expensesMatch = cleanText.match(/Despesas\s*-?\s*([\d\s.,]+)/i);
         if (expensesMatch) {
             const valor = Math.abs(parseNumericValue(expensesMatch[1]));
@@ -426,7 +421,6 @@ async function processBoltStatement(file) {
             logAudit(`Extrato: Despesas/Comissões = ${formatCurrency(valor)}`, 'success');
         }
         
-        // Capturar campanhas
         const campaignMatch = cleanText.match(/Ganhos da campanha\s*([\d\s.,]+)/i);
         if (campaignMatch) {
             const valor = parseNumericValue(campaignMatch[1]);
@@ -434,7 +428,6 @@ async function processBoltStatement(file) {
             logAudit(`Extrato: Campanhas = ${formatCurrency(valor)}`, 'info');
         }
         
-        // Capturar gorjetas
         const tipsMatch = cleanText.match(/Gorjetas dos passageiros\s*([\d\s.,]+)/i);
         if (tipsMatch) {
             const valor = parseNumericValue(tipsMatch[1]);
@@ -442,7 +435,6 @@ async function processBoltStatement(file) {
             logAudit(`Extrato: Gorjetas = ${formatCurrency(valor)}`, 'info');
         }
         
-        // Capturar taxas de cancelamento
         const cancelMatch = cleanText.match(/Taxas de cancelamento\s*([\d\s.,]+)/i);
         if (cancelMatch) {
             const valor = parseNumericValue(cancelMatch[1]);
@@ -477,7 +469,6 @@ async function processBoltInvoice(file) {
         
         const cleanText = fullText.replace(/\s+/g, ' ');
         
-        // Padrão 1: Total com IVA (EUR)
         const invoiceMatch = cleanText.match(/"Total com IVA \(EUR\)"\s*,\s*"([\d\s.,]+)"/i);
         if (invoiceMatch) {
             const valor = parseNumericValue(invoiceMatch[1]);
@@ -488,7 +479,6 @@ async function processBoltInvoice(file) {
             return true;
         }
         
-        // Padrão 2: A pagar:
         const paymentMatch = cleanText.match(/A pagar[:\s]*€?\s*([\d\s.,]+)/i);
         if (paymentMatch) {
             const valor = parseNumericValue(paymentMatch[1]);
@@ -606,7 +596,6 @@ async function handleFileUpload(e, type) {
         }
     }
     
-    // FORÇAR ATUALIZAÇÃO DA INTERFACE
     renderAll();
     
     updateAnalysisButton();
@@ -617,25 +606,21 @@ async function handleFileUpload(e, type) {
  * Renderiza todos os componentes da interface
  */
 function renderAll() {
-    // Atualizar resultados rápidos
     setElementText('resGanhos', formatCurrency(QUICK_EXTRACTION.ganhos));
     setElementText('resComissao', formatCurrency(QUICK_EXTRACTION.comissoes));
     setElementText('resDac7', formatCurrency(QUICK_EXTRACTION.dac7));
     setElementText('resSaft', formatCurrency(QUICK_EXTRACTION.saft));
     
-    // Atualizar módulos
     setElementText('stmtGanhosValue', formatCurrency(QUICK_EXTRACTION.ganhos));
     setElementText('stmtComissaoValue', formatCurrency(QUICK_EXTRACTION.comissoes));
     setElementText('dac7TotalValue', formatCurrency(QUICK_EXTRACTION.dac7));
     setElementText('dac7Q4Value', formatCurrency(QUICK_EXTRACTION.dac7));
     setElementText('saftBrutoValue', formatCurrency(QUICK_EXTRACTION.saft));
     
-    // Atualizar fatura se existir
     if (VDCSystem.analysis.operatorInvoices > 0) {
         setElementText('invoiceTotal', formatCurrency(VDCSystem.analysis.operatorInvoices));
     }
     
-    // Atualizar estatísticas
     setElementText('statsPdfCount', extractionStats.pdfProcessed);
     setElementText('statsValuesFound', extractionStats.valuesFound);
     setElementText('statsBoltFormat', extractionStats.boltFormat);
@@ -644,7 +629,6 @@ function renderAll() {
     setElementText('detailBoltFormat', extractionStats.boltFormat);
     setElementText('detailPdfCount', extractionStats.pdfProcessed);
     
-    // Atualizar status
     updateExtractionStatus();
 }
 
@@ -978,7 +962,6 @@ function registerClient() {
 function clearAllEvidence() {
     if (!confirm('Tem a certeza que deseja limpar todas as evidências?')) return;
     
-    // Reset dos valores
     VDCSystem.analysis.appGains = 0;
     VDCSystem.analysis.operatorInvoices = 0;
     VDCSystem.analysis.dac7Total = 0;
@@ -1002,7 +985,6 @@ function clearAllEvidence() {
         dac7: { files: [] }
     };
     
-    // Limpar listas visuais
     ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 
      'statementsFileListModal', 'dac7FileListModal'].forEach(id => {
         const el = document.getElementById(id);
@@ -1041,7 +1023,6 @@ function activateDemoMode() {
     registerClient();
 
     setTimeout(() => {
-        // Dados simulados
         QUICK_EXTRACTION.ganhos = 3157.94;
         QUICK_EXTRACTION.comissoes = 792.59;
         QUICK_EXTRACTION.dac7 = 7755.16;
