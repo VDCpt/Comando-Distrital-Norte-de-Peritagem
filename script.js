@@ -76,7 +76,7 @@ const QUESTIONS_CACHE = [
 ];
 
 // ============================================================================
-// 2. UTILITÁRIOS FORENSES
+// 2. UTILITÁRIOS FORENSES (RETIFICADO: NORMALIZAÇÃO DECIMAL PONTO)
 // ============================================================================
 const forensicRound = (num) => {
     if (num === null || num === undefined || isNaN(num)) return 0;
@@ -84,12 +84,28 @@ const forensicRound = (num) => {
 };
 
 const toForensicNumber = (v) => {
-    if (v === null || v === undefined || v === '') return 0;
-    let str = v.toString().trim().replace(/[^\d.,-]/g, '');
-    if (str.includes(',') && str.includes('.')) {
-        if (str.lastIndexOf(',') > str.lastIndexOf('.')) str = str.replace(/\./g, '').replace(',', '.');
-        else str = str.replace(/,/g, '');
-    } else if (str.includes(',')) str = str.replace(',', '.');
+    if (!v) return 0;
+    let str = v.toString().trim();
+    
+    // RETIFICAÇÃO: Normalização de formato numérico (Dot vs Comma)
+    // Remove tudo que não for dígito, ponto, vírgula ou sinal de menos
+    str = str.replace(/[^\d.,-]/g, ''); 
+    
+    // Se existir vírgula E ponto (ex: 1.000,50 ou 1,000.50)
+    if (str.indexOf(',') > -1 && str.indexOf('.') > -1) {
+        if (str.lastIndexOf(',') > str.lastIndexOf('.')) {
+            // Formato PT/EU (1.000,50) -> Remove ponto, troca vírgula por ponto
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else {
+            // Formato US (1,000.50) -> Remove vírgula
+            str = str.replace(/,/g, '');
+        }
+    } else if (str.indexOf(',') > -1) {
+        // Apenas vírgula (ex: 50,20) -> Assume decimal e troca por ponto
+        str = str.replace(',', '.');
+    }
+    // Se tiver apenas ponto, já está pronto para parseFloat
+    
     return parseFloat(str) || 0;
 };
 
@@ -104,13 +120,14 @@ const validateNIF = (nif) => {
 };
 
 const formatCurrency = (value) => {
+    // Exibe sempre com vírgula para PT-PT, independentemente da entrada ser ponto
     return forensicRound(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 };
 
 const getRiskVerdict = (delta, gross) => {
     if (gross === 0 || isNaN(gross)) return { level: 'INCONCLUSIVO', key: 'low', color: '#8c7ae6', description: 'Dados insuficientes para veredicto pericial.', percent: '0.00%' };
     const pct = Math.abs((delta / gross) * 100);
-    const pctFormatted = pct.toFixed(2) + '%';
+    const pctFormatted = pct.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
     if (pct <= 5) return { level: 'BAIXO RISCO', key: 'low', color: '#44bd32', description: 'Margem de erro operacional. Monitorização periódica recomendada, sem indícios de fraude.', percent: pctFormatted };
     if (pct <= 15) return { level: 'RISCO MÉDIO', key: 'med', color: '#f59e0b', description: 'Anomalia algorítmica detetada. Auditoria aprofundada recomendada nos termos do art. 63.º LGT.', percent: pctFormatted };
     return { level: 'CRÍTICO', key: 'high', color: '#ef4444', description: 'Indício de Fraude Fiscal (art. 103.º e 104.º RGIT). Participação à Autoridade Tributária recomendada.', percent: pctFormatted };
@@ -128,10 +145,16 @@ const generateSessionId = () => {
 
 const readFileAsText = (file) => {
     return new Promise((resolve, reject) => {
+        // Se for PDF, não tenta ler como texto para parsing numérico simples,
+        // apenas resolve para contagem na cadeia de custódia
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            resolve("[PDF_BINARY_CONTENT]"); 
+            return;
+        }
         const reader = new FileReader();
         reader.onload = e => resolve(e.target.result);
         reader.onerror = reject;
-        reader.readAsText(file, 'UTF-8');
+        reader.readAsText(file, 'UTF-8'); // Tenta ler CSV/XML/TXT como UTF-8
     });
 };
 
@@ -676,8 +699,21 @@ async function handleFileUpload(e, type) {
 }
 
 async function processFile(file, type) {
-    const text = await readFileAsText(file);
-    const hash = CryptoJS.SHA256(text).toString();
+    // RETIFICAÇÃO: Verifica se é PDF para apenas registar na cadeia de custódia
+    // sem tentar extrair texto (o que geraria lixo binário)
+    let text = "";
+    let isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    
+    if (isPDF) {
+        text = "[PDF_BINARY_DATA]"; 
+        logAudit(`PDF detetado: ${file.name} - Conteúdo não extraído (apenas metadados)`, 'info');
+    } else {
+        text = await readFileAsText(file);
+    }
+    
+    // Hash do conteúdo (mesmo que seja marcador PDF) ou nome+tamanho para PDFs
+    const contentToHash = isPDF ? (file.name + file.size + file.lastModified) : text;
+    const hash = CryptoJS.SHA256(contentToHash).toString();
 
     if(!VDCSystem.documents[type]) {
         VDCSystem.documents[type] = { files: [], hashes: {}, totals: { records: 0 } };
@@ -694,111 +730,119 @@ async function processFile(file, type) {
         timestampUnix: Math.floor(Date.now() / 1000)
     });
 
-    // Processamento específico por tipo
-    if (type === 'invoice') {
-        const val = toForensicNumber(text.match(/(\d+[.,]\d{2})/)?.[0] || 0);
-        VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
-        VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
-        logAudit(`Fatura processada: ${file.name} | Valor: ${formatCurrency(val)}`, 'success');
-    }
-
-    if (type === 'saft') {
-        try {
-            const creditMatch = text.match(/TotalCredit>\s*([\d\.,]+)/i);
-            const debitMatch = text.match(/TotalDebit>\s*([\d\.,]+)/i);
-            const taxMatch = text.match(/TaxPayable>\s*([\d\.,]+)/i);
-            const netMatch = text.match(/NetTotal>\s*([\d\.,]+)/i);
-            
-            let bruto = 0, iva = 0, iliquido = 0;
-            
-            if (creditMatch) bruto = toForensicNumber(creditMatch[1]);
-            if (debitMatch) bruto = Math.max(bruto, toForensicNumber(debitMatch[1]));
-            if (taxMatch) iva = toForensicNumber(taxMatch[1]);
-            if (netMatch) iliquido = toForensicNumber(netMatch[1]);
-            
-            if (iliquido === 0 && bruto > 0) iliquido = bruto - iva;
-            
-            VDCSystem.documents.saft.totals.bruto = (VDCSystem.documents.saft.totals.bruto || 0) + bruto;
-            VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + iliquido;
-            VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + iva;
-            
-            VDCSystem.analysis.extractedValues.saftBruto = VDCSystem.documents.saft.totals.bruto;
-            VDCSystem.analysis.extractedValues.saftIliquido = VDCSystem.documents.saft.totals.iliquido;
-            VDCSystem.analysis.extractedValues.saftIva = VDCSystem.documents.saft.totals.iva;
-            
-            logAudit(`SAF-T processado: ${file.name} | Bruto: ${formatCurrency(bruto)} | IVA: ${formatCurrency(iva)}`, 'info');
-        } catch(e) {
-            console.warn(`Erro ao processar SAF-T ${file.name}:`, e);
+    // Processamento específico por tipo (apenas se não for PDF)
+    if (!isPDF) {
+        if (type === 'invoice') {
+            const val = toForensicNumber(text.match(/(\d+[.,]\d{2})/)?.[0] || 0);
+            VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
+            VDCSystem.analysis.extractedValues.faturaPlataforma = VDCSystem.documents.invoices.totals.invoiceValue;
+            logAudit(`Fatura processada: ${file.name} | Valor: ${formatCurrency(val)}`, 'success');
         }
-    }
 
-    if (type === 'statement') {
-        try {
-            let ganhos = 0, comissao = 0;
-            
-            const result = Papa.parse(text, { header: false, skipEmptyLines: true, delimiter: "auto" });
-            
-            if (result.data) {
-                result.data.forEach(row => {
-                    row.forEach(cell => {
-                        const txt = (cell || '').toString().toLowerCase();
-                        const val = toForensicNumber(cell);
-                        
-                        if (val !== 0) {
-                            if (txt.includes('earning') || txt.includes('ganho') || txt.includes('bolt') || txt.includes('uber') || txt.includes('freenow')) {
-                                if (!txt.includes('comiss') && !txt.includes('fee') && !txt.includes('taxa')) {
-                                    ganhos += Math.abs(val);
+        if (type === 'saft') {
+            try {
+                const creditMatch = text.match(/TotalCredit>\s*([\d\.,]+)/i);
+                const debitMatch = text.match(/TotalDebit>\s*([\d\.,]+)/i);
+                const taxMatch = text.match(/TaxPayable>\s*([\d\.,]+)/i);
+                const netMatch = text.match(/NetTotal>\s*([\d\.,]+)/i);
+                
+                let bruto = 0, iva = 0, iliquido = 0;
+                
+                if (creditMatch) bruto = toForensicNumber(creditMatch[1]);
+                if (debitMatch) bruto = Math.max(bruto, toForensicNumber(debitMatch[1]));
+                if (taxMatch) iva = toForensicNumber(taxMatch[1]);
+                if (netMatch) iliquido = toForensicNumber(netMatch[1]);
+                
+                if (iliquido === 0 && bruto > 0) iliquido = bruto - iva;
+                
+                VDCSystem.documents.saft.totals.bruto = (VDCSystem.documents.saft.totals.bruto || 0) + bruto;
+                VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + iliquido;
+                VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + iva;
+                
+                VDCSystem.analysis.extractedValues.saftBruto = VDCSystem.documents.saft.totals.bruto;
+                VDCSystem.analysis.extractedValues.saftIliquido = VDCSystem.documents.saft.totals.iliquido;
+                VDCSystem.analysis.extractedValues.saftIva = VDCSystem.documents.saft.totals.iva;
+                
+                logAudit(`SAF-T processado: ${file.name} | Bruto: ${formatCurrency(bruto)} | IVA: ${formatCurrency(iva)}`, 'info');
+            } catch(e) {
+                console.warn(`Erro ao processar SAF-T ${file.name}:`, e);
+            }
+        }
+
+        if (type === 'statement') {
+            try {
+                let ganhos = 0, comissao = 0;
+                
+                const result = Papa.parse(text, { header: false, skipEmptyLines: true, delimiter: "auto" });
+                
+                if (result.data) {
+                    result.data.forEach(row => {
+                        row.forEach(cell => {
+                            const txt = (cell || '').toString().toLowerCase();
+                            const val = toForensicNumber(cell);
+                            
+                            if (val !== 0) {
+                                if (txt.includes('earning') || txt.includes('ganho') || txt.includes('bolt') || txt.includes('uber') || txt.includes('freenow')) {
+                                    if (!txt.includes('comiss') && !txt.includes('fee') && !txt.includes('taxa')) {
+                                        ganhos += Math.abs(val);
+                                    }
+                                }
+                                if (txt.includes('comiss') || txt.includes('fee') || txt.includes('service') || txt.includes('taxa')) {
+                                    comissao += Math.abs(val);
                                 }
                             }
-                            if (txt.includes('comiss') || txt.includes('fee') || txt.includes('service') || txt.includes('taxa')) {
-                                comissao += Math.abs(val);
-                            }
-                        }
+                        });
                     });
-                });
+                }
+                
+                VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
+                VDCSystem.documents.statements.totals.despesasComissao = (VDCSystem.documents.statements.totals.despesasComissao || 0) + comissao;
+                
+                VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.ganhosApp;
+                VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.despesasComissao;
+                
+                logAudit(`Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Comissões: ${formatCurrency(comissao)}`, 'info');
+            } catch(e) {
+                console.warn(`Erro ao processar extrato ${file.name}:`, e);
             }
-            
-            VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
-            VDCSystem.documents.statements.totals.despesasComissao = (VDCSystem.documents.statements.totals.despesasComissao || 0) + comissao;
-            
-            VDCSystem.analysis.extractedValues.rendimentosBrutos = VDCSystem.documents.statements.totals.ganhosApp;
-            VDCSystem.analysis.extractedValues.comissaoApp = -VDCSystem.documents.statements.totals.despesasComissao;
-            
-            logAudit(`Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Comissões: ${formatCurrency(comissao)}`, 'info');
-        } catch(e) {
-            console.warn(`Erro ao processar extrato ${file.name}:`, e);
         }
-    }
-    
-    if (type === 'dac7') {
-        try {
-            const q1Match = text.match(/Q1[^\d]*(\d+[.,]\d{2})/i);
-            const q2Match = text.match(/Q2[^\d]*(\d+[.,]\d{2})/i);
-            const q3Match = text.match(/Q3[^\d]*(\d+[.,]\d{2})/i);
-            const q4Match = text.match(/Q4[^\d]*(\d+[.,]\d{2})/i);
-            
-            if (q1Match) VDCSystem.documents.dac7.totals.q1 = toForensicNumber(q1Match[1]);
-            if (q2Match) VDCSystem.documents.dac7.totals.q2 = toForensicNumber(q2Match[1]);
-            if (q3Match) VDCSystem.documents.dac7.totals.q3 = toForensicNumber(q3Match[1]);
-            if (q4Match) VDCSystem.documents.dac7.totals.q4 = toForensicNumber(q4Match[1]);
-            
-            logAudit(`DAC7 importado: ${file.name}`, 'success');
-        } catch(e) {
-            console.warn(`Erro ao processar DAC7 ${file.name}:`, e);
+        
+        if (type === 'dac7') {
+            try {
+                const q1Match = text.match(/Q1[^\d]*(\d+[.,]\d{2})/i);
+                const q2Match = text.match(/Q2[^\d]*(\d+[.,]\d{2})/i);
+                const q3Match = text.match(/Q3[^\d]*(\d+[.,]\d{2})/i);
+                const q4Match = text.match(/Q4[^\d]*(\d+[.,]\d{2})/i);
+                
+                if (q1Match) VDCSystem.documents.dac7.totals.q1 = toForensicNumber(q1Match[1]);
+                if (q2Match) VDCSystem.documents.dac7.totals.q2 = toForensicNumber(q2Match[1]);
+                if (q3Match) VDCSystem.documents.dac7.totals.q3 = toForensicNumber(q3Match[1]);
+                if (q4Match) VDCSystem.documents.dac7.totals.q4 = toForensicNumber(q4Match[1]);
+                
+                logAudit(`DAC7 importado: ${file.name}`, 'success');
+            } catch(e) {
+                console.warn(`Erro ao processar DAC7 ${file.name}:`, e);
+            }
         }
+    } else {
+        // Se for PDF, assume que o utilizador vai inserir valores manualmente ou é apenas prova documental
+        logAudit(`Documento PDF anexado à custódia: ${file.name}`, 'info');
     }
 
-    // Atualizar lista de ficheiros no modal
+    // Atualizar lista de ficheiros no modal (agora inclui ícone PDF)
     const listId = type === 'invoice' ? 'invoicesFileListModal' : 
                    type === 'statement' ? 'statementsFileListModal' : 
                    type === 'dac7' ? 'dac7FileListModal' :
                    `${type}FileListModal`;
     const listEl = document.getElementById(listId);
+    
+    const iconClass = isPDF ? 'fa-file-pdf' : 'fa-check-circle';
+    const iconColor = isPDF ? '#e74c3c' : 'var(--success-primary)';
 
     if(listEl) {
         listEl.style.display = 'block';
         listEl.innerHTML += `<div class="file-item-modal">
-            <i class="fas fa-check-circle" style="color: var(--success-primary);"></i>
+            <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
             <span class="file-name-modal">${file.name}</span>
             <span class="file-hash-modal">${hash.substring(0,8)}...</span>
         </div>`;
