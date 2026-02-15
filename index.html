@@ -32,7 +32,7 @@
         <div class="laser-h-second"></div>
         <div class="laser-v-second"></div>
 
-        <div class="splash-content">
+        <div class="splash-content" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);">
             <div class="splash-logo">
                 <i class="fas fa-fingerprint"></i>
             </div>
@@ -40,14 +40,14 @@
             <h2>VDC SYSTEMS INTERNATIONAL</h2>
             <p class="splash-subtitle">MÓDULO DE INVESTIGAÇÃO DIGITAL · ISO/IEC 27037</p>
 
-            <div class="splash-warning-box">
+            <div class="splash-warning-box" style="background: rgba(245, 158, 11, 0.15);">
                 <p><i class="fas fa-gavel"></i> AVISO JUDICIAL</p>
                 <small>Este sistema destina-se exclusivamente a uso pericial autorizado. O acesso não autorizado constitui crime previsto no art. 103.º e 104.º do RGIT (Lei 15/2001).</small>
             </div>
 
             <div class="splash-version-info">
                 <span class="version-major">v12.8</span>
-                <span class="version-tag">FINAL · EXTRAÇÃO INSTANTÂNEA</span>
+                <span class="version-tag">FINAL · EXTRAÇÃO OTIMIZADA</span>
             </div>
 
             <button id="startSessionBtn" class="splash-btn">
@@ -57,7 +57,7 @@
 
             <div class="splash-footer">
                 <p>Ao continuar, declara estar autorizado a realizar esta perícia nos termos da legislação aplicável.</p>
-                <p class="version">v12.8 FINAL · EXTRAÇÃO INSTANTÂNEA · SHA-256: 3E9C09A1</p>
+                <p class="version">v12.8 FINAL · EXTRAÇÃO OTIMIZADA · SHA-256: 3E9C09A1</p>
             </div>
         </div>
     </div>
@@ -247,31 +247,25 @@
                     </div>
                 </div>
 
-                <div class="upload-area" id="quickUploadArea">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Arraste ficheiros PDF, CSV ou XML para extração instantânea</p>
-                    <input type="file" id="quickUpload" multiple accept=".pdf,.csv,.xml" style="display: none;">
-                    <button id="quickUploadBtn" class="btn-upload"><i class="fas fa-upload"></i> SELECIONAR FICHEIROS</button>
-                </div>
-
+                <!-- RESULTADOS DA EXTRAÇÃO - IDs Corrigidos -->
                 <div class="extraction-results">
                     <h4><i class="fas fa-microscope"></i> RESULTADOS DA EXTRAÇÃO FORENSE</h4>
                     <div class="results-grid">
                         <div class="result-item">
                             <span class="result-label">GANHOS APP</span>
-                            <span id="resGanhos" class="result-value highlight">0,00 €</span>
+                            <span id="appGainsDisplay" class="result-value highlight">0,00 €</span>
                         </div>
                         <div class="result-item">
                             <span class="result-label">COMISSÕES</span>
-                            <span id="resComissao" class="result-value">0,00 €</span>
+                            <span id="operatorInvoicesDisplay" class="result-value">0,00 €</span>
                         </div>
                         <div class="result-item">
                             <span class="result-label">DAC7 ANUAL</span>
-                            <span id="resDac7" class="result-value">0,00 €</span>
+                            <span id="dac7ValueDisplay" class="result-value">0,00 €</span>
                         </div>
                         <div class="result-item">
                             <span class="result-label">TOTAL SAF-T</span>
-                            <span id="resSaft" class="result-value">0,00 €</span>
+                            <span id="saftTotalDisplay" class="result-value">0,00 €</span>
                         </div>
                     </div>
                 </div>
@@ -326,6 +320,12 @@
                                 <span class="module-value-label">Ganhos Líquidos (Transferência)</span>
                                 <span id="stmtLiquidoValue" class="module-value-amount highlight">0,00 €</span>
                             </div>
+                        </div>
+                        <!-- Estatísticas dentro da box -->
+                        <div class="module-stats" style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; font-size: 0.7rem; color: var(--text-tertiary);">
+                            <span><i class="fas fa-file-pdf"></i> PDFs: <span id="moduleStatsPdf">0</span></span>
+                            <span><i class="fas fa-euro-sign"></i> Valores: <span id="moduleStatsValues">0</span></span>
+                            <span><i class="fas fa-bolt"></i> Bolt: <span id="moduleStatsBolt">0</span></span>
                         </div>
                     </div>
 
@@ -484,6 +484,9 @@
                 <div class="console-section">
                     <div class="console-header">
                         <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA DIGITAL</h3>
+                        <button id="clearConsoleBtn2" class="console-clear-btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-tertiary); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                            <i class="fas fa-trash-alt"></i> LIMPAR
+                        </button>
                     </div>
                     <div id="consoleOutput" class="console-output"></div>
                 </div>
@@ -494,7 +497,7 @@
                             <strong id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.8)</strong>
                             <span id="masterHashValue">A aguardar processamento de evidências...</span>
                         </div>
-                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Extração Instantânea</p>
+                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Extração Otimizada</p>
                     </div>
                 </footer>
 
@@ -529,6 +532,11 @@
                         </button>
                         <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.csv,.txt" multiple>
                         <div id="saftFileListModal" class="file-list-modal"></div>
+                        <!-- Estatísticas dentro da box -->
+                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                            <span>📄 PDFs: <span id="boxSaftPdf">0</span></span>
+                            <span>💰 Valores: <span id="boxSaftValues">0</span></span>
+                        </div>
                     </div>
 
                     <div class="upload-group-modal">
@@ -538,6 +546,11 @@
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
+                        <!-- Estatísticas dentro da box -->
+                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                            <span>📄 PDFs: <span id="boxInvoicePdf">0</span></span>
+                            <span>💰 Valores: <span id="boxInvoiceValues">0</span></span>
+                        </div>
                     </div>
 
                     <div class="upload-group-modal">
@@ -547,6 +560,11 @@
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
+                        <!-- Estatísticas dentro da box -->
+                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                            <span>📄 PDFs: <span id="boxStatementPdf">0</span></span>
+                            <span>💰 Valores: <span id="boxStatementValues">0</span></span>
+                        </div>
                     </div>
 
                     <div class="upload-group-modal">
@@ -556,59 +574,15 @@
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
-                    </div>
-
-                    <div class="extraction-stats-modal">
-                        <h5><i class="fas fa-microscope"></i> ESTATÍSTICAS DE EXTRAÇÃO FORENSE</h5>
-                        <div class="stats-grid-modal">
-                            <div class="stat-item-modal">
-                                <span class="stat-label">PDFs Processados:</span>
-                                <span id="statsPdfCount" class="stat-value">0</span>
-                            </div>
-                            <div class="stat-item-modal">
-                                <span class="stat-label">Valores Extraídos:</span>
-                                <span id="statsValuesFound" class="stat-value">0</span>
-                            </div>
-                            <div class="stat-item-modal">
-                                <span class="stat-label">Extratos Bolt:</span>
-                                <span id="statsBoltFormat" class="stat-value">0</span>
-                            </div>
-                            <div class="stat-item-modal">
-                                <span class="stat-label">Faturas Bolt:</span>
-                                <span id="statsUberFormat" class="stat-value">0</span>
-                            </div>
+                        <!-- Estatísticas dentro da box -->
+                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                            <span>📄 PDFs: <span id="boxDac7Pdf">0</span></span>
+                            <span>💰 Valores: <span id="boxDac7Values">0</span></span>
                         </div>
                     </div>
 
-                    <div class="processing-summary">
-                        <h4 id="summaryTitle"><i class="fas fa-clipboard-list"></i> RESUMO DE PROCESSAMENTO PROBATÓRIO</h4>
-                        <div class="summary-grid">
-                            <div class="summary-item">
-                                <span class="summary-label">CONTROLO</span>
-                                <span id="summaryControl" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">SAF-T/CSV</span>
-                                <span id="summarySaft" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">FATURAS</span>
-                                <span id="summaryInvoices" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">EXTRATOS</span>
-                                <span id="summaryStatements" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">DAC7</span>
-                                <span id="summaryDac7" class="summary-value">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">TOTAL</span>
-                                <span id="summaryTotal" class="summary-value total">0</span>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Estatísticas gerais removidas daqui - agora estão dentro de cada box -->
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -634,22 +608,16 @@
                 <div class="help-content">
                     <h4>Formato dos Ficheiros Suportados:</h4>
                     <ul>
-                        <li><strong>Extrato Bolt (PDF):</strong> "Ganhos na app","3157.94" ou "Ganhos na app 3157.94"</li>
-                        <li><strong>Fatura Bolt (PDF):</strong> "Total com IVA (EUR)","239.00" ou "A pagar: 239.00€"</li>
+                        <li><strong>Extrato Bolt (PDF):</strong> "Ganhos na app","3157.94"</li>
+                        <li><strong>Fatura Bolt (PDF):</strong> "Total com IVA (EUR)","239.00"</li>
                         <li><strong>DAC7 (PDF):</strong> "Total de receitas anuais: 7755.16€"</li>
-                        <li><strong>CSV Viagens:</strong> Colunas "Preço da viagem", "IVA"</li>
+                        <li><strong>CSV Viagens:</strong> Colunas com valores</li>
                     </ul>
-                    <h4>Extração Instantânea:</h4>
+                    <h4>Extração Otimizada:</h4>
                     <ul>
-                        <li>Os dados aparecem automaticamente após carregar os ficheiros</li>
-                        <li>Não é necessário clicar em "Analisar" para ver os valores</li>
-                        <li>O botão "Analisar" serve apenas para o veredicto final</li>
-                    </ul>
-                    <h4>Atalhos:</h4>
-                    <ul>
-                        <li><strong>Drag & Drop:</strong> Arraste ficheiros para área de upload</li>
-                        <li><strong>CTRL + O:</strong> Abrir gestão de evidências</li>
-                        <li><strong>CTRL + Enter:</strong> Executar perícia</li>
+                        <li>Upload rápido e silencioso</li>
+                        <li>Extração imediata após seleção</li>
+                        <li>Estatísticas visíveis em cada box</li>
                     </ul>
                 </div>
             </div>
