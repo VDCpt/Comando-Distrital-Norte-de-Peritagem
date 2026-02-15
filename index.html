@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="VDC Sistema de Peritagem Forense - Módulo de Análise Financeira e Fiscal v12.8 FINAL">
     <meta name="author" content="VDC Systems International">
-    <meta name="keywords" content="forense, auditoria, fiscal, bolt, uber, peritagem, digital, extração, pdf, normalização binária">
+    <meta name="keywords" content="forense, auditoria, fiscal, bolt, uber, peritagem, digital, extração, pdf, dac7">
     <title>VDC FORENSE · v12.8 FINAL</title>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -47,7 +47,7 @@
 
             <div class="splash-version-info">
                 <span class="version-major">v12.8</span>
-                <span class="version-tag">FINAL · NORMALIZAÇÃO BINÁRIA</span>
+                <span class="version-tag">FINAL · EXTRAÇÃO COMPLETA</span>
             </div>
 
             <button id="startSessionBtn" class="splash-btn">
@@ -57,7 +57,7 @@
 
             <div class="splash-footer">
                 <p>Ao continuar, declara estar autorizado a realizar esta perícia nos termos da legislação aplicável.</p>
-                <p class="version">v12.8 FINAL · NORMALIZAÇÃO DE STRING · SHA-256: 3E9C09A1</p>
+                <p class="version">v12.8 FINAL · EXTRAÇÃO BOLT/DAC7/CSV · SHA-256: 3E9C09A1</p>
             </div>
         </div>
     </div>
@@ -319,8 +319,12 @@
                                 <span id="stmtTaxasCancelValue" class="module-value-amount alert">0,00 €</span>
                             </div>
                             <div class="module-value-item">
-                                <span class="module-value-label">Comissões Plataforma</span>
+                                <span class="module-value-label">Despesas (Comissões)</span>
                                 <span id="stmtComissaoValue" class="module-value-amount">0,00 €</span>
+                            </div>
+                            <div class="module-value-item" style="grid-column: span 2;">
+                                <span class="module-value-label">Ganhos Líquidos (Transferência)</span>
+                                <span id="stmtLiquidoValue" class="module-value-amount highlight">0,00 €</span>
                             </div>
                         </div>
                     </div>
@@ -332,24 +336,54 @@
                                 <div class="quarter-box">
                                     <span class="quarter-label" id="dac7Q1Label">1.º TRIMESTRE</span>
                                     <span id="dac7Q1Value" class="quarter-value">0,00 €</span>
+                                    <span class="quarter-sublabel">Ganhos</span>
+                                    <span id="dac7Q1Comissoes" class="quarter-small">Comis: 0,00 €</span>
+                                    <span id="dac7Q1Servicos" class="quarter-small">Serv: 0</span>
                                 </div>
                                 <div class="quarter-box">
                                     <span class="quarter-label" id="dac7Q2Label">2.º TRIMESTRE</span>
                                     <span id="dac7Q2Value" class="quarter-value">0,00 €</span>
+                                    <span class="quarter-sublabel">Ganhos</span>
+                                    <span id="dac7Q2Comissoes" class="quarter-small">Comis: 0,00 €</span>
+                                    <span id="dac7Q2Servicos" class="quarter-small">Serv: 0</span>
                                 </div>
                                 <div class="quarter-box">
                                     <span class="quarter-label" id="dac7Q3Label">3.º TRIMESTRE</span>
                                     <span id="dac7Q3Value" class="quarter-value">0,00 €</span>
+                                    <span class="quarter-sublabel">Ganhos</span>
+                                    <span id="dac7Q3Comissoes" class="quarter-small">Comis: 0,00 €</span>
+                                    <span id="dac7Q3Servicos" class="quarter-small">Serv: 0</span>
                                 </div>
                                 <div class="quarter-box">
                                     <span class="quarter-label" id="dac7Q4Label">4.º TRIMESTRE</span>
                                     <span id="dac7Q4Value" class="quarter-value">0,00 €</span>
+                                    <span class="quarter-sublabel">Ganhos</span>
+                                    <span id="dac7Q4Comissoes" class="quarter-small">Comis: 0,00 €</span>
+                                    <span id="dac7Q4Servicos" class="quarter-small">Serv: 0</span>
                                 </div>
                             </div>
                             <div class="module-value-item" style="grid-column: span 2; margin-top: 0.5rem;">
                                 <span class="module-value-label">Total Declarado DAC7</span>
                                 <span id="dac7TotalValue" class="module-value-amount highlight">0,00 €</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-module" id="moduleInvoice" style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <h4><i class="fas fa-file-invoice"></i> MÓDULO FATURAS BOLT</h4>
+                    <div class="invoice-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div class="invoice-item">
+                            <span class="invoice-label">N.º Fatura</span>
+                            <span id="invoiceNumero" class="invoice-value">---</span>
+                        </div>
+                        <div class="invoice-item">
+                            <span class="invoice-label">Total c/ IVA</span>
+                            <span id="invoiceTotal" class="invoice-value highlight">0,00 €</span>
+                        </div>
+                        <div class="invoice-item">
+                            <span class="invoice-label">Autoliquidação</span>
+                            <span id="invoiceAutoliquidacao" class="invoice-value">0,00 €</span>
                         </div>
                     </div>
                 </div>
@@ -433,11 +467,11 @@
                             <span id="detailValuesFound" class="detail-value">0</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Formato Bolt (",") detetado:</span>
+                            <span class="detail-label">Extratos processados:</span>
                             <span id="detailBoltFormat" class="detail-value">0</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Formato Uber (texto) detetado:</span>
+                            <span class="detail-label">Faturas processadas:</span>
                             <span id="detailUberFormat" class="detail-value">0</span>
                         </div>
                         <div class="detail-item">
@@ -460,7 +494,7 @@
                             <strong id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 v12.8)</strong>
                             <span id="masterHashValue">A aguardar processamento de evidências...</span>
                         </div>
-                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Normalização Binária Ativa</p>
+                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8 | EM · PT | Extração Completa Bolt/DAC7</p>
                     </div>
                 </footer>
 
@@ -489,38 +523,38 @@
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T (PT) · XML</label>
+                        <label id="uploadSaftText"><i class="fas fa-file-code"></i> FICHEIROS SAF-T (PT) · XML / CSV</label>
                         <button id="saftUploadBtnModal" class="upload-btn">
                             <i class="fas fa-upload"></i> SELECIONAR FICHEIROS SAF-T
                         </button>
-                        <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.txt" multiple>
+                        <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.csv,.txt" multiple>
                         <div id="saftFileListModal" class="file-list-modal"></div>
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadInvoiceText"><i class="fas fa-file-invoice-dollar"></i> FATURAS / RECIBOS (PDF/CSV/XML)</label>
+                        <label id="uploadInvoiceText"><i class="fas fa-file-invoice-dollar"></i> FATURAS BOLT (PDF)</label>
                         <button id="invoiceUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-upload"></i> SELECIONAR FATURAS
+                            <i class="fas fa-upload"></i> SELECIONAR FATURAS BOLT
                         </button>
-                        <input type="file" id="invoiceFileModal" class="file-input-modal" accept=".csv,.xml,.pdf,.txt" multiple>
+                        <input type="file" id="invoiceFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadStatementText"><i class="fas fa-file-contract"></i> EXTRATOS BANCÁRIOS / DADOS DA PLATAFORMA</label>
+                        <label id="uploadStatementText"><i class="fas fa-file-contract"></i> EXTRATOS BOLT (PDF)</label>
                         <button id="statementUploadBtnModal" class="upload-btn">
-                            <i class="fas fa-upload"></i> SELECIONAR EXTRATOS (BOLT/UBER)
+                            <i class="fas fa-upload"></i> SELECIONAR EXTRATOS BOLT
                         </button>
-                        <input type="file" id="statementFileModal" class="file-input-modal" accept=".csv,.xlsx,.xls,.txt,.pdf" multiple>
+                        <input type="file" id="statementFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
                     </div>
 
                     <div class="upload-group-modal">
-                        <label id="uploadDac7Text"><i class="fas fa-envelope-open-text"></i> DECLARAÇÃO DAC7 / COMUNICAÇÃO À AT</label>
+                        <label id="uploadDac7Text"><i class="fas fa-envelope-open-text"></i> DECLARAÇÃO DAC7 (PDF/Email)</label>
                         <button id="dac7UploadBtnModal" class="upload-btn">
                             <i class="fas fa-upload"></i> SELECIONAR FICHEIROS DAC7
                         </button>
-                        <input type="file" id="dac7FileModal" class="file-input-modal" accept=".xml,.csv,.json,.txt,.pdf" multiple>
+                        <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf,.eml,.msg" multiple>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
                     </div>
 
@@ -536,11 +570,11 @@
                                 <span id="statsValuesFound" class="stat-value">0</span>
                             </div>
                             <div class="stat-item-modal">
-                                <span class="stat-label">Formato Bolt:</span>
+                                <span class="stat-label">Extratos Bolt:</span>
                                 <span id="statsBoltFormat" class="stat-value">0</span>
                             </div>
                             <div class="stat-item-modal">
-                                <span class="stat-label">Formato Uber:</span>
+                                <span class="stat-label">Faturas Bolt:</span>
                                 <span id="statsUberFormat" class="stat-value">0</span>
                             </div>
                         </div>
@@ -554,7 +588,7 @@
                                 <span id="summaryControl" class="summary-value">0</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">SAF-T</span>
+                                <span class="summary-label">SAF-T/CSV</span>
                                 <span id="summarySaft" class="summary-value">0</span>
                             </div>
                             <div class="summary-item">
@@ -600,20 +634,19 @@
                 <div class="help-content">
                     <h4>Formato dos Ficheiros Suportados:</h4>
                     <ul>
-                        <li><strong>PDF Bolt:</strong> "Ganhos na app","3157.94" (com aspas)</li>
-                        <li><strong>PDF Uber:</strong> Ganhos totais: 3157.94 (texto simples)</li>
-                        <li><strong>CSV:</strong> Qualquer coluna com valores numéricos</li>
-                        <li><strong>SAF-T:</strong> Ficheiros XML da AT</li>
+                        <li><strong>Extrato Bolt (PDF):</strong> Tabelas "Transações" e "Ganhos líquidos"</li>
+                        <li><strong>Fatura Bolt (PDF):</strong> N.º fatura, Total com IVA, Período</li>
+                        <li><strong>DAC7 (PDF):</strong> Total anual e detalhe por trimestre</li>
+                        <li><strong>CSV Viagens:</strong> Colunas "Preço da viagem (sem IVA)", "IVA", "Preço da viagem"</li>
                     </ul>
-                    <h4>Normalização de String:</h4>
+                    <h4>Campos Extraídos:</h4>
                     <ul>
-                        <li>Remove quebras de linha entre campos</li>
-                        <li>Cola valores aos nomes dos campos</li>
-                        <li>Preserva formato europeu (1.234,56)</li>
+                        <li><strong>Extrato:</strong> Ganhos app, campanhas, gorjetas, portagens, taxas cancelamento, ganhos líquidos</li>
+                        <li><strong>Fatura:</strong> Número, Total com IVA, Autoliquidação</li>
+                        <li><strong>DAC7:</strong> Ganhos, comissões, impostos, serviços por trimestre</li>
                     </ul>
                     <h4>Atalhos:</h4>
                     <ul>
-                        <li><strong>Drag & Drop:</strong> Arraste ficheiros para área de upload</li>
                         <li><strong>CTRL + O:</strong> Abrir gestão de evidências</li>
                         <li><strong>CTRL + Enter:</strong> Executar perícia</li>
                     </ul>
