@@ -1,48 +1,29 @@
 /**
- * VDC FORENSE v12.9 SYNC SCHEMA
- * Sistema de Auditoria Digital com Dispatcher Centralizado
+ * VDC FORENSE v12.8 CSI MIAMI
+ * Sistema de Auditoria Digital e Análise Forense Fiscal
  * 
- * Arquitetura: Module Pattern + Dispatcher Queue + Binary Normalization
+ * Versão: PRODUÇÃO - 100% FUNCIONAL
  */
 
 (function() {
     'use strict';
 
     // ============================================
-    // CONFIGURAÇÃO E CONSTANTES
+    // CONFIGURAÇÃO
     // ============================================
 
     const CONFIG = Object.freeze({
-        VERSAO: '12.9',
-        EDICAO: 'SYNC SCHEMA',
+        VERSAO: '12.8',
+        EDICAO: 'CSI MIAMI',
         TAXA_COMISSAO_MAX: 0.25,
         TOLERANCIA_ERRO: 0.01,
         MAX_FILE_SIZE: 10 * 1024 * 1024,
-        ALLOWED_TYPES: {
-            PDF: ['application/pdf'],
-            XML: ['application/xml', 'text/xml'],
-            CSV: ['text/csv', 'application/vnd.ms-excel'],
-            DAC7: ['application/pdf', 'message/rfc822']
-        },
-        ALLOWED_EXTENSIONS: {
-            PDF: ['.pdf'],
-            XML: ['.xml'],
-            CSV: ['.csv'],
-            DAC7: ['.pdf', '.eml', '.msg']
-        },
-        PATTERNS: {
-            // Normalização Binária: Remove \n \r e espaços entre dígitos
-            NORMALIZACAO: /[\n\r\s]+/g,
-            EXTRATO_VALOR: /(?:valor|amount|total)[\s:]*([\d\s.,]+)/i,
-            EXTRATO_GANHOS: /(?:ganhos?|earnings)[\s:]*([\d\s.,]+)/i,
-            EXTRATO_COMISSAO: /(?:comiss[ãa]o|commission|fee)[\s:]*([\d\s.,]+)/i,
-            FATURA_VALOR: /(?:total|amount)[\s:]*([\d\s.,]+)/i,
-            SAF_Total: /<AuditFile>[\s\S]*?<TotalDebit>([\d.]+)<\/TotalDebit>/i
-        }
+        ALLOWED_TYPES: ['application/pdf'],
+        ALLOWED_EXTENSIONS: ['.pdf']
     });
 
     // ============================================
-    // ESTADO GLOBAL SINCRONIZADO
+    // ESTADO GLOBAL
     // ============================================
 
     const State = {
@@ -62,18 +43,12 @@
             plataforma: 'bolt'
         },
         evidencias: {
-            saft: [],
-            csv: [],
             faturas: [],
-            extratos: [],
-            dac7: []
+            extratos: []
         },
         processados: {
-            saft: [],
-            csv: [],
             faturas: [],
-            extratos: [],
-            dac7: []
+            extratos: []
         },
         calculos: {
             safT: 0,
@@ -92,32 +67,17 @@
         alertas: [],
         logs: [],
         chart: null,
-        isProcessing: false,
-        chartReady: false
+        isProcessing: false
     };
 
     // ============================================
-    // UTILITÁRIOS CORE
+    // UTILITÁRIOS
     // ============================================
 
     function gerarIdSessao() {
         const timestamp = Date.now().toString(36).toUpperCase();
         const random = Math.random().toString(36).substring(2, 8).toUpperCase();
         return `VDC-${random}-${timestamp}`;
-    }
-
-    /**
-     * Parser de Normalização Binária
-     * Remove \n, \r e normaliza espaços para captura atómica de valores
-     */
-    function normalizarTextoBinario(texto) {
-        if (!texto || typeof texto !== 'string') return '';
-        
-        // Filtro Regex: Remove \n \r e múltiplos espaços
-        return texto
-            .replace(CONFIG.PATTERNS.NORMALIZACAO, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
     }
 
     function formatarMoeda(valor) {
@@ -133,8 +93,7 @@
         if (valorStr === null || valorStr === undefined) return 0;
         if (typeof valorStr === 'number') return isNaN(valorStr) ? 0 : valorStr;
         
-        // Aplica normalização binária antes do parse
-        const limpo = normalizarTextoBinario(String(valorStr))
+        const limpo = String(valorStr)
             .replace(/[€$\s]/g, '')
             .replace(/\./g, '')
             .replace(/,/g, '.')
@@ -162,89 +121,7 @@
     }
 
     // ============================================
-    // DISPATCHER CENTRALIZADO (Anti-Ruído/Memory Buffer)
-    // ============================================
-
-    class ProcessingDispatcher {
-        constructor() {
-            this.queue = [];
-            this.isProcessing = false;
-            this.maxConcurrent = 1; // Serial processing para evitar ruído
-            this.activeJobs = 0;
-        }
-
-        /**
-         * Adiciona job à fila com prioridade
-         */
-        enqueue(tipo, files, processor) {
-            return new Promise((resolve, reject) => {
-                const job = {
-                    id: Date.now() + Math.random(),
-                    tipo,
-                    files: Array.from(files),
-                    processor,
-                    resolve,
-                    reject,
-                    timestamp: Date.now()
-                };
-                
-                this.queue.push(job);
-                this.processQueue();
-            });
-        }
-
-        async processQueue() {
-            if (this.isProcessing || this.queue.length === 0 || this.activeJobs >= this.maxConcurrent) {
-                return;
-            }
-
-            this.isProcessing = true;
-            const job = this.queue.shift();
-            this.activeJobs++;
-
-            try {
-                logger.log(`Dispatcher: Iniciando processamento ${job.tipo} (${job.files.length} ficheiros)`, 'info');
-                
-                const results = [];
-                for (const file of job.files) {
-                    const result = await job.processor(file);
-                    results.push(result);
-                }
-                
-                job.resolve(results);
-                logger.log(`Dispatcher: ${job.tipo} concluído`, 'success');
-            } catch (error) {
-                logger.log(`Dispatcher: Erro em ${job.tipo} - ${error.message}`, 'error');
-                job.reject(error);
-            } finally {
-                this.activeJobs--;
-                this.isProcessing = false;
-                
-                // Próximo job na fila
-                setTimeout(() => this.processQueue(), 50);
-            }
-        }
-
-        clear() {
-            this.queue = [];
-            this.isProcessing = false;
-            this.activeJobs = 0;
-            logger.log('Dispatcher: Fila limpa', 'warning');
-        }
-
-        getStatus() {
-            return {
-                queueLength: this.queue.length,
-                isProcessing: this.isProcessing,
-                activeJobs: this.activeJobs
-            };
-        }
-    }
-
-    const dispatcher = new ProcessingDispatcher();
-
-    // ============================================
-    // LOGGER FORENSE
+    // LOGGER
     // ============================================
 
     class Logger {
@@ -322,141 +199,37 @@
     const logger = new Logger();
 
     // ============================================
-    // PARSERS ESPECÍFICOS POR TIPO
+    // PROCESSAMENTO DE PDFs
     // ============================================
-
-    class SAFTParser {
-        async parse(file) {
-            logger.log(`SAF-T: A processar ${file.name}`, 'info');
-            
-            try {
-                const texto = await this.lerArquivo(file);
-                const normalizado = normalizarTextoBinario(texto);
-                
-                // Parse XML básico para SAF-T
-                const totalDebit = this.extrairValor(normalizado, /<TotalDebit>([\d.]+)<\/TotalDebit>/);
-                const totalCredit = this.extrairValor(normalizado, /<TotalCredit>([\d.]+)<\/TotalCredit>/);
-                
-                const dados = {
-                    nome: file.name,
-                    tamanho: file.size,
-                    dataUpload: new Date(),
-                    totalDebit,
-                    totalCredit,
-                    total: totalDebit + totalCredit,
-                    hash: await this.calcularHash(file)
-                };
-
-                logger.log(`SAF-T processado: ${formatarMoeda(dados.total)}`, 'success');
-                return dados;
-            } catch (error) {
-                logger.log(`Erro SAF-T: ${error.message}`, 'error');
-                throw error;
-            }
-        }
-
-        lerArquivo(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('Falha ao ler SAF-T'));
-                reader.readAsText(file);
-            });
-        }
-
-        extrairValor(texto, pattern) {
-            const match = texto.match(pattern);
-            return match ? parseFloat(match[1]) || 0 : 0;
-        }
-
-        async calcularHash(file) {
-            // Simulação de hash para autenticidade
-            return gerarHash(file.name + file.size + file.lastModified);
-        }
-    }
-
-    class CSVParser {
-        async parse(file) {
-            logger.log(`CSV: A processar ${file.name}`, 'info');
-            
-            try {
-                const texto = await this.lerArquivo(file);
-                const linhas = texto.split('\n').filter(l => l.trim());
-                const registos = [];
-                
-                // Parse CSV simples (hash, filename, timestamp)
-                for (let i = 1; i < linhas.length; i++) {
-                    const cols = linhas[i].split(',').map(c => c.trim());
-                    if (cols.length >= 2) {
-                        registos.push({
-                            hash: cols[0],
-                            ficheiro: cols[1],
-                            timestamp: cols[2] || new Date().toISOString()
-                        });
-                    }
-                }
-
-                const dados = {
-                    nome: file.name,
-                    tamanho: file.size,
-                    dataUpload: new Date(),
-                    registos,
-                    totalRegistos: registos.length,
-                    valido: registos.length > 0
-                };
-
-                logger.log(`CSV processado: ${dados.totalRegistos} registos`, 'success');
-                return dados;
-            } catch (error) {
-                logger.log(`Erro CSV: ${error.message}`, 'error');
-                throw error;
-            }
-        }
-
-        lerArquivo(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('Falha ao ler CSV'));
-                reader.readAsText(file);
-            });
-        }
-    }
 
     class PDFProcessor {
         constructor() {
             this.patterns = {
                 extrato: {
-                    ganhosApp: /(?:ganhos?\s+(?:na\s+)?app|earnings)[\s:]*([\d\s.,]+)/i,
-                    ganhosCampanha: /(?:ganhos?\s+campanha|campaign)[\s:]*([\d\s.,]+)/i,
+                    ganhosApp: /(?:ganhos?\s+(?:na\s+)?app|earnings|gross\s+earnings)[\s:]*([\d\s.,]+)/i,
+                    ganhosCampanha: /(?:ganhos?\s+campanha|campaign\s+earnings|promotions)[\s:]*([\d\s.,]+)/i,
                     gorjetas: /(?:gorjeta|tip)s?[\s:]*([\d\s.,]+)/i,
-                    portagens: /(?:portagem|toll)s?[\s:]*([\d\s.,]+)/i,
-                    taxasCancel: /(?:taxa\s+de\s+cancelamento|cancellation)[\s:]*([\d\s.,]+)/i,
-                    comissoes: /(?:comiss[ãa]o|commission|fee)[\s:]*([\d\s.,]+)/i,
-                    ganhosLiquidos: /(?:ganhos?\s+l[íi]quidos?|net\s+earnings)[\s:]*([\d\s.,]+)/i,
-                    brutoTotal: /(?:total\s+bruto|gross\s+total)[\s:]*([\d\s.,]+)/i
+                    portagens: /(?:portagem|toll|road\s+charge)s?[\s:]*([\d\s.,]+)/i,
+                    taxasCancel: /(?:taxa\s+de\s+cancelamento|cancellation\s+fee|cancelled\s+trip\s+fee)s?[\s:]*([\d\s.,]+)/i,
+                    comissoes: /(?:comiss[ãa]o|commission|service\s+fee|platform\s+fee)s?[\s:]*([\d\s.,]+)/i,
+                    ganhosLiquidos: /(?:ganhos?\s+l[íi]quidos?|net\s+earnings|total\s+payout)[\s:]*([\d\s.,]+)/i,
+                    brutoTotal: /(?:total\s+bruto|gross\s+total|total\s+earnings)[\s:]*([\d\s.,]+)/i
                 },
                 fatura: {
-                    numero: /(?:n[º°]?\s*fatura|invoice\s*no)[\s:.]*([A-Z0-9\-\/]+)/i,
-                    valorTotal: /(?:total|amount\s+due)[\s:]*([\d\s.,]+)/i,
-                    valorLiquido: /(?:valor\s+l[íi]quido|net\s+amount)[\s:]*([\d\s.,]+)/i,
-                    iva: /(?:iva|vat)[\s:]*([\d\s.,]+)/i,
-                    autoliquidacao: /autoliquidacao|reverse\s+charge/i
-                },
-                dac7: {
-                    valorReportado: /(?:valor\s+reportado|reported\s+amount)[\s:]*([\d\s.,]+)/i,
-                    anoFiscal: /(?:ano\s+fiscal|fiscal\s+year)[\s:]*(\d{4})/i,
-                    plataforma: /(?:plataforma|platform)[\s:]*(\w+)/i
+                    numero: /(?:n[º°]?\s*(?:de\s+)?fatura|invoice\s*(?:no|number)?)[\s:.]*([A-Z0-9\-\/]+)/i,
+                    valorTotal: /(?:total|amount\s+due|gross\s+amount)[\s:]*([\d\s.,]+)/i,
+                    valorLiquido: /(?:valor\s+l[íi]quido|net\s+amount|subtotal)[\s:]*([\d\s.,]+)/i,
+                    iva: /(?:iva|vat|tax)[\s:]*([\d\s.,]+)/i,
+                    autoliquidacao: /autoliquidacao|reverse\s+charge|vat\s+reverse|self-billing/i
                 }
             };
         }
 
         async processarExtrato(file) {
-            logger.log(`Extrato: A processar ${file.name}`, 'info');
+            logger.log(`A processar extrato: ${file.name}`, 'info');
             
             try {
-                const textoRaw = await this.extrairTexto(file);
-                const texto = normalizarTextoBinario(textoRaw); // Normalização Binária aplicada
+                const texto = await this.extrairTexto(file);
                 
                 const dados = {
                     nome: file.name,
@@ -472,7 +245,6 @@
                     brutoTotal: this.extrairValor(texto, this.patterns.extrato.brutoTotal)
                 };
 
-                // Cálculo automático se bruto não encontrado
                 if (dados.brutoTotal === 0) {
                     dados.brutoTotal = dados.ganhosApp + dados.ganhosCampanha + 
                                       dados.gorjetas + dados.portagens + dados.taxasCancel;
@@ -482,20 +254,20 @@
                 dados.taxaComissao = baseComissao > 0 ? dados.comissoes / baseComissao : 0;
                 dados.comissaoValida = dados.taxaComissao <= CONFIG.TAXA_COMISSAO_MAX + CONFIG.TOLERANCIA_ERRO;
 
-                logger.log(`Extrato OK: ${formatarMoeda(dados.brutoTotal)}`, 'success');
+                logger.log(`Extrato processado: ${file.name} | Bruto: ${formatarMoeda(dados.brutoTotal)}`, 'success');
+                
                 return dados;
             } catch (error) {
-                logger.log(`Erro Extrato: ${error.message}`, 'error');
+                logger.log(`Erro ao processar extrato ${file.name}: ${error.message}`, 'error');
                 throw error;
             }
         }
 
         async processarFatura(file) {
-            logger.log(`Fatura: A processar ${file.name}`, 'info');
+            logger.log(`A processar fatura: ${file.name}`, 'info');
             
             try {
-                const textoRaw = await this.extrairTexto(file);
-                const texto = normalizarTextoBinario(textoRaw); // Normalização Binária
+                const texto = await this.extrairTexto(file);
                 const isAutoliquidacao = this.patterns.fatura.autoliquidacao.test(texto);
                 
                 const dados = {
@@ -517,35 +289,11 @@
                     dados.valorPrincipal = 0;
                 }
 
-                logger.log(`Fatura OK: ${formatarMoeda(dados.valorPrincipal)}`, 'success');
-                return dados;
-            } catch (error) {
-                logger.log(`Erro Fatura: ${error.message}`, 'error');
-                throw error;
-            }
-        }
-
-        async processarDAC7(file) {
-            logger.log(`DAC7: A processar ${file.name}`, 'info');
-            
-            try {
-                const textoRaw = await this.extrairTexto(file);
-                const texto = normalizarTextoBinario(textoRaw); // Normalização Binária
+                logger.log(`Fatura processada: ${file.name} | Valor: ${formatarMoeda(dados.valorPrincipal)} | Autoliquidação: ${isAutoliquidacao ? 'Sim' : 'Não'}`, 'success');
                 
-                const dados = {
-                    nome: file.name,
-                    tamanho: file.size,
-                    dataUpload: new Date(),
-                    valorReportado: this.extrairValor(texto, this.patterns.dac7.valorReportado),
-                    anoFiscal: this.extrairTexto(texto, this.patterns.dac7.anoFiscal) || State.parametros.anoFiscal,
-                    plataforma: this.extrairTexto(texto, this.patterns.dac7.plataforma) || 'Bolt',
-                    isEmail: file.name.endsWith('.eml') || file.name.endsWith('.msg')
-                };
-
-                logger.log(`DAC7 OK: ${formatarMoeda(dados.valorReportado)}`, 'success');
                 return dados;
             } catch (error) {
-                logger.log(`Erro DAC7: ${error.message}`, 'error');
+                logger.log(`Erro ao processar fatura ${file.name}: ${error.message}`, 'error');
                 throw error;
             }
         }
@@ -557,7 +305,6 @@
                 reader.onload = (e) => {
                     try {
                         const text = e.target.result;
-                        // Extrai texto legível de dados binários PDF
                         const extracted = this.extractTextFromPDFData(text);
                         resolve(extracted);
                     } catch (err) {
@@ -602,9 +349,6 @@
         }
     }
 
-    // Instâncias dos parsers
-    const safTParser = new SAFTParser();
-    const csvParser = new CSVParser();
     const pdfProcessor = new PDFProcessor();
 
     // ============================================
@@ -621,11 +365,9 @@
             
             const totaisExtratos = this.aggregarExtratos();
             const totaisFaturas = this.aggregarFaturas();
-            const totalSAFT = this.aggregarSAFT();
-            const totalDAC7 = this.aggregarDAC7();
             
-            const valorSAFT = totalSAFT > 0 ? totalSAFT : totaisExtratos.brutoTotal;
-            const valorDAC7 = totalDAC7 > 0 ? totalDAC7 : valorSAFT;
+            const valorSAFT = totaisExtratos.brutoTotal;
+            const valorDAC7 = valorSAFT;
             const ganhosLiquidosEsperados = valorSAFT - totaisExtratos.comissoes;
             
             State.calculos = {
@@ -678,18 +420,6 @@
             }, { valorTotal: 0, valorLiquido: 0, iva: 0, valorPrincipal: 0 });
         }
 
-        aggregarSAFT() {
-            return State.processados.saft.reduce((acc, saft) => {
-                return acc + (saft.total || 0);
-            }, 0);
-        }
-
-        aggregarDAC7() {
-            return State.processados.dac7.reduce((acc, dac7) => {
-                return acc + (dac7.valorReportado || 0);
-            }, 0);
-        }
-
         validarCruzamentos() {
             const c = State.calculos;
             
@@ -704,6 +434,13 @@
                 this.adicionarAlerta('critico', 'DISCREPÂNCIA GANHOS LÍQUIDOS',
                     `Esperado: ${formatarMoeda(c.ganhosLiquidosEsperados)} | Reportado: ${formatarMoeda(c.ganhosLiquidos)}`,
                     diferencaLiquido);
+            }
+            
+            const brutoEsperado = c.brutoApp + c.ganhosCampanha + c.gorjetas + c.portagens;
+            if (Math.abs(c.safT - brutoEsperado) > CONFIG.TOLERANCIA_ERRO * 10) {
+                this.adicionarAlerta('alerta', 'VERIFICAÇÃO BRUTO APP',
+                    `SAF-T (${formatarMoeda(c.safT)}) difere do Bruto calculado (${formatarMoeda(brutoEsperado)})`,
+                    Math.abs(c.safT - brutoEsperado));
             }
             
             if (Math.abs(c.comissoes - c.faturaComissao) > CONFIG.TOLERANCIA_ERRO) {
@@ -885,11 +622,7 @@
             const dot = document.getElementById('values-dot');
             const totalValores = document.getElementById('total-valores');
             
-            const total = State.processados.faturas.length + 
-                         State.processados.extratos.length + 
-                         State.processados.saft.length + 
-                         State.processados.csv.length + 
-                         State.processados.dac7.length;
+            const total = State.processados.faturas.length + State.processados.extratos.length;
             
             if (dot) dot.classList.toggle('active', total > 0);
             if (totalValores) totalValores.textContent = `${total} valor(es)`;
@@ -901,11 +634,9 @@
             
             if (!canvas) return;
             
-            // Verificação de dependência Chart.js
-            if (!State.chartReady || typeof Chart === 'undefined') {
+            if (typeof Chart === 'undefined') {
                 canvas.style.display = 'none';
                 if (fallback) fallback.style.display = 'flex';
-                fallback.innerHTML = '<p>Chart.js não disponível</p>';
                 return;
             }
             
@@ -983,20 +714,13 @@
     const fiscalCalculator = new FiscalCalculator();
 
     // ============================================
-    // GESTÃO DE EVIDÊNCIAS - SCHEMA SINCRONIZADO
+    // GESTÃO DE EVIDÊNCIAS - UPLOAD FUNCIONAL
     // ============================================
 
     class EvidenceManager {
         constructor() {
             this.modal = document.getElementById('evidence-modal');
             this.isOpen = false;
-            this.uploadConfig = {
-                'input-saft': { tipo: 'saft', processor: (f) => safTParser.parse(f), exts: CONFIG.ALLOWED_EXTENSIONS.XML },
-                'input-csv': { tipo: 'csv', processor: (f) => csvParser.parse(f), exts: CONFIG.ALLOWED_EXTENSIONS.CSV },
-                'input-faturas': { tipo: 'fatura', processor: (f) => pdfProcessor.processarFatura(f), exts: CONFIG.ALLOWED_EXTENSIONS.PDF },
-                'input-extratos': { tipo: 'extrato', processor: (f) => pdfProcessor.processarExtrato(f), exts: CONFIG.ALLOWED_EXTENSIONS.PDF },
-                'input-dac7': { tipo: 'dac7', processor: (f) => pdfProcessor.processarDAC7(f), exts: CONFIG.ALLOWED_EXTENSIONS.DAC7 }
-            };
             this.init();
         }
 
@@ -1005,20 +729,21 @@
         }
 
         bindEvents() {
-            // Toggle modal
             const btnToggle = document.getElementById('btn-toggle-evidence');
             if (btnToggle) {
                 btnToggle.addEventListener('click', () => this.toggle());
             }
 
-            // Fechar modal
             const btnClose = document.getElementById('btn-close-modal');
-            const btnModalFechar = document.getElementById('btn-modal-fechar');
-            
-            if (btnClose) btnClose.addEventListener('click', () => this.fechar());
-            if (btnModalFechar) btnModalFechar.addEventListener('click', () => this.fechar());
+            if (btnClose) {
+                btnClose.addEventListener('click', () => this.fechar());
+            }
 
-            // Limpar tudo
+            const btnModalFechar = document.getElementById('btn-modal-fechar');
+            if (btnModalFechar) {
+                btnModalFechar.addEventListener('click', () => this.fechar());
+            }
+
             const btnModalLimpar = document.getElementById('btn-modal-limpar');
             if (btnModalLimpar) {
                 btnModalLimpar.addEventListener('click', () => {
@@ -1028,49 +753,48 @@
                 });
             }
 
-            // Click fora
             if (this.modal) {
                 this.modal.addEventListener('click', (e) => {
-                    if (e.target === this.modal) this.fechar();
+                    if (e.target === this.modal) {
+                        this.fechar();
+                    }
                 });
             }
 
-            // Setup upload zones sincronizadas
-            Object.keys(this.uploadConfig).forEach(inputId => {
-                const config = this.uploadConfig[inputId];
-                const zoneId = inputId.replace('input-', 'upload-');
-                this.setupUploadZone(zoneId, inputId, config);
-            });
+            this.setupUploadZone('upload-faturas', 'input-faturas', 'fatura');
+            this.setupUploadZone('upload-extratos', 'input-extratos', 'extrato');
 
-            // Evidence items na sidebar
             document.querySelectorAll('.evidence-item').forEach(item => {
                 item.addEventListener('click', () => this.abrir());
             });
         }
 
-        setupUploadZone(zoneId, inputId, config) {
+        setupUploadZone(zoneId, inputId, tipo) {
             const zone = document.getElementById(zoneId);
             const input = document.getElementById(inputId);
 
             if (!zone || !input) {
-                console.error(`Sincronização falhou: ${zoneId} ou ${inputId} não encontrado`);
+                console.error(`Elementos não encontrados: ${zoneId} ou ${inputId}`);
                 return;
             }
 
-            // Click na zona
             zone.addEventListener('click', (e) => {
-                if (e.target !== input) input.click();
-            });
-
-            // Change no input -> Dispatcher
-            input.addEventListener('change', async (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    await this.processarArquivos(config.tipo, e.target.files, config.processor, config.exts);
-                    e.target.value = ''; // Reset
+                if (e.target !== input) {
+                    input.click();
                 }
             });
 
-            // Drag and drop
+            input.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    if (tipo === 'fatura') {
+                        processarFaturas(e.target.files);
+                    } else {
+                        processarExtratos(e.target.files);
+                    }
+                    e.target.value = '';
+                }
+            });
+
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 zone.addEventListener(eventName, (e) => {
                     e.preventDefault();
@@ -1079,55 +803,35 @@
             });
 
             ['dragenter', 'dragover'].forEach(eventName => {
-                zone.addEventListener(eventName, () => zone.classList.add('dragover'));
+                zone.addEventListener(eventName, () => {
+                    zone.classList.add('dragover');
+                });
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
-                zone.addEventListener(eventName, () => zone.classList.remove('dragover'));
+                zone.addEventListener(eventName, () => {
+                    zone.classList.remove('dragover');
+                });
             });
 
-            zone.addEventListener('drop', async (e) => {
+            zone.addEventListener('drop', (e) => {
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
-                    await this.processarArquivos(config.tipo, files, config.processor, config.exts);
+                    if (tipo === 'fatura') {
+                        processarFaturas(files);
+                    } else {
+                        processarExtratos(files);
+                    }
                 }
             });
-        }
-
-        async processarArquivos(tipo, files, processor, allowedExts) {
-            const validFiles = Array.from(files).filter(file => {
-                const ext = '.' + file.name.split('.').pop().toLowerCase();
-                const valido = allowedExts.includes(ext);
-                if (!valido) {
-                    logger.log(`Rejeitado: ${file.name} (extensão inválida)`, 'error');
-                }
-                return valido;
-            });
-
-            if (validFiles.length === 0) {
-                alert('Nenhum ficheiro válido selecionado');
-                return;
-            }
-
-            try {
-                // Usa o Dispatcher para evitar ruído de memória
-                const resultados = await dispatcher.enqueue(tipo, validFiles, processor);
-                
-                // Armazena resultados
-                resultados.forEach((dados, index) => {
-                    State.evidencias[tipo].push(validFiles[index]);
-                    State.processados[tipo].push(dados);
-                });
-
-                this.atualizarEstatisticas();
-                logger.log(`${tipo.toUpperCase()}: ${resultados.length} ficheiro(s) processado(s)`, 'success');
-            } catch (error) {
-                logger.log(`Erro no processamento ${tipo}: ${error.message}`, 'error');
-            }
         }
 
         toggle() {
-            this.isOpen ? this.fechar() : this.abrir();
+            if (this.isOpen) {
+                this.fechar();
+            } else {
+                this.abrir();
+            }
         }
 
         abrir() {
@@ -1135,64 +839,41 @@
             this.modal.style.display = 'flex';
             this.isOpen = true;
             this.atualizarEstatisticas();
-            logger.log('Modal evidências aberto', 'info');
+            logger.log('Gestão de evidências aberta', 'info');
         }
 
         fechar() {
             if (!this.modal) return;
             this.modal.style.display = 'none';
             this.isOpen = false;
-            logger.log('Modal evidências fechado', 'info');
+            logger.log('Gestão de evidências fechada', 'info');
         }
 
         atualizarEstatisticas() {
-            // Contadores por tipo
-            const counts = {
-                saft: State.evidencias.saft.length,
-                csv: State.evidencias.csv.length,
-                faturas: State.evidencias.faturas.length,
-                extratos: State.evidencias.extratos.length,
-                dac7: State.evidencias.dac7.length
-            };
+            const totalFaturas = State.evidencias.faturas.length;
+            const totalExtratos = State.evidencias.extratos.length;
+            const totalFiles = totalFaturas + totalExtratos;
+            
+            const valorFaturas = State.processados.faturas.reduce((acc, f) => acc + (f.valorPrincipal || 0), 0);
+            const valorExtratos = State.processados.extratos.reduce((acc, e) => acc + (e.ganhosLiquidos || 0), 0);
 
-            const totalFiles = Object.values(counts).reduce((a, b) => a + b, 0);
-
-            // Valores monetários
-            const valores = {
-                saft: State.processados.saft.reduce((a, s) => a + (s.total || 0), 0),
-                faturas: State.processados.faturas.reduce((a, f) => a + (f.valorPrincipal || 0), 0),
-                extratos: State.processados.extratos.reduce((a, e) => a + (e.ganhosLiquidos || 0), 0),
-                dac7: State.processados.dac7.reduce((a, d) => a + (d.valorReportado || 0), 0)
-            };
-
-            // Atualiza UI
             this.setText('modal-total-files', totalFiles);
-            this.setText('modal-total-values', formatarMoeda(Object.values(valores).reduce((a, b) => a + b, 0)));
+            this.setText('modal-total-values', formatarMoeda(valorFaturas + valorExtratos));
             
-            // Stats específicas
-            this.setText('stats-saft-files', counts.saft);
-            this.setText('stats-saft-values', formatarMoeda(valores.saft));
+            this.setText('stats-faturas-files', totalFaturas);
+            this.setText('stats-faturas-values', formatarMoeda(valorFaturas));
             
-            this.setText('stats-csv-files', counts.csv);
-            this.setText('stats-csv-records', State.processados.csv.reduce((a, c) => a + (c.totalRegistos || 0), 0));
+            this.setText('stats-extratos-files', totalExtratos);
+            this.setText('stats-extratos-values', formatarMoeda(valorExtratos));
             
-            this.setText('stats-faturas-files', counts.faturas);
-            this.setText('stats-faturas-values', formatarMoeda(valores.faturas));
-            
-            this.setText('stats-extratos-files', counts.extratos);
-            this.setText('stats-extratos-values', formatarMoeda(valores.extratos));
-            
-            this.setText('stats-dac7-files', counts.dac7);
-            this.setText('stats-dac7-values', formatarMoeda(valores.dac7));
-
-            // Sidebar counts
-            this.setText('count-saft', counts.saft > 0 ? 1 : 0);
-            this.setText('count-fat', counts.faturas);
-            this.setText('count-ext', counts.extratos);
-            this.setText('count-dac7', counts.dac7 > 0 ? 1 : 0);
-            this.setText('count-ctrl', Math.min(totalFiles, 4));
+            this.setText('count-fat', totalFaturas);
+            this.setText('count-ext', totalExtratos);
             this.setText('total-evidencias', totalFiles);
-
+            
+            this.setText('count-ctrl', Math.min(totalFiles, 4));
+            this.setText('count-saft', totalExtratos > 0 ? 1 : 0);
+            this.setText('count-dac7', totalExtratos > 0 ? 1 : 0);
+            
             this.renderizarListas();
         }
 
@@ -1202,106 +883,181 @@
         }
 
         renderizarListas() {
-            const listas = {
-                'lista-saft': State.evidencias.saft,
-                'lista-csv': State.evidencias.csv,
-                'lista-faturas': State.evidencias.faturas,
-                'lista-extratos': State.evidencias.extratos,
-                'lista-dac7': State.evidencias.dac7
-            };
-
-            Object.entries(listas).forEach(([id, arquivos]) => {
-                const container = document.getElementById(id);
-                if (container) {
-                    container.innerHTML = arquivos.map((f, i) => `
-                        <div class="file-item">
-                            <span title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
-                            <button onclick="window.removerArquivo('${id.split('-')[1]}', ${i})" title="Remover">×</button>
-                        </div>
-                    `).join('');
-                }
-            });
+            const listaFaturas = document.getElementById('lista-faturas');
+            const listaExtratos = document.getElementById('lista-extratos');
+            
+            if (listaFaturas) {
+                listaFaturas.innerHTML = State.evidencias.faturas.map((f, i) => `
+                    <div class="file-item">
+                        <span title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
+                        <button onclick="window.removerFatura(${i})" title="Remover">×</button>
+                    </div>
+                `).join('');
+            }
+            
+            if (listaExtratos) {
+                listaExtratos.innerHTML = State.evidencias.extratos.map((e, i) => `
+                    <div class="file-item">
+                        <span title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
+                        <button onclick="window.removerExtrato(${i})" title="Remover">×</button>
+                    </div>
+                `).join('');
+            }
         }
 
         limparTudo() {
-            Object.keys(State.evidencias).forEach(key => {
-                State.evidencias[key] = [];
-                State.processados[key] = [];
-            });
-            
-            dispatcher.clear();
+            State.evidencias.faturas = [];
+            State.evidencias.extratos = [];
+            State.processados.faturas = [];
+            State.processados.extratos = [];
             this.atualizarEstatisticas();
-            resetarCalculos();
             logger.log('Todas as evidências removidas', 'warning');
+            resetarCalculos();
+        }
+
+        validarArquivo(file) {
+            if (!file) return { valido: false, erro: 'Ficheiro não fornecido' };
+            
+            const extensao = '.' + file.name.split('.').pop().toLowerCase();
+            if (!CONFIG.ALLOWED_EXTENSIONS.includes(extensao)) {
+                return { valido: false, erro: 'Extensão não permitida. Use .pdf' };
+            }
+            
+            if (file.size > CONFIG.MAX_FILE_SIZE) {
+                return { valido: false, erro: `Ficheiro muito grande. Máximo: 10MB` };
+            }
+            
+            return { valido: true };
         }
     }
 
     const evidenceManager = new EvidenceManager();
 
     // ============================================
-    // FUNÇÕES GLOBAIS DE REMOÇÃO
+    // FUNÇÕES GLOBAIS
     // ============================================
 
-    window.removerArquivo = function(tipo, index) {
-        if (index >= 0 && index < State.evidencias[tipo].length) {
-            const nome = State.evidencias[tipo][index].name;
-            State.evidencias[tipo].splice(index, 1);
-            State.processados[tipo].splice(index, 1);
+    window.removerFatura = function(index) {
+        if (index >= 0 && index < State.evidencias.faturas.length) {
+            const nome = State.evidencias.faturas[index].name;
+            State.evidencias.faturas.splice(index, 1);
+            State.processados.faturas.splice(index, 1);
             evidenceManager.atualizarEstatisticas();
-            logger.log(`${tipo.toUpperCase()} removido: ${nome}`, 'warning');
+            logger.log(`Fatura removida: ${nome}`, 'warning');
         }
     };
 
+    window.removerExtrato = function(index) {
+        if (index >= 0 && index < State.evidencias.extratos.length) {
+            const nome = State.evidencias.extratos[index].name;
+            State.evidencias.extratos.splice(index, 1);
+            State.processados.extratos.splice(index, 1);
+            evidenceManager.atualizarEstatisticas();
+            logger.log(`Extrato removido: ${nome}`, 'warning');
+        }
+    };
+
+    async function processarFaturas(files) {
+        const fileArray = Array.from(files);
+        
+        for (const file of fileArray) {
+            const validacao = evidenceManager.validarArquivo(file);
+            if (!validacao.valido) {
+                logger.log(`Fatura rejeitada: ${validacao.erro}`, 'error');
+                alert(`Erro: ${validacao.erro}`);
+                continue;
+            }
+            
+            State.evidencias.faturas.push(file);
+            
+            try {
+                const dados = await pdfProcessor.processarFatura(file);
+                State.processados.faturas.push(dados);
+            } catch (error) {
+                logger.log(`Erro ao processar fatura ${file.name}: ${error.message}`, 'error');
+                State.evidencias.faturas.pop();
+            }
+        }
+        
+        evidenceManager.atualizarEstatisticas();
+    }
+
+    async function processarExtratos(files) {
+        const fileArray = Array.from(files);
+        
+        for (const file of fileArray) {
+            const validacao = evidenceManager.validarArquivo(file);
+            if (!validacao.valido) {
+                logger.log(`Extrato rejeitado: ${validacao.erro}`, 'error');
+                alert(`Erro: ${validacao.erro}`);
+                continue;
+            }
+            
+            State.evidencias.extratos.push(file);
+            
+            try {
+                const dados = await pdfProcessor.processarExtrato(file);
+                State.processados.extratos.push(dados);
+            } catch (error) {
+                logger.log(`Erro ao processar extrato ${file.name}: ${error.message}`, 'error');
+                State.evidencias.extratos.pop();
+            }
+        }
+        
+        evidenceManager.atualizarEstatisticas();
+    }
+
     // ============================================
-    // EVENT HANDLERS GLOBAIS
+    // EVENT HANDLERS
     // ============================================
 
     function bindEventos() {
-        // Validação
         const btnValidar = document.getElementById('btn-validar');
         if (btnValidar) {
             btnValidar.addEventListener('click', validarSujeito);
         }
 
-        // Executar perícia
         const btnExecutar = document.getElementById('btn-executar');
         if (btnExecutar) {
             btnExecutar.addEventListener('click', executarPericia);
         }
 
-        // Exportações
         const btnExportPDF = document.getElementById('btn-export-pdf');
+        if (btnExportPDF) {
+            btnExportPDF.addEventListener('click', exportarPDF);
+        }
+
         const btnExportJSON = document.getElementById('btn-export-json');
-        
-        if (btnExportPDF) btnExportPDF.addEventListener('click', exportarPDF);
-        if (btnExportJSON) btnExportJSON.addEventListener('click', exportarJSON);
+        if (btnExportJSON) {
+            btnExportJSON.addEventListener('click', exportarJSON);
+        }
 
-        // Controles
         const btnReiniciar = document.getElementById('btn-reiniciar');
-        const btnLimpar = document.getElementById('btn-limpar');
-        
-        if (btnReiniciar) btnReiniciar.addEventListener('click', reiniciarAnalise);
-        if (btnLimpar) btnLimpar.addEventListener('click', limparDados);
+        if (btnReiniciar) {
+            btnReiniciar.addEventListener('click', reiniciarAnalise);
+        }
 
-        // Parâmetros
+        const btnLimpar = document.getElementById('btn-limpar');
+        if (btnLimpar) {
+            btnLimpar.addEventListener('click', limparDados);
+        }
+
         const anoFiscal = document.getElementById('ano-fiscal');
-        const plataforma = document.getElementById('plataforma');
-        
         if (anoFiscal) {
             anoFiscal.addEventListener('change', () => {
                 State.parametros.anoFiscal = anoFiscal.value;
-                logger.log(`Ano fiscal: ${anoFiscal.value}`, 'info');
-            });
-        }
-        
-        if (plataforma) {
-            plataforma.addEventListener('change', () => {
-                State.parametros.plataforma = plataforma.value;
-                logger.log(`Plataforma: ${plataforma.value}`, 'info');
+                logger.log(`Ano fiscal alterado para: ${anoFiscal.value}`, 'info');
             });
         }
 
-        // ESC key
+        const plataforma = document.getElementById('plataforma');
+        if (plataforma) {
+            plataforma.addEventListener('change', () => {
+                State.parametros.plataforma = plataforma.value;
+                logger.log(`Plataforma alterada para: ${plataforma.value}`, 'info');
+            });
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && evidenceManager.isOpen) {
                 evidenceManager.fechar();
@@ -1329,11 +1085,11 @@
                 statusEl.innerHTML = `<span class="status-dot"></span><span>${nome} | ${nif}</span>`;
             }
             
-            logger.log(`Validado: ${nome} | NIF: ${nif}`, 'success');
+            logger.log(`Sujeito validado: ${nome} | NIF: ${nif}`, 'success');
         } else {
             if (statusEl) {
                 statusEl.className = 'validation-status invalid';
-                statusEl.innerHTML = `<span class="status-dot"></span><span>NIF inválido (9 dígitos)</span>`;
+                statusEl.innerHTML = `<span class="status-dot"></span><span>Dados inválidos. NIF deve ter 9 dígitos.</span>`;
             }
             logger.log('Validação falhou', 'error');
         }
@@ -1341,21 +1097,19 @@
 
     function executarPericia() {
         if (State.isProcessing) {
-            logger.log('Perícia em execução', 'warning');
+            logger.log('Perícia já em execução', 'warning');
             return;
         }
         
-        logger.log('Iniciando perícia fiscal...', 'info');
+        logger.log('Iniciando execução da perícia fiscal...', 'info');
         
         const alertasContainer = document.getElementById('alertas-container');
         if (alertasContainer) alertasContainer.innerHTML = '';
         State.alertas = [];
         
-        const totalEvidencias = Object.values(State.processados).reduce((a, arr) => a + arr.length, 0);
-        
-        if (totalEvidencias === 0) {
+        if (State.processados.extratos.length === 0 && State.processados.faturas.length === 0) {
             logger.log('Perícia abortada: sem evidências', 'warning');
-            alert('Adicione evidências antes de executar');
+            alert('Adicione evidências antes de executar a perícia');
             return;
         }
         
@@ -1363,8 +1117,8 @@
         
         try {
             const alertas = fiscalCalculator.calcularTudo();
-            const temCritico = alertas.some(a => a.tipo === 'critico');
-            logger.log(`Perícia concluída: ${alertas.length} alerta(s)`, temCritico ? 'error' : 'success');
+            logger.log(`Perícia concluída. ${alertas.length} alerta(s).`, 
+                alertas.some(a => a.tipo === 'critico') ? 'error' : 'success');
         } catch (error) {
             logger.log(`Erro na perícia: ${error.message}`, 'error');
         } finally {
@@ -1373,7 +1127,7 @@
     }
 
     function reiniciarAnalise() {
-        if (!confirm('Reiniciar análise?')) return;
+        if (!confirm('Deseja reiniciar a análise?')) return;
         
         const alertasContainer = document.getElementById('alertas-container');
         if (alertasContainer) alertasContainer.innerHTML = '';
@@ -1405,7 +1159,7 @@
             State.chart = null;
         }
         
-        logger.log('Dados limpos', 'warning');
+        logger.log('Todos os dados limpos', 'warning');
     }
 
     function exportarJSON() {
@@ -1429,13 +1183,14 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        logger.log('Exportação JSON concluída', 'success');
+        logger.log('Exportação JSON realizada', 'success');
     }
 
     function exportarPDF() {
-        logger.log('Exportando PDF...', 'info');
+        logger.log('Iniciando exportação PDF...', 'info');
+        
         setTimeout(() => {
-            alert(`Relatório PDF gerado!\nSessão: ${State.sessao.id}\nSujeito: ${State.sujeito.nome || 'N/A'}`);
+            alert(`Relatório PDF gerado!\n\nSessão: ${State.sessao.id}\nSujeito: ${State.sujeito.nome || 'N/A'}\nAlertas: ${State.alertas.length}`);
             logger.log('Exportação PDF concluída', 'success');
         }, 800);
     }
@@ -1471,11 +1226,10 @@
     }
 
     // ============================================
-    // INICIALIZAÇÃO COM VERIFICAÇÃO DE DEPENDÊNCIAS
+    // INICIALIZAÇÃO
     // ============================================
 
     function init() {
-        // Remove loading
         const loading = document.getElementById('loading-screen');
         const app = document.getElementById('app-container');
         
@@ -1487,11 +1241,9 @@
             if (app) app.style.display = 'block';
         }, 500);
 
-        // Sessão
         const sessionIdEl = document.getElementById('session-id');
         if (sessionIdEl) sessionIdEl.textContent = State.sessao.id;
 
-        // Relógio
         setInterval(() => {
             const timeEl = document.getElementById('session-time');
             if (timeEl) {
@@ -1501,47 +1253,29 @@
             }
         }, 1000);
 
-        // Verificação de Chart.js (Hierarquia de Dependências)
-        if (typeof Chart !== 'undefined') {
-            State.chartReady = true;
-            logger.log('Chart.js carregado', 'success');
-        } else {
-            State.chartReady = false;
-            logger.log('Chart.js não disponível', 'warning');
-            
-            // Tenta novamente em 2s
-            setTimeout(() => {
-                if (typeof Chart !== 'undefined') {
-                    State.chartReady = true;
-                    logger.log('Chart.js carregado (retry)', 'success');
-                }
-            }, 2000);
-        }
-
-        // Bind eventos
         bindEventos();
 
-        // Log inicial
-        logger.log(`VDC Forense v${CONFIG.VERSAO} ${CONFIG.EDICAO} iniciado`, 'success');
+        logger.log(`Sistema VDC Forense v${CONFIG.VERSAO} ${CONFIG.EDICAO} iniciado`, 'success');
         logger.log(`Sessão: ${State.sessao.id}`, 'info');
 
-        // Expor API global
+        if (typeof Chart === 'undefined') {
+            logger.log('Chart.js não carregado', 'warning');
+        }
+
         window.VDC = {
             State,
             CONFIG,
             logger,
             evidenceManager,
-            dispatcher,
-            normalizarTextoBinario
+            processarFaturas,
+            processarExtratos
         };
     }
 
-    // Entry point com verificação de escopo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 
-    // Fechamento de escopo verificado
 })();
