@@ -1,10 +1,7 @@
 /* ============================================
    VDC FORENSE v12.8 CSI MIAMI - STYLESHEET
-   Tema: Dark Cyberpunk Forense
-   Status: PRODUÇÃO - 100% FUNCIONAL
    ============================================ */
 
-/* Reset e Base */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -12,14 +9,12 @@
 }
 
 :root {
-    /* Cores Principais */
     --bg-primary: #0a0e17;
     --bg-secondary: #111827;
     --bg-tertiary: #1f2937;
     --bg-card: rgba(17, 24, 39, 0.95);
     --bg-hover: rgba(31, 41, 55, 0.8);
     
-    /* Cores de Acento */
     --accent-cyan: #06b6d4;
     --accent-cyan-glow: rgba(6, 182, 212, 0.3);
     --accent-cyan-light: rgba(6, 182, 212, 0.1);
@@ -27,7 +22,6 @@
     --accent-purple: #8b5cf6;
     --accent-purple-light: rgba(139, 92, 246, 0.1);
     
-    /* Cores de Estado */
     --success: #10b981;
     --success-glow: rgba(16, 185, 129, 0.3);
     --success-light: rgba(16, 185, 129, 0.1);
@@ -39,47 +33,34 @@
     --info: #3b82f6;
     --info-glow: rgba(59, 130, 246, 0.3);
     
-    /* Texto */
     --text-primary: #f9fafb;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
-    --text-dark: #374151;
     
-    /* Bordas */
     --border-color: rgba(6, 182, 212, 0.2);
     --border-light: rgba(255, 255, 255, 0.1);
     --border-glow: 0 0 10px rgba(6, 182, 212, 0.3);
     
-    /* Tipografia */
     --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     
-    /* Espaçamento */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
     
-    /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
     --radius-full: 9999px;
     
-    /* Transições */
     --transition-fast: 150ms ease;
     --transition-normal: 300ms ease;
-    --transition-slow: 500ms ease;
     
-    /* Z-index Scale */
-    --z-dropdown: 100;
     --z-sticky: 200;
     --z-modal: 1000;
-    --z-tooltip: 1100;
-    --z-toast: 1200;
 }
 
 html {
@@ -98,23 +79,12 @@ body {
     overflow-x: hidden;
 }
 
-/* ============================================
-   LAYOUT PRINCIPAL
-   ============================================ */
-
 .app-container {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    opacity: 0;
-    animation: fadeIn 0.5s var(--transition-normal) forwards;
 }
 
-@keyframes fadeIn {
-    to { opacity: 1; }
-}
-
-/* Header */
 .main-header {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
     border-bottom: 1px solid var(--border-color);
@@ -234,7 +204,6 @@ body {
     font-weight: 600;
 }
 
-/* Layout Principal */
 .main-layout {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -246,7 +215,6 @@ body {
     width: 100%;
 }
 
-/* Sidebar */
 .sidebar {
     display: flex;
     flex-direction: column;
@@ -277,7 +245,6 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Botão Toggle Evidence */
 .btn-toggle-evidence {
     background: none;
     border: none;
@@ -293,10 +260,9 @@ body {
 }
 
 .btn-toggle-evidence:hover {
-    color: var(--accent-cyan-light);
+    color: var(--accent-cyan);
 }
 
-/* Formulários */
 .form-group {
     margin-bottom: var(--spacing-md);
 }
@@ -337,12 +303,6 @@ body {
     box-shadow: 0 0 0 3px var(--accent-cyan-glow);
 }
 
-.form-group input:invalid {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px var(--danger-glow);
-}
-
-/* Botões */
 .btn-validate,
 .btn-primary,
 .btn-secondary,
@@ -375,10 +335,6 @@ body {
 .btn-validate:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px var(--accent-cyan-glow);
-}
-
-.btn-validate:active {
-    transform: translateY(0);
 }
 
 .btn-primary {
@@ -467,7 +423,6 @@ button:disabled {
     box-shadow: 0 0 10px var(--danger);
 }
 
-/* Evidence Panel */
 .evidence-summary {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -490,10 +445,6 @@ button:disabled {
     border-color: var(--accent-cyan);
     transform: translateY(-2px);
     background: var(--bg-hover);
-}
-
-.evidence-item:active {
-    transform: translateY(0);
 }
 
 .evidence-item .count {
@@ -533,18 +484,13 @@ button:disabled {
     box-shadow: 0 0 10px var(--success);
 }
 
-/* ============================================
-   CONTEÚDO PRINCIPAL
-   ============================================ */
-
 .content {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
-    min-width: 0; /* Previne overflow em grid */
+    min-width: 0;
 }
 
-/* Toolbar */
 .toolbar {
     display: flex;
     gap: var(--spacing-sm);
@@ -552,7 +498,6 @@ button:disabled {
     flex-wrap: wrap;
 }
 
-/* Alertas */
 .alertas-container {
     display: flex;
     flex-direction: column;
@@ -571,14 +516,8 @@ button:disabled {
 }
 
 @keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 .alerta.critico {
@@ -611,7 +550,6 @@ button:disabled {
 .alerta.alerta strong { color: var(--warning); }
 .alerta.info strong { color: var(--info); }
 
-/* Resultados Forenses */
 .results-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -673,11 +611,6 @@ button:disabled {
     text-shadow: 0 0 10px var(--success-glow);
 }
 
-.metric-card .value.negative {
-    color: var(--danger);
-}
-
-/* Detalhes Grid */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -759,7 +692,6 @@ button:disabled {
     font-size: 1.125rem;
 }
 
-/* Autoliquidação */
 .autoliquidacao strong {
     color: var(--text-muted);
     font-style: italic;
@@ -774,7 +706,6 @@ button:disabled {
     letter-spacing: 0.5px;
 }
 
-/* DAC7 Card */
 .dac7-card {
     background: linear-gradient(135deg, var(--bg-card), var(--accent-purple-light));
 }
@@ -829,7 +760,6 @@ button:disabled {
     line-height: 1.4;
 }
 
-/* Faturas Section */
 .invoices-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -898,7 +828,6 @@ button:disabled {
     letter-spacing: 0.5px;
 }
 
-/* Veredicto Fiscal */
 .veredicto-section {
     background: var(--bg-card);
     border: 2px solid var(--success);
@@ -986,7 +915,6 @@ button:disabled {
     font-family: var(--font-mono);
 }
 
-/* Triangulação Financeira */
 .triangulacao-financeira {
     background: var(--bg-tertiary);
     border-radius: var(--radius-lg);
@@ -1047,7 +975,6 @@ button:disabled {
     color: var(--danger);
 }
 
-/* Chart Section */
 .chart-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1088,7 +1015,6 @@ button:disabled {
     font-size: 0.875rem;
 }
 
-/* Log Section */
 .log-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1153,7 +1079,6 @@ button:disabled {
     word-break: break-word;
 }
 
-/* Hash Section */
 .hash-section {
     text-align: center;
     padding: var(--spacing-xl) 0;
@@ -1195,10 +1120,6 @@ button:disabled {
     color: var(--text-muted);
     font-family: var(--font-mono);
 }
-
-/* ============================================
-   MODAL - GESTÃO DE EVIDÊNCIAS
-   ============================================ */
 
 .modal-overlay {
     position: fixed;
@@ -1333,13 +1254,13 @@ button:disabled {
     transition: all var(--transition-fast);
     margin-bottom: var(--spacing-md);
     background: var(--bg-tertiary);
+    position: relative;
 }
 
 .upload-zone:hover,
-.upload-zone:focus {
+.upload-zone.dragover {
     border-color: var(--accent-cyan);
     background: var(--accent-cyan-light);
-    outline: none;
 }
 
 .upload-zone:active {
@@ -1357,6 +1278,16 @@ button:disabled {
     font-size: 0.875rem;
     color: var(--text-secondary);
     display: block;
+}
+
+.upload-zone input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
 }
 
 .file-list {
@@ -1438,10 +1369,6 @@ button:disabled {
     flex-shrink: 0;
 }
 
-/* ============================================
-   ÍCONES (CSS-only)
-   ============================================ */
-
 .icon-user::before { content: "👤"; }
 .icon-settings::before { content: "⚙️"; }
 .icon-folder::before { content: "📁"; }
@@ -1462,9 +1389,29 @@ button:disabled {
 .icon-upload::before { content: "⬆️"; }
 .icon-warning::before { content: "⚠️"; }
 
-/* ============================================
-   RESPONSIVIDADE
-   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-cyan);
+    border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-purple);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-cyan) var(--bg-secondary);
+}
 
 @media (max-width: 1400px) {
     .main-layout {
@@ -1480,10 +1427,6 @@ button:disabled {
     }
     
     .triangulacao-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .invoice-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
@@ -1615,89 +1558,12 @@ button:disabled {
     .btn-tool {
         width: 100%;
     }
-}
-
-/* ============================================
-   SCROLLBAR PERSONALIZADA
-   ============================================ */
-
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-    border-radius: var(--radius-sm);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--accent-cyan);
-    border-radius: var(--radius-sm);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-purple);
-}
-
-/* Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-cyan) var(--bg-secondary);
-}
-
-/* ============================================
-   ANIMAÇÕES ADICIONAIS
-   ============================================ */
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    
+    .triangulacao-grid {
+        grid-template-columns: 1fr;
     }
 }
 
-.slide-up {
-    animation: slideUp 0.3s ease;
-}
-
-/* Loading States */
-.loading {
-    position: relative;
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.loading::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.2), transparent);
-    animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-/* Focus States para Acessibilidade */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-.upload-zone:focus {
-    outline: 2px solid var(--accent-cyan);
-    outline-offset: 2px;
-}
-
-/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -1708,7 +1574,6 @@ select:focus-visible,
     }
 }
 
-/* Print Styles */
 @media print {
     .sidebar,
     .toolbar,
@@ -1723,31 +1588,8 @@ select:focus-visible,
         grid-template-columns: 1fr;
     }
     
-    .content {
-        gap: var(--spacing-md);
-    }
-    
-    .veredicto-section {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 2px solid #000;
-    }
-    
     body {
         background: white;
         color: black;
-    }
-    
-    .hash-value {
-        word-break: break-all;
-    }
-}
-
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-    :root {
-        --border-color: #fff;
-        --text-primary: #fff;
-        --bg-primary: #000;
     }
 }
