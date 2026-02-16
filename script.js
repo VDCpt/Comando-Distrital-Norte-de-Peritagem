@@ -999,4 +999,505 @@
         }
 
         validarArquivo(file) {
-            if (!file) return { valido: false
+            if (!file) return { valido: false, erro: 'Ficheiro não fornecido' };
+            
+            if (!CONFIG.ALLOWED_TYPES.includes(file.type)) {
+                return { valido: false, erro: 'Tipo de ficheiro não suportado. Use PDF.' };
+            }
+            
+            if (file.size > CONFIG.MAX_FILE_SIZE) {
+                return { valido: false, erro: `Ficheiro muito grande. Máximo: ${CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB` };
+            }
+            
+            return { valido: true };
+        }
+    }
+
+    const evidenceManager = new EvidenceManager();
+
+    // ============================================
+    // FUNÇÕES GLOBAIS (expostas ao HTML)
+    // ============================================
+
+    window.removerFatura = function(index) {
+        if (index >= 0 && index < State.evidencias.faturas.length) {
+            const nome = State.evidencias.faturas[index].name;
+            State.evidencias.faturas.splice(index, 1);
+            State.processados.faturas.splice(index, 1);
+            evidenceManager.atualizarEstatisticas();
+            logger.log(`Fatura removida: ${nome}`, 'warning');
+        }
+    };
+
+    window.removerExtrato = function(index) {
+        if (index >= 0 && index < State.evidencias.extratos.length) {
+            const nome = State.evidencias.extratos[index].name;
+            State.evidencias.extratos.splice(index, 1);
+            State.processados.extratos.splice(index, 1);
+            evidenceManager.atualizarEstatisticas();
+            logger.log(`Extrato removido: ${nome}`, 'warning');
+        }
+    };
+
+    window.validarSujeito = function() {
+        const nomeInput = document.getElementById('subject-name');
+        const nifInput = document.getElementById('subject-nif');
+        const statusEl = document.getElementById('validation-status');
+        
+        const nome = nomeInput ? nomeInput.value.trim() : '';
+        const nif = nifInput ? nifInput.value.trim() : '';
+        
+        // Validar NIF português (9 dígitos)
+        const nifValido = /^\d{9}$/.test(nif);
+        
+        if (nome && nifValido) {
+            State.sujeito.nome = nome;
+            State.sujeito.nif = nif;
+            State.sujeito.validado = true;
+            
+            if (statusEl) {
+                statusEl.className = 'validation-status';
+                statusEl.innerHTML = `
+                    <span class="status-dot"></span>
+                    <span>${nome} | ${nif}</span>
+                `;
+            }
+            
+            logger.log(`Sujeito validado: ${nome} | NIF: ${nif}`, 'success');
+        } else {
+            if (statusEl) {
+                statusEl.className = 'validation-status invalid';
+                statusEl.innerHTML = `
+                    <span class="status-dot"></span>
+                    <span>Dados inválidos. NIF deve ter 9 dígitos.</span>
+                `;
+            }
+            logger.log('Validação falhou: dados incompletos ou inválidos', 'error');
+        }
+    };
+
+    window.atualizarPeriodo = function() {
+        const select = document.getElementById('ano-fiscal');
+        if (select) {
+            State.parametros.anoFiscal = select.value;
+            logger.log(`Ano fiscal alterado para: ${State.parametros.anoFiscal}`, 'info');
+        }
+    };
+
+    window.mudarPlataforma = function() {
+        const select = document.getElementById('plataforma');
+        if (select) {
+            State.parametros.plataforma = select.value;
+            logger.log(`Plataforma alterada para: ${State.parametros.plataforma}`, 'info');
+        }
+    };
+
+    window.executarPericia = function() {
+        if (State.isProcessing) {
+            logger.log('Perícia já em execução', 'warning');
+            return;
+        }
+        
+        logger.log('Iniciando execução da perícia fiscal...', 'info');
+        
+        // Limpar alertas anteriores
+        const alertasContainer = document.getElementById('alertas-container');
+        if (alertasContainer) alertasContainer.innerHTML = '';
+        State.alertas = [];
+        
+        // Verificar dados
+        if (State.processados.extratos.length === 0 && State.processados.faturas.length === 0) {
+            logger.log('Perícia abortada: sem evidências suficientes', 'warning');
+            alert('Adicione evidências antes de executar a perícia');
+            return;
+        }
+        
+        State.isProcessing = true;
+        
+        try {
+            const alertas = fiscalCalculator.calcularTudo();
+            logger.log(`Perícia concluída. ${alertas.length} alerta(s) gerado(s).`, 
+                alertas.some(a => a.tipo === 'critico') ? 'error' : 'success');
+        } catch (error) {
+            logger.log(`Erro na perícia: ${error.message}`, 'error');
+        } finally {
+            State.isProcessing = false;
+        }
+    };
+
+    window.reiniciarAnalise = function() {
+        if (!confirm('Deseja reiniciar a análise? Os dados processados serão mantidos.')) return;
+        
+        const alertasContainer = document.getElementById('alertas-container');
+        if (alertasContainer) alertasContainer.innerHTML = '';
+        
+        const veredictoSection = document.getElementById('veredicto-section');
+        if (veredictoSection) veredictoSection.style.display = 'none';
+        
+        if (State.chart) {
+            State.chart.destroy();
+            State.chart = null;
+        }
+        
+        logger.log('Análise reiniciada', 'info');
+    };
+
+    window.limparDados = function() {
+        if (!confirm('ATENÇÃO: Todos os dados serão removidos. Continuar?')) return;
+        
+        evidenceManager.limparTudo();
+        
+        const alertasContainer = document.getElementById('alertas-container');
+        if (alertasContainer) alertasContainer.innerHTML = '';
+        
+        const veredictoSection = document.getElementById('veredicto-section');
+        if (veredictoSection) veredictoSection.style.display = 'none';
+        
+        if (State.chart) {
+            State.chart.destroy();
+            State.chart = null;
+        }
+        
+        logger.log('Todos os dados limpos', 'warning');
+    };
+
+    window.exportarJSON = function() {
+        const dados = {
+            sessao: State.sessao,
+            sujeito: State.sujeito,
+            parametros: State.parametros,
+            calculos: State.calculos,
+            alertas: State.alertas,
+            evidencias: {
+                faturas: State.evidencias.faturas.length,
+                extratos: State.evidencias.extratos.length
+            },
+            logs: logger.logs.slice(-50), // Últimos 50 logs
+            timestamp: new Date().toISOString(),
+            versao: CONFIG.VERSAO
+        };
+        
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `VDC_Forense_${State.sessao.id}_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        logger.log('Exportação JSON realizada', 'success');
+    };
+
+    window.exportarPDF = function() {
+        logger.log('Iniciando exportação PDF...', 'info');
+        
+        // Simulação de geração de PDF
+        setTimeout(() => {
+            alert(`Relatório PDF gerado com sucesso!\n\nResumo:\n- Sessão: ${State.sessao.id}\n- Sujeito: ${State.sujeito.nome || 'N/A'}\n- Alertas: ${State.alertas.length}\n\nNota: Em ambiente de produção, seria gerado um PDF completo.`);
+            logger.log('Exportação PDF concluída', 'success');
+        }, 800);
+    };
+
+    function resetarCalculos() {
+        State.calculos = {
+            safT: 0,
+            dac7: 0,
+            brutoApp: 0,
+            comissoes: 0,
+            ganhosLiquidos: 0,
+            ganhosLiquidosEsperados: 0,
+            ganhosCampanha: 0,
+            gorjetas: 0,
+            portagens: 0,
+            taxasCancel: 0,
+            faturaTotal: 0,
+            faturaComissao: 0
+        };
+        
+        // Resetar UI
+        const ids = [
+            'ganhos-app', 'comissoes-total', 'dac7-anual', 'total-saft',
+            'saft-liquido', 'saft-total', 'ext-ganhos-app', 'ext-ganhos-campanha',
+            'ext-gorjetas', 'ext-portagens', 'ext-taxas-cancel', 'ext-comissoes',
+            'ext-ganhos-liquidos', 'dac7-valor', 'fat-total', 'fat-autoliquidacao',
+            'tri-bruto', 'tri-comissoes', 'tri-liquido', 'tri-faturado'
+        ];
+        
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '0,00 €';
+        });
+        
+        const fatNumero = document.getElementById('fat-numero');
+        if (fatNumero) fatNumero.textContent = '---';
+        
+        if (State.chart) {
+            State.chart.destroy();
+            State.chart = null;
+        }
+    }
+
+    // ============================================
+    // PROCESSAMENTO DE FICHEIROS
+    // ============================================
+
+    async function processarFaturas(files) {
+        const fileArray = Array.from(files);
+        
+        for (const file of fileArray) {
+            const validacao = evidenceManager.validarArquivo(file);
+            if (!validacao.valido) {
+                logger.log(`Fatura rejeitada: ${validacao.erro}`, 'error');
+                continue;
+            }
+            
+            State.evidencias.faturas.push(file);
+            
+            try {
+                const dados = await pdfProcessor.processarFatura(file);
+                State.processados.faturas.push(dados);
+            } catch (error) {
+                logger.log(`Erro ao processar fatura ${file.name}: ${error.message}`, 'error');
+                // Remover da lista se falhar
+                State.evidencias.faturas.pop();
+            }
+        }
+        
+        evidenceManager.atualizarEstatisticas();
+    }
+
+    async function processarExtratos(files) {
+        const fileArray = Array.from(files);
+        
+        for (const file of fileArray) {
+            const validacao = evidenceManager.validarArquivo(file);
+            if (!validacao.valido) {
+                logger.log(`Extrato rejeitado: ${validacao.erro}`, 'error');
+                continue;
+            }
+            
+            State.evidencias.extratos.push(file);
+            
+            try {
+                const dados = await pdfProcessor.processarExtrato(file);
+                State.processados.extratos.push(dados);
+            } catch (error) {
+                logger.log(`Erro ao processar extrato ${file.name}: ${error.message}`, 'error');
+                State.evidencias.extratos.pop();
+            }
+        }
+        
+        evidenceManager.atualizarEstatisticas();
+    }
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+
+    function init() {
+        // Remover loading screen
+        const loading = document.getElementById('loading-screen');
+        const app = document.getElementById('app-container');
+        
+        setTimeout(() => {
+            if (loading) {
+                loading.classList.add('hidden');
+                setTimeout(() => loading.remove(), 500);
+            }
+            if (app) app.style.display = 'block';
+        }, 500);
+        
+        // Inicializar sessão
+        const sessionIdEl = document.getElementById('session-id');
+        if (sessionIdEl) sessionIdEl.textContent = State.sessao.id;
+        
+        // Atualizar relógio
+        setInterval(() => {
+            const timeEl = document.getElementById('session-time');
+            if (timeEl) {
+                const agora = new Date();
+                timeEl.textContent = agora.toLocaleDateString('pt-PT') + ' | ' + 
+                                    agora.toLocaleTimeString('pt-PT');
+            }
+        }, 1000);
+        
+        // Bind eventos
+        bindEventos();
+        
+        // Configurar drag and drop
+        configurarDragDrop();
+        
+        // Log inicial
+        logger.log(`Sistema VDC Forense v${CONFIG.VERSAO} ${CONFIG.EDICAO} iniciado`, 'success');
+        logger.log(`Sessão: ${State.sessao.id}`, 'info');
+        
+        // Verificar Chart.js
+        if (typeof Chart === 'undefined') {
+            logger.log('Chart.js não carregado. Gráficos desativados.', 'warning');
+        }
+        
+        // Expor API global para debug
+        window.VDC = {
+            State,
+            CONFIG,
+            logger,
+            fiscalCalculator,
+            evidenceManager,
+            processarFaturas,
+            processarExtratos
+        };
+    }
+
+    function bindEventos() {
+        // Botões principais
+        const btnValidar = document.getElementById('btn-validar');
+        const btnExecutar = document.getElementById('btn-executar');
+        const btnExportPDF = document.getElementById('btn-export-pdf');
+        const btnExportJSON = document.getElementById('btn-export-json');
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+        const btnLimpar = document.getElementById('btn-limpar');
+        const btnToggleEvidence = document.getElementById('btn-toggle-evidence');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnModalFechar = document.getElementById('btn-modal-fechar');
+        const btnModalLimpar = document.getElementById('btn-modal-limpar');
+        
+        if (btnValidar) btnValidar.addEventListener('click', window.validarSujeito);
+        if (btnExecutar) btnExecutar.addEventListener('click', window.executarPericia);
+        if (btnExportPDF) btnExportPDF.addEventListener('click', window.exportarPDF);
+        if (btnExportJSON) btnExportJSON.addEventListener('click', window.exportarJSON);
+        if (btnReiniciar) btnReiniciar.addEventListener('click', window.reiniciarAnalise);
+        if (btnLimpar) btnLimpar.addEventListener('click', window.limparDados);
+        
+        if (btnToggleEvidence) {
+            btnToggleEvidence.addEventListener('click', () => evidenceManager.toggle());
+        }
+        
+        if (btnCloseModal) btnCloseModal.addEventListener('click', () => evidenceManager.fechar());
+        if (btnModalFechar) btnModalFechar.addEventListener('click', () => evidenceManager.fechar());
+        if (btnModalLimpar) btnModalLimpar.addEventListener('click', () => {
+            if (confirm('Remover todas as evidências?')) {
+                evidenceManager.limparTudo();
+            }
+        });
+        
+        // Inputs de ficheiros
+        const inputFaturas = document.getElementById('input-faturas');
+        const inputExtratos = document.getElementById('input-extratos');
+        
+        if (inputFaturas) {
+            inputFaturas.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    processarFaturas(e.target.files);
+                    e.target.value = ''; // Reset para permitir mesmo ficheiro
+                }
+            });
+        }
+        
+        if (inputExtratos) {
+            inputExtratos.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    processarExtratos(e.target.files);
+                    e.target.value = '';
+                }
+            });
+        }
+        
+        // Selects
+        const anoFiscal = document.getElementById('ano-fiscal');
+        const periodo = document.getElementById('periodo');
+        const plataforma = document.getElementById('plataforma');
+        
+        if (anoFiscal) anoFiscal.addEventListener('change', window.atualizarPeriodo);
+        if (periodo) periodo.addEventListener('change', () => {
+            logger.log(`Período alterado para: ${periodo.value}º Semestre`, 'info');
+        });
+        if (plataforma) plataforma.addEventListener('change', window.mudarPlataforma);
+        
+        // Tecla ESC para fechar modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && evidenceManager.isOpen) {
+                evidenceManager.fechar();
+            }
+        });
+        
+        // Clicar fora do modal para fechar
+        if (evidenceManager.modal) {
+            evidenceManager.modal.addEventListener('click', (e) => {
+                if (e.target === evidenceManager.modal) {
+                    evidenceManager.fechar();
+                }
+            });
+        }
+        
+        // Evidence items na sidebar
+        document.querySelectorAll('.evidence-item').forEach(item => {
+            item.addEventListener('click', () => {
+                evidenceManager.abrir();
+            });
+        });
+    }
+
+    function configurarDragDrop() {
+        const uploadFaturas = document.getElementById('upload-faturas');
+        const uploadExtratos = document.getElementById('upload-extratos');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            [uploadFaturas, uploadExtratos].forEach(zone => {
+                if (zone) {
+                    zone.addEventListener(eventName, preventDefaults, false);
+                }
+            });
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            [uploadFaturas, uploadExtratos].forEach(zone => {
+                if (zone) {
+                    zone.addEventListener(eventName, () => {
+                        zone.style.borderColor = 'var(--accent-cyan)';
+                        zone.style.background = 'var(--accent-cyan-light)';
+                    });
+                }
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            [uploadFaturas, uploadExtratos].forEach(zone => {
+                if (zone) {
+                    zone.addEventListener(eventName, () => {
+                        zone.style.borderColor = '';
+                        zone.style.background = '';
+                    });
+                }
+            });
+        });
+        
+        if (uploadFaturas) {
+            uploadFaturas.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) processarFaturas(files);
+            });
+        }
+        
+        if (uploadExtratos) {
+            uploadExtratos.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) processarExtratos(files);
+            });
+        }
+    }
+
+    // Iniciar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
