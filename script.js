@@ -274,72 +274,62 @@ async function processPDF(file, type) {
         
         let extracted = false;
         
-        // ============================================================
-        // MATCHER PARA EXTRATO (Ganhos na App)
-        // ============================================================
-        if (type === 'statements') {
-            const gMatch = clean.match(/"Ganhos na app","([\d\s.,]+)"/i) || 
-                          clean.match(/Ganhos na app\s*([\d\s.,]+)/i);
-            if (gMatch) {
-                const valor = parseNumericValue(gMatch[1]);
-                VDCSystem.analysis.appGains += valor;
-                QUICK_EXTRACTION.ganhos += valor;
-                QUICK_EXTRACTION.valuesFound++;
-                extractionStats.statements.values++;
-                extracted = true;
-                logAudit(`📊 Extrato: +${formatCurrency(valor)}`, 'success', true);
-            }
-            
-            const cMatch = clean.match(/"Comissão da app","-?([\d\s.,]+)"/i) ||
-                          clean.match(/Despesas\s*-?\s*([\d\s.,]+)/i);
-            if (cMatch) {
-                const valor = Math.abs(parseNumericValue(cMatch[1]));
-                QUICK_EXTRACTION.comissoes += valor;
-                extractionStats.statements.values++;
-                logAudit(`💰 Comissões: +${formatCurrency(valor)}`, 'info', true);
-            }
+        // Matcher para EXTRATO (Ganhos na App)
+        const gMatch = clean.match(/"Ganhos na app","([\d\s.,]+)"/i) || 
+                      clean.match(/Ganhos na app\s*([\d\s.,]+)/i);
+        if (gMatch && type === 'statements') {
+            const valor = parseNumericValue(gMatch[1]);
+            VDCSystem.analysis.appGains += valor;
+            QUICK_EXTRACTION.ganhos += valor;
+            QUICK_EXTRACTION.valuesFound++;
+            extractionStats.statements.values++;
+            extractionStats.valuesFound++;
+            extracted = true;
         }
         
-        // ============================================================
-        // MATCHER PARA FATURA (Total com IVA)
-        // ============================================================
-        if (type === 'invoices') {
-            const fMatch = clean.match(/"Total com IVA \(EUR\)","([\d\s.,]+)"/i) ||
-                          clean.match(/Total com IVA \(EUR\)\s*([\d\s.,]+)/i) ||
-                          clean.match(/A pagar[:\s]*€?\s*([\d\s.,]+)/i);
-            if (fMatch) {
-                const valor = parseNumericValue(fMatch[1]);
-                VDCSystem.analysis.operatorInvoices += valor;
-                QUICK_EXTRACTION.comissoes += valor;
-                QUICK_EXTRACTION.valuesFound++;
-                extractionStats.invoices.values++;
-                extracted = true;
-                logAudit(`🧾 Fatura: +${formatCurrency(valor)}`, 'success', true);
-            }
-            
-            const numMatch = clean.match(/Fatura\s*n\.?º?\s*([A-Z0-9\-\s]+)/i);
-            if (numMatch) {
-                setElementText('invoiceNumero', numMatch[1].trim());
-            }
+        // Matcher para Comissões no Extrato
+        const cMatch = clean.match(/"Comissão da app","-?([\d\s.,]+)"/i) ||
+                      clean.match(/Despesas\s*-?\s*([\d\s.,]+)/i);
+        if (cMatch && type === 'statements') {
+            const valor = Math.abs(parseNumericValue(cMatch[1]));
+            QUICK_EXTRACTION.comissoes += valor;
+            extractionStats.statements.values++;
+            extractionStats.valuesFound++;
         }
         
-        // ============================================================
-        // MATCHER PARA DAC7
-        // ============================================================
-        if (type === 'dac7') {
-            const dMatch = clean.match(/Total de receitas anuais[:\s]*€?\s*([\d\s.,]+)/i);
-            if (dMatch) {
-                const valor = parseNumericValue(dMatch[1]);
-                VDCSystem.analysis.dac7Value = valor;
-                QUICK_EXTRACTION.dac7 = valor;
-                QUICK_EXTRACTION.valuesFound++;
-                extractionStats.dac7.values++;
-                extracted = true;
-                logAudit(`📋 DAC7: ${formatCurrency(valor)}`, 'success', true);
-            }
+        // Matcher para FATURA (Total com IVA)
+        const fMatch = clean.match(/"Total com IVA \(EUR\)","([\d\s.,]+)"/i) ||
+                      clean.match(/Total com IVA \(EUR\)\s*([\d\s.,]+)/i) ||
+                      clean.match(/A pagar[:\s]*€?\s*([\d\s.,]+)/i);
+        if (fMatch && type === 'invoices') {
+            const valor = parseNumericValue(fMatch[1]);
+            VDCSystem.analysis.operatorInvoices += valor;
+            QUICK_EXTRACTION.comissoes += valor;
+            QUICK_EXTRACTION.valuesFound++;
+            extractionStats.invoices.values++;
+            extractionStats.valuesFound++;
+            extracted = true;
         }
         
-        // Atualizar contadores
+        // Matcher para Número da Fatura
+        const numMatch = clean.match(/Fatura\s*n\.?º?\s*([A-Z0-9\-\s]+)/i);
+        if (numMatch && type === 'invoices') {
+            setElementText('invoiceNumero', numMatch[1].trim());
+        }
+        
+        // Matcher para DAC7
+        const dMatch = clean.match(/Total de receitas anuais[:\s]*€?\s*([\d\s.,]+)/i);
+        if (dMatch && type === 'dac7') {
+            const valor = parseNumericValue(dMatch[1]);
+            VDCSystem.analysis.dac7Value = valor;
+            QUICK_EXTRACTION.dac7 = valor;
+            QUICK_EXTRACTION.valuesFound++;
+            extractionStats.dac7.values++;
+            extractionStats.valuesFound++;
+            extracted = true;
+        }
+        
+        // Atualizar contadores de PDFs processados
         extractionStats.pdfProcessed++;
         extractionStats[type].pdfs++;
         
@@ -381,7 +371,8 @@ function processCSV(file) {
                     QUICK_EXTRACTION.saft += total;
                     QUICK_EXTRACTION.valuesFound += count;
                     extractionStats.saft.values += count;
-                    logAudit(`📊 CSV: ${count} registos, total ${formatCurrency(total)}`, 'success', true);
+                    extractionStats.valuesFound += count;
+                    extractionStats.pdfProcessed++;
                 }
                 
                 resolve(true);
@@ -401,7 +392,6 @@ async function handleFileUpload(e, type) {
 
     VDCSystem.documents[type].files = files;
     
-    // Mostrar apenas um toast rápido
     showToast(`📂 ${files.length} ficheiro(s)`, 'info', 1500);
     
     for (const file of files) {
@@ -412,12 +402,11 @@ async function handleFileUpload(e, type) {
         }
     }
     
-    // Atualizar estatísticas das boxes
+    extractionStats.valuesFound = QUICK_EXTRACTION.valuesFound;
+    
     updateBoxStats(type);
-    
-    // Renderizar interface
+    updateEvidenceSummary();
     renderAll();
-    
     updateAnalysisButton();
 }
 
@@ -427,51 +416,42 @@ async function handleFileUpload(e, type) {
 function updateBoxStats(type) {
     const stats = extractionStats[type] || { pdfs: 0, values: 0 };
     
-    setElementText(`box${type.charAt(0).toUpperCase() + type.slice(1)}Pdf`, stats.pdfs);
-    setElementText(`box${type.charAt(0).toUpperCase() + type.slice(1)}Values`, stats.values);
+    const pdfElement = document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}Pdf`);
+    const valElement = document.getElementById(`box${type.charAt(0).toUpperCase() + type.slice(1)}Values`);
     
-    // Atualizar também os detalhes principais
-    setElementText('detailValuesFound', extractionStats.valuesFound);
-    setElementText('detailBoltFormat', extractionStats.boltFormat);
-    setElementText('detailUberFormat', extractionStats.uberFormat);
-    setElementText('detailPdfCount', extractionStats.pdfProcessed);
-    
-    // Atualizar stats dos módulos
-    setElementText('moduleStatsPdf', extractionStats.pdfProcessed);
-    setElementText('moduleStatsValues', extractionStats.valuesFound);
-    setElementText('moduleStatsBolt', extractionStats.boltFormat);
+    if (pdfElement) pdfElement.textContent = stats.pdfs;
+    if (valElement) valElement.textContent = stats.values;
 }
 
 /**
  * Renderiza todos os componentes da interface
  */
 function renderAll() {
-    // Resultados principais (IDs corrigidos)
+    setElementText('detailValuesFound', extractionStats.valuesFound);
+    setElementText('detailBoltFormat', extractionStats.boltFormat);
+    setElementText('detailUberFormat', extractionStats.uberFormat);
+    setElementText('detailPdfCount', extractionStats.pdfProcessed);
+    
+    setElementText('moduleStatsPdf', extractionStats.pdfProcessed);
+    setElementText('moduleStatsValues', extractionStats.valuesFound);
+    setElementText('moduleStatsBolt', extractionStats.boltFormat);
+    
     setElementText('appGainsDisplay', formatCurrency(VDCSystem.analysis.appGains));
     setElementText('operatorInvoicesDisplay', formatCurrency(VDCSystem.analysis.operatorInvoices));
     setElementText('dac7ValueDisplay', formatCurrency(VDCSystem.analysis.dac7Value));
     setElementText('saftTotalDisplay', formatCurrency(VDCSystem.analysis.saftTotal));
     
-    // Módulo Extratos
     setElementText('stmtGanhosValue', formatCurrency(VDCSystem.analysis.appGains));
     setElementText('stmtComissaoValue', formatCurrency(VDCSystem.analysis.operatorInvoices));
     
-    // Módulo DAC7
     setElementText('dac7TotalValue', formatCurrency(VDCSystem.analysis.dac7Value));
     setElementText('dac7Q4Value', formatCurrency(VDCSystem.analysis.dac7Value));
     
-    // Módulo SAF-T
     setElementText('saftBrutoValue', formatCurrency(VDCSystem.analysis.saftTotal));
     
-    // Fatura
     if (VDCSystem.analysis.operatorInvoices > 0) {
         setElementText('invoiceTotal', formatCurrency(VDCSystem.analysis.operatorInvoices));
     }
-    
-    // Estatísticas de extração
-    setElementText('statsPdfCount', extractionStats.pdfProcessed);
-    setElementText('statsValuesFound', extractionStats.valuesFound);
-    setElementText('statsBoltFormat', extractionStats.boltFormat);
     
     updateExtractionStatus();
 }
@@ -519,7 +499,6 @@ function setupStaticListeners() {
         document.getElementById('helpModal').style.display = 'none';
     });
     
-    // Botões de limpar console (dois para garantir)
     document.getElementById('clearConsoleBtn')?.addEventListener('click', clearConsole);
     document.getElementById('clearConsoleBtn2')?.addEventListener('click', clearConsole);
 }
@@ -702,7 +681,6 @@ function updateEvidenceSummary() {
     const total = types.reduce((sum, k) => sum + (VDCSystem.documents[k]?.files?.length || 0), 0);
     setElementText('summaryTotal', total);
     
-    // Atualizar contadores compactos
     setElementText('controlCountCompact', VDCSystem.documents.control?.files?.length || 0);
     setElementText('saftCountCompact', VDCSystem.documents.saft?.files?.length || 0);
     setElementText('invoiceCountCompact', VDCSystem.documents.invoices?.files?.length || 0);
@@ -751,7 +729,6 @@ function registerClient() {
 function clearAllEvidence() {
     if (!confirm('Tem a certeza que deseja limpar todas as evidências?')) return;
     
-    // Reset dos valores
     VDCSystem.analysis.appGains = 0;
     VDCSystem.analysis.operatorInvoices = 0;
     VDCSystem.analysis.dac7Value = 0;
@@ -763,7 +740,6 @@ function clearAllEvidence() {
     QUICK_EXTRACTION.saft = 0;
     QUICK_EXTRACTION.valuesFound = 0;
     
-    // Reset das estatísticas
     extractionStats.pdfProcessed = 0;
     extractionStats.valuesFound = 0;
     extractionStats.boltFormat = 0;
@@ -781,7 +757,6 @@ function clearAllEvidence() {
         dac7: { files: [] }
     };
     
-    // Limpar listas visuais
     ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 
      'statementsFileListModal', 'dac7FileListModal'].forEach(id => {
         const el = document.getElementById(id);
@@ -792,7 +767,6 @@ function clearAllEvidence() {
     setElementText('invoiceTotal', '0,00 €');
     setElementText('invoiceAutoliquidacao', '0,00 €');
     
-    // Atualizar todas as boxes
     ['saft', 'invoices', 'statements', 'dac7'].forEach(type => {
         updateBoxStats(type);
     });
@@ -827,7 +801,6 @@ function activateDemoMode() {
     registerClient();
 
     setTimeout(() => {
-        // Dados simulados
         VDCSystem.analysis.appGains = 3157.94;
         VDCSystem.analysis.operatorInvoices = 239.00;
         VDCSystem.analysis.dac7Value = 7755.16;
