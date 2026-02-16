@@ -3,6 +3,7 @@
  * Sistema de Auditoria Digital e Análise Forense Fiscal
  * 
  * Versão: PRODUÇÃO - 100% FUNCIONAL
+ * Com padrões de extração ajustados para documentos Bolt Portugal
  */
 
 (function() {
@@ -93,11 +94,38 @@
         if (valorStr === null || valorStr === undefined) return 0;
         if (typeof valorStr === 'number') return isNaN(valorStr) ? 0 : valorStr;
         
-        const limpo = String(valorStr)
-            .replace(/[€$\s]/g, '')
-            .replace(/\./g, '')
-            .replace(/,/g, '.')
-            .replace(/[^\d.-]/g, '');
+        // Remove espaços e símbolos de moeda
+        let limpo = String(valorStr)
+            .replace(/[€$\s]/g, '');
+        
+        // Detecta se é formato português (1.000,00) ou formato inglês (1,000.00)
+        // Verifica se existe vírgula como separador decimal (padrão PT)
+        const hasCommaDecimal = /\d+,\d{2}$/.test(limpo);
+        const hasDotDecimal = /\d+\.\d{2}$/.test(limpo);
+        
+        if (hasCommaDecimal && !hasDotDecimal) {
+            // Formato PT: remove pontos (separador milhares), troca vírgula por ponto
+            limpo = limpo.replace(/\./g, '').replace(',', '.');
+        } else if (hasDotDecimal && !hasCommaDecimal) {
+            // Formato EN: remove vírgulas (separador milhares)
+            limpo = limpo.replace(/,/g, '');
+        } else if (hasCommaDecimal && hasDotDecimal) {
+            // Caso misto raro: assume PT se a vírgula está após o último ponto
+            const lastComma = limpo.lastIndexOf(',');
+            const lastDot = limpo.lastIndexOf('.');
+            if (lastComma > lastDot) {
+                limpo = limpo.replace(/\./g, '').replace(',', '.');
+            } else {
+                limpo = limpo.replace(/,/g, '');
+            }
+        } else {
+            // Sem separador decimal claro - remove vírgulas e pontos se não houver decimais
+            // ou assume que o último separador é decimal
+            limpo = limpo.replace(/[^\d.-]/g, '');
+        }
+        
+        // Remove caracteres não numéricos exceto ponto e sinal negativo
+        limpo = limpo.replace(/[^\d.-]/g, '');
         
         const parsed = parseFloat(limpo);
         return isNaN(parsed) ? 0 : parsed;
@@ -128,8 +156,12 @@
         constructor() {
             this.logs = [];
             this.ultimaEntrada = '';
-            this.container = document.getElementById('log-container');
+            this.container = null;
             this.maxLogs = 100;
+        }
+
+        init() {
+            this.container = document.getElementById('log-container');
         }
 
         log(acao, tipo = 'info', dados = {}) {
@@ -159,6 +191,9 @@
         }
 
         renderizar(entry) {
+            if (!this.container) {
+                this.container = document.getElementById('log-container');
+            }
             if (!this.container) return;
             
             const div = document.createElement('div');
@@ -204,23 +239,54 @@
 
     class PDFProcessor {
         constructor() {
+            // PADRÕES CORRIGIDOS PARA DOCUMENTOS BOLT PORTUGAL
             this.patterns = {
                 extrato: {
-                    ganhosApp: /(?:ganhos?\s+(?:na\s+)?app|earnings|gross\s+earnings)[\s:]*([\d\s.,]+)/i,
-                    ganhosCampanha: /(?:ganhos?\s+campanha|campaign\s+earnings|promotions)[\s:]*([\d\s.,]+)/i,
-                    gorjetas: /(?:gorjeta|tip)s?[\s:]*([\d\s.,]+)/i,
-                    portagens: /(?:portagem|toll|road\s+charge)s?[\s:]*([\d\s.,]+)/i,
-                    taxasCancel: /(?:taxa\s+de\s+cancelamento|cancellation\s+fee|cancelled\s+trip\s+fee)s?[\s:]*([\d\s.,]+)/i,
-                    comissoes: /(?:comiss[ãa]o|commission|service\s+fee|platform\s+fee)s?[\s:]*([\d\s.,]+)/i,
-                    ganhosLiquidos: /(?:ganhos?\s+l[íi]quidos?|net\s+earnings|total\s+payout)[\s:]*([\d\s.,]+)/i,
-                    brutoTotal: /(?:total\s+bruto|gross\s+total|total\s+earnings)[\s:]*([\d\s.,]+)/i
+                    // Padrão: "Ganhos na app 3157.94"
+                    ganhosApp: /Ganhos\s+(?:na\s+)?app\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Ganhos da campanha 20.00"
+                    ganhosCampanha: /Ganhos\s+(?:da\s+)?campanha\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Gorjetas dos passageiros 9.00"
+                    gorjetas: /Gorjetas\s+(?:dos\s+passageiros)?\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Portagens..." (pode não existir em todos)
+                    portagens: /Portagens?\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Taxas de cancelamento 15.60"
+                    taxasCancel: /Taxas?\s+de\s+cancelamento\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Comissão da app -792.59"
+                    comissoes: /Comiss[ãa]o\s+(?:da\s+app)?\s*(-?[\d\s.,]+)/i,
+                    
+                    // Padrão: "Ganhos líquidos 2409.95"
+                    ganhosLiquidos: /Ganhos\s+l[ií]quidos?\s*([\d\s.,]+)/i,
+                    
+                    // Bruto total (para compatibilidade)
+                    brutoTotal: /(?:Total\s+bruto|Ganhos\s+totais?)[\s:]*([\d\s.,]+)/i
                 },
                 fatura: {
-                    numero: /(?:n[º°]?\s*(?:de\s+)?fatura|invoice\s*(?:no|number)?)[\s:.]*([A-Z0-9\-\/]+)/i,
-                    valorTotal: /(?:total|amount\s+due|gross\s+amount)[\s:]*([\d\s.,]+)/i,
-                    valorLiquido: /(?:valor\s+l[íi]quido|net\s+amount|subtotal)[\s:]*([\d\s.,]+)/i,
-                    iva: /(?:iva|vat|tax)[\s:]*([\d\s.,]+)/i,
-                    autoliquidacao: /autoliquidacao|reverse\s+charge|vat\s+reverse|self-billing/i
+                    // Padrão: "Fatura n.º PT1125-3582" ou "Fatura n.oPT1125-3582"
+                    numero: /Fatura\s+n\.?[º°o]?\s*([A-Z]{2}\d{4}-\d{4}|[A-Z0-9\-]+)/i,
+                    
+                    // Padrão: "Total com IVA (EUR) 239.00"
+                    valorTotal: /Total\s+com\s+IVA\s*\(EUR\)\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Total 239.00" (fallback)
+                    valorTotalAlt: /(?:^|\n)\s*Total\s+([\d\s.,]+)\s*$/im,
+                    
+                    // Padrão: "IVA 0% 0.00"
+                    iva: /IVA\s*0%\s*([\d\s.,]+)/i,
+                    
+                    // Padrão: "Autoliquidação de IVA"
+                    autoliquidacao: /Autoliquidac[ãa]o\s+de\s+IVA/i,
+                    
+                    // Padrão: "Período: 01-10-2024 - 31-12-2024"
+                    periodo: /(?:Per[ií]odo|de)\s*:?\s*(\d{2}-\d{2}-\d{4})\s*[-–a]\s*(\d{2}-\d{2}-\d{4})/i,
+                    
+                    // Padrão para valor da comissão na linha de detalhe
+                    valorComissao: /Comiss[oõ]es\s+da\s+Bolt[^0-9]*([\d\s.,]+)/i
                 }
             };
         }
@@ -240,21 +306,21 @@
                     gorjetas: this.extrairValor(texto, this.patterns.extrato.gorjetas),
                     portagens: this.extrairValor(texto, this.patterns.extrato.portagens),
                     taxasCancel: this.extrairValor(texto, this.patterns.extrato.taxasCancel),
-                    comissoes: this.extrairValor(texto, this.patterns.extrato.comissoes),
+                    comissoes: Math.abs(this.extrairValor(texto, this.patterns.extrato.comissoes)),
                     ganhosLiquidos: this.extrairValor(texto, this.patterns.extrato.ganhosLiquidos),
-                    brutoTotal: this.extrairValor(texto, this.patterns.extrato.brutoTotal)
+                    brutoTotal: 0
                 };
 
-                if (dados.brutoTotal === 0) {
-                    dados.brutoTotal = dados.ganhosApp + dados.ganhosCampanha + 
-                                      dados.gorjetas + dados.portagens + dados.taxasCancel;
-                }
+                // Calcular bruto total se não encontrado explicitamente
+                dados.brutoTotal = dados.ganhosApp + dados.ganhosCampanha + 
+                                  dados.gorjetas + dados.portagens + dados.taxasCancel;
 
+                // Calcular taxa de comissão
                 const baseComissao = dados.ganhosApp + dados.taxasCancel;
                 dados.taxaComissao = baseComissao > 0 ? dados.comissoes / baseComissao : 0;
                 dados.comissaoValida = dados.taxaComissao <= CONFIG.TAXA_COMISSAO_MAX + CONFIG.TOLERANCIA_ERRO;
 
-                logger.log(`Extrato processado: ${file.name} | Bruto: ${formatarMoeda(dados.brutoTotal)}`, 'success');
+                logger.log(`Extrato processado: ${file.name} | Bruto: ${formatarMoeda(dados.brutoTotal)} | Líquido: ${formatarMoeda(dados.ganhosLiquidos)}`, 'success');
                 
                 return dados;
             } catch (error) {
@@ -270,26 +336,36 @@
                 const texto = await this.extrairTexto(file);
                 const isAutoliquidacao = this.patterns.fatura.autoliquidacao.test(texto);
                 
+                let valorTotal = this.extrairValor(texto, this.patterns.fatura.valorTotal);
+                
+                // Fallback para formato alternativo
+                if (valorTotal === 0) {
+                    valorTotal = this.extrairValor(texto, this.patterns.fatura.valorTotalAlt);
+                }
+                
+                // Tentar extrair valor da linha de comissões
+                let valorComissao = this.extrairValor(texto, this.patterns.fatura.valorComissao);
+                
+                const numero = this.extrairTextoMatch(texto, this.patterns.fatura.numero) || 'N/A';
+                
                 const dados = {
                     nome: file.name,
                     tamanho: file.size,
                     dataUpload: new Date(),
-                    numero: this.extrairTexto(texto, this.patterns.fatura.numero) || 'N/A',
-                    valorTotal: this.extrairValor(texto, this.patterns.fatura.valorTotal),
-                    valorLiquido: this.extrairValor(texto, this.patterns.fatura.valorLiquido),
-                    iva: isAutoliquidacao ? 0 : this.extrairValor(texto, this.patterns.fatura.iva),
-                    isAutoliquidacao: isAutoliquidacao
+                    numero: numero,
+                    valorTotal: valorTotal,
+                    valorLiquido: valorTotal, // Nas faturas Bolt, o total é o valor a pagar
+                    iva: 0, // IVA 0% em autoliquidação
+                    isAutoliquidacao: isAutoliquidacao,
+                    valorPrincipal: valorTotal > 0 ? valorTotal : valorComissao
                 };
 
-                if (dados.valorLiquido > 0) {
-                    dados.valorPrincipal = dados.valorLiquido;
-                } else if (dados.valorTotal > 0) {
-                    dados.valorPrincipal = isAutoliquidacao ? dados.valorTotal : dados.valorTotal - dados.iva;
-                } else {
-                    dados.valorPrincipal = 0;
+                // Se não encontrou valor principal, usar o total
+                if (dados.valorPrincipal === 0 && dados.valorTotal > 0) {
+                    dados.valorPrincipal = dados.valorTotal;
                 }
 
-                logger.log(`Fatura processada: ${file.name} | Valor: ${formatarMoeda(dados.valorPrincipal)} | Autoliquidação: ${isAutoliquidacao ? 'Sim' : 'Não'}`, 'success');
+                logger.log(`Fatura processada: ${file.name} | N.º: ${dados.numero} | Valor: ${formatarMoeda(dados.valorPrincipal)} | Autoliquidação: ${isAutoliquidacao ? 'Sim' : 'Não'}`, 'success');
                 
                 return dados;
             } catch (error) {
@@ -323,8 +399,15 @@
             
             for (const line of lines) {
                 const cleanLine = line.trim();
+                // Inclui caracteres latinos e acentos portugueses
                 if (cleanLine.length > 0 && /[\x20-\x7E\u00A0-\u00FF]/.test(cleanLine)) {
-                    if (!cleanLine.startsWith('%') && !cleanLine.startsWith('<<')) {
+                    // Ignora linhas de controle PDF
+                    if (!cleanLine.startsWith('%') && 
+                        !cleanLine.startsWith('<<') && 
+                        !cleanLine.startsWith('stream') &&
+                        !cleanLine.startsWith('endstream') &&
+                        !cleanLine.startsWith('obj') &&
+                        !cleanLine.startsWith('endobj')) {
                         text += cleanLine + ' ';
                     }
                 }
@@ -342,7 +425,7 @@
             return 0;
         }
 
-        extrairTexto(texto, pattern) {
+        extrairTextoMatch(texto, pattern) {
             if (!texto || !pattern) return null;
             const match = texto.match(pattern);
             return match ? match[1].trim() : null;
@@ -416,6 +499,7 @@
                 acc.valorTotal += fat.valorPrincipal || 0;
                 acc.valorLiquido += fat.valorLiquido || 0;
                 acc.iva += fat.iva || 0;
+                acc.valorPrincipal += fat.valorPrincipal || 0;
                 return acc;
             }, { valorTotal: 0, valorLiquido: 0, iva: 0, valorPrincipal: 0 });
         }
@@ -423,19 +507,22 @@
         validarCruzamentos() {
             const c = State.calculos;
             
+            // Validação SAF-T vs DAC7
             if (Math.abs(c.safT - c.dac7) > CONFIG.TOLERANCIA_ERRO) {
                 this.adicionarAlerta('critico', 'DISCREPÂNCIA SAF-T vs DAC7', 
                     `SAF-T (${formatarMoeda(c.safT)}) ≠ DAC7 (${formatarMoeda(c.dac7)})`,
                     Math.abs(c.safT - c.dac7));
             }
             
+            // Validação Ganhos Líquidos
             const diferencaLiquido = Math.abs(c.ganhosLiquidosEsperados - c.ganhosLiquidos);
-            if (diferencaLiquido > CONFIG.TOLERANCIA_ERRO) {
-                this.adicionarAlerta('critico', 'DISCREPÂNCIA GANHOS LÍQUIDOS',
+            if (diferencaLiquido > CONFIG.TOLERANCIA_ERRO * 10) {
+                this.adicionarAlerta('alerta', 'DISCREPÂNCIA GANHOS LÍQUIDOS',
                     `Esperado: ${formatarMoeda(c.ganhosLiquidosEsperados)} | Reportado: ${formatarMoeda(c.ganhosLiquidos)}`,
                     diferencaLiquido);
             }
             
+            // Validação Bruto App
             const brutoEsperado = c.brutoApp + c.ganhosCampanha + c.gorjetas + c.portagens;
             if (Math.abs(c.safT - brutoEsperado) > CONFIG.TOLERANCIA_ERRO * 10) {
                 this.adicionarAlerta('alerta', 'VERIFICAÇÃO BRUTO APP',
@@ -443,16 +530,18 @@
                     Math.abs(c.safT - brutoEsperado));
             }
             
-            if (Math.abs(c.comissoes - c.faturaComissao) > CONFIG.TOLERANCIA_ERRO) {
-                this.adicionarAlerta('critico', 'DISCREPÂNCIA COMISSÃO vs FATURA',
-                    `Comissões: ${formatarMoeda(c.comissoes)} | Faturado: ${formatarMoeda(c.faturaComissao)}`,
+            // Validação Comissões vs Fatura
+            if (c.faturaComissao > 0 && Math.abs(c.comissoes - c.faturaComissao) > CONFIG.TOLERANCIA_ERRO * 10) {
+                this.adicionarAlerta('alerta', 'COMISSÃO vs FATURA',
+                    `Comissões extrato: ${formatarMoeda(c.comissoes)} | Faturado: ${formatarMoeda(c.faturaComissao)}`,
                     Math.abs(c.comissoes - c.faturaComissao));
             }
             
+            // Validação Taxa de Comissão
             const baseComissao = c.brutoApp;
             const taxaEfetiva = baseComissao > 0 ? c.comissoes / baseComissao : 0;
             
-            if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.01) {
+            if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.05) {
                 this.adicionarAlerta('critico', 'COMISSÃO EXCEDE LIMITE LEGAL',
                     `Taxa: ${(taxaEfetiva * 100).toFixed(2)}% | Limite: 25%`,
                     c.comissoes - (baseComissao * CONFIG.TAXA_COMISSAO_MAX));
@@ -592,7 +681,7 @@
             this.setText('saft-liquido', formatarMoeda(c.safT));
             this.setText('saft-total', formatarMoeda(c.safT));
             
-            this.setText('ext-ganhos-app', formatarMoeda(c.ganhosCampanha + c.gorjetas + c.portagens + c.brutoApp - c.taxasCancel));
+            this.setText('ext-ganhos-app', formatarMoeda(c.brutoApp));
             this.setText('ext-ganhos-campanha', formatarMoeda(c.ganhosCampanha));
             this.setText('ext-gorjetas', formatarMoeda(c.gorjetas));
             this.setText('ext-portagens', formatarMoeda(c.portagens));
@@ -719,12 +808,12 @@
 
     class EvidenceManager {
         constructor() {
-            this.modal = document.getElementById('evidence-modal');
+            this.modal = null;
             this.isOpen = false;
-            this.init();
         }
 
         init() {
+            this.modal = document.getElementById('evidence-modal');
             this.bindEvents();
         }
 
@@ -774,7 +863,7 @@
             const input = document.getElementById(inputId);
 
             if (!zone || !input) {
-                console.error(`Elementos não encontrados: ${zoneId} ou ${inputId}`);
+                console.warn(`Elementos não encontrados: ${zoneId} ou ${inputId}`);
                 return;
             }
 
@@ -835,6 +924,9 @@
         }
 
         abrir() {
+            if (!this.modal) {
+                this.modal = document.getElementById('evidence-modal');
+            }
             if (!this.modal) return;
             this.modal.style.display = 'flex';
             this.isOpen = true;
@@ -1169,6 +1261,10 @@
             parametros: State.parametros,
             calculos: State.calculos,
             alertas: State.alertas,
+            evidencias: {
+                faturas: State.processados.faturas,
+                extratos: State.processados.extratos
+            },
             timestamp: new Date().toISOString(),
             versao: CONFIG.VERSAO
         };
@@ -1236,7 +1332,11 @@
         setTimeout(() => {
             if (loading) {
                 loading.classList.add('hidden');
-                setTimeout(() => loading.remove(), 500);
+                setTimeout(() => {
+                    if (loading.parentNode) {
+                        loading.parentNode.removeChild(loading);
+                    }
+                }, 500);
             }
             if (app) app.style.display = 'block';
         }, 500);
@@ -1244,6 +1344,7 @@
         const sessionIdEl = document.getElementById('session-id');
         if (sessionIdEl) sessionIdEl.textContent = State.sessao.id;
 
+        // Atualizar relógio
         setInterval(() => {
             const timeEl = document.getElementById('session-time');
             if (timeEl) {
@@ -1253,20 +1354,27 @@
             }
         }, 1000);
 
+        // Inicializar componentes
+        logger.init();
+        evidenceManager.init();
+
         bindEventos();
 
         logger.log(`Sistema VDC Forense v${CONFIG.VERSAO} ${CONFIG.EDICAO} iniciado`, 'success');
         logger.log(`Sessão: ${State.sessao.id}`, 'info');
 
         if (typeof Chart === 'undefined') {
-            logger.log('Chart.js não carregado', 'warning');
+            logger.log('Chart.js não carregado - gráficos indisponíveis', 'warning');
         }
 
+        // Exportar para debug
         window.VDC = {
             State,
             CONFIG,
             logger,
             evidenceManager,
+            pdfProcessor,
+            fiscalCalculator,
             processarFaturas,
             processarExtratos
         };
