@@ -1,9 +1,8 @@
 /**
- * VDC FORENSE v12.8 CSI MIAMI
+ * VDC FORENSE v12.9 CSI MIAMI
  * Sistema de Auditoria Digital e Análise Forense Fiscal
  * 
- * Versão: PRODUÇÃO - 100% FUNCIONAL
- * Com padrões de extração ajustados para documentos Bolt Portugal
+ * Versão: PRODUÇÃO - EXTRAÇÃO REFINADA PARA DOCUMENTOS BOLT PORTUGAL
  */
 
 (function() {
@@ -14,11 +13,11 @@
     // ============================================
 
     const CONFIG = Object.freeze({
-        VERSAO: '12.8',
+        VERSAO: '12.9',
         EDICAO: 'CSI MIAMI',
-        TAXA_COMISSAO_MAX: 0.25,
+        TAXA_COMISSAO_MAX: 0.25, // 25% limite legal
         TOLERANCIA_ERRO: 0.01,
-        MAX_FILE_SIZE: 10 * 1024 * 1024,
+        MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
         ALLOWED_TYPES: ['application/pdf'],
         ALLOWED_EXTENSIONS: ['.pdf']
     });
@@ -45,25 +44,38 @@
         },
         evidencias: {
             faturas: [],
-            extratos: []
+            extratos: [],
+            dac7: []
         },
         processados: {
             faturas: [],
-            extratos: []
+            extratos: [],
+            dac7: []
         },
         calculos: {
-            safT: 0,
-            dac7: 0,
-            brutoApp: 0,
-            comissoes: 0,
-            ganhosLiquidos: 0,
-            ganhosLiquidosEsperados: 0,
+            // Extratos
+            ganhosApp: 0,
             ganhosCampanha: 0,
             gorjetas: 0,
             portagens: 0,
             taxasCancel: 0,
+            comissoes: 0,
+            ganhosLiquidos: 0,
+            brutoTotal: 0,
+            
+            // Faturas
+            faturaNumero: '---',
             faturaTotal: 0,
-            faturaComissao: 0
+            faturaPeriodo: '',
+            
+            // DAC7
+            dac7ReceitaAnual: 0,
+            dac7Comissoes: 0,
+            dac7Servicos: 0,
+            dac7Ganhos1T: 0, dac7Comissoes1T: 0, dac7Impostos1T: 0, dac7Servicos1T: 0,
+            dac7Ganhos2T: 0, dac7Comissoes2T: 0, dac7Impostos2T: 0, dac7Servicos2T: 0,
+            dac7Ganhos3T: 0, dac7Comissoes3T: 0, dac7Impostos3T: 0, dac7Servicos3T: 0,
+            dac7Ganhos4T: 0, dac7Comissoes4T: 0, dac7Impostos4T: 0, dac7Servicos4T: 0
         },
         alertas: [],
         logs: [],
@@ -96,36 +108,32 @@
         
         // Remove espaços e símbolos de moeda
         let limpo = String(valorStr)
-            .replace(/[€$\s]/g, '');
+            .replace(/[€$\s]/g, '')
+            .trim();
         
-        // Detecta se é formato português (1.000,00) ou formato inglês (1,000.00)
-        // Verifica se existe vírgula como separador decimal (padrão PT)
-        const hasCommaDecimal = /\d+,\d{2}$/.test(limpo);
-        const hasDotDecimal = /\d+\.\d{2}$/.test(limpo);
+        // Detecta formato português (1.000,00) ou inglês (1,000.00)
+        const temVirgulaDecimal = /\d+,\d{2}$/.test(limpo);
+        const temPontoDecimal = /\d+\.\d{2}$/.test(limpo);
         
-        if (hasCommaDecimal && !hasDotDecimal) {
-            // Formato PT: remove pontos (separador milhares), troca vírgula por ponto
+        if (temVirgulaDecimal && !temPontoDecimal) {
+            // Formato PT: remove pontos (milhar), troca vírgula por ponto
             limpo = limpo.replace(/\./g, '').replace(',', '.');
-        } else if (hasDotDecimal && !hasCommaDecimal) {
-            // Formato EN: remove vírgulas (separador milhares)
+        } else if (temPontoDecimal && !temVirgulaDecimal) {
+            // Formato EN: remove vírgulas (milhar)
             limpo = limpo.replace(/,/g, '');
-        } else if (hasCommaDecimal && hasDotDecimal) {
-            // Caso misto raro: assume PT se a vírgula está após o último ponto
-            const lastComma = limpo.lastIndexOf(',');
-            const lastDot = limpo.lastIndexOf('.');
-            if (lastComma > lastDot) {
+        } else if (temVirgulaDecimal && temPontoDecimal) {
+            // Caso misto: assume PT se vírgula após último ponto
+            const ultimaVirgula = limpo.lastIndexOf(',');
+            const ultimoPonto = limpo.lastIndexOf('.');
+            if (ultimaVirgula > ultimoPonto) {
                 limpo = limpo.replace(/\./g, '').replace(',', '.');
             } else {
                 limpo = limpo.replace(/,/g, '');
             }
         } else {
-            // Sem separador decimal claro - remove vírgulas e pontos se não houver decimais
-            // ou assume que o último separador é decimal
+            // Remove qualquer caractere não numérico exceto ponto e sinal
             limpo = limpo.replace(/[^\d.-]/g, '');
         }
-        
-        // Remove caracteres não numéricos exceto ponto e sinal negativo
-        limpo = limpo.replace(/[^\d.-]/g, '');
         
         const parsed = parseFloat(limpo);
         return isNaN(parsed) ? 0 : parsed;
@@ -218,7 +226,7 @@
         atualizarHashGlobal() {
             const hashEl = document.getElementById('hash-value');
             if (hashEl) {
-                hashEl.textContent = gerarHash(this.logs);
+                hashEl.textContent = gerarHash(this.logs).substring(0, 64);
             }
         }
 
@@ -234,59 +242,60 @@
     const logger = new Logger();
 
     // ============================================
-    // PROCESSAMENTO DE PDFs
+    // PROCESSAMENTO DE PDFs - EXTRATORES REFINADOS
     // ============================================
 
     class PDFProcessor {
         constructor() {
-            // PADRÕES CORRIGIDOS PARA DOCUMENTOS BOLT PORTUGAL
+            // PADRÕES ESPECÍFICOS PARA DOCUMENTOS BOLT PORTUGAL
             this.patterns = {
                 extrato: {
-                    // Padrão: "Ganhos na app 3157.94"
-                    ganhosApp: /Ganhos\s+(?:na\s+)?app\s*([\d\s.,]+)/i,
+                    // Quadro Transações
+                    ganhosApp: /Ganhos\s+na\s+app\s*([\d\s.,]+)/i,
+                    ganhosCampanha: /Ganhos\s+da\s+campanha\s*([\d\s.,]+)/i,
+                    gorjetas: /Gorjetas\s+dos\s+passageiros\s*([\d\s.,]+)/i,
+                    portagens: /Portagens\s*([\d\s.,]+)/i,
+                    taxasCancel: /Taxas\s+de\s+cancelamento\s*([\d\s.,]+)/i,
                     
-                    // Padrão: "Ganhos da campanha 20.00"
-                    ganhosCampanha: /Ganhos\s+(?:da\s+)?campanha\s*([\d\s.,]+)/i,
+                    // Comissões (pode estar com sinal negativo ou não)
+                    comissoes: /Comiss[ãa]o\s+da\s+app\s*(-?[\d\s.,]+)/i,
                     
-                    // Padrão: "Gorjetas dos passageiros 9.00"
-                    gorjetas: /Gorjetas\s+(?:dos\s+passageiros)?\s*([\d\s.,]+)/i,
+                    // Quadro Ganhos líquidos
+                    ganhosLiquidos: /Ganhos\s+l[ií]quidos\s*([\d\s.,]+)/i,
                     
-                    // Padrão: "Portagens..." (pode não existir em todos)
-                    portagens: /Portagens?\s*([\d\s.,]+)/i,
-                    
-                    // Padrão: "Taxas de cancelamento 15.60"
-                    taxasCancel: /Taxas?\s+de\s+cancelamento\s*([\d\s.,]+)/i,
-                    
-                    // Padrão: "Comissão da app -792.59"
-                    comissoes: /Comiss[ãa]o\s+(?:da\s+app)?\s*(-?[\d\s.,]+)/i,
-                    
-                    // Padrão: "Ganhos líquidos 2409.95"
-                    ganhosLiquidos: /Ganhos\s+l[ií]quidos?\s*([\d\s.,]+)/i,
-                    
-                    // Bruto total (para compatibilidade)
-                    brutoTotal: /(?:Total\s+bruto|Ganhos\s+totais?)[\s:]*([\d\s.,]+)/i
+                    // Valores totais do quadro Ganhos líquidos
+                    ganhosQuadro: /Ganhos\s*([\d\s.,]+)/i,
+                    despesas: /Despesas\s*\([^)]*\)\s*(-?[\d\s.,]+)/i
                 },
                 fatura: {
-                    // Padrão: "Fatura n.º PT1125-3582" ou "Fatura n.oPT1125-3582"
-                    numero: /Fatura\s+n\.?[º°o]?\s*([A-Z]{2}\d{4}-\d{4}|[A-Z0-9\-]+)/i,
-                    
-                    // Padrão: "Total com IVA (EUR) 239.00"
+                    numero: /Fatura\s+n\.?[º°o]?\s*([A-Z0-9\-]+)/i,
                     valorTotal: /Total\s+com\s+IVA\s*\(EUR\)\s*([\d\s.,]+)/i,
-                    
-                    // Padrão: "Total 239.00" (fallback)
-                    valorTotalAlt: /(?:^|\n)\s*Total\s+([\d\s.,]+)\s*$/im,
-                    
-                    // Padrão: "IVA 0% 0.00"
-                    iva: /IVA\s*0%\s*([\d\s.,]+)/i,
-                    
-                    // Padrão: "Autoliquidação de IVA"
+                    periodo: /Per[ií]odo\s*:?\s*(\d{2}-\d{2}-\d{4})\s*[-–a]\s*(\d{2}-\d{2}-\d{4})/i,
                     autoliquidacao: /Autoliquidac[ãa]o\s+de\s+IVA/i,
+                    comissoesDesc: /Comiss[oõ]es\s+da\s+Bolt[^0-9]*([\d\s.,]+)/i
+                },
+                dac7: {
+                    receitaAnual: /Total\s+de\s+receitas\s+anuais:\s*([\d\s.,]+)€/i,
+                    // Trimestres - padrões mais flexíveis
+                    ganhos1T: /Ganhos\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    comissoes1T: /Comiss[oõ]es\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    impostos1T: /Impostos\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    servicos1T: /Serviços\s+prestados\s+no\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
                     
-                    // Padrão: "Período: 01-10-2024 - 31-12-2024"
-                    periodo: /(?:Per[ií]odo|de)\s*:?\s*(\d{2}-\d{2}-\d{4})\s*[-–a]\s*(\d{2}-\d{2}-\d{4})/i,
+                    ganhos2T: /Ganhos\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    comissoes2T: /Comiss[oõ]es\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    impostos2T: /Impostos\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    servicos2T: /Serviços\s+prestados\s+no\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
                     
-                    // Padrão para valor da comissão na linha de detalhe
-                    valorComissao: /Comiss[oõ]es\s+da\s+Bolt[^0-9]*([\d\s.,]+)/i
+                    ganhos3T: /Ganhos\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    comissoes3T: /Comiss[oõ]es\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    impostos3T: /Impostos\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    servicos3T: /Serviços\s+prestados\s+no\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
+                    
+                    ganhos4T: /Ganhos\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    comissoes4T: /Comiss[oõ]es\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    impostos4T: /Impostos\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
+                    servicos4T: /Serviços\s+prestados\s+no\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i
                 }
             };
         }
@@ -297,30 +306,40 @@
             try {
                 const texto = await this.extrairTexto(file);
                 
+                // Extrair valores específicos
+                const ganhosApp = this.extrairValor(texto, this.patterns.extrato.ganhosApp);
+                const ganhosCampanha = this.extrairValor(texto, this.patterns.extrato.ganhosCampanha);
+                const gorjetas = this.extrairValor(texto, this.patterns.extrato.gorjetas);
+                const portagens = this.extrairValor(texto, this.patterns.extrato.portagens);
+                const taxasCancel = this.extrairValor(texto, this.patterns.extrato.taxasCancel);
+                
+                // Comissões (valor absoluto)
+                let comissoes = Math.abs(this.extrairValor(texto, this.patterns.extrato.comissoes));
+                if (comissoes === 0) {
+                    // Fallback: tentar extrair do quadro Despesas
+                    comissoes = Math.abs(this.extrairValor(texto, this.patterns.extrato.despesas));
+                }
+                
+                const ganhosLiquidos = this.extrairValor(texto, this.patterns.extrato.ganhosLiquidos);
+                
+                // Calcular bruto total
+                const brutoTotal = ganhosApp + ganhosCampanha + gorjetas + portagens + taxasCancel;
+                
                 const dados = {
                     nome: file.name,
                     tamanho: file.size,
                     dataUpload: new Date(),
-                    ganhosApp: this.extrairValor(texto, this.patterns.extrato.ganhosApp),
-                    ganhosCampanha: this.extrairValor(texto, this.patterns.extrato.ganhosCampanha),
-                    gorjetas: this.extrairValor(texto, this.patterns.extrato.gorjetas),
-                    portagens: this.extrairValor(texto, this.patterns.extrato.portagens),
-                    taxasCancel: this.extrairValor(texto, this.patterns.extrato.taxasCancel),
-                    comissoes: Math.abs(this.extrairValor(texto, this.patterns.extrato.comissoes)),
-                    ganhosLiquidos: this.extrairValor(texto, this.patterns.extrato.ganhosLiquidos),
-                    brutoTotal: 0
+                    ganhosApp,
+                    ganhosCampanha,
+                    gorjetas,
+                    portagens,
+                    taxasCancel,
+                    comissoes,
+                    ganhosLiquidos,
+                    brutoTotal
                 };
 
-                // Calcular bruto total se não encontrado explicitamente
-                dados.brutoTotal = dados.ganhosApp + dados.ganhosCampanha + 
-                                  dados.gorjetas + dados.portagens + dados.taxasCancel;
-
-                // Calcular taxa de comissão
-                const baseComissao = dados.ganhosApp + dados.taxasCancel;
-                dados.taxaComissao = baseComissao > 0 ? dados.comissoes / baseComissao : 0;
-                dados.comissaoValida = dados.taxaComissao <= CONFIG.TAXA_COMISSAO_MAX + CONFIG.TOLERANCIA_ERRO;
-
-                logger.log(`Extrato processado: ${file.name} | Bruto: ${formatarMoeda(dados.brutoTotal)} | Líquido: ${formatarMoeda(dados.ganhosLiquidos)}`, 'success');
+                logger.log(`Extrato processado: ${file.name} | Bruto: ${formatarMoeda(brutoTotal)} | Líquido: ${formatarMoeda(ganhosLiquidos)}`, 'success');
                 
                 return dados;
             } catch (error) {
@@ -334,42 +353,86 @@
             
             try {
                 const texto = await this.extrairTexto(file);
-                const isAutoliquidacao = this.patterns.fatura.autoliquidacao.test(texto);
-                
-                let valorTotal = this.extrairValor(texto, this.patterns.fatura.valorTotal);
-                
-                // Fallback para formato alternativo
-                if (valorTotal === 0) {
-                    valorTotal = this.extrairValor(texto, this.patterns.fatura.valorTotalAlt);
-                }
-                
-                // Tentar extrair valor da linha de comissões
-                let valorComissao = this.extrairValor(texto, this.patterns.fatura.valorComissao);
                 
                 const numero = this.extrairTextoMatch(texto, this.patterns.fatura.numero) || 'N/A';
+                const valorTotal = this.extrairValor(texto, this.patterns.fatura.valorTotal);
+                const periodoMatch = texto.match(this.patterns.fatura.periodo);
+                const periodo = periodoMatch ? `${periodoMatch[1]} a ${periodoMatch[2]}` : 'N/A';
+                const isAutoliquidacao = this.patterns.fatura.autoliquidacao.test(texto);
                 
                 const dados = {
                     nome: file.name,
                     tamanho: file.size,
                     dataUpload: new Date(),
-                    numero: numero,
-                    valorTotal: valorTotal,
-                    valorLiquido: valorTotal, // Nas faturas Bolt, o total é o valor a pagar
-                    iva: 0, // IVA 0% em autoliquidação
-                    isAutoliquidacao: isAutoliquidacao,
-                    valorPrincipal: valorTotal > 0 ? valorTotal : valorComissao
+                    numero,
+                    valorTotal,
+                    periodo,
+                    isAutoliquidacao
                 };
 
-                // Se não encontrou valor principal, usar o total
-                if (dados.valorPrincipal === 0 && dados.valorTotal > 0) {
-                    dados.valorPrincipal = dados.valorTotal;
-                }
-
-                logger.log(`Fatura processada: ${file.name} | N.º: ${dados.numero} | Valor: ${formatarMoeda(dados.valorPrincipal)} | Autoliquidação: ${isAutoliquidacao ? 'Sim' : 'Não'}`, 'success');
+                logger.log(`Fatura processada: ${file.name} | N.º: ${numero} | Valor: ${formatarMoeda(valorTotal)}`, 'success');
                 
                 return dados;
             } catch (error) {
                 logger.log(`Erro ao processar fatura ${file.name}: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        async processarDAC7(file) {
+            logger.log(`A processar relatório DAC7: ${file.name}`, 'info');
+            
+            try {
+                const texto = await this.extrairTexto(file);
+                
+                const dados = {
+                    nome: file.name,
+                    tamanho: file.size,
+                    dataUpload: new Date(),
+                    receitaAnual: this.extrairValor(texto, this.patterns.dac7.receitaAnual),
+                    
+                    // Trimestre 1
+                    ganhos1T: this.extrairValor(texto, this.patterns.dac7.ganhos1T),
+                    comissoes1T: this.extrairValor(texto, this.patterns.dac7.comissoes1T),
+                    impostos1T: this.extrairValor(texto, this.patterns.dac7.impostos1T),
+                    servicos1T: this.extrairValor(texto, this.patterns.dac7.servicos1T),
+                    
+                    // Trimestre 2
+                    ganhos2T: this.extrairValor(texto, this.patterns.dac7.ganhos2T),
+                    comissoes2T: this.extrairValor(texto, this.patterns.dac7.comissoes2T),
+                    impostos2T: this.extrairValor(texto, this.patterns.dac7.impostos2T),
+                    servicos2T: this.extrairValor(texto, this.patterns.dac7.servicos2T),
+                    
+                    // Trimestre 3
+                    ganhos3T: this.extrairValor(texto, this.patterns.dac7.ganhos3T),
+                    comissoes3T: this.extrairValor(texto, this.patterns.dac7.comissoes3T),
+                    impostos3T: this.extrairValor(texto, this.patterns.dac7.impostos3T),
+                    servicos3T: this.extrairValor(texto, this.patterns.dac7.servicos3T),
+                    
+                    // Trimestre 4
+                    ganhos4T: this.extrairValor(texto, this.patterns.dac7.ganhos4T),
+                    comissoes4T: this.extrairValor(texto, this.patterns.dac7.comissoes4T),
+                    impostos4T: this.extrairValor(texto, this.patterns.dac7.impostos4T),
+                    servicos4T: this.extrairValor(texto, this.patterns.dac7.servicos4T)
+                };
+
+                // Calcular totais se não encontrados diretamente
+                if (dados.receitaAnual === 0) {
+                    dados.receitaAnual = dados.ganhos1T + dados.ganhos2T + dados.ganhos3T + dados.ganhos4T;
+                }
+                
+                const comissoesTotais = dados.comissoes1T + dados.comissoes2T + dados.comissoes3T + dados.comissoes4T;
+                const servicosTotais = dados.servicos1T + dados.servicos2T + dados.servicos3T + dados.servicos4T;
+
+                logger.log(`DAC7 processado: Receita anual ${formatarMoeda(dados.receitaAnual)} | Comissões totais ${formatarMoeda(comissoesTotais)}`, 'success');
+                
+                return {
+                    ...dados,
+                    comissoesTotais,
+                    servicosTotais
+                };
+            } catch (error) {
+                logger.log(`Erro ao processar DAC7 ${file.name}: ${error.message}`, 'error');
                 throw error;
             }
         }
@@ -408,7 +471,7 @@
                         !cleanLine.startsWith('endstream') &&
                         !cleanLine.startsWith('obj') &&
                         !cleanLine.startsWith('endobj')) {
-                        text += cleanLine + ' ';
+                        text += cleanLine + '\n';
                     }
                 }
             }
@@ -435,7 +498,7 @@
     const pdfProcessor = new PDFProcessor();
 
     // ============================================
-    // CÁLCULOS FISCAIS
+    // CÁLCULOS FISCAIS E TRIANGULAÇÃO
     // ============================================
 
     class FiscalCalculator {
@@ -446,27 +509,9 @@
         calcularTudo() {
             this.alertas = [];
             
-            const totaisExtratos = this.aggregarExtratos();
-            const totaisFaturas = this.aggregarFaturas();
-            
-            const valorSAFT = totaisExtratos.brutoTotal;
-            const valorDAC7 = valorSAFT;
-            const ganhosLiquidosEsperados = valorSAFT - totaisExtratos.comissoes;
-            
-            State.calculos = {
-                safT: valorSAFT,
-                dac7: valorDAC7,
-                brutoApp: totaisExtratos.ganhosApp + totaisExtratos.taxasCancel,
-                comissoes: totaisExtratos.comissoes,
-                ganhosLiquidos: totaisExtratos.ganhosLiquidos,
-                ganhosLiquidosEsperados: ganhosLiquidosEsperados,
-                ganhosCampanha: totaisExtratos.ganhosCampanha,
-                gorjetas: totaisExtratos.gorjetas,
-                portagens: totaisExtratos.portagens,
-                taxasCancel: totaisExtratos.taxasCancel,
-                faturaTotal: totaisFaturas.valorTotal,
-                faturaComissao: totaisFaturas.valorPrincipal
-            };
+            this.aggregarExtratos();
+            this.aggregarFaturas();
+            this.aggregarDAC7();
             
             this.validarCruzamentos();
             this.atualizarDashboard();
@@ -475,13 +520,7 @@
         }
 
         aggregarExtratos() {
-            const inicial = {
-                ganhosApp: 0, ganhosCampanha: 0, gorjetas: 0,
-                portagens: 0, taxasCancel: 0, comissoes: 0,
-                ganhosLiquidos: 0, brutoTotal: 0
-            };
-            
-            return State.processados.extratos.reduce((acc, ext) => {
+            const totals = State.processados.extratos.reduce((acc, ext) => {
                 acc.ganhosApp += ext.ganhosApp || 0;
                 acc.ganhosCampanha += ext.ganhosCampanha || 0;
                 acc.gorjetas += ext.gorjetas || 0;
@@ -491,60 +530,94 @@
                 acc.ganhosLiquidos += ext.ganhosLiquidos || 0;
                 acc.brutoTotal += ext.brutoTotal || 0;
                 return acc;
-            }, inicial);
+            }, {
+                ganhosApp: 0, ganhosCampanha: 0, gorjetas: 0,
+                portagens: 0, taxasCancel: 0, comissoes: 0,
+                ganhosLiquidos: 0, brutoTotal: 0
+            });
+            
+            State.calculos.ganhosApp = totals.ganhosApp;
+            State.calculos.ganhosCampanha = totals.ganhosCampanha;
+            State.calculos.gorjetas = totals.gorjetas;
+            State.calculos.portagens = totals.portagens;
+            State.calculos.taxasCancel = totals.taxasCancel;
+            State.calculos.comissoes = totals.comissoes;
+            State.calculos.ganhosLiquidos = totals.ganhosLiquidos;
+            State.calculos.brutoTotal = totals.brutoTotal;
         }
 
         aggregarFaturas() {
-            return State.processados.faturas.reduce((acc, fat) => {
-                acc.valorTotal += fat.valorPrincipal || 0;
-                acc.valorLiquido += fat.valorLiquido || 0;
-                acc.iva += fat.iva || 0;
-                acc.valorPrincipal += fat.valorPrincipal || 0;
-                return acc;
-            }, { valorTotal: 0, valorLiquido: 0, iva: 0, valorPrincipal: 0 });
+            const ultimaFatura = State.processados.faturas[State.processados.faturas.length - 1];
+            if (ultimaFatura) {
+                State.calculos.faturaNumero = ultimaFatura.numero;
+                State.calculos.faturaTotal = ultimaFatura.valorTotal;
+                State.calculos.faturaPeriodo = ultimaFatura.periodo;
+            }
+        }
+
+        aggregarDAC7() {
+            const ultimoDAC7 = State.processados.dac7[State.processados.dac7.length - 1];
+            if (ultimoDAC7) {
+                State.calculos.dac7ReceitaAnual = ultimoDAC7.receitaAnual;
+                State.calculos.dac7Comissoes = ultimoDAC7.comissoesTotais || 0;
+                State.calculos.dac7Servicos = ultimoDAC7.servicosTotais || 0;
+                
+                // Guardar valores trimestrais
+                State.calculos.dac7Ganhos1T = ultimoDAC7.ganhos1T || 0;
+                State.calculos.dac7Comissoes1T = ultimoDAC7.comissoes1T || 0;
+                State.calculos.dac7Impostos1T = ultimoDAC7.impostos1T || 0;
+                State.calculos.dac7Servicos1T = ultimoDAC7.servicos1T || 0;
+                
+                State.calculos.dac7Ganhos2T = ultimoDAC7.ganhos2T || 0;
+                State.calculos.dac7Comissoes2T = ultimoDAC7.comissoes2T || 0;
+                State.calculos.dac7Impostos2T = ultimoDAC7.impostos2T || 0;
+                State.calculos.dac7Servicos2T = ultimoDAC7.servicos2T || 0;
+                
+                State.calculos.dac7Ganhos3T = ultimoDAC7.ganhos3T || 0;
+                State.calculos.dac7Comissoes3T = ultimoDAC7.comissoes3T || 0;
+                State.calculos.dac7Impostos3T = ultimoDAC7.impostos3T || 0;
+                State.calculos.dac7Servicos3T = ultimoDAC7.servicos3T || 0;
+                
+                State.calculos.dac7Ganhos4T = ultimoDAC7.ganhos4T || 0;
+                State.calculos.dac7Comissoes4T = ultimoDAC7.comissoes4T || 0;
+                State.calculos.dac7Impostos4T = ultimoDAC7.impostos4T || 0;
+                State.calculos.dac7Servicos4T = ultimoDAC7.servicos4T || 0;
+            }
         }
 
         validarCruzamentos() {
             const c = State.calculos;
             
-            // Validação SAF-T vs DAC7
-            if (Math.abs(c.safT - c.dac7) > CONFIG.TOLERANCIA_ERRO) {
+            // 1. Validação: Ganhos brutos vs DAC7
+            if (Math.abs(c.brutoTotal - c.dac7ReceitaAnual) > CONFIG.TOLERANCIA_ERRO * 100) {
                 this.adicionarAlerta('critico', 'DISCREPÂNCIA SAF-T vs DAC7', 
-                    `SAF-T (${formatarMoeda(c.safT)}) ≠ DAC7 (${formatarMoeda(c.dac7)})`,
-                    Math.abs(c.safT - c.dac7));
+                    `Extratos (${formatarMoeda(c.brutoTotal)}) ≠ DAC7 (${formatarMoeda(c.dac7ReceitaAnual)})`,
+                    Math.abs(c.brutoTotal - c.dac7ReceitaAnual));
             }
             
-            // Validação Ganhos Líquidos
-            const diferencaLiquido = Math.abs(c.ganhosLiquidosEsperados - c.ganhosLiquidos);
-            if (diferencaLiquido > CONFIG.TOLERANCIA_ERRO * 10) {
-                this.adicionarAlerta('alerta', 'DISCREPÂNCIA GANHOS LÍQUIDOS',
-                    `Esperado: ${formatarMoeda(c.ganhosLiquidosEsperados)} | Reportado: ${formatarMoeda(c.ganhosLiquidos)}`,
-                    diferencaLiquido);
-            }
-            
-            // Validação Bruto App
-            const brutoEsperado = c.brutoApp + c.ganhosCampanha + c.gorjetas + c.portagens;
-            if (Math.abs(c.safT - brutoEsperado) > CONFIG.TOLERANCIA_ERRO * 10) {
-                this.adicionarAlerta('alerta', 'VERIFICAÇÃO BRUTO APP',
-                    `SAF-T (${formatarMoeda(c.safT)}) difere do Bruto calculado (${formatarMoeda(brutoEsperado)})`,
-                    Math.abs(c.safT - brutoEsperado));
-            }
-            
-            // Validação Comissões vs Fatura
-            if (c.faturaComissao > 0 && Math.abs(c.comissoes - c.faturaComissao) > CONFIG.TOLERANCIA_ERRO * 10) {
+            // 2. Validação: Comissões vs Fatura
+            if (c.faturaTotal > 0 && Math.abs(c.comissoes - c.faturaTotal) > CONFIG.TOLERANCIA_ERRO * 10) {
                 this.adicionarAlerta('alerta', 'COMISSÃO vs FATURA',
-                    `Comissões extrato: ${formatarMoeda(c.comissoes)} | Faturado: ${formatarMoeda(c.faturaComissao)}`,
-                    Math.abs(c.comissoes - c.faturaComissao));
+                    `Comissões extrato: ${formatarMoeda(c.comissoes)} | Faturado: ${formatarMoeda(c.faturaTotal)}`,
+                    Math.abs(c.comissoes - c.faturaTotal));
             }
             
-            // Validação Taxa de Comissão
-            const baseComissao = c.brutoApp;
+            // 3. Validação: Taxa de comissão
+            const baseComissao = c.ganhosApp + c.ganhosCampanha + c.gorjetas + c.portagens + c.taxasCancel;
             const taxaEfetiva = baseComissao > 0 ? c.comissoes / baseComissao : 0;
             
             if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.05) {
                 this.adicionarAlerta('critico', 'COMISSÃO EXCEDE LIMITE LEGAL',
                     `Taxa: ${(taxaEfetiva * 100).toFixed(2)}% | Limite: 25%`,
                     c.comissoes - (baseComissao * CONFIG.TAXA_COMISSAO_MAX));
+            }
+            
+            // 4. Validação: Ganhos líquidos (cálculo vs reportado)
+            const ganhosLiquidosCalculados = baseComissao - c.comissoes;
+            if (Math.abs(ganhosLiquidosCalculados - c.ganhosLiquidos) > CONFIG.TOLERANCIA_ERRO * 10) {
+                this.adicionarAlerta('alerta', 'DISCREPÂNCIA GANHOS LÍQUIDOS',
+                    `Calculado: ${formatarMoeda(ganhosLiquidosCalculados)} | Reportado: ${formatarMoeda(c.ganhosLiquidos)}`,
+                    Math.abs(ganhosLiquidosCalculados - c.ganhosLiquidos));
             }
             
             this.calcularVeredicto();
@@ -595,55 +668,43 @@
             
             if (alertasCriticas.length > 0) {
                 const desvioTotal = alertasCriticas.reduce((acc, a) => acc + (a.valor || 0), 0);
-                const percentualDesvio = State.calculos.safT > 0 ? (desvioTotal / State.calculos.safT) * 100 : 0;
+                const percentualDesvio = State.calculos.dac7ReceitaAnual > 0 ? (desvioTotal / State.calculos.dac7ReceitaAnual) * 100 : 0;
                 
-                if (status) {
-                    status.textContent = 'CRÍTICO';
-                    status.style.color = 'var(--danger)';
-                }
-                if (desvio) {
-                    desvio.textContent = `Desvio: ${percentualDesvio.toFixed(2)}%`;
-                    desvio.style.color = 'var(--danger)';
-                }
+                status.textContent = 'CRÍTICO';
+                status.style.color = 'var(--danger)';
+                desvio.textContent = `Desvio: ${percentualDesvio.toFixed(2)}%`;
+                desvio.style.color = 'var(--danger)';
                 
                 section.classList.add('critico');
                 
-                if (anomalia) {
-                    anomalia.style.display = 'flex';
-                    const texto = anomalia.querySelector('#anomalia-texto');
-                    const valor = anomalia.querySelector('#valor-anomalia');
-                    if (texto) texto.textContent = `Indício de fraude fiscal (Art. 103.º RGIT). ${alertasCriticas.length} anomalia(s) detectada(s).`;
-                    if (valor) valor.textContent = formatarMoeda(desvioTotal);
-                }
+                anomalia.style.display = 'flex';
+                const texto = document.getElementById('anomalia-texto');
+                const valor = document.getElementById('valor-anomalia');
+                texto.textContent = `Potencial incumprimento fiscal (Art. 103.º RGIT). ${alertasCriticas.length} anomalia(s) crítica(s).`;
+                valor.textContent = formatarMoeda(desvioTotal);
                 
                 this.atualizarTriangulacao(desvioTotal);
                 logger.log(`Perícia: CRÍTICO (${percentualDesvio.toFixed(2)}%)`, 'error');
+                
             } else if (alertasNormais.length > 0) {
-                if (status) {
-                    status.textContent = 'ALERTA';
-                    status.style.color = 'var(--warning)';
-                }
-                if (desvio) {
-                    desvio.textContent = 'Requer verificação manual';
-                    desvio.style.color = 'var(--warning)';
-                }
+                status.textContent = 'ALERTA';
+                status.style.color = 'var(--warning)';
+                desvio.textContent = 'Requer verificação manual';
+                desvio.style.color = 'var(--warning)';
                 
                 section.classList.remove('critico');
-                if (anomalia) anomalia.style.display = 'none';
+                anomalia.style.display = 'none';
                 this.atualizarTriangulacao(0);
                 logger.log('Perícia: ALERTA', 'warning');
+                
             } else {
-                if (status) {
-                    status.textContent = 'NORMAL';
-                    status.style.color = 'var(--success)';
-                }
-                if (desvio) {
-                    desvio.textContent = 'Sem desvios significativos';
-                    desvio.style.color = 'var(--success)';
-                }
+                status.textContent = 'NORMAL';
+                status.style.color = 'var(--success)';
+                desvio.textContent = 'Sem desvios significativos';
+                desvio.style.color = 'var(--success)';
                 
                 section.classList.remove('critico');
-                if (anomalia) anomalia.style.display = 'none';
+                anomalia.style.display = 'none';
                 this.atualizarTriangulacao(0);
                 logger.log('Perícia: NORMAL', 'success');
             }
@@ -652,7 +713,9 @@
         atualizarTriangulacao(discrepancia) {
             const c = State.calculos;
             
-            this.setText('tri-bruto', formatarMoeda(c.brutoApp + c.ganhosCampanha + c.gorjetas + c.portagens));
+            const brutoTotal = c.ganhosApp + c.ganhosCampanha + c.gorjetas + c.portagens + c.taxasCancel;
+            
+            this.setText('tri-bruto', formatarMoeda(brutoTotal));
             this.setText('tri-comissoes', formatarMoeda(c.comissoes));
             this.setText('tri-liquido', formatarMoeda(c.ganhosLiquidos));
             this.setText('tri-faturado', formatarMoeda(c.faturaTotal));
@@ -661,7 +724,7 @@
             const discValor = document.getElementById('tri-discrepancia');
             
             if (discItem && discValor) {
-                if (discrepancia > CONFIG.TOLERANCIA_ERRO) {
+                if (discrepancia > CONFIG.TOLERANCIA_ERRO * 100) {
                     discItem.style.display = 'block';
                     discValor.textContent = formatarMoeda(discrepancia);
                 } else {
@@ -673,15 +736,14 @@
         atualizarDashboard() {
             const c = State.calculos;
             
-            this.setText('ganhos-app', formatarMoeda(c.brutoApp));
+            // Métricas principais
+            this.setText('ganhos-app', formatarMoeda(c.ganhosApp + c.ganhosCampanha + c.gorjetas + c.portagens + c.taxasCancel));
             this.setText('comissoes-total', formatarMoeda(c.comissoes));
-            this.setText('dac7-anual', formatarMoeda(c.dac7));
-            this.setText('total-saft', formatarMoeda(c.safT));
+            this.setText('dac7-anual', formatarMoeda(c.dac7ReceitaAnual));
+            this.setText('total-saft', formatarMoeda(c.brutoTotal));
             
-            this.setText('saft-liquido', formatarMoeda(c.safT));
-            this.setText('saft-total', formatarMoeda(c.safT));
-            
-            this.setText('ext-ganhos-app', formatarMoeda(c.brutoApp));
+            // Extrato detalhado
+            this.setText('ext-ganhos-app', formatarMoeda(c.ganhosApp));
             this.setText('ext-ganhos-campanha', formatarMoeda(c.ganhosCampanha));
             this.setText('ext-gorjetas', formatarMoeda(c.gorjetas));
             this.setText('ext-portagens', formatarMoeda(c.portagens));
@@ -689,14 +751,25 @@
             this.setText('ext-comissoes', formatarMoeda(c.comissoes));
             this.setText('ext-ganhos-liquidos', formatarMoeda(c.ganhosLiquidos));
             
-            this.setText('dac7-valor', formatarMoeda(c.dac7));
-            this.setText('dac7-ano', State.parametros.anoFiscal);
-            this.setText('dac7-limite', `31/01/${parseInt(State.parametros.anoFiscal) + 1}`);
-            
-            const ultimaFatura = State.processados.faturas[State.processados.faturas.length - 1];
-            this.setText('fat-numero', ultimaFatura ? ultimaFatura.numero : '---');
+            // Fatura
+            this.setText('fat-numero', c.faturaNumero);
             this.setText('fat-total', formatarMoeda(c.faturaTotal));
-            this.setText('fat-autoliquidacao', formatarMoeda(c.faturaTotal));
+            this.setText('fat-periodo', c.faturaPeriodo);
+            
+            // DAC7
+            this.setText('dac7-valor', formatarMoeda(c.dac7ReceitaAnual));
+            this.setText('dac7-ano', State.parametros.anoFiscal);
+            this.setText('dac7-comissoes', formatarMoeda(c.dac7Comissoes));
+            this.setText('dac7-servicos', c.dac7Servicos.toString());
+            
+            // Nota DAC7 com detalhes trimestrais
+            const dac7Note = document.getElementById('dac7-note');
+            if (dac7Note) {
+                dac7Note.innerHTML = `
+                    1T: ${formatarMoeda(c.dac7Ganhos1T)} · 2T: ${formatarMoeda(c.dac7Ganhos2T)} · 
+                    3T: ${formatarMoeda(c.dac7Ganhos3T)} · 4T: ${formatarMoeda(c.dac7Ganhos4T)}
+                `;
+            }
             
             this.atualizarGrafico();
             this.atualizarIndicadores();
@@ -711,7 +784,7 @@
             const dot = document.getElementById('values-dot');
             const totalValores = document.getElementById('total-valores');
             
-            const total = State.processados.faturas.length + State.processados.extratos.length;
+            const total = State.processados.faturas.length + State.processados.extratos.length + State.processados.dac7.length;
             
             if (dot) dot.classList.toggle('active', total > 0);
             if (totalValores) totalValores.textContent = `${total} valor(es)`;
@@ -730,12 +803,9 @@
             }
             
             const c = State.calculos;
+            const brutoTotal = c.ganhosApp + c.ganhosCampanha + c.gorjetas + c.portagens + c.taxasCancel;
             
-            if (State.chart) {
-                State.chart.destroy();
-            }
-            
-            if (c.safT === 0 && c.comissoes === 0) {
+            if (brutoTotal === 0 && c.comissoes === 0 && c.dac7ReceitaAnual === 0) {
                 canvas.style.display = 'none';
                 if (fallback) fallback.style.display = 'flex';
                 return;
@@ -745,26 +815,28 @@
             if (fallback) fallback.style.display = 'none';
             
             try {
+                if (State.chart) State.chart.destroy();
+                
                 const ctx = canvas.getContext('2d');
                 State.chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ['Bruto', 'Comissões', 'Líquido', 'Faturado', 'Discrep.'],
+                        labels: ['Bruto', 'Comissões', 'Líquido', 'DAC7', 'Faturado'],
                         datasets: [{
                             label: 'Valores (€)',
                             data: [
-                                c.brutoApp + c.ganhosCampanha + c.gorjetas + c.portagens,
+                                brutoTotal,
                                 c.comissoes,
                                 c.ganhosLiquidos,
-                                c.faturaTotal,
-                                Math.abs(c.ganhosLiquidosEsperados - c.ganhosLiquidos)
+                                c.dac7ReceitaAnual,
+                                c.faturaTotal
                             ],
                             backgroundColor: [
                                 'rgba(6, 182, 212, 0.8)',
                                 'rgba(245, 158, 11, 0.8)',
                                 'rgba(16, 185, 129, 0.8)',
                                 'rgba(139, 92, 246, 0.8)',
-                                'rgba(239, 68, 68, 0.8)'
+                                'rgba(236, 72, 153, 0.8)'
                             ],
                             borderWidth: 2,
                             borderRadius: 4
@@ -803,7 +875,7 @@
     const fiscalCalculator = new FiscalCalculator();
 
     // ============================================
-    // GESTÃO DE EVIDÊNCIAS - UPLOAD FUNCIONAL
+    // GESTÃO DE EVIDÊNCIAS - UPLOAD
     // ============================================
 
     class EvidenceManager {
@@ -852,6 +924,7 @@
 
             this.setupUploadZone('upload-faturas', 'input-faturas', 'fatura');
             this.setupUploadZone('upload-extratos', 'input-extratos', 'extrato');
+            this.setupUploadZone('upload-dac7', 'input-dac7', 'dac7');
 
             document.querySelectorAll('.evidence-item').forEach(item => {
                 item.addEventListener('click', () => this.abrir());
@@ -862,10 +935,7 @@
             const zone = document.getElementById(zoneId);
             const input = document.getElementById(inputId);
 
-            if (!zone || !input) {
-                console.warn(`Elementos não encontrados: ${zoneId} ou ${inputId}`);
-                return;
-            }
+            if (!zone || !input) return;
 
             zone.addEventListener('click', (e) => {
                 if (e.target !== input) {
@@ -877,8 +947,10 @@
                 if (e.target.files && e.target.files.length > 0) {
                     if (tipo === 'fatura') {
                         processarFaturas(e.target.files);
-                    } else {
+                    } else if (tipo === 'extrato') {
                         processarExtratos(e.target.files);
+                    } else if (tipo === 'dac7') {
+                        processarDAC7(e.target.files);
                     }
                     e.target.value = '';
                 }
@@ -908,25 +980,21 @@
                 if (files.length > 0) {
                     if (tipo === 'fatura') {
                         processarFaturas(files);
-                    } else {
+                    } else if (tipo === 'extrato') {
                         processarExtratos(files);
+                    } else if (tipo === 'dac7') {
+                        processarDAC7(files);
                     }
                 }
             });
         }
 
         toggle() {
-            if (this.isOpen) {
-                this.fechar();
-            } else {
-                this.abrir();
-            }
+            this.isOpen ? this.fechar() : this.abrir();
         }
 
         abrir() {
-            if (!this.modal) {
-                this.modal = document.getElementById('evidence-modal');
-            }
+            if (!this.modal) this.modal = document.getElementById('evidence-modal');
             if (!this.modal) return;
             this.modal.style.display = 'flex';
             this.isOpen = true;
@@ -944,13 +1012,15 @@
         atualizarEstatisticas() {
             const totalFaturas = State.evidencias.faturas.length;
             const totalExtratos = State.evidencias.extratos.length;
-            const totalFiles = totalFaturas + totalExtratos;
+            const totalDAC7 = State.evidencias.dac7.length;
+            const totalFiles = totalFaturas + totalExtratos + totalDAC7;
             
-            const valorFaturas = State.processados.faturas.reduce((acc, f) => acc + (f.valorPrincipal || 0), 0);
+            const valorFaturas = State.processados.faturas.reduce((acc, f) => acc + (f.valorTotal || 0), 0);
             const valorExtratos = State.processados.extratos.reduce((acc, e) => acc + (e.ganhosLiquidos || 0), 0);
+            const valorDAC7 = State.processados.dac7.reduce((acc, d) => acc + (d.receitaAnual || 0), 0);
 
             this.setText('modal-total-files', totalFiles);
-            this.setText('modal-total-values', formatarMoeda(valorFaturas + valorExtratos));
+            this.setText('modal-total-values', formatarMoeda(valorFaturas + valorExtratos + valorDAC7));
             
             this.setText('stats-faturas-files', totalFaturas);
             this.setText('stats-faturas-values', formatarMoeda(valorFaturas));
@@ -958,13 +1028,15 @@
             this.setText('stats-extratos-files', totalExtratos);
             this.setText('stats-extratos-values', formatarMoeda(valorExtratos));
             
+            this.setText('stats-dac7-files', totalDAC7);
+            this.setText('stats-dac7-values', formatarMoeda(valorDAC7));
+            
             this.setText('count-fat', totalFaturas);
             this.setText('count-ext', totalExtratos);
-            this.setText('total-evidencias', totalFiles);
-            
+            this.setText('count-dac7', totalDAC7);
             this.setText('count-ctrl', Math.min(totalFiles, 4));
             this.setText('count-saft', totalExtratos > 0 ? 1 : 0);
-            this.setText('count-dac7', totalExtratos > 0 ? 1 : 0);
+            this.setText('total-evidencias', totalFiles);
             
             this.renderizarListas();
         }
@@ -977,6 +1049,7 @@
         renderizarListas() {
             const listaFaturas = document.getElementById('lista-faturas');
             const listaExtratos = document.getElementById('lista-extratos');
+            const listaDAC7 = document.getElementById('lista-dac7');
             
             if (listaFaturas) {
                 listaFaturas.innerHTML = State.evidencias.faturas.map((f, i) => `
@@ -995,13 +1068,24 @@
                     </div>
                 `).join('');
             }
+            
+            if (listaDAC7) {
+                listaDAC7.innerHTML = State.evidencias.dac7.map((d, i) => `
+                    <div class="file-item">
+                        <span title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</span>
+                        <button onclick="window.removerDAC7(${i})" title="Remover">×</button>
+                    </div>
+                `).join('');
+            }
         }
 
         limparTudo() {
             State.evidencias.faturas = [];
             State.evidencias.extratos = [];
+            State.evidencias.dac7 = [];
             State.processados.faturas = [];
             State.processados.extratos = [];
+            State.processados.dac7 = [];
             this.atualizarEstatisticas();
             logger.log('Todas as evidências removidas', 'warning');
             resetarCalculos();
@@ -1026,7 +1110,7 @@
     const evidenceManager = new EvidenceManager();
 
     // ============================================
-    // FUNÇÕES GLOBAIS
+    // FUNÇÕES GLOBAIS DE REMOÇÃO
     // ============================================
 
     window.removerFatura = function(index) {
@@ -1048,6 +1132,20 @@
             logger.log(`Extrato removido: ${nome}`, 'warning');
         }
     };
+
+    window.removerDAC7 = function(index) {
+        if (index >= 0 && index < State.evidencias.dac7.length) {
+            const nome = State.evidencias.dac7[index].name;
+            State.evidencias.dac7.splice(index, 1);
+            State.processados.dac7.splice(index, 1);
+            evidenceManager.atualizarEstatisticas();
+            logger.log(`Relatório DAC7 removido: ${nome}`, 'warning');
+        }
+    };
+
+    // ============================================
+    // PROCESSAMENTO DE FICHEIROS
+    // ============================================
 
     async function processarFaturas(files) {
         const fileArray = Array.from(files);
@@ -1093,6 +1191,31 @@
             } catch (error) {
                 logger.log(`Erro ao processar extrato ${file.name}: ${error.message}`, 'error');
                 State.evidencias.extratos.pop();
+            }
+        }
+        
+        evidenceManager.atualizarEstatisticas();
+    }
+
+    async function processarDAC7(files) {
+        const fileArray = Array.from(files);
+        
+        for (const file of fileArray) {
+            const validacao = evidenceManager.validarArquivo(file);
+            if (!validacao.valido) {
+                logger.log(`DAC7 rejeitado: ${validacao.erro}`, 'error');
+                alert(`Erro: ${validacao.erro}`);
+                continue;
+            }
+            
+            State.evidencias.dac7.push(file);
+            
+            try {
+                const dados = await pdfProcessor.processarDAC7(file);
+                State.processados.dac7.push(dados);
+            } catch (error) {
+                logger.log(`Erro ao processar DAC7 ${file.name}: ${error.message}`, 'error');
+                State.evidencias.dac7.pop();
             }
         }
         
@@ -1199,7 +1322,7 @@
         if (alertasContainer) alertasContainer.innerHTML = '';
         State.alertas = [];
         
-        if (State.processados.extratos.length === 0 && State.processados.faturas.length === 0) {
+        if (State.processados.extratos.length === 0 && State.processados.faturas.length === 0 && State.processados.dac7.length === 0) {
             logger.log('Perícia abortada: sem evidências', 'warning');
             alert('Adicione evidências antes de executar a perícia');
             return;
@@ -1263,7 +1386,8 @@
             alertas: State.alertas,
             evidencias: {
                 faturas: State.processados.faturas,
-                extratos: State.processados.extratos
+                extratos: State.processados.extratos,
+                dac7: State.processados.dac7
             },
             timestamp: new Date().toISOString(),
             versao: CONFIG.VERSAO
@@ -1293,27 +1417,40 @@
 
     function resetarCalculos() {
         State.calculos = {
-            safT: 0, dac7: 0, brutoApp: 0, comissoes: 0,
-            ganhosLiquidos: 0, ganhosLiquidosEsperados: 0,
-            ganhosCampanha: 0, gorjetas: 0, portagens: 0,
-            taxasCancel: 0, faturaTotal: 0, faturaComissao: 0
+            ganhosApp: 0, ganhosCampanha: 0, gorjetas: 0, portagens: 0, taxasCancel: 0,
+            comissoes: 0, ganhosLiquidos: 0, brutoTotal: 0,
+            faturaNumero: '---', faturaTotal: 0, faturaPeriodo: '',
+            dac7ReceitaAnual: 0, dac7Comissoes: 0, dac7Servicos: 0,
+            dac7Ganhos1T: 0, dac7Comissoes1T: 0, dac7Impostos1T: 0, dac7Servicos1T: 0,
+            dac7Ganhos2T: 0, dac7Comissoes2T: 0, dac7Impostos2T: 0, dac7Servicos2T: 0,
+            dac7Ganhos3T: 0, dac7Comissoes3T: 0, dac7Impostos3T: 0, dac7Servicos3T: 0,
+            dac7Ganhos4T: 0, dac7Comissoes4T: 0, dac7Impostos4T: 0, dac7Servicos4T: 0
         };
         
         const ids = [
             'ganhos-app', 'comissoes-total', 'dac7-anual', 'total-saft',
-            'saft-liquido', 'saft-total', 'ext-ganhos-app', 'ext-ganhos-campanha',
-            'ext-gorjetas', 'ext-portagens', 'ext-taxas-cancel', 'ext-comissoes',
-            'ext-ganhos-liquidos', 'dac7-valor', 'fat-total', 'fat-autoliquidacao',
+            'ext-ganhos-app', 'ext-ganhos-campanha', 'ext-gorjetas', 'ext-portagens',
+            'ext-taxas-cancel', 'ext-comissoes', 'ext-ganhos-liquidos',
+            'fat-numero', 'fat-total', 'fat-periodo',
+            'dac7-valor', 'dac7-comissoes', 'dac7-servicos',
             'tri-bruto', 'tri-comissoes', 'tri-liquido', 'tri-faturado'
         ];
         
         ids.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.textContent = '0,00 €';
+            if (el && id !== 'fat-numero' && id !== 'fat-periodo') {
+                el.textContent = '0,00 €';
+            } else if (el && id === 'fat-numero') {
+                el.textContent = '---';
+            } else if (el && id === 'fat-periodo') {
+                el.textContent = '---';
+            }
         });
         
-        const fatNumero = document.getElementById('fat-numero');
-        if (fatNumero) fatNumero.textContent = '---';
+        const dac7Note = document.getElementById('dac7-note');
+        if (dac7Note) {
+            dac7Note.innerHTML = 'Reporting nos termos do Art. 6.º DAC7';
+        }
         
         if (State.chart) {
             State.chart.destroy();
@@ -1329,6 +1466,7 @@
         const loading = document.getElementById('loading-screen');
         const app = document.getElementById('app-container');
         
+        // Simular carregamento e remover barreira
         setTimeout(() => {
             if (loading) {
                 loading.classList.add('hidden');
@@ -1339,7 +1477,7 @@
                 }, 500);
             }
             if (app) app.style.display = 'block';
-        }, 500);
+        }, 1500); // Tempo para visualizar a barreira
 
         const sessionIdEl = document.getElementById('session-id');
         if (sessionIdEl) sessionIdEl.textContent = State.sessao.id;
@@ -1376,7 +1514,8 @@
             pdfProcessor,
             fiscalCalculator,
             processarFaturas,
-            processarExtratos
+            processarExtratos,
+            processarDAC7
         };
     }
 
