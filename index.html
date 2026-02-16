@@ -40,6 +40,7 @@
             bottom: 0;
             background: var(--bg-primary);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 9999;
@@ -63,14 +64,84 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .demo-barreira {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 2rem;
+        }
+        
+        .demo-barreira.hidden {
+            display: none;
+        }
+        
+        .demo-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 16px;
+            padding: 3rem;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 50px var(--accent-cyan-glow);
+        }
+        
+        .demo-content h2 {
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .demo-content p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .demo-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), #8b5cf6);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+        
+        .demo-btn:hover {
+            transform: translateY(-2px);
+        }
     </style>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- LOADING SCREEN -->
     <div class="loading-screen" id="loading-screen">
         <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: var(--text-secondary);">Inicializando sistema forense...</p>
     </div>
     
+    <!-- DEMO BARREIRA -->
+    <div class="demo-barreira" id="demo-barreira">
+        <div class="demo-content">
+            <h2>⚠️ AMBIENTE DE DEMONSTRAÇÃO</h2>
+            <p>Este é um sistema de auditoria digital forense em modo de demonstração. Todos os dados apresentados são simulados para fins de teste e validação da interface.</p>
+            <p style="font-size: 0.875rem; color: var(--accent-cyan); margin-bottom: 2rem;">Versão 12.8 CSI MIAMI | ISO/IEC 27037 Compliant</p>
+            <button class="demo-btn" id="btn-entrar-demo">ENTRAR NO SISTEMA</button>
+        </div>
+    </div>
+    
+    <!-- APP CONTAINER -->
     <div class="app-container" id="app-container" style="display: none;">
         <!-- HEADER -->
         <header class="main-header">
@@ -105,7 +176,7 @@
                     <h3>IDENTIFICAÇÃO DO SUJEITO</h3>
                     <div class="form-group">
                         <label for="subject-name">NOME / EMPRESA</label>
-                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa">
+                        <input type="text" id="subject-name" value="Momento Eficaz Unip, Lda" placeholder="Nome ou Empresa">
                     </div>
                     <div class="form-group">
                         <label for="subject-nif">NIF</label>
@@ -157,23 +228,23 @@
                         </button>
                     </h3>
                     <div class="evidence-summary">
-                        <div class="evidence-item" data-tipo="ctrl">
+                        <div class="evidence-item" data-tipo="ctrl" title="Controlo de Autenticidade (CSV)">
                             <span class="count" id="count-ctrl">0</span>
                             <span class="label">CTRL</span>
                         </div>
-                        <div class="evidence-item" data-tipo="saft">
+                        <div class="evidence-item" data-tipo="saft" title="SAF-T (MLX/SCV)">
                             <span class="count" id="count-saft">0</span>
                             <span class="label">SAF-T</span>
                         </div>
-                        <div class="evidence-item" data-tipo="fat">
+                        <div class="evidence-item" data-tipo="fat" title="Faturas (PDF)">
                             <span class="count" id="count-fat">0</span>
                             <span class="label">FAT</span>
                         </div>
-                        <div class="evidence-item" data-tipo="ext">
+                        <div class="evidence-item" data-tipo="ext" title="Extratos (PDF)">
                             <span class="count" id="count-ext">0</span>
                             <span class="label">EXT</span>
                         </div>
-                        <div class="evidence-item" data-tipo="dac7">
+                        <div class="evidence-item" data-tipo="dac7" title="DAC7 (E-mail/PDF)">
                             <span class="count" id="count-dac7">0</span>
                             <span class="label">DAC7</span>
                         </div>
@@ -423,12 +494,42 @@
                         <span>Valores: <strong id="modal-total-values">0,00 €</strong></span>
                     </div>
 
-                    <!-- FATURAS BOLT -->
+                    <!-- CONTROLO DE AUTENTICIDADE (CSV) -->
+                    <div class="evidence-category">
+                        <h4>CONTROLO DE AUTENTICIDADE (CSV)</h4>
+                        <div class="upload-zone" id="upload-csv">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS CSV AQUI</span>
+                            <input type="file" id="input-csv" multiple accept=".csv,text/csv">
+                        </div>
+                        <div class="file-list" id="lista-csv"></div>
+                        <div class="category-stats">
+                            <span>Ficheiros: <strong id="stats-csv-files">0</strong></span>
+                            <span>Registos: <strong id="stats-csv-records">0</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- SAF-T (MLX/SCV) -->
+                    <div class="evidence-category">
+                        <h4>SAF-T (MLX/SCV)</h4>
+                        <div class="upload-zone" id="upload-saft">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS XML AQUI</span>
+                            <input type="file" id="input-saft" multiple accept=".xml,text/xml,application/xml">
+                        </div>
+                        <div class="file-list" id="lista-saft"></div>
+                        <div class="category-stats">
+                            <span>Ficheiros: <strong id="stats-saft-files">0</strong></span>
+                            <span>Valores: <strong id="stats-saft-values">0,00 €</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- FATURAS BOLT (PDF) -->
                     <div class="evidence-category">
                         <h4>FATURAS BOLT (PDF)</h4>
                         <div class="upload-zone" id="upload-faturas">
                             <span class="icon-upload">⬆</span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS PDF AQUI</span>
                             <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf">
                         </div>
                         <div class="file-list" id="lista-faturas"></div>
@@ -438,18 +539,33 @@
                         </div>
                     </div>
 
-                    <!-- EXTRATOS BOLT -->
+                    <!-- EXTRATOS BOLT (PDF) -->
                     <div class="evidence-category">
                         <h4>EXTRATOS BOLT (PDF)</h4>
                         <div class="upload-zone" id="upload-extratos">
                             <span class="icon-upload">⬆</span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS PDF AQUI</span>
                             <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf">
                         </div>
                         <div class="file-list" id="lista-extratos"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-extratos-files">0</strong></span>
                             <span>Valores: <strong id="stats-extratos-values">0,00 €</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- DAC7 (E-mail/PDF) -->
+                    <div class="evidence-category">
+                        <h4>DAC7 (E-mail/PDF)</h4>
+                        <div class="upload-zone" id="upload-dac7">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS PDF/E-MAIL AQUI</span>
+                            <input type="file" id="input-dac7" multiple accept=".pdf,.eml,.msg,application/pdf">
+                        </div>
+                        <div class="file-list" id="lista-dac7"></div>
+                        <div class="category-stats">
+                            <span>Ficheiros: <strong id="stats-dac7-files">0</strong></span>
+                            <span>Valores: <strong id="stats-dac7-values">0,00 €</strong></span>
                         </div>
                     </div>
                 </div>
