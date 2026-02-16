@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Forense - Sistema de Auditoria Digital e Análise Forense Fiscal v12.8 CSI MIAMI">
-    <title>VDC FORENSE - v12.8 CSI MIAMI</title>
+    <meta name="description" content="VDC Forense - Sistema de Auditoria Digital e Análise Forense Fiscal v12.9 FINAL">
+    <title>VDC FORENSE - v12.9 FINAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -53,8 +53,8 @@
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h1>VDC FORENSE <span class="version">v12.8</span></h1>
-                    <p>ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</p>
+                    <h1>VDC FORENSE <span class="version">v12.9</span></h1>
+                    <p>ISO/IEC 27037 | NIST SP 800-86 | FINAL EDITION</p>
                 </div>
             </div>
             <div class="session-info">
@@ -72,11 +72,11 @@
                     <h3><span class="icon-user"></span> IDENTIFICAÇÃO DO SUJEITO</h3>
                     <div class="form-group">
                         <label for="subject-name">NOME / EMPRESA</label>
-                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa">
+                        <input type="text" id="subject-name" value="Momento Eficaz Unip, Lda" placeholder="Nome ou Empresa">
                     </div>
                     <div class="form-group">
                         <label for="subject-nif">NIF</label>
-                        <input type="text" id="subject-nif" value="123456789" placeholder="NIF" maxlength="9">
+                        <input type="text" id="subject-nif" value="517905450" placeholder="NIF" maxlength="9">
                     </div>
                     <button class="btn-validate" id="btn-validar" type="button">
                         <span class="icon-check"></span> VALIDAR
@@ -220,28 +220,32 @@
                         <h4><span class="icon-file-alt"></span> EXTRATOS BOLT</h4>
                         <div class="detail-content">
                             <div class="detail-row">
-                                <span>GANHOS NA APP</span>
-                                <strong class="positive" id="ext-ganhos-app">0,00 €</strong>
+                                <span>TAXA DE VIAGEM</span>
+                                <strong class="positive" id="ext-taxa-viagem">0,00 €</strong>
                             </div>
                             <div class="detail-row">
-                                <span>GANHOS CAMPANHA</span>
-                                <strong id="ext-ganhos-campanha">0,00 €</strong>
-                            </div>
-                            <div class="detail-row">
-                                <span>GORJETAS</span>
-                                <strong id="ext-gorjetas">0,00 €</strong>
+                                <span>TAXA DE CANCELAMENTO</span>
+                                <strong id="ext-taxa-cancel">0,00 €</strong>
                             </div>
                             <div class="detail-row">
                                 <span>PORTAGENS</span>
                                 <strong id="ext-portagens">0,00 €</strong>
                             </div>
+                            <div class="detail-row">
+                                <span>GORJETAS</span>
+                                <strong id="ext-gorjetas">0,00 €</strong>
+                            </div>
                             <div class="detail-row negative">
-                                <span>TAXAS CANCEL.</span>
-                                <strong id="ext-taxas-cancel">0,00 €</strong>
+                                <span>COMISSÃO BOLT</span>
+                                <strong id="ext-comissao-bolt">0,00 €</strong>
+                            </div>
+                            <div class="detail-row negative">
+                                <span>OUTRAS COMISSÕES</span>
+                                <strong id="ext-outras-comissoes">0,00 €</strong>
                             </div>
                             <div class="detail-row">
-                                <span>COMISSÕES</span>
-                                <strong id="ext-comissoes">0,00 €</strong>
+                                <span>IVA LIQUIDADO</span>
+                                <strong id="ext-iva">0,00 €</strong>
                             </div>
                             <div class="detail-row total">
                                 <span>GANHOS LÍQUIDOS</span>
@@ -272,16 +276,16 @@
                     <h4><span class="icon-invoice"></span> FATURAS BOLT</h4>
                     <div class="invoice-grid">
                         <div class="invoice-item">
-                            <span class="label">N.º FATURA</span>
+                            <span class="label">N.º FATURAS</span>
                             <strong id="fat-numero">---</strong>
                         </div>
                         <div class="invoice-item">
-                            <span class="label">TOTAL</span>
+                            <span class="label">TOTAL FATURADO</span>
                             <strong class="positive" id="fat-total">0,00 €</strong>
                         </div>
                         <div class="invoice-item autoliquidacao">
                             <span class="label">AUTOLIQUIDAÇÃO</span>
-                            <strong id="fat-autoliquidacao">0,00 €</strong>
+                            <strong id="fat-autoliquidacao">SIM</strong>
                             <small>IVA - Autoliquidação</small>
                         </div>
                     </div>
@@ -305,7 +309,7 @@
                         <h4>TRIANGULAÇÃO FINANCEIRA</h4>
                         <div class="triangulacao-grid">
                             <div class="tri-item">
-                                <span>BRUTO APP</span>
+                                <span>BRUTO EXTRATOS</span>
                                 <strong id="tri-bruto">0,00 €</strong>
                             </div>
                             <div class="tri-item">
@@ -355,7 +359,7 @@
                         <span class="hash-value" id="hash-value">PENDENTE</span>
                     </div>
                     <div class="footer-info">
-                        VDC Systems © 2024/2026 | CSI MIAMI EDITION
+                        VDC Systems © 2024/2026 | FINAL EDITION
                     </div>
                 </section>
             </main>
@@ -375,29 +379,29 @@
                     
                     <div class="evidence-category">
                         <h4><span class="icon-file-pdf"></span> FATURAS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-faturas">
+                        <div class="upload-zone" id="upload-faturas" data-tipo="fatura">
                             <span class="icon-upload"></span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <span>CLIQUE OU ARRASTE FATURAS AQUI (ex: PT1124-91599.pdf)</span>
                             <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf" style="display: none;">
                         </div>
                         <div class="file-list" id="lista-faturas"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-faturas-files">0</strong></span>
-                            <span>Valores: <strong id="stats-faturas-values">0,00 €</strong></span>
+                            <span>Total: <strong id="stats-faturas-values">0,00 €</strong></span>
                         </div>
                     </div>
 
                     <div class="evidence-category">
-                        <h4><span class="icon-file-pdf"></span> EXTRATOS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-extratos">
+                        <h4><span class="icon-file-alt"></span> EXTRATOS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-extratos" data-tipo="extrato">
                             <span class="icon-upload"></span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <span>CLIQUE OU ARRASTE EXTRATOS AQUI (ex: Ganhos da Empresa...)</span>
                             <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf" style="display: none;">
                         </div>
                         <div class="file-list" id="lista-extratos"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-extratos-files">0</strong></span>
-                            <span>Valores: <strong id="stats-extratos-values">0,00 €</strong></span>
+                            <span>Ganhos: <strong id="stats-extratos-values">0,00 €</strong></span>
                         </div>
                     </div>
                 </div>
