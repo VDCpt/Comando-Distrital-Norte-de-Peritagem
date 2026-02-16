@@ -32,7 +32,7 @@
         <div class="laser-h-second"></div>
         <div class="laser-v-second"></div>
 
-        <div class="splash-content" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);">
+        <div class="splash-content">
             <div class="splash-logo">
                 <i class="fas fa-fingerprint"></i>
             </div>
@@ -40,7 +40,7 @@
             <h2>VDC SYSTEMS INTERNATIONAL</h2>
             <p class="splash-subtitle">MÓDULO DE INVESTIGAÇÃO DIGITAL · ISO/IEC 27037</p>
 
-            <div class="splash-warning-box" style="background: rgba(245, 158, 11, 0.15);">
+            <div class="splash-warning-box">
                 <p><i class="fas fa-gavel"></i> AVISO JUDICIAL</p>
                 <small>Este sistema destina-se exclusivamente a uso pericial autorizado. O acesso não autorizado constitui crime previsto no art. 103.º e 104.º do RGIT (Lei 15/2001).</small>
             </div>
@@ -247,7 +247,6 @@
                     </div>
                 </div>
 
-                <!-- RESULTADOS DA EXTRAÇÃO - IDs Corrigidos -->
                 <div class="extraction-results">
                     <h4><i class="fas fa-microscope"></i> RESULTADOS DA EXTRAÇÃO FORENSE</h4>
                     <div class="results-grid">
@@ -321,8 +320,7 @@
                                 <span id="stmtLiquidoValue" class="module-value-amount highlight">0,00 €</span>
                             </div>
                         </div>
-                        <!-- Estatísticas dentro da box -->
-                        <div class="module-stats" style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; font-size: 0.7rem; color: var(--text-tertiary);">
+                        <div class="module-stats">
                             <span><i class="fas fa-file-pdf"></i> PDFs: <span id="moduleStatsPdf">0</span></span>
                             <span><i class="fas fa-euro-sign"></i> Valores: <span id="moduleStatsValues">0</span></span>
                             <span><i class="fas fa-bolt"></i> Bolt: <span id="moduleStatsBolt">0</span></span>
@@ -370,9 +368,9 @@
                     </div>
                 </div>
 
-                <div class="invoice-module" id="moduleInvoice" style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <div class="invoice-module" id="moduleInvoice">
                     <h4><i class="fas fa-file-invoice"></i> MÓDULO FATURAS BOLT</h4>
-                    <div class="invoice-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="invoice-grid">
                         <div class="invoice-item">
                             <span class="invoice-label">N.º Fatura</span>
                             <span id="invoiceNumero" class="invoice-value">---</span>
@@ -484,7 +482,7 @@
                 <div class="console-section">
                     <div class="console-header">
                         <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA DIGITAL</h3>
-                        <button id="clearConsoleBtn2" class="console-clear-btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-tertiary); padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                        <button id="clearConsoleBtn2" class="console-clear-btn">
                             <i class="fas fa-trash-alt"></i> LIMPAR
                         </button>
                     </div>
@@ -532,8 +530,7 @@
                         </button>
                         <input type="file" id="saftFileModal" class="file-input-modal" accept=".xml,.csv,.txt" multiple>
                         <div id="saftFileListModal" class="file-list-modal"></div>
-                        <!-- Estatísticas dentro da box -->
-                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                        <div class="box-stats">
                             <span>📄 PDFs: <span id="boxSaftPdf">0</span></span>
                             <span>💰 Valores: <span id="boxSaftValues">0</span></span>
                         </div>
@@ -546,8 +543,7 @@
                         </button>
                         <input type="file" id="invoiceFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="invoicesFileListModal" class="file-list-modal"></div>
-                        <!-- Estatísticas dentro da box -->
-                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                        <div class="box-stats">
                             <span>📄 PDFs: <span id="boxInvoicePdf">0</span></span>
                             <span>💰 Valores: <span id="boxInvoiceValues">0</span></span>
                         </div>
@@ -560,8 +556,7 @@
                         </button>
                         <input type="file" id="statementFileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="statementsFileListModal" class="file-list-modal"></div>
-                        <!-- Estatísticas dentro da box -->
-                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                        <div class="box-stats">
                             <span>📄 PDFs: <span id="boxStatementPdf">0</span></span>
                             <span>💰 Valores: <span id="boxStatementValues">0</span></span>
                         </div>
@@ -574,14 +569,11 @@
                         </button>
                         <input type="file" id="dac7FileModal" class="file-input-modal" accept=".pdf" multiple>
                         <div id="dac7FileListModal" class="file-list-modal"></div>
-                        <!-- Estatísticas dentro da box -->
-                        <div class="box-stats" style="margin-top: 0.5rem; display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-tertiary);">
+                        <div class="box-stats">
                             <span>📄 PDFs: <span id="boxDac7Pdf">0</span></span>
                             <span>💰 Valores: <span id="boxDac7Values">0</span></span>
                         </div>
                     </div>
-
-                    <!-- Estatísticas gerais removidas daqui - agora estão dentro de cada box -->
 
                 </div>
             </div>
