@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Critical CSS Inline para garantir renderização imediata */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Inter', sans-serif; 
@@ -41,17 +40,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading-screen" id="loading-screen">
         <div class="spinner"></div>
     </div>
 
     <div class="app-container" id="app-container" style="display: none;">
-        <!-- Header -->
-        <header class="main-header" role="banner">
+        <header class="main-header">
             <div class="brand">
-                <div class="logo" aria-label="Logo VDC Forense">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                 </div>
@@ -61,7 +58,7 @@
                 </div>
             </div>
             <div class="session-info">
-                <div class="badge simulated" role="status">CASO SIMULADO</div>
+                <div class="badge simulated">CASO SIMULADO</div>
                 <div class="session-id">
                     <span>SESSÃO: <span id="session-id">CARREGANDO...</span></span>
                     <span id="session-time">--/--/---- | --:--:--</span>
@@ -70,31 +67,28 @@
         </header>
 
         <div class="main-layout">
-            <!-- Sidebar -->
-            <aside class="sidebar" role="complementary">
-                <!-- Identificação do Sujeito -->
-                <section class="panel subject-panel" aria-labelledby="subject-heading">
-                    <h3 id="subject-heading"><span class="icon-user" aria-hidden="true"></span> IDENTIFICAÇÃO DO SUJEITO</h3>
+            <aside class="sidebar">
+                <section class="panel subject-panel">
+                    <h3><span class="icon-user"></span> IDENTIFICAÇÃO DO SUJEITO</h3>
                     <div class="form-group">
                         <label for="subject-name">NOME / EMPRESA</label>
-                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa" autocomplete="organization">
+                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa">
                     </div>
                     <div class="form-group">
                         <label for="subject-nif">NIF</label>
-                        <input type="text" id="subject-nif" value="123456789" placeholder="NIF" maxlength="9" pattern="[0-9]{9}" inputmode="numeric">
+                        <input type="text" id="subject-nif" value="123456789" placeholder="NIF" maxlength="9">
                     </div>
                     <button class="btn-validate" id="btn-validar" type="button">
-                        <span class="icon-check" aria-hidden="true"></span> VALIDAR
+                        <span class="icon-check"></span> VALIDAR
                     </button>
-                    <div class="validation-status" id="validation-status" role="status">
-                        <span class="status-dot" aria-hidden="true"></span>
+                    <div class="validation-status" id="validation-status">
+                        <span class="status-dot"></span>
                         <span>Aguardando validação...</span>
                     </div>
                 </section>
 
-                <!-- Parâmetros -->
-                <section class="panel parameters-panel" aria-labelledby="params-heading">
-                    <h3 id="params-heading"><span class="icon-settings" aria-hidden="true"></span> PARÂMETROS</h3>
+                <section class="panel parameters-panel">
+                    <h3><span class="icon-settings"></span> PARÂMETROS</h3>
                     <div class="form-group">
                         <label for="ano-fiscal">ANO FISCAL</label>
                         <select id="ano-fiscal">
@@ -120,74 +114,68 @@
                     </div>
                 </section>
 
-                <!-- Gestão de Evidências -->
-                <section class="panel evidence-panel" aria-labelledby="evidence-heading">
-                    <h3 id="evidence-heading">
-                        <button class="btn-toggle-evidence" id="btn-toggle-evidence" aria-expanded="false" aria-controls="evidence-modal">
-                            <span class="icon-folder" aria-hidden="true"></span> GESTÃO DE EVIDÊNCIAS
+                <section class="panel evidence-panel">
+                    <h3>
+                        <button class="btn-toggle-evidence" id="btn-toggle-evidence" type="button">
+                            <span class="icon-folder"></span> GESTÃO DE EVIDÊNCIAS
                             <span class="badge-count" id="total-evidencias">0</span>
                         </button>
                     </h3>
-                    <div class="evidence-summary" role="list" aria-label="Resumo de evidências">
-                        <div class="evidence-item" role="listitem" data-tipo="ctrl">
+                    <div class="evidence-summary">
+                        <div class="evidence-item" data-tipo="ctrl">
                             <span class="count" id="count-ctrl">0</span>
                             <span class="label">CTRL</span>
                         </div>
-                        <div class="evidence-item" role="listitem" data-tipo="saft">
+                        <div class="evidence-item" data-tipo="saft">
                             <span class="count" id="count-saft">0</span>
                             <span class="label">SAF-T</span>
                         </div>
-                        <div class="evidence-item" role="listitem" data-tipo="fat">
+                        <div class="evidence-item" data-tipo="fat">
                             <span class="count" id="count-fat">0</span>
                             <span class="label">FAT</span>
                         </div>
-                        <div class="evidence-item" role="listitem" data-tipo="ext">
+                        <div class="evidence-item" data-tipo="ext">
                             <span class="count" id="count-ext">0</span>
                             <span class="label">EXT</span>
                         </div>
-                        <div class="evidence-item" role="listitem" data-tipo="dac7">
+                        <div class="evidence-item" data-tipo="dac7">
                             <span class="count" id="count-dac7">0</span>
                             <span class="label">DAC7</span>
                         </div>
                     </div>
                     <div class="values-indicator">
-                        <span class="dot" id="values-dot" aria-hidden="true"></span>
+                        <span class="dot" id="values-dot"></span>
                         <span id="total-valores">0 valor(es)</span>
                     </div>
                 </section>
 
-                <!-- Ações -->
                 <section class="panel actions-panel">
                     <button class="btn-primary" id="btn-executar" type="button">
-                        <span class="icon-search" aria-hidden="true"></span> EXECUTAR PERÍCIA
+                        <span class="icon-search"></span> EXECUTAR PERÍCIA
                     </button>
                     <button class="btn-secondary" id="btn-export-pdf" type="button">
-                        <span class="icon-download" aria-hidden="true"></span> EXPORTAR PDF
+                        <span class="icon-download"></span> EXPORTAR PDF
                     </button>
                 </section>
             </aside>
 
-            <!-- Main Content -->
-            <main class="content" role="main">
-                <!-- Toolbar -->
-                <div class="toolbar" role="toolbar" aria-label="Ferramentas">
+            <main class="content">
+                <div class="toolbar">
                     <button class="btn-tool" id="btn-export-json" type="button">
-                        <span aria-hidden="true">{ }</span> EXPORTAR JSON
+                        <span>{ }</span> EXPORTAR JSON
                     </button>
                     <button class="btn-tool" id="btn-reiniciar" type="button">
-                        <span class="icon-refresh" aria-hidden="true"></span> REINICIAR
+                        <span class="icon-refresh"></span> REINICIAR
                     </button>
                     <button class="btn-tool" id="btn-limpar" type="button">
-                        <span class="icon-trash" aria-hidden="true"></span> LIMPAR
+                        <span class="icon-trash"></span> LIMPAR
                     </button>
                 </div>
 
-                <!-- Alertas de Validação -->
-                <div id="alertas-container" class="alertas-container" role="alert" aria-live="polite"></div>
+                <div id="alertas-container" class="alertas-container"></div>
 
-                <!-- Resultados Forenses -->
-                <section class="results-section" aria-labelledby="results-heading">
-                    <h3 id="results-heading"><span class="icon-chart" aria-hidden="true"></span> RESULTADOS FORENSES</h3>
+                <section class="results-section">
+                    <h3><span class="icon-chart"></span> RESULTADOS FORENSES</h3>
                     <div class="metrics-grid">
                         <div class="metric-card">
                             <span class="label">GANHOS APP</span>
@@ -208,11 +196,9 @@
                     </div>
                 </section>
 
-                <!-- Detalhamento -->
                 <div class="details-grid">
-                    <!-- SAF-T -->
-                    <section class="detail-card" aria-labelledby="saft-heading">
-                        <h4 id="saft-heading"><span class="icon-file" aria-hidden="true"></span> SAF-T (PT)</h4>
+                    <section class="detail-card">
+                        <h4><span class="icon-file"></span> SAF-T (PT)</h4>
                         <div class="detail-content">
                             <div class="detail-row">
                                 <span>VALOR LÍQUIDO</span>
@@ -230,9 +216,8 @@
                         </div>
                     </section>
 
-                    <!-- Extratos Bolt -->
-                    <section class="detail-card" aria-labelledby="extratos-heading">
-                        <h4 id="extratos-heading"><span class="icon-file-alt" aria-hidden="true"></span> EXTRATOS BOLT</h4>
+                    <section class="detail-card">
+                        <h4><span class="icon-file-alt"></span> EXTRATOS BOLT</h4>
                         <div class="detail-content">
                             <div class="detail-row">
                                 <span>GANHOS NA APP</span>
@@ -265,9 +250,8 @@
                         </div>
                     </section>
 
-                    <!-- DAC7 -->
-                    <section class="detail-card dac7-card" aria-labelledby="dac7-heading">
-                        <h4 id="dac7-heading"><span class="icon-globe" aria-hidden="true"></span> DAC7</h4>
+                    <section class="detail-card dac7-card">
+                        <h4><span class="icon-globe"></span> DAC7</h4>
                         <div class="detail-content">
                             <div class="dac7-info">
                                 <span class="dac7-label">REPORTING ANUAL</span>
@@ -284,9 +268,8 @@
                     </section>
                 </div>
 
-                <!-- Faturas Bolt -->
-                <section class="invoices-section" aria-labelledby="faturas-heading">
-                    <h4 id="faturas-heading"><span class="icon-invoice" aria-hidden="true"></span> FATURAS BOLT</h4>
+                <section class="invoices-section">
+                    <h4><span class="icon-invoice"></span> FATURAS BOLT</h4>
                     <div class="invoice-grid">
                         <div class="invoice-item">
                             <span class="label">N.º FATURA</span>
@@ -304,15 +287,14 @@
                     </div>
                 </section>
 
-                <!-- Veredicto Fiscal -->
-                <section class="veredicto-section" id="veredicto-section" aria-labelledby="veredicto-heading" style="display: none;">
+                <section class="veredicto-section" id="veredicto-section" style="display: none;">
                     <div class="veredicto-header" id="veredicto-header">
-                        <h2 id="veredicto-heading">VEREDICTO FISCAL</h2>
+                        <h2>VEREDICTO FISCAL</h2>
                         <div class="veredicto-status" id="veredicto-status">NORMAL</div>
                         <div class="veredicto-desvio" id="veredicto-desvio">Desvio: 0%</div>
                     </div>
-                    <div class="anomalia-critica" id="anomalia-critica" role="alert" style="display: none;">
-                        <span class="icon-warning" aria-hidden="true"></span>
+                    <div class="anomalia-critica" id="anomalia-critica" style="display: none;">
+                        <span class="icon-warning"></span>
                         <div>
                             <strong>ANOMALIA CRÍTICA</strong>
                             <p id="anomalia-texto">Indício de fraude fiscal</p>
@@ -346,48 +328,44 @@
                     </div>
                 </section>
 
-                <!-- Análise Gráfica -->
-                <section class="chart-section" aria-labelledby="chart-heading">
-                    <h4 id="chart-heading"><span class="icon-chart-bar" aria-hidden="true"></span> ANÁLISE GRÁFICA</h4>
+                <section class="chart-section">
+                    <h4><span class="icon-chart-bar"></span> ANÁLISE GRÁFICA</h4>
                     <div class="chart-container">
-                        <canvas id="analiseGrafica" aria-label="Gráfico de análise financeira"></canvas>
+                        <canvas id="analiseGrafica"></canvas>
                         <div id="chart-fallback" class="chart-fallback" style="display: none;">
                             <p>Dados insuficientes para gerar gráfico</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Log Forense -->
-                <section class="log-section" aria-labelledby="log-heading">
-                    <h4 id="log-heading"><span class="icon-terminal" aria-hidden="true"></span> LOG FORENSE</h4>
-                    <div class="log-container" id="log-container" role="log" aria-live="polite" aria-atomic="false">
+                <section class="log-section">
+                    <h4><span class="icon-terminal"></span> LOG FORENSE</h4>
+                    <div class="log-container" id="log-container">
                         <div class="log-entry">
                             <span class="timestamp">[--:--:--]</span>
-                            <span class="icon info" aria-hidden="true">ℹ</span>
+                            <span class="icon info">ℹ</span>
                             <span class="message">Sistema inicializado. Aguardando evidências...</span>
                         </div>
                     </div>
                 </section>
 
-                <!-- Hash SHA-256 -->
-                <section class="hash-section" aria-label="Hash de integridade">
+                <section class="hash-section">
                     <div class="hash-display">
                         <span class="hash-label">HASH SHA-256</span>
                         <span class="hash-value" id="hash-value">PENDENTE</span>
                     </div>
                     <div class="footer-info">
-                        VDC Systems © 2024/2026 | CSI MIAMI EDITION | <span id="build-info">BUILD: PROD</span>
+                        VDC Systems © 2024/2026 | CSI MIAMI EDITION
                     </div>
                 </section>
             </main>
         </div>
 
-        <!-- Modal Gestão de Evidências -->
-        <div class="modal-overlay" id="evidence-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display: none;">
+        <div class="modal-overlay" id="evidence-modal" style="display: none;">
             <div class="modal evidence-manager">
                 <div class="modal-header">
-                    <h3 id="modal-title"><span class="icon-folder-open" aria-hidden="true"></span> GESTÃO DE EVIDÊNCIAS</h3>
-                    <button class="btn-close" id="btn-close-modal" aria-label="Fechar modal" type="button">×</button>
+                    <h3><span class="icon-folder-open"></span> GESTÃO DE EVIDÊNCIAS</h3>
+                    <button class="btn-close" id="btn-close-modal" type="button" aria-label="Fechar">×</button>
                 </div>
                 <div class="modal-body">
                     <div class="evidence-stats">
@@ -395,30 +373,28 @@
                         <span>Valores: <strong id="modal-total-values">0,00 €</strong></span>
                     </div>
                     
-                    <!-- Faturas Bolt -->
                     <div class="evidence-category">
-                        <h4><span class="icon-file-pdf" aria-hidden="true"></span> FATURAS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-faturas" role="button" tabindex="0" aria-label="Selecionar faturas PDF">
-                            <span class="icon-upload" aria-hidden="true"></span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS</span>
-                            <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf" aria-label="Selecionar ficheiros de faturas" style="display: none;">
+                        <h4><span class="icon-file-pdf"></span> FATURAS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-faturas">
+                            <span class="icon-upload"></span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf" style="display: none;">
                         </div>
-                        <div class="file-list" id="lista-faturas" role="list" aria-label="Lista de faturas"></div>
+                        <div class="file-list" id="lista-faturas"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-faturas-files">0</strong></span>
                             <span>Valores: <strong id="stats-faturas-values">0,00 €</strong></span>
                         </div>
                     </div>
 
-                    <!-- Extratos Bolt -->
                     <div class="evidence-category">
-                        <h4><span class="icon-file-pdf" aria-hidden="true"></span> EXTRATOS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-extratos" role="button" tabindex="0" aria-label="Selecionar extratos PDF">
-                            <span class="icon-upload" aria-hidden="true"></span>
-                            <span>CLIQUE OU ARRASTE FICHEIROS</span>
-                            <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf" aria-label="Selecionar ficheiros de extratos" style="display: none;">
+                        <h4><span class="icon-file-pdf"></span> EXTRATOS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-extratos">
+                            <span class="icon-upload"></span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf" style="display: none;">
                         </div>
-                        <div class="file-list" id="lista-extratos" role="list" aria-label="Lista de extratos"></div>
+                        <div class="file-list" id="lista-extratos"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-extratos-files">0</strong></span>
                             <span>Valores: <strong id="stats-extratos-values">0,00 €</strong></span>
@@ -427,25 +403,17 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn-primary" id="btn-modal-fechar" type="button">
-                        <span class="icon-check" aria-hidden="true"></span> FECHAR
+                        <span class="icon-check"></span> FECHAR
                     </button>
                     <button class="btn-danger" id="btn-modal-limpar" type="button">
-                        <span class="icon-trash" aria-hidden="true"></span> LIMPAR TUDO
+                        <span class="icon-trash"></span> LIMPAR TUDO
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script>
-        // Fallback se Chart.js falhar
-        window.chartJsLoaded = false;
-        if (typeof Chart !== 'undefined') {
-            window.chartJsLoaded = true;
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
