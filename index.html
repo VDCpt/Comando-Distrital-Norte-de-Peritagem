@@ -3,39 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Forense - Sistema de Auditoria Digital e Análise Forense Fiscal v12.9 FINAL">
-    <title>VDC FORENSE - v12.9 FINAL</title>
+    <title>VDC FORENSE - v12.8 CSI MIAMI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: #0a0e17; 
-            color: #f9fafb; 
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --accent-cyan: #06b6d4;
+            --accent-cyan-glow: rgba(6, 182, 212, 0.3);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
         }
+        
         .loading-screen {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0a0e17;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.5s;
+            transition: opacity 0.5s ease;
         }
-        .loading-screen.hidden { opacity: 0; pointer-events: none; }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
         .spinner {
-            width: 50px; height: 50px;
+            width: 50px;
+            height: 50px;
             border: 3px solid rgba(6, 182, 212, 0.3);
-            border-top-color: #06b6d4;
+            border-top-color: var(--accent-cyan);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -43,18 +70,21 @@
     <div class="loading-screen" id="loading-screen">
         <div class="spinner"></div>
     </div>
-
+    
     <div class="app-container" id="app-container" style="display: none;">
+        <!-- HEADER -->
         <header class="main-header">
             <div class="brand">
                 <div class="logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h1>VDC FORENSE <span class="version">v12.9</span></h1>
-                    <p>ISO/IEC 27037 | NIST SP 800-86 | FINAL EDITION</p>
+                    <h1>VDC FORENSE <span class="version">v12.8</span></h1>
+                    <p>ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</p>
                 </div>
             </div>
             <div class="session-info">
@@ -66,20 +96,23 @@
             </div>
         </header>
 
+        <!-- MAIN LAYOUT -->
         <div class="main-layout">
+            <!-- SIDEBAR -->
             <aside class="sidebar">
+                <!-- PAINEL: IDENTIFICAÇÃO DO SUJEITO -->
                 <section class="panel subject-panel">
-                    <h3><span class="icon-user"></span> IDENTIFICAÇÃO DO SUJEITO</h3>
+                    <h3>IDENTIFICAÇÃO DO SUJEITO</h3>
                     <div class="form-group">
                         <label for="subject-name">NOME / EMPRESA</label>
-                        <input type="text" id="subject-name" value="Momento Eficaz Unip, Lda" placeholder="Nome ou Empresa">
+                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa">
                     </div>
                     <div class="form-group">
                         <label for="subject-nif">NIF</label>
                         <input type="text" id="subject-nif" value="517905450" placeholder="NIF" maxlength="9">
                     </div>
                     <button class="btn-validate" id="btn-validar" type="button">
-                        <span class="icon-check"></span> VALIDAR
+                        <span class="icon">✓</span> VALIDAR
                     </button>
                     <div class="validation-status" id="validation-status">
                         <span class="status-dot"></span>
@@ -87,8 +120,9 @@
                     </div>
                 </section>
 
+                <!-- PAINEL: PARÂMETROS -->
                 <section class="panel parameters-panel">
-                    <h3><span class="icon-settings"></span> PARÂMETROS</h3>
+                    <h3>PARÂMETROS</h3>
                     <div class="form-group">
                         <label for="ano-fiscal">ANO FISCAL</label>
                         <select id="ano-fiscal">
@@ -114,10 +148,11 @@
                     </div>
                 </section>
 
+                <!-- PAINEL: GESTÃO DE EVIDÊNCIAS -->
                 <section class="panel evidence-panel">
                     <h3>
                         <button class="btn-toggle-evidence" id="btn-toggle-evidence" type="button">
-                            <span class="icon-folder"></span> GESTÃO DE EVIDÊNCIAS
+                            GESTÃO DE EVIDÊNCIAS
                             <span class="badge-count" id="total-evidencias">0</span>
                         </button>
                     </h3>
@@ -149,33 +184,38 @@
                     </div>
                 </section>
 
+                <!-- PAINEL: AÇÕES -->
                 <section class="panel actions-panel">
                     <button class="btn-primary" id="btn-executar" type="button">
-                        <span class="icon-search"></span> EXECUTAR PERÍCIA
+                        <span class="icon">🔍</span> EXECUTAR PERÍCIA
                     </button>
                     <button class="btn-secondary" id="btn-export-pdf" type="button">
-                        <span class="icon-download"></span> EXPORTAR PDF
+                        <span class="icon">⬇</span> EXPORTAR PDF
                     </button>
                 </section>
             </aside>
 
+            <!-- CONTEÚDO PRINCIPAL -->
             <main class="content">
+                <!-- TOOLBAR -->
                 <div class="toolbar">
                     <button class="btn-tool" id="btn-export-json" type="button">
                         <span>{ }</span> EXPORTAR JSON
                     </button>
                     <button class="btn-tool" id="btn-reiniciar" type="button">
-                        <span class="icon-refresh"></span> REINICIAR
+                        <span>↻</span> REINICIAR
                     </button>
                     <button class="btn-tool" id="btn-limpar" type="button">
-                        <span class="icon-trash"></span> LIMPAR
+                        <span>🗑</span> LIMPAR
                     </button>
                 </div>
 
+                <!-- ALERTAS -->
                 <div id="alertas-container" class="alertas-container"></div>
 
+                <!-- RESULTADOS FORENSES -->
                 <section class="results-section">
-                    <h3><span class="icon-chart"></span> RESULTADOS FORENSES</h3>
+                    <h3>RESULTADOS FORENSES</h3>
                     <div class="metrics-grid">
                         <div class="metric-card">
                             <span class="label">GANHOS APP</span>
@@ -196,9 +236,11 @@
                     </div>
                 </section>
 
+                <!-- DETALHES GRID -->
                 <div class="details-grid">
+                    <!-- SAF-T -->
                     <section class="detail-card">
-                        <h4><span class="icon-file"></span> SAF-T (PT)</h4>
+                        <h4>SAF-T (PT)</h4>
                         <div class="detail-content">
                             <div class="detail-row">
                                 <span>VALOR LÍQUIDO</span>
@@ -216,36 +258,33 @@
                         </div>
                     </section>
 
+                    <!-- EXTRATOS BOLT -->
                     <section class="detail-card">
-                        <h4><span class="icon-file-alt"></span> EXTRATOS BOLT</h4>
+                        <h4>EXTRATOS BOLT</h4>
                         <div class="detail-content">
                             <div class="detail-row">
-                                <span>TAXA DE VIAGEM</span>
-                                <strong class="positive" id="ext-taxa-viagem">0,00 €</strong>
+                                <span>GANHOS NA APP</span>
+                                <strong class="positive" id="ext-ganhos-app">0,00 €</strong>
                             </div>
                             <div class="detail-row">
-                                <span>TAXA DE CANCELAMENTO</span>
-                                <strong id="ext-taxa-cancel">0,00 €</strong>
-                            </div>
-                            <div class="detail-row">
-                                <span>PORTAGENS</span>
-                                <strong id="ext-portagens">0,00 €</strong>
+                                <span>GANHOS CAMPANHA</span>
+                                <strong id="ext-ganhos-campanha">0,00 €</strong>
                             </div>
                             <div class="detail-row">
                                 <span>GORJETAS</span>
                                 <strong id="ext-gorjetas">0,00 €</strong>
                             </div>
-                            <div class="detail-row negative">
-                                <span>COMISSÃO BOLT</span>
-                                <strong id="ext-comissao-bolt">0,00 €</strong>
+                            <div class="detail-row">
+                                <span>PORTAGENS</span>
+                                <strong id="ext-portagens">0,00 €</strong>
                             </div>
                             <div class="detail-row negative">
-                                <span>OUTRAS COMISSÕES</span>
-                                <strong id="ext-outras-comissoes">0,00 €</strong>
+                                <span>TAXAS CANCEL.</span>
+                                <strong id="ext-taxas-cancel">0,00 €</strong>
                             </div>
                             <div class="detail-row">
-                                <span>IVA LIQUIDADO</span>
-                                <strong id="ext-iva">0,00 €</strong>
+                                <span>COMISSÕES</span>
+                                <strong id="ext-comissoes">0,00 €</strong>
                             </div>
                             <div class="detail-row total">
                                 <span>GANHOS LÍQUIDOS</span>
@@ -254,8 +293,9 @@
                         </div>
                     </section>
 
+                    <!-- DAC7 -->
                     <section class="detail-card dac7-card">
-                        <h4><span class="icon-globe"></span> DAC7</h4>
+                        <h4>DAC7</h4>
                         <div class="detail-content">
                             <div class="dac7-info">
                                 <span class="dac7-label">REPORTING ANUAL</span>
@@ -266,39 +306,41 @@
                                 <span>Data limite: <strong id="dac7-limite">31/01/2025</strong></span>
                             </div>
                             <div class="dac7-note">
-                                Valor reportado pela Bolt às autoridades fiscais (Art. 6º DAC7)
+                                Valor reportado pela Bolt às autoridades fiscais (Art. 6.º DAC7)
                             </div>
                         </div>
                     </section>
                 </div>
 
+                <!-- FATURAS BOLT -->
                 <section class="invoices-section">
-                    <h4><span class="icon-invoice"></span> FATURAS BOLT</h4>
+                    <h4>FATURAS BOLT</h4>
                     <div class="invoice-grid">
                         <div class="invoice-item">
-                            <span class="label">N.º FATURAS</span>
+                            <span class="label">N.º FATURA</span>
                             <strong id="fat-numero">---</strong>
                         </div>
                         <div class="invoice-item">
-                            <span class="label">TOTAL FATURADO</span>
+                            <span class="label">TOTAL</span>
                             <strong class="positive" id="fat-total">0,00 €</strong>
                         </div>
                         <div class="invoice-item autoliquidacao">
                             <span class="label">AUTOLIQUIDAÇÃO</span>
-                            <strong id="fat-autoliquidacao">SIM</strong>
+                            <strong id="fat-autoliquidacao">0,00 €</strong>
                             <small>IVA - Autoliquidação</small>
                         </div>
                     </div>
                 </section>
 
+                <!-- VEREDITO FISCAL -->
                 <section class="veredicto-section" id="veredicto-section" style="display: none;">
-                    <div class="veredicto-header" id="veredicto-header">
-                        <h2>VEREDICTO FISCAL</h2>
+                    <div class="veredicto-header">
+                        <h2>VEREDITO FISCAL</h2>
                         <div class="veredicto-status" id="veredicto-status">NORMAL</div>
                         <div class="veredicto-desvio" id="veredicto-desvio">Desvio: 0%</div>
                     </div>
                     <div class="anomalia-critica" id="anomalia-critica" style="display: none;">
-                        <span class="icon-warning"></span>
+                        <span class="icon-warning">⚠</span>
                         <div>
                             <strong>ANOMALIA CRÍTICA</strong>
                             <p id="anomalia-texto">Indício de fraude fiscal</p>
@@ -309,7 +351,7 @@
                         <h4>TRIANGULAÇÃO FINANCEIRA</h4>
                         <div class="triangulacao-grid">
                             <div class="tri-item">
-                                <span>BRUTO EXTRATOS</span>
+                                <span>BRUTO APP</span>
                                 <strong id="tri-bruto">0,00 €</strong>
                             </div>
                             <div class="tri-item">
@@ -332,8 +374,9 @@
                     </div>
                 </section>
 
+                <!-- ANÁLISE GRÁFICA -->
                 <section class="chart-section">
-                    <h4><span class="icon-chart-bar"></span> ANÁLISE GRÁFICA</h4>
+                    <h4>ANÁLISE GRÁFICA</h4>
                     <div class="chart-container">
                         <canvas id="analiseGrafica"></canvas>
                         <div id="chart-fallback" class="chart-fallback" style="display: none;">
@@ -342,8 +385,9 @@
                     </div>
                 </section>
 
+                <!-- LOG FORENSE -->
                 <section class="log-section">
-                    <h4><span class="icon-terminal"></span> LOG FORENSE</h4>
+                    <h4>LOG FORENSE</h4>
                     <div class="log-container" id="log-container">
                         <div class="log-entry">
                             <span class="timestamp">[--:--:--]</span>
@@ -353,22 +397,24 @@
                     </div>
                 </section>
 
+                <!-- HASH -->
                 <section class="hash-section">
                     <div class="hash-display">
                         <span class="hash-label">HASH SHA-256</span>
                         <span class="hash-value" id="hash-value">PENDENTE</span>
                     </div>
                     <div class="footer-info">
-                        VDC Systems © 2024/2026 | FINAL EDITION
+                        VDC Systems © 2024/2026 | CSI MIAMI EDITION
                     </div>
                 </section>
             </main>
         </div>
 
+        <!-- MODAL: GESTÃO DE EVIDÊNCIAS -->
         <div class="modal-overlay" id="evidence-modal" style="display: none;">
             <div class="modal evidence-manager">
                 <div class="modal-header">
-                    <h3><span class="icon-folder-open"></span> GESTÃO DE EVIDÊNCIAS</h3>
+                    <h3>GESTÃO DE EVIDÊNCIAS</h3>
                     <button class="btn-close" id="btn-close-modal" type="button" aria-label="Fechar">×</button>
                 </div>
                 <div class="modal-body">
@@ -376,41 +422,43 @@
                         <span>Ficheiros: <strong id="modal-total-files">0</strong></span>
                         <span>Valores: <strong id="modal-total-values">0,00 €</strong></span>
                     </div>
-                    
+
+                    <!-- FATURAS BOLT -->
                     <div class="evidence-category">
-                        <h4><span class="icon-file-pdf"></span> FATURAS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-faturas" data-tipo="fatura">
-                            <span class="icon-upload"></span>
-                            <span>CLIQUE OU ARRASTE FATURAS AQUI (ex: PT1124-91599.pdf)</span>
-                            <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf" style="display: none;">
+                        <h4>FATURAS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-faturas">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf">
                         </div>
                         <div class="file-list" id="lista-faturas"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-faturas-files">0</strong></span>
-                            <span>Total: <strong id="stats-faturas-values">0,00 €</strong></span>
+                            <span>Valores: <strong id="stats-faturas-values">0,00 €</strong></span>
                         </div>
                     </div>
 
+                    <!-- EXTRATOS BOLT -->
                     <div class="evidence-category">
-                        <h4><span class="icon-file-alt"></span> EXTRATOS BOLT (PDF)</h4>
-                        <div class="upload-zone" id="upload-extratos" data-tipo="extrato">
-                            <span class="icon-upload"></span>
-                            <span>CLIQUE OU ARRASTE EXTRATOS AQUI (ex: Ganhos da Empresa...)</span>
-                            <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf" style="display: none;">
+                        <h4>EXTRATOS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-extratos">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf">
                         </div>
                         <div class="file-list" id="lista-extratos"></div>
                         <div class="category-stats">
                             <span>Ficheiros: <strong id="stats-extratos-files">0</strong></span>
-                            <span>Ganhos: <strong id="stats-extratos-values">0,00 €</strong></span>
+                            <span>Valores: <strong id="stats-extratos-values">0,00 €</strong></span>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-primary" id="btn-modal-fechar" type="button">
-                        <span class="icon-check"></span> FECHAR
+                        <span class="icon">✓</span> FECHAR
                     </button>
                     <button class="btn-danger" id="btn-modal-limpar" type="button">
-                        <span class="icon-trash"></span> LIMPAR TUDO
+                        <span class="icon">🗑</span> LIMPAR TUDO
                     </button>
                 </div>
             </div>
