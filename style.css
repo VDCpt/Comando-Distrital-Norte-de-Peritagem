@@ -1,5 +1,10 @@
 /* ============================================
    VDC FORENSE v12.8 CSI MIAMI - STYLESHEET
+   Sistema de Auditoria Digital e Análise Forense Fiscal
+   ============================================ */
+
+/* ============================================
+   RESET E VARIÁVEIS
    ============================================ */
 
 *, *::before, *::after {
@@ -9,12 +14,14 @@
 }
 
 :root {
+    /* Cores de Fundo */
     --bg-primary: #0a0e17;
     --bg-secondary: #111827;
     --bg-tertiary: #1f2937;
     --bg-card: rgba(17, 24, 39, 0.95);
     --bg-hover: rgba(31, 41, 55, 0.8);
     
+    /* Cores de Destaque */
     --accent-cyan: #06b6d4;
     --accent-cyan-glow: rgba(6, 182, 212, 0.3);
     --accent-cyan-light: rgba(6, 182, 212, 0.1);
@@ -22,6 +29,7 @@
     --accent-purple: #8b5cf6;
     --accent-purple-light: rgba(139, 92, 246, 0.1);
     
+    /* Cores de Estado */
     --success: #10b981;
     --success-glow: rgba(16, 185, 129, 0.3);
     --success-light: rgba(16, 185, 129, 0.1);
@@ -33,35 +41,46 @@
     --info: #3b82f6;
     --info-glow: rgba(59, 130, 246, 0.3);
     
+    /* Cores de Texto */
     --text-primary: #f9fafb;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
     
+    /* Bordas */
     --border-color: rgba(6, 182, 212, 0.2);
     --border-light: rgba(255, 255, 255, 0.1);
     --border-glow: 0 0 10px rgba(6, 182, 212, 0.3);
     
+    /* Tipografia */
     --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     
+    /* Espaçamento */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     
+    /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
     --radius-full: 9999px;
     
+    /* Transições */
     --transition-fast: 150ms ease;
     --transition-normal: 300ms ease;
     
+    /* Z-Index */
     --z-sticky: 200;
     --z-modal: 1000;
 }
+
+/* ============================================
+   BASE
+   ============================================ */
 
 html {
     font-size: 16px;
@@ -79,11 +98,19 @@ body {
     overflow-x: hidden;
 }
 
+/* ============================================
+   APP CONTAINER
+   ============================================ */
+
 .app-container {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
+
+/* ============================================
+   HEADER
+   ============================================ */
 
 .main-header {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
@@ -173,8 +200,12 @@ body {
 }
 
 @keyframes pulseDanger {
-    0%, 100% { box-shadow: 0 0 0 0 var(--danger-glow); }
-    50% { box-shadow: 0 0 0 4px var(--danger-glow); }
+    0%, 100% {
+        box-shadow: 0 0 0 0 var(--danger-glow);
+    }
+    50% {
+        box-shadow: 0 0 0 4px var(--danger-glow);
+    }
 }
 
 .badge-count {
@@ -204,6 +235,10 @@ body {
     font-weight: 600;
 }
 
+/* ============================================
+   MAIN LAYOUT
+   ============================================ */
+
 .main-layout {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -215,6 +250,10 @@ body {
     width: 100%;
 }
 
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
 .sidebar {
     display: flex;
     flex-direction: column;
@@ -223,6 +262,10 @@ body {
     position: sticky;
     top: 80px;
 }
+
+/* ============================================
+   PAINÉIS
+   ============================================ */
 
 .panel {
     background: var(--bg-card);
@@ -245,6 +288,10 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* ============================================
+   BOTÃO TOGGLE EVIDÊNCIAS
+   ============================================ */
+
 .btn-toggle-evidence {
     background: none;
     border: none;
@@ -262,6 +309,10 @@ body {
 .btn-toggle-evidence:hover {
     color: var(--accent-cyan);
 }
+
+/* ============================================
+   FORMULÁRIOS
+   ============================================ */
 
 .form-group {
     margin-bottom: var(--spacing-md);
@@ -302,6 +353,10 @@ body {
     border-color: var(--accent-cyan);
     box-shadow: 0 0 0 3px var(--accent-cyan-glow);
 }
+
+/* ============================================
+   BOTÕES
+   ============================================ */
 
 .btn-validate,
 .btn-primary,
@@ -389,6 +444,10 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* ============================================
+   VALIDAÇÃO STATUS
+   ============================================ */
+
 .validation-status {
     margin-top: var(--spacing-md);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -422,6 +481,10 @@ button:disabled {
     background: var(--danger);
     box-shadow: 0 0 10px var(--danger);
 }
+
+/* ============================================
+   EVIDÊNCIAS SUMMARY
+   ============================================ */
 
 .evidence-summary {
     display: grid;
@@ -463,6 +526,10 @@ button:disabled {
     letter-spacing: 0.5px;
 }
 
+/* ============================================
+   VALUES INDICATOR
+   ============================================ */
+
 .values-indicator {
     display: flex;
     align-items: center;
@@ -484,6 +551,10 @@ button:disabled {
     box-shadow: 0 0 10px var(--success);
 }
 
+/* ============================================
+   CONTEÚDO PRINCIPAL
+   ============================================ */
+
 .content {
     display: flex;
     flex-direction: column;
@@ -491,12 +562,20 @@ button:disabled {
     min-width: 0;
 }
 
+/* ============================================
+   TOOLBAR
+   ============================================ */
+
 .toolbar {
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
     flex-wrap: wrap;
 }
+
+/* ============================================
+   ALERTAS
+   ============================================ */
 
 .alertas-container {
     display: flex;
@@ -516,8 +595,14 @@ button:disabled {
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .alerta.critico {
@@ -546,9 +631,21 @@ button:disabled {
     font-size: 0.75rem;
 }
 
-.alerta.critico strong { color: var(--danger); }
-.alerta.alerta strong { color: var(--warning); }
-.alerta.info strong { color: var(--info); }
+.alerta.critico strong {
+    color: var(--danger);
+}
+
+.alerta.alerta strong {
+    color: var(--warning);
+}
+
+.alerta.info strong {
+    color: var(--info);
+}
+
+/* ============================================
+   RESULTS SECTION
+   ============================================ */
 
 .results-section {
     background: var(--bg-card);
@@ -568,6 +665,10 @@ button:disabled {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* ============================================
+   METRICS GRID
+   ============================================ */
 
 .metrics-grid {
     display: grid;
@@ -610,6 +711,10 @@ button:disabled {
     color: var(--success);
     text-shadow: 0 0 10px var(--success-glow);
 }
+
+/* ============================================
+   DETAILS GRID
+   ============================================ */
 
 .details-grid {
     display: grid;
@@ -692,6 +797,10 @@ button:disabled {
     font-size: 1.125rem;
 }
 
+/* ============================================
+   AUTOLIQUIDAÇÃO
+   ============================================ */
+
 .autoliquidacao strong {
     color: var(--text-muted);
     font-style: italic;
@@ -705,6 +814,10 @@ button:disabled {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* ============================================
+   DAC7 CARD
+   ============================================ */
 
 .dac7-card {
     background: linear-gradient(135deg, var(--bg-card), var(--accent-purple-light));
@@ -759,6 +872,10 @@ button:disabled {
     border-radius: var(--radius-md);
     line-height: 1.4;
 }
+
+/* ============================================
+   INVOICES SECTION
+   ============================================ */
 
 .invoices-section {
     background: var(--bg-card);
@@ -828,6 +945,10 @@ button:disabled {
     letter-spacing: 0.5px;
 }
 
+/* ============================================
+   VEREDITO SECTION
+   ============================================ */
+
 .veredicto-section {
     background: var(--bg-card);
     border: 2px solid var(--success);
@@ -837,6 +958,15 @@ button:disabled {
     animation: fadeIn 0.5s ease;
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .veredicto-section.critico {
     border-color: var(--danger);
     box-shadow: 0 0 30px var(--danger-glow);
@@ -844,8 +974,12 @@ button:disabled {
 }
 
 @keyframes pulseDangerBox {
-    0%, 100% { box-shadow: 0 0 30px var(--danger-glow); }
-    50% { box-shadow: 0 0 50px var(--danger-glow); }
+    0%, 100% {
+        box-shadow: 0 0 30px var(--danger-glow);
+    }
+    50% {
+        box-shadow: 0 0 50px var(--danger-glow);
+    }
 }
 
 .veredicto-header {
@@ -875,6 +1009,10 @@ button:disabled {
     font-size: 1rem;
     font-family: var(--font-mono);
 }
+
+/* ============================================
+   ANOMALIA CRÍTICA
+   ============================================ */
 
 .anomalia-critica {
     background: var(--danger-light);
@@ -914,6 +1052,10 @@ button:disabled {
     color: var(--danger);
     font-family: var(--font-mono);
 }
+
+/* ============================================
+   TRIANGULAÇÃO FINANCEIRA
+   ============================================ */
 
 .triangulacao-financeira {
     background: var(--bg-tertiary);
@@ -975,6 +1117,10 @@ button:disabled {
     color: var(--danger);
 }
 
+/* ============================================
+   CHART SECTION
+   ============================================ */
+
 .chart-section {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1014,6 +1160,10 @@ button:disabled {
     color: var(--text-secondary);
     font-size: 0.875rem;
 }
+
+/* ============================================
+   LOG SECTION
+   ============================================ */
 
 .log-section {
     background: var(--bg-card);
@@ -1069,15 +1219,30 @@ button:disabled {
     flex-shrink: 0;
 }
 
-.log-entry .icon.success { color: var(--success); }
-.log-entry .icon.warning { color: var(--warning); }
-.log-entry .icon.error { color: var(--danger); }
-.log-entry .icon.info { color: var(--info); }
+.log-entry .icon.success {
+    color: var(--success);
+}
+
+.log-entry .icon.warning {
+    color: var(--warning);
+}
+
+.log-entry .icon.error {
+    color: var(--danger);
+}
+
+.log-entry .icon.info {
+    color: var(--info);
+}
 
 .log-entry .message {
     color: var(--text-secondary);
     word-break: break-word;
 }
+
+/* ============================================
+   HASH SECTION
+   ============================================ */
 
 .hash-section {
     text-align: center;
@@ -1121,6 +1286,10 @@ button:disabled {
     font-family: var(--font-mono);
 }
 
+/* ============================================
+   MODAL OVERLAY
+   ============================================ */
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -1136,6 +1305,10 @@ button:disabled {
     padding: var(--spacing-lg);
     animation: fadeIn 0.3s ease;
 }
+
+/* ============================================
+   MODAL
+   ============================================ */
 
 .modal {
     background: var(--bg-secondary);
@@ -1210,6 +1383,10 @@ button:disabled {
     flex: 1;
 }
 
+/* ============================================
+   EVIDENCE STATS
+   ============================================ */
+
 .evidence-stats {
     display: flex;
     justify-content: space-between;
@@ -1225,6 +1402,10 @@ button:disabled {
     color: var(--accent-cyan);
     font-family: var(--font-mono);
 }
+
+/* ============================================
+   EVIDENCE CATEGORY
+   ============================================ */
 
 .evidence-category {
     margin-bottom: var(--spacing-xl);
@@ -1244,6 +1425,10 @@ button:disabled {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* ============================================
+   UPLOAD ZONE
+   ============================================ */
 
 .upload-zone {
     border: 2px dashed var(--border-color);
@@ -1289,6 +1474,10 @@ button:disabled {
     opacity: 0;
     cursor: pointer;
 }
+
+/* ============================================
+   FILE LIST
+   ============================================ */
 
 .file-list {
     display: flex;
@@ -1347,6 +1536,10 @@ button:disabled {
     background: var(--danger-light);
 }
 
+/* ============================================
+   CATEGORY STATS
+   ============================================ */
+
 .category-stats {
     display: flex;
     gap: var(--spacing-lg);
@@ -1359,6 +1552,10 @@ button:disabled {
     font-family: var(--font-mono);
 }
 
+/* ============================================
+   MODAL FOOTER
+   ============================================ */
+
 .modal-footer {
     background: var(--bg-tertiary);
     padding: var(--spacing-lg);
@@ -1369,25 +1566,9 @@ button:disabled {
     flex-shrink: 0;
 }
 
-.icon-user::before { content: "👤"; }
-.icon-settings::before { content: "⚙️"; }
-.icon-folder::before { content: "📁"; }
-.icon-folder-open::before { content: "📂"; }
-.icon-check::before { content: "✓"; }
-.icon-search::before { content: "🔍"; }
-.icon-download::before { content: "⬇️"; }
-.icon-refresh::before { content: "↻"; }
-.icon-trash::before { content: "🗑"; }
-.icon-chart::before { content: "📊"; }
-.icon-chart-bar::before { content: "📈"; }
-.icon-file::before { content: "📄"; }
-.icon-file-alt::before { content: "📃"; }
-.icon-file-pdf::before { content: "📕"; }
-.icon-globe::before { content: "🌐"; }
-.icon-invoice::before { content: "🧾"; }
-.icon-terminal::before { content: "💻"; }
-.icon-upload::before { content: "⬆️"; }
-.icon-warning::before { content: "⚠️"; }
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 
 ::-webkit-scrollbar {
     width: 8px;
@@ -1413,6 +1594,10 @@ button:disabled {
     scrollbar-color: var(--accent-cyan) var(--bg-secondary);
 }
 
+/* ============================================
+   MEDIA QUERIES - 1400px
+   ============================================ */
+
 @media (max-width: 1400px) {
     .main-layout {
         grid-template-columns: 280px 1fr;
@@ -1430,6 +1615,10 @@ button:disabled {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* ============================================
+   MEDIA QUERIES - 1024px
+   ============================================ */
 
 @media (max-width: 1024px) {
     .main-layout {
@@ -1462,6 +1651,10 @@ button:disabled {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ============================================
+   MEDIA QUERIES - 768px
+   ============================================ */
 
 @media (max-width: 768px) {
     .main-header {
@@ -1530,6 +1723,10 @@ button:disabled {
     }
 }
 
+/* ============================================
+   MEDIA QUERIES - 480px
+   ============================================ */
+
 @media (max-width: 480px) {
     .brand-text h1 {
         font-size: 1.125rem;
@@ -1564,6 +1761,10 @@ button:disabled {
     }
 }
 
+/* ============================================
+   PREFERS REDUCED MOTION
+   ============================================ */
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -1573,6 +1774,10 @@ button:disabled {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
 
 @media print {
     .sidebar,
