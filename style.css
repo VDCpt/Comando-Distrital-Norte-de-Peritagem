@@ -1,8 +1,8 @@
 /* ============================================
-   VDC FORENSE v13.6 MASTER SCHEMA - STYLESHEET UNIFICADO
+   VDC FORENSE v13.7 FINAL - STYLESHEET
    Sistema de Auditoria Digital e Análise Fiscal
    Versão com Alertas Críticos, Cruzamentos e Verdade Material
-   UNIFICAÇÃO DAS VERSÕES: v13.0 SYNC SCHEMA + v13.1 + v13.6 MASTER SCHEMA
+   UNIFICAÇÃO FINAL DE TODAS AS VERSÕES
    ============================================ */
 
 /* ============================================
@@ -16,7 +16,7 @@
 }
 
 :root {
-    /* Cores de Fundo - Tema Forense Escuro (v13.0) */
+    /* Cores de Fundo - Tema Forense Escuro */
     --bg-deep: #05070a;
     --bg-primary: #0a0c12;
     --bg-secondary: #0d1117;
@@ -25,7 +25,7 @@
     --bg-tertiary: #21262d;
     --bg-hover: #2d333b;
     
-    /* Cores de Destaque - Audit Trail (v13.0) */
+    /* Cores de Destaque - Audit Trail */
     --accent-blue: #00d2ff;
     --accent-blue-glow: rgba(0, 210, 255, 0.2);
     --accent-green: #00ff88;
@@ -37,7 +37,7 @@
     --accent-purple: #8b5cf6;
     --accent-purple-glow: rgba(139, 92, 246, 0.2);
     
-    /* Cores de Alerta (v13.0) */
+    /* Cores de Alerta */
     --alert-red: #ff4d4d;
     --alert-red-light: rgba(255, 77, 77, 0.1);
     --alert-red-border: #b71c1c;
@@ -48,14 +48,14 @@
     --alert-blue-light: rgba(59, 130, 246, 0.1);
     --alert-blue-border: #1e3a8a;
     
-    /* Cores de Texto (v13.0) */
+    /* Cores de Texto */
     --text-primary: #e6edf3;
     --text-secondary: #b1bac4;
     --text-dim: #8b949e;
     --text-muted: #6e7681;
     --text-dark: #c9d1d9;
     
-    /* Cores de Estado (v13.0 + v13.1) */
+    /* Cores de Estado */
     --success: #00ff88;
     --success-light: rgba(0, 255, 136, 0.1);
     --warning: #f59e0b;
@@ -66,17 +66,17 @@
     --info: #3b82f6;
     --info-light: rgba(59, 130, 246, 0.1);
     
-    /* Bordas (v13.0) */
+    /* Bordas */
     --border-color: #30363d;
     --border-light: #21262d;
     --border-ui: #30363d;
     --border-glow: 0 0 15px rgba(0, 210, 255, 0.15);
     
-    /* Tipografia (v13.0 + v13.1) */
+    /* Tipografia */
     --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     
-    /* Espaçamento (v13.0) */
+    /* Espaçamento */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
@@ -84,24 +84,24 @@
     --spacing-xl: 2rem;
     --spacing-2xl: 2.5rem;
     
-    /* Border Radius (v13.0 + v13.1) */
+    /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;
     --radius-xl: 12px;
     --radius-full: 9999px;
     
-    /* Transições (v13.0) */
+    /* Transições */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s ease;
     --transition-slow: 0.4s ease;
     
-    /* Sombras (v13.1) */
+    /* Sombras */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
     
-    /* Z-Index (v13.0) */
+    /* Z-Index */
     --z-barreira: 10000;
     --z-modal: 9000;
     --z-header: 1000;
@@ -109,7 +109,7 @@
 }
 
 /* ============================================
-   BASE (v13.0 + v13.1)
+   BASE
    ============================================ */
 
 html {
@@ -137,7 +137,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   BARREIRA DE ENTRADA (JANELA DE ACESSO) - v13.0 + v13.1
+   BARREIRA DE ENTRADA (JANELA DE ACESSO)
    ============================================ */
 
 .modal-overlay {
@@ -273,7 +273,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   APP CONTAINER (v13.0)
+   APP CONTAINER
    ============================================ */
 
 #app-container {
@@ -283,7 +283,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   HEADER PRINCIPAL (v13.0 + v13.1)
+   HEADER PRINCIPAL
    ============================================ */
 
 .main-header {
@@ -380,7 +380,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   DASHBOARD GRID (v13.0)
+   DASHBOARD GRID
    ============================================ */
 
 .dashboard-grid {
@@ -400,7 +400,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   METADADOS DE AUDITORIA (v13.1 + v13.6)
+   METADADOS DE AUDITORIA
    ============================================ */
 
 .metadata-audit {
@@ -460,7 +460,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   CARDS (v13.0)
+   CARDS
    ============================================ */
 
 .card {
@@ -505,7 +505,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   TERMINAL DE AUDITORIA (v13.0)
+   TERMINAL DE AUDITORIA
    ============================================ */
 
 .terminal-box {
@@ -562,7 +562,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   ZONA DE UPLOAD (v13.0 + v13.1)
+   ZONA DE UPLOAD
    ============================================ */
 
 .drop-zone {
@@ -651,7 +651,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   EVIDENCE SUMMARY (v13.0)
+   EVIDENCE SUMMARY
    ============================================ */
 
 .evidence-summary {
@@ -694,7 +694,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   MÉTRICAS (v13.0)
+   MÉTRICAS
    ============================================ */
 
 .metrics-grid {
@@ -754,7 +754,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   TABS (v13.0)
+   TABS
    ============================================ */
 
 .tabs {
@@ -797,7 +797,7 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
 }
 
 /* ============================================
-   TABELAS (v13.0)
+   TABELAS
    ============================================ */
 
 .table-wrapper {
@@ -875,7 +875,7 @@ tr:hover td {
 }
 
 /* ============================================
-   TRIANGULAÇÃO FINANCEIRA (v13.0)
+   TRIANGULAÇÃO FINANCEIRA
    ============================================ */
 
 .triangulacao-financeira {
@@ -939,7 +939,7 @@ tr:hover td {
 }
 
 /* ============================================
-   CRUZAMENTOS DETALHE (v13.0)
+   CRUZAMENTOS DETALHE
    ============================================ */
 
 .cruzamentos-detalhe {
@@ -993,7 +993,7 @@ tr:hover td {
 }
 
 /* ============================================
-   DAC7 CONTAINER (v13.0)
+   DAC7 CONTAINER
    ============================================ */
 
 .dac7-container {
@@ -1094,7 +1094,7 @@ tr:hover td {
 }
 
 /* ============================================
-   ALERTAS CONTAINER (v13.0)
+   ALERTAS CONTAINER
    ============================================ */
 
 .alertas-container {
@@ -1165,7 +1165,7 @@ tr:hover td {
 }
 
 /* ============================================
-   VEREDITO FISCAL (v13.0)
+   VEREDITO FISCAL
    ============================================ */
 
 .veredicto-section {
@@ -1297,7 +1297,7 @@ tr:hover td {
 }
 
 /* ============================================
-   BOTÕES (v13.0 + v13.1)
+   BOTÕES
    ============================================ */
 
 button {
@@ -1399,7 +1399,7 @@ button {
 }
 
 /* ============================================
-   FOOTER (v13.0)
+   FOOTER
    ============================================ */
 
 .main-footer {
@@ -1433,7 +1433,7 @@ button {
 }
 
 /* ============================================
-   STATUS DOTS (v13.0)
+   STATUS DOTS
    ============================================ */
 
 .status-dot {
@@ -1472,7 +1472,7 @@ button {
 }
 
 /* ============================================
-   MEDIA QUERIES - RESPONSIVIDADE (v13.0 + v13.1 + v13.6)
+   MEDIA QUERIES - RESPONSIVIDADE
    ============================================ */
 
 @media (max-width: 1400px) {
@@ -1501,10 +1501,6 @@ button {
     .dac7-content {
         grid-template-columns: 1fr;
     }
-    
-    .dashboard-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
 }
 
 @media (max-width: 1024px) {
@@ -1532,14 +1528,10 @@ button {
         flex: 1 1 auto;
         text-align: center;
     }
-    
-    .metadata-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }
 
 @media (max-width: 992px) {
-    .metadata-grid {
+    .metadata-audit {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1599,27 +1591,6 @@ button {
     .metadata-row {
         flex-direction: column;
     }
-    
-    .session-info {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .upload-actions {
-        flex-direction: column;
-    }
-    
-    .hash-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .main-footer {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1627,13 +1598,8 @@ button {
         padding: 10px;
     }
     
-    .container {
-        padding: 15px;
-        border-radius: 0;
-    }
-    
-    .app {
-        padding: 20px;
+    #app-container {
+        padding: var(--spacing-sm);
     }
     
     .evidence-summary {
@@ -1674,25 +1640,13 @@ button {
         text-align: left;
     }
     
-    .metadata-grid {
+    .metadata-audit {
         grid-template-columns: 1fr;
-    }
-    
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .card-value {
-        font-size: 1.5rem;
-    }
-    
-    .barrier-content {
-        padding: 25px;
     }
 }
 
 /* ============================================
-   PREFERS REDUCED MOTION (v13.0)
+   PREFERS REDUCED MOTION
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1706,7 +1660,7 @@ button {
 }
 
 /* ============================================
-   PRINT STYLES (v13.0 + v13.1)
+   PRINT STYLES
    ============================================ */
 
 @media print {
@@ -1729,13 +1683,8 @@ button {
         padding: 0;
     }
     
-    .container {
-        box-shadow: none;
+    #app-container {
         padding: 15px;
-    }
-    
-    .app {
-        padding: 0;
     }
     
     .card {
@@ -1753,12 +1702,8 @@ button {
         color: black;
     }
     
-    .hash-container {
+    .master-hash-container {
         border: 1px solid var(--border-light);
-        background: var(--gray-100);
-    }
-    
-    .hash-value {
-        color: var(--black);
+        background: var(--bg-panel);
     }
 }
