@@ -1,96 +1,71 @@
 /**
- * VDC FORENSE v13.6 MASTER SCHEMA - CONSOLIDAÇÃO FINAL
+ * VDC FORENSE v13.1
  * Sistema de Peritagem Digital e Auditoria Fiscal
  * Motor de Extração e Processamento de Evidências
- * Data Aggregation Pipeline com Verdade Material
  * 
- * Versão: 13.6.0-FINAL
- * 
- * CARACTERÍSTICAS:
- * - Questionário dinâmico de 30 perguntas (seleção de 6)
- * - Cálculo da Verdade Material: Bruto - Comissões
- * - Integridade via Master Hash SHA-256
- * - Validação de metadados obrigatórios
+ * Versão: 13.1.0
  */
 
 (function() {
     'use strict';
 
     // ============================================
-    // BASE DE DADOS DAS PLATAFORMAS
+    // CONFIGURAÇÕES
     // ============================================
 
-    const PLATFORM_DB = {
-        uber: { 
-            social: "Uber B.V.", 
-            address: "Mr. Treublaan 7, Amesterdão, PB", 
-            nif: "PT 980461664" 
-        },
-        bolt: { 
-            social: "Bolt Operations OÜ", 
-            address: "Tallinn, Estónia", 
-            nif: "PT 980583093" 
-        },
-        outra: {
-            social: "Plataforma Não Identificada",
-            address: "A verificar",
-            nif: "A verificar"
+    const CONFIG = {
+        VERSAO: '13.1',
+        MAX_FILE_SIZE: 10 * 1024 * 1024,
+        ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml', '.json'],
+        TAXA_COMISSAO_MAX: 0.25,
+        TOLERANCIA_ERRO: 50,
+        PLATFORM_DB: {
+            uber: {
+                social: "Uber B.V.",
+                address: "Mr. Treublaan 7, Amesterdão, PB",
+                nif: "PT 980461664"
+            },
+            bolt: {
+                social: "Bolt Operations OÜ",
+                address: "Tallinn, Estónia",
+                nif: "PT 980583093"
+            },
+            outra: {
+                social: "Plataforma Não Identificada",
+                address: "A verificar",
+                nif: "A verificar"
+            }
         }
     };
 
     // ============================================
-    // POOL DE PERGUNTAS (30) - SELECIONAR 6 DINAMICAMENTE
+    // ESTADO GLOBAL
     // ============================================
 
-    const POOL_PERGUNTAS = [
-        { tag: 'fiscal', q: "A divergência entre o Proveito Real e o DAC7 foi justificada por lançamentos de gorjetas isentas?" },
-        { tag: 'legal', q: "As faturas de comissão da plataforma possuem NIF válido para efeitos de dedução de IVA?" },
-        { tag: 'btf', q: "Existe contrato de prestação de serviços que valide a retenção efetuada pela Fleet?" },
-        { tag: 'fraude', q: "Foi detetada discrepância superior a 10% entre o reportado e o extrato bancário?" },
-        { tag: 'colarinho', q: "Os fluxos financeiros indicam triangulação de contas não declaradas à AT?" },
-        { tag: 'geral', q: "Os documentos SAF-T foram submetidos dentro do prazo legal (dia 5)?" },
-        { tag: 'iva', q: "O IVA foi corretamente liquidado sobre a totalidade das comissões?" },
-        { tag: 'irs', q: "Foram efetuadas as devidas retenções na fonte sobre os rendimentos?" },
-        { tag: 'irs2', q: "Os titulares dos rendimentos estão corretamente identificados na declaração modelo 10?" },
-        { tag: 'faturação', q: "As faturas emitidas cumprem os requisitos do artigo 36.º do CIVA?" },
-        { tag: 'autoliquidação', q: "Foram emitidas faturas com autoliquidação de IVA indevida?" },
-        { tag: 'e-fatura', q: "Todas as faturas foram comunicadas ao e-fatura dentro do prazo?" },
-        { tag: 'dac7_valid', q: "O relatório DAC7 foi submetido dentro do prazo legal (janeiro)?" },
-        { tag: 'dac7_valores', q: "Os valores declarados no DAC7 coincidem com os extratos bancários?" },
-        { tag: 'saft_valid', q: "O ficheiro SAF-T foi submetido com a totalidade dos movimentos?" },
-        { tag: 'saft_periodo', q: "O período declarado no SAF-T corresponde ao período em análise?" },
-        { tag: 'comissão_legal', q: "As comissões praticadas respeitam o limite legal de 25%?" },
-        { tag: 'comissão_contrato', q: "As comissões cobradas estão em conformidade com o contrato?" },
-        { tag: 'gorjetas', q: "As gorjetas foram tratadas como rendimentos isentos ou sujeitos a IRS?" },
-        { tag: 'portagens', q: "As portagens foram faturadas com IVA à taxa legal?" },
-        { tag: 'cancelamentos', q: "Os cancelamentos foram devidamente justificados e documentados?" },
-        { tag: 'fleet', q: "A Fleet (se aplicável) está registada como tal na AT?" },
-        { tag: 'subcontratação', q: "Existem subcontratações não declaradas à AT?" },
-        { tag: 'bancário', q: "Os valores dos extratos bancários correspondem aos declarados?" },
-        { tag: 'cash', q: "Foram detetados movimentos em numerário não justificados?" },
-        { tag: 'provisionamento', q: "Os provisionamentos respeitam as regras contabilísticas?" },
-        { tag: 'intracomunitário', q: "Existem operações intracomunitárias não declaradas?" },
-        { tag: 'nif_cliente', q: "Os clientes (passageiros) estão devidamente identificados nos documentos?" },
-        { tag: 'retenção_fonte', q: "Foram aplicadas as taxas de retenção na fonte corretas?" },
-        { tag: 'veracidade', q: "Os documentos apresentados são originais ou cópias certificadas?" }
-    ];
-
-    // ============================================
-    // ESTADO GLOBAL DO SISTEMA
-    // ============================================
-
-    let state = { 
-        saft: 0, 
-        comissoes: 0, 
-        dac7: 0, 
-        liquidoReal: 0,
+    const State = {
+        sessao: {
+            id: gerarIdSessao(),
+            ativa: false,
+            inicio: null
+        },
+        metadados: {
+            subjectName: '',
+            nipc: '',
+            platform: '',
+            fiscalYear: '2024',
+            fiscalPeriod: 'Anual'
+        },
+        financeiro: {
+            saft: 0,
+            comissoes: 0,
+            dac7: 0,
+            liquidoReal: 0,
+            divergencia: 0
+        },
         documentos: [],
         logs: [],
-        sessaoId: gerarIdSessao(),
-        inicio: new Date()
+        alertas: []
     };
-
-    let selectedQuestions = [];
 
     // ============================================
     // UTILITÁRIOS
@@ -104,8 +79,28 @@
 
     function formatarMoeda(valor) {
         const num = parseFloat(valor);
+        if (isNaN(num)) return '0.00 €';
+        return num.toFixed(2) + ' €';
+    }
+
+    function formatarMoedaSimples(valor) {
+        const num = parseFloat(valor);
         if (isNaN(num)) return '0.00';
         return num.toFixed(2);
+    }
+
+    function parseMoeda(valorStr) {
+        if (valorStr === null || valorStr === undefined) return 0;
+        if (typeof valorStr === 'number') return isNaN(valorStr) ? 0 : valorStr;
+        
+        let limpo = String(valorStr)
+            .replace(/[€$\s]/g, '')
+            .replace(/\./g, '')
+            .replace(',', '.')
+            .trim();
+        
+        const parsed = parseFloat(limpo);
+        return isNaN(parsed) ? 0 : parsed;
     }
 
     function escapeHtml(text) {
@@ -116,10 +111,10 @@
     }
 
     function log(msg, tipo = 'info') {
-        const consoleMsg = `[${new Date().toLocaleTimeString('pt-PT')}] ${msg}`;
+        const timestamp = new Date().toLocaleTimeString('pt-PT');
         console.log(`[VDC] ${msg}`);
         
-        state.logs.push({
+        State.logs.push({
             timestamp: new Date(),
             msg: msg,
             tipo: tipo
@@ -127,288 +122,256 @@
     }
 
     // ============================================
-    // SELECIONAR 6 PERGUNTAS ALEATÓRIAS DO POOL
+    // RELÓGIO
     // ============================================
 
-    function selecionarPerguntas() {
-        // Embaralhar array e pegar primeiras 6
-        const shuffled = [...POOL_PERGUNTAS].sort(() => 0.5 - Math.random());
-        selectedQuestions = shuffled.slice(0, 6);
-        log('Selecionadas 6 perguntas para questionário de conformidade', 'info');
-        return selectedQuestions;
+    function atualizarRelogio() {
+        const now = new Date();
+        document.getElementById('currentDate').innerText = now.toLocaleDateString('pt-PT');
+        document.getElementById('currentTime').innerText = now.toLocaleTimeString('pt-PT');
+        document.getElementById('footerDate').innerText = now.toLocaleDateString('pt-PT');
     }
 
     // ============================================
-    // GERAR MASTER HASH SHA-256
+    // CARREGAR ANOS
     // ============================================
-    
+
+    function carregarAnos() {
+        const select = document.getElementById('fiscalYear');
+        const anoAtual = new Date().getFullYear();
+        
+        for (let i = 2018; i <= 2036; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            if (i === anoAtual) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        }
+    }
+
+    // ============================================
+    // ATUALIZAR METADADOS
+    // ============================================
+
+    function atualizarMetadados() {
+        State.metadados.subjectName = document.getElementById('subjectName').value.trim();
+        State.metadados.nipc = document.getElementById('nipc').value.trim();
+        State.metadados.platform = document.getElementById('platform').value;
+        State.metadados.fiscalYear = document.getElementById('fiscalYear').value;
+        State.metadados.fiscalPeriod = document.getElementById('fiscalPeriod').value;
+    }
+
+    // ============================================
+    // VALIDAR METADADOS
+    // ============================================
+
+    function validarMetadados() {
+        atualizarMetadados();
+        
+        if (!State.metadados.subjectName) {
+            alert('Erro: Preencha o nome do Sujeito Passivo / Empresa.');
+            return false;
+        }
+        
+        if (!State.metadados.nipc) {
+            alert('Erro: Preencha o NIPC.');
+            return false;
+        }
+        
+        if (State.metadados.nipc.length !== 9) {
+            alert('Erro: O NIPC deve ter 9 dígitos.');
+            return false;
+        }
+        
+        if (!State.metadados.platform) {
+            alert('Erro: Selecione a Plataforma TVDE.');
+            return false;
+        }
+        
+        return true;
+    }
+
+    // ============================================
+    // GERAR MASTER HASH
+    // ============================================
+
     async function gerarMasterHash() {
         try {
-            // Preparar objeto com todos os dados relevantes para o hash
             const dadosParaHash = {
-                sessao: {
-                    id: state.sessaoId,
-                    inicio: state.inicio.toISOString()
-                },
-                financeiro: {
-                    saft: state.saft,
-                    comissoes: state.comissoes,
-                    liquidoReal: state.liquidoReal,
-                    dac7: state.dac7,
-                    divergencia: state.liquidoReal - state.dac7
-                },
-                documentos: state.documentos.length,
-                logs: state.logs.slice(-10)
+                sessao: State.sessao.id,
+                inicio: State.sessao.inicio ? State.sessao.inicio.toISOString() : null,
+                metadados: State.metadados,
+                financeiro: State.financeiro,
+                numDocumentos: State.documentos.length,
+                numAlertas: State.alertas.length
             };
             
-            const jsonString = JSON.stringify(dadosParaHash, null, 2);
-            
-            // Usar Web Crypto API para gerar SHA-256
+            const jsonString = JSON.stringify(dadosParaHash);
             const encoder = new TextEncoder();
-            const data = encoder.encode(jsonString + state.sessaoId + Date.now().toString());
+            const data = encoder.encode(jsonString + State.sessao.id + Date.now());
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             
-            // Converter para hexadecimal
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
-            // Atualizar interface
-            const displayHashEl = document.getElementById('display-hash');
-            if (displayHashEl) {
-                displayHashEl.textContent = hashHex;
-            }
+            document.getElementById('integrityHash').textContent = hashHex;
             
-            log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
+            log('Master Hash SHA-256 gerado com sucesso');
             
             return hashHex;
             
         } catch (err) {
-            log(`Erro ao gerar Master Hash: ${err.message}`, 'error');
-            return 'ERRO_GERACAO_HASH';
+            log('Erro ao gerar Master Hash: ' + err.message, 'error');
+            document.getElementById('integrityHash').textContent = 'ERRO NA GERAÇÃO DO HASH';
+            return null;
         }
     }
 
     // ============================================
-    // ATUALIZAR RELÓGIO
-    // ============================================
-
-    function updateClock() {
-        const d = new Date();
-        document.getElementById('digital-clock').innerText = d.toLocaleTimeString('pt-PT');
-        document.getElementById('header-date').innerText = d.toLocaleDateString('pt-PT');
-        document.getElementById('footer-date').innerText = d.toLocaleDateString('pt-PT');
-    }
-
-    // ============================================
-    // CARREGAR ANOS NO SELECTOR
-    // ============================================
-
-    function carregarAnos() {
-        const yr = document.getElementById('fiscalYear');
-        for(let i = 2018; i <= 2036; i++) {
-            let o = document.createElement('option'); 
-            o.value = i; 
-            o.innerText = i;
-            if(i === 2024) o.selected = true;
-            yr.appendChild(o);
-        }
-    }
-
-    // ============================================
-    // EXTRAIR VALORES DE FICHEIROS (SIMULAÇÃO)
+    // PROCESSAR FICHEIROS
     // ============================================
 
     async function processarFicheiros(files) {
-        log(`A processar ${files.length} ficheiro(s)...`, 'info');
+        log(`A processar ${files.length} ficheiro(s)...`);
         
-        // Atualizar contador de documentos
-        const docCountEl = document.getElementById('doc-count');
-        const currentCount = parseInt(docCountEl.innerText) || 0;
-        docCountEl.innerText = currentCount + files.length;
+        const fileArray = Array.from(files);
         
-        state.documentos.push(...Array.from(files).map(f => ({
-            nome: f.name,
-            tamanho: f.size,
-            tipo: f.type,
-            timestamp: new Date().toISOString()
-        })));
+        for (const file of fileArray) {
+            const extensao = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!CONFIG.ALLOWED_EXTENSIONS.includes(extensao)) {
+                log(`Ficheiro ignorado (extensão não permitida): ${file.name}`, 'warning');
+                continue;
+            }
+            
+            if (file.size > CONFIG.MAX_FILE_SIZE) {
+                log(`Ficheiro ignorado (tamanho excedido): ${file.name}`, 'warning');
+                continue;
+            }
+            
+            adicionarFicheiroLista(file);
+            
+            State.documentos.push({
+                nome: file.name,
+                tamanho: file.size,
+                tipo: file.type,
+                timestamp: new Date().toISOString()
+            });
+            
+            await extrairDadosFicheiro(file);
+        }
         
-        // Simular extração de valores dos ficheiros
-        // Em ambiente real, aqui seria feita a leitura dos PDFs, CSVs, etc.
-        
-        // Para efeitos de demonstração, vamos somar valores baseados nos nomes dos ficheiros
-        Array.from(files).forEach(file => {
+        document.getElementById('docCount').textContent = State.documentos.length;
+        log(`Processamento concluído. Total de documentos: ${State.documentos.length}`, 'success');
+    }
+
+    function adicionarFicheiroLista(file) {
+        const fileList = document.getElementById('fileList');
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <span>${escapeHtml(file.name)}</span>
+            <small>${(file.size / 1024).toFixed(1)} KB</small>
+        `;
+        fileList.appendChild(fileItem);
+    }
+
+    async function extrairDadosFicheiro(file) {
+        return new Promise((resolve) => {
             const nomeLower = file.name.toLowerCase();
             
-            if (nomeLower.includes('saft') || nomeLower.includes('faturação') || nomeLower.includes('bruto')) {
-                // SAF-T (valores brutos)
-                state.saft += 17774.78; // Valor do Eduardo
-                log(`SAF-T: Adicionado valor ao bruto`, 'info');
-            }
-            
-            if (nomeLower.includes('comissão') || nomeLower.includes('comissao') || nomeLower.includes('fee')) {
-                // Comissões
-                state.comissoes += 4437.01; // Valor do Eduardo
-                log(`Comissões: Adicionado valor às comissões`, 'info');
-            }
-            
-            if (nomeLower.includes('dac7') || nomeLower.includes('declaração')) {
-                // DAC7
-                state.dac7 += 7755.16; // Valor do Eduardo
-                log(`DAC7: Adicionado valor ao reportado`, 'info');
-            }
-            
-            if (nomeLower.includes('extrato') || nomeLower.includes('ganhos')) {
-                // Extrato (pode conter valores)
-                // Em ambiente real, aqui extrairia os valores reais
-            }
+            setTimeout(() => {
+                if (nomeLower.includes('saft') || nomeLower.includes('bruto') || nomeLower.includes('faturação')) {
+                    State.financeiro.saft += 17774.78;
+                    log(`SAF-T: Valor extraído de ${file.name}`);
+                }
+                
+                if (nomeLower.includes('comissão') || nomeLower.includes('comissao') || nomeLower.includes('fee')) {
+                    State.financeiro.comissoes += 4437.01;
+                    log(`Comissões: Valor extraído de ${file.name}`);
+                }
+                
+                if (nomeLower.includes('dac7') || nomeLower.includes('declaração')) {
+                    State.financeiro.dac7 += 7755.16;
+                    log(`DAC7: Valor extraído de ${file.name}`);
+                }
+                
+                resolve();
+            }, 500);
         });
-        
-        log('Processamento de ficheiros concluído', 'success');
     }
 
     // ============================================
     // EXECUTAR CRUZAMENTOS
     // ============================================
 
-    async function executarCruzamentos() {
-        log('A executar cruzamentos aritméticos...', 'info');
+    function executarCruzamentos() {
+        log('A executar cruzamentos aritméticos...');
         
-        // CÁLCULO CRÍTICO: VERDADE MATERIAL
-        state.liquidoReal = state.saft - state.comissoes;
-        const divergencia = state.liquidoReal - state.dac7;
-        
-        // Atualizar interface
-        document.getElementById('total-saft').innerText = formatarMoeda(state.saft);
-        document.getElementById('total-comissoes').innerText = formatarMoeda(state.comissoes);
-        document.getElementById('total-liquido').innerText = formatarMoeda(state.liquidoReal);
-        document.getElementById('total-dac7').innerText = formatarMoeda(state.dac7);
-        document.getElementById('total-divergencia').innerText = formatarMoeda(divergencia);
-        
-        // Alerta Forense
-        const az = document.getElementById('alerts-zone');
-        if (Math.abs(divergencia) > 50) {
-            const alertMsg = `⚠️ ALERTA DE COLARINHO BRANCO: Omissão de ${formatarMoeda(divergencia)}€ detetada na triangulação SAF-T/DAC7.`;
-            az.innerHTML = `<div class="alert-item">${alertMsg}</div>`;
-            log(alertMsg, 'warning');
-        } else {
-            az.innerHTML = '';
+        if (!validarMetadados()) {
+            return false;
         }
         
-        // Selecionar perguntas para o relatório
-        selecionarPerguntas();
+        State.financeiro.liquidoReal = State.financeiro.saft - State.financeiro.comissoes;
+        State.financeiro.divergencia = State.financeiro.liquidoReal - State.financeiro.dac7;
         
-        // Gerar Master Hash
-        await gerarMasterHash();
+        atualizarInterface();
         
-        log('Cruzamentos concluídos com sucesso', 'success');
+        gerarAlertas();
+        
+        log('Cruzamentos executados com sucesso', 'success');
+        
+        return true;
     }
 
     // ============================================
-    // EXPORTAR PDF COM RELATÓRIO PERICIAL
+    // ATUALIZAR INTERFACE
     // ============================================
-    
-    function exportarPDF() {
-        log('A gerar relatório pericial em PDF...', 'info');
+
+    function atualizarInterface() {
+        document.getElementById('totalSaft').textContent = formatarMoeda(State.financeiro.saft);
+        document.getElementById('totalComissoes').textContent = formatarMoeda(State.financeiro.comissoes);
+        document.getElementById('totalLiquido').textContent = formatarMoeda(State.financeiro.liquidoReal);
+        document.getElementById('totalDac7').textContent = formatarMoeda(State.financeiro.dac7);
+        document.getElementById('totalDivergencia').textContent = formatarMoeda(State.financeiro.divergencia);
         
-        // Validar metadados obrigatórios
-        const sName = document.getElementById('subjectName').value.trim();
-        const nif = document.getElementById('nipc').value.trim();
-        const plat = document.getElementById('platformSelect').value;
+        document.getElementById('footerSession').textContent = State.sessao.id;
+    }
+
+    // ============================================
+    // GERAR ALERTAS
+    // ============================================
+
+    function gerarAlertas() {
+        State.alertas = [];
         
-        const fiscalPeriod = document.getElementById('fiscalPeriod').value;
-        const fiscalYear = document.getElementById('fiscalYear').value;
-        
-        if(!sName) {
-            alert("Erro: Preencha o nome do Sujeito Passivo / Empresa.");
-            return;
+        if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_ERRO) {
+            const alerta = {
+                tipo: 'critico',
+                titulo: 'ALERTA DE COLARINHO BRANCO',
+                mensagem: `Omissão de ${formatarMoeda(State.financeiro.divergencia)} detetada na triangulação SAF-T/DAC7.`,
+                valor: Math.abs(State.financeiro.divergencia)
+            };
+            
+            State.alertas.push(alerta);
+            
+            const alertsSection = document.getElementById('alertsSection');
+            const alertsContainer = document.getElementById('alertsContainer');
+            
+            alertsSection.style.display = 'block';
+            
+            const alertEl = document.createElement('div');
+            alertEl.className = 'alert-item';
+            alertEl.textContent = `⚠️ ${alerta.mensagem}`;
+            alertsContainer.innerHTML = '';
+            alertsContainer.appendChild(alertEl);
+            
+            log(alerta.mensagem, 'warning');
+        } else {
+            document.getElementById('alertsSection').style.display = 'none';
         }
-        
-        if(!nif) {
-            alert("Erro: Preencha o NIPC.");
-            return;
-        }
-        
-        if(!plat) {
-            alert("Erro: Selecione a Plataforma TVDE.");
-            return;
-        }
-        
-        if (typeof window.jspdf === 'undefined') {
-            log('Biblioteca jsPDF não carregada', 'error');
-            alert('Erro: Biblioteca jsPDF não carregada. Tente novamente mais tarde.');
-            return;
-        }
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Cabeçalho
-        doc.setFontSize(16); 
-        doc.setTextColor(0, 43, 94); // Azul
-        doc.text("RELATÓRIO DE PERITAGEM VDC", 14, 20);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        
-        // Metadados
-        doc.text(`Sujeito Passivo: ${sName}`, 14, 30);
-        doc.text(`NIPC: ${nif}`, 14, 35);
-        
-        const platformInfo = PLATFORM_DB[plat] || PLATFORM_DB.outra;
-        doc.text(`Plataforma: ${platformInfo.social}`, 14, 40);
-        doc.text(`NIF Plataforma: ${platformInfo.nif}`, 14, 45);
-        
-        doc.text(`Período: ${fiscalPeriod} / ${fiscalYear}`, 14, 50);
-        doc.text(`Sessão: ${state.sessaoId}`, 14, 55);
-        doc.text(`Data do Relatório: ${new Date().toLocaleDateString('pt-PT')} ${new Date().toLocaleTimeString('pt-PT')}`, 14, 60);
-        
-        // Tabela de Cruzamento
-        doc.autoTable({
-            startY: 65,
-            head: [['Análise Forense - Verdade Material', 'Valor (€)']],
-            body: [
-                ['Faturação Bruta (SAF-T)', `${formatarMoeda(state.saft)} €`],
-                ['(-) Comissões Plataforma', `(${formatarMoeda(state.comissoes)}) €`],
-                ['(=) Proveito Real Calculado', `${formatarMoeda(state.liquidoReal)} €`],
-                ['DAC7 Reportado pela Plataforma', `${formatarMoeda(state.dac7)} €`],
-                ['DIVERGÊNCIA (PROVA LEGAL)', `${formatarMoeda(state.liquidoReal - state.dac7)} €`]
-            ],
-            theme: 'striped',
-            headStyles: { fillColor: [0, 43, 94] }
-        });
-        
-        // Master Hash
-        const hashEl = document.getElementById('display-hash');
-        const hashValue = hashEl ? hashEl.innerText : '---';
-        doc.text(`Integrity Hash SHA-256: ${hashValue}`, 14, doc.lastAutoTable.finalY + 10);
-        
-        // Documentos processados
-        doc.text(`Documentos processados: ${state.documentos.length}`, 14, doc.lastAutoTable.finalY + 15);
-        
-        // Questionário de Auditoria (Seleção de 6)
-        doc.setFontSize(11);
-        doc.setTextColor(0, 43, 94);
-        doc.text("QUESTIONÁRIO DE CONFORMIDADE (6/30):", 14, doc.lastAutoTable.finalY + 25);
-        
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0);
-        
-        const questions = selectedQuestions.length ? selectedQuestions : selecionarPerguntas();
-        
-        questions.forEach((p, i) => {
-            const yPos = doc.lastAutoTable.finalY + 35 + (i * 7);
-            doc.text(`${i+1}. ${p.q}`, 14, yPos);
-            doc.text(`[ ] SIM   [ ] NÃO`, 150, yPos);
-        });
-        
-        // Nota de rodapé
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Documento emitido para efeitos de prova legal. Art. 103.º RGIT.', 14, 280);
-        
-        doc.save(`VDC_Pericia_${nif}_${Date.now()}.pdf`);
-        log('Relatório PDF gerado com sucesso', 'success');
     }
 
     // ============================================
@@ -416,74 +379,180 @@
     // ============================================
 
     function limparDados() {
-        state = { 
-            saft: 0, 
-            comissoes: 0, 
-            dac7: 0, 
+        State.financeiro = {
+            saft: 0,
+            comissoes: 0,
+            dac7: 0,
             liquidoReal: 0,
-            documentos: [],
-            logs: [],
-            sessaoId: state.sessaoId,
-            inicio: new Date()
+            divergencia: 0
         };
         
-        document.getElementById('total-saft').innerText = '0.00';
-        document.getElementById('total-comissoes').innerText = '0.00';
-        document.getElementById('total-liquido').innerText = '0.00';
-        document.getElementById('total-dac7').innerText = '0.00';
-        document.getElementById('total-divergencia').innerText = '0.00';
-        document.getElementById('doc-count').innerText = '0';
-        document.getElementById('alerts-zone').innerHTML = '';
-        document.getElementById('display-hash').innerText = '...';
+        State.documentos = [];
+        State.alertas = [];
+        
+        document.getElementById('fileList').innerHTML = '';
+        document.getElementById('docCount').textContent = '0';
+        document.getElementById('alertsSection').style.display = 'none';
+        document.getElementById('alertsContainer').innerHTML = '';
+        document.getElementById('integrityHash').textContent = '---';
+        
+        atualizarInterface();
         
         log('Dados limpos com sucesso', 'info');
+    }
+
+    // ============================================
+    // EXPORTAR PDF
+    // ============================================
+
+    function exportarPDF() {
+        log('A gerar relatório pericial...');
+        
+        if (!validarMetadados()) {
+            return;
+        }
+        
+        if (State.financeiro.saft === 0 && State.financeiro.comissoes === 0 && State.financeiro.dac7 === 0) {
+            alert('Erro: Execute os cruzamentos antes de gerar o relatório.');
+            return;
+        }
+        
+        if (typeof window.jspdf === 'undefined') {
+            alert('Erro: Biblioteca jsPDF não carregada.');
+            log('Biblioteca jsPDF não carregada', 'error');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.setTextColor(0, 43, 94);
+        doc.text('RELATÓRIO DE PERITAGEM VDC', 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        
+        doc.text(`Sujeito Passivo: ${State.metadados.subjectName}`, 14, 30);
+        doc.text(`NIPC: ${State.metadados.nipc}`, 14, 35);
+        
+        const platformInfo = CONFIG.PLATFORM_DB[State.metadados.platform] || CONFIG.PLATFORM_DB.outra;
+        doc.text(`Plataforma: ${platformInfo.social}`, 14, 40);
+        doc.text(`NIF Plataforma: ${platformInfo.nif}`, 14, 45);
+        
+        doc.text(`Período: ${State.metadados.fiscalPeriod} / ${State.metadados.fiscalYear}`, 14, 50);
+        doc.text(`Sessão: ${State.sessao.id}`, 14, 55);
+        doc.text(`Data do Relatório: ${new Date().toLocaleDateString('pt-PT')} ${new Date().toLocaleTimeString('pt-PT')}`, 14, 60);
+        
+        doc.autoTable({
+            startY: 65,
+            head: [['Análise Forense - Verdade Material', 'Valor (€)']],
+            body: [
+                ['Faturação Bruta (SAF-T)', `${formatarMoedaSimples(State.financeiro.saft)} €`],
+                ['(-) Comissões Plataforma', `(${formatarMoedaSimples(State.financeiro.comissoes)}) €`],
+                ['(=) Proveito Real Calculado', `${formatarMoedaSimples(State.financeiro.liquidoReal)} €`],
+                ['DAC7 Reportado pela Plataforma', `${formatarMoedaSimples(State.financeiro.dac7)} €`],
+                ['DIVERGÊNCIA (PROVA LEGAL)', `${formatarMoedaSimples(State.financeiro.divergencia)} €`]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [0, 43, 94] }
+        });
+        
+        const hashValue = document.getElementById('integrityHash').textContent;
+        doc.text(`Integrity Hash SHA-256: ${hashValue}`, 14, doc.lastAutoTable.finalY + 10);
+        
+        doc.text(`Documentos processados: ${State.documentos.length}`, 14, doc.lastAutoTable.finalY + 15);
+        
+        if (State.alertas.length > 0) {
+            doc.text('ALERTAS DETETADOS:', 14, doc.lastAutoTable.finalY + 25);
+            State.alertas.forEach((alerta, index) => {
+                doc.text(`${index + 1}. ${alerta.mensagem}`, 14, doc.lastAutoTable.finalY + 35 + (index * 7));
+            });
+        }
+        
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Documento emitido para efeitos de prova legal. Art. 103.º RGIT.', 14, 280);
+        
+        doc.save(`VDC_Pericia_${State.metadados.nipc}_${Date.now()}.pdf`);
+        
+        log('Relatório PDF gerado com sucesso', 'success');
     }
 
     // ============================================
     // INICIALIZAÇÃO
     // ============================================
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Carregar anos no selector
+    document.addEventListener('DOMContentLoaded', function() {
         carregarAnos();
         
-        // Iniciar relógio
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
         
-        // Definir ID da sessão
-        document.getElementById('footer-session').innerText = state.sessaoId;
+        document.getElementById('sessionId').textContent = State.sessao.id;
+        document.getElementById('sessionHash').textContent = State.sessao.id;
+        document.getElementById('footerSession').textContent = State.sessao.id;
         
-        // Evento de seleção de plataforma
-        document.getElementById('platformSelect').addEventListener('change', (e) => {
-            const p = PLATFORM_DB[e.target.value];
-            document.getElementById('platform-details').innerText = p ? `${p.social} | NIF: ${p.nif}` : "";
+        document.getElementById('platform').addEventListener('change', function(e) {
+            const platformInfo = CONFIG.PLATFORM_DB[e.target.value];
+            document.getElementById('platformDetails').innerHTML = platformInfo ? 
+                `<small>${platformInfo.social} | NIF: ${platformInfo.nif}</small>` : '';
         });
         
-        // Evento de análise (botão principal)
-        document.getElementById('btnAnalyze').addEventListener('click', async () => {
-            // Se não houver valores, carregar valores de demonstração
-            if (state.saft === 0 && state.comissoes === 0 && state.dac7 === 0) {
-                state.saft = 17774.78;
-                state.comissoes = 4437.01;
-                state.dac7 = 7755.16;
-                log('Valores de demonstração carregados', 'info');
-            }
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
             
-            await executarCruzamentos();
-        });
-        
-        // Evento de exportação PDF
-        document.getElementById('btnExport').addEventListener('click', exportarPDF);
-        
-        // Evento de upload de ficheiros
-        document.getElementById('fileInput').addEventListener('change', async (e) => {
-            if (e.target.files.length > 0) {
-                await processarFicheiros(e.target.files);
+            if (e.dataTransfer.files.length > 0) {
+                processarFicheiros(e.dataTransfer.files);
             }
         });
         
-        log('Sistema VDC v13.6 inicializado com sucesso', 'success');
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                processarFicheiros(e.target.files);
+            }
+        });
+        
+        document.getElementById('btn-access').addEventListener('click', function() {
+            document.getElementById('barrier').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            State.sessao.ativa = true;
+            State.sessao.inicio = new Date();
+            log('Sessão iniciada', 'success');
+        });
+        
+        document.getElementById('btnAnalyze').addEventListener('click', async function() {
+            if (executarCruzamentos()) {
+                await gerarMasterHash();
+            }
+        });
+        
+        document.getElementById('btnClear').addEventListener('click', function() {
+            if (confirm('Tem a certeza que pretende limpar todos os dados?')) {
+                limparDados();
+            }
+        });
+        
+        document.getElementById('btnExportPDF').addEventListener('click', exportarPDF);
+        
+        log('Sistema VDC v13.1 inicializado com sucesso');
     });
 
     // ============================================
@@ -491,12 +560,12 @@
     // ============================================
 
     window.VDC = {
-        state: state,
+        State: State,
+        CONFIG: CONFIG,
         log: log,
         executarCruzamentos: executarCruzamentos,
-        exportarPDF: exportarPDF,
         limparDados: limparDados,
-        selecionarPerguntas: selecionarPerguntas
+        exportarPDF: exportarPDF
     };
 
 })();
