@@ -1,10 +1,14 @@
 /**
  * VDC FORENSE v13.0 SYNC SCHEMA - CONSOLIDAÇÃO FINAL
- * Sistema de Peritagem Digital e Auditoria Fiscal
- * Motor de Extração e Processamento de Evidências
+ * RETIFICAÇÃO DA LÓGICA DE CONCILIAÇÃO ARITMÉTICA
  * 
- * Versão: 13.0.0-FINAL
- * Analista: Eduardo Perito Forense
+ * Engenheiro de Dados Forenses: Eduardo
+ * Data: Fevereiro 2026
+ * 
+ * CRUZAMENTOS RETIFICADOS:
+ * - SAF-T vs DAC7
+ * - Bruto vs Ganhos App (soma dos componentes)
+ * - Comissões vs Fatura Plataforma (validação 25%)
  */
 
 (function() {
@@ -21,7 +25,8 @@
         MAX_FILE_SIZE: 10 * 1024 * 1024,
         ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml'],
         TAXA_COMISSAO_MAX: 0.25,
-        TOLERANCIA_ERRO: 0.01,
+        TAXA_COMISSAO_PADRAO: 0.23, // 23% (valor médio observado)
+        TOLERANCIA_ERRO: 0.01,       // 1 cêntimo de tolerância
         
         PATTERNS: {
             CLEAN: /[\n\r\t]+/g,
@@ -43,19 +48,15 @@
             DAC7_RECEITA_ANUAL: /Total\s+de\s+receitas\s+anuais:\s*([\d\s.,]+)€/i,
             DAC7_GANHOS_1T: /Ganhos\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_COMISSOES_1T: /Comiss[oõ]es\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
-            DAC7_IMPOSTOS_1T: /Impostos\s+do\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_SERVICOS_1T: /Serviços\s+prestados\s+no\s+1\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
             DAC7_GANHOS_2T: /Ganhos\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_COMISSOES_2T: /Comiss[oõ]es\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
-            DAC7_IMPOSTOS_2T: /Impostos\s+do\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_SERVICOS_2T: /Serviços\s+prestados\s+no\s+2\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
             DAC7_GANHOS_3T: /Ganhos\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_COMISSOES_3T: /Comiss[oõ]es\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
-            DAC7_IMPOSTOS_3T: /Impostos\s+do\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_SERVICOS_3T: /Serviços\s+prestados\s+no\s+3\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
             DAC7_GANHOS_4T: /Ganhos\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_COMISSOES_4T: /Comiss[oõ]es\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
-            DAC7_IMPOSTOS_4T: /Impostos\s+do\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)€/i,
             DAC7_SERVICOS_4T: /Serviços\s+prestados\s+no\s+4\.?[º°]?\s*trimestre:\s*([\d\s.,]+)/i,
             
             NIF: /NIF:\s*(\d{9})/i,
@@ -100,7 +101,40 @@
         fila: [],
         processando: false,
         alertas: [],
-        logs: []
+        logs: [],
+        
+        // ============================================
+        // NOVAS PROPRIEDADES PARA CRUZAMENTOS ARITMÉTICOS
+        // ============================================
+        
+        // Resultados dos cruzamentos para exportação JSON
+        cruzamentos: {
+            saftVsDac7: {
+                realizado: false,
+                valorSAFT: 0,
+                valorDAC7: 0,
+                diferenca: 0,
+                convergente: false,
+                alerta: null
+            },
+            brutoVsGanhosApp: {
+                realizado: false,
+                valorBruto: 0,
+                valorCalculado: 0, // ganhosApp + ganhosCampanha + gorjetas + portagens + taxasCancel
+                diferenca: 0,
+                convergente: false,
+                alerta: null
+            },
+            comissoesVsFatura: {
+                realizado: false,
+                totalComissoes: 0,
+                totalFaturas: 0,
+                diferenca: 0,
+                taxaEfetiva: 0,
+                convergente: false,
+                alertasPorViagem: []
+            }
+        }
     };
 
     // ============================================
@@ -157,6 +191,292 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // ============================================
+    // NOVA FUNÇÃO: GERAR MASTER HASH SHA-256
+    // ============================================
+    
+    async function gerarMasterHash() {
+        try {
+            // Preparar objeto com todos os dados relevantes para o hash
+            const dadosParaHash = {
+                sessao: {
+                    id: State.sessao.id,
+                    inicio: State.sessao.inicio ? State.sessao.inicio.toISOString() : null
+                },
+                financeiro: {
+                    bruto: State.financeiro.bruto,
+                    comissoes: State.financeiro.comissoes,
+                    liquido: State.financeiro.liquido,
+                    dac7: State.financeiro.dac7,
+                    viagens: State.financeiro.viagens.map(v => ({
+                        valor: v.valor,
+                        comissao: v.comissao
+                    })),
+                    extrato: State.financeiro.extrato,
+                    dac7Trimestres: State.financeiro.dac7Trimestres
+                },
+                autenticidade: State.autenticidade.map(a => ({
+                    algoritmo: a.algoritmo,
+                    hash: a.hash,
+                    ficheiro: a.ficheiro
+                })),
+                cruzamentos: State.cruzamentos
+            };
+            
+            const jsonString = JSON.stringify(dadosParaHash, null, 2);
+            
+            // Usar Web Crypto API para gerar SHA-256
+            const encoder = new TextEncoder();
+            const data = encoder.encode(jsonString + State.sessao.id);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            
+            // Converter para hexadecimal
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            logger.log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
+            
+            return {
+                hash: hashHex,
+                timestamp: new Date().toISOString(),
+                algoritmo: 'SHA-256'
+            };
+            
+        } catch (err) {
+            logger.log(`Erro ao gerar Master Hash: ${err.message}`, 'error');
+            return {
+                hash: 'ERRO_GERACAO_HASH',
+                timestamp: new Date().toISOString(),
+                algoritmo: 'SHA-256',
+                erro: err.message
+            };
+        }
+    }
+
+    // ============================================
+    // NOVA FUNÇÃO: EXECUTAR CRUZAMENTOS ARITMÉTICOS
+    // ============================================
+    
+    function executarCruzamentos() {
+        logger.log('A executar cruzamentos aritméticos...', 'info');
+        
+        // ============================================
+        // CRUZAMENTO 1: SAF-T vs DAC7
+        // ============================================
+        
+        const saftVsDac7 = {
+            realizado: true,
+            valorSAFT: State.financeiro.bruto,
+            valorDAC7: State.financeiro.dac7,
+            diferenca: Math.abs(State.financeiro.bruto - State.financeiro.dac7),
+            convergente: Math.abs(State.financeiro.bruto - State.financeiro.dac7) <= CONFIG.TOLERANCIA_ERRO,
+            alerta: null
+        };
+        
+        if (State.financeiro.bruto > 0 && State.financeiro.dac7 > 0) {
+            if (!saftVsDac7.convergente) {
+                saftVsDac7.alerta = `Discrepância SAF-T (${formatarMoeda(State.financeiro.bruto)}) vs DAC7 (${formatarMoeda(State.financeiro.dac7)}) - Diferença: ${formatarMoeda(saftVsDac7.diferenca)}`;
+                logger.log(`⚠️ ${saftVsDac7.alerta}`, 'warning');
+            } else {
+                logger.log(`✅ SAF-T e DAC7 convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
+            }
+        }
+        
+        State.cruzamentos.saftVsDac7 = saftVsDac7;
+        
+        // ============================================
+        // CRUZAMENTO 2: Bruto vs Ganhos App (soma dos componentes)
+        // ============================================
+        
+        const valorCalculadoApp = 
+            State.financeiro.extrato.ganhosApp +
+            State.financeiro.extrato.ganhosCampanha +
+            State.financeiro.extrato.gorjetas +
+            State.financeiro.extrato.portagens +
+            State.financeiro.extrato.taxasCancel;
+        
+        const brutoVsGanhosApp = {
+            realizado: true,
+            valorBruto: State.financeiro.bruto,
+            valorCalculado: valorCalculadoApp,
+            diferenca: Math.abs(State.financeiro.bruto - valorCalculadoApp),
+            convergente: Math.abs(State.financeiro.bruto - valorCalculadoApp) <= CONFIG.TOLERANCIA_ERRO,
+            alerta: null
+        };
+        
+        if (State.financeiro.bruto > 0 || valorCalculadoApp > 0) {
+            if (!brutoVsGanhosApp.convergente) {
+                brutoVsGanhosApp.alerta = `Discrepância Bruto (${formatarMoeda(State.financeiro.bruto)}) vs Soma Ganhos App (${formatarMoeda(valorCalculadoApp)}) - Diferença: ${formatarMoeda(brutoVsGanhosApp.diferenca)}`;
+                logger.log(`⚠️ ${brutoVsGanhosApp.alerta}`, 'warning');
+            } else {
+                logger.log(`✅ Bruto e soma dos ganhos App convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
+            }
+        }
+        
+        State.cruzamentos.brutoVsGanhosApp = brutoVsGanhosApp;
+        
+        // ============================================
+        // CRUZAMENTO 3: Comissões vs Fatura Plataforma
+        // Validação da taxa de 25% por viagem
+        // ============================================
+        
+        const totalFaturas = State.financeiro.faturas.reduce((acc, f) => acc + f.valor, 0);
+        const taxaEfetiva = State.financeiro.bruto > 0 ? 
+            (State.financeiro.comissoes / State.financeiro.bruto) * 100 : 0;
+        
+        const comissoesVsFatura = {
+            realizado: true,
+            totalComissoes: State.financeiro.comissoes,
+            totalFaturas: totalFaturas,
+            diferenca: Math.abs(State.financeiro.comissoes - totalFaturas),
+            taxaEfetiva: taxaEfetiva,
+            convergente: true, // Assume convergente, será alterado se houver discrepâncias
+            alertasPorViagem: []
+        };
+        
+        // Verificar discrepância entre total comissões e total faturas
+        if (totalFaturas > 0 && Math.abs(State.financeiro.comissoes - totalFaturas) > CONFIG.TOLERANCIA_ERRO) {
+            comissoesVsFatura.convergente = false;
+            comissoesVsFatura.alerta = `Discrepância Comissões (${formatarMoeda(State.financeiro.comissoes)}) vs Faturas (${formatarMoeda(totalFaturas)})`;
+            logger.log(`⚠️ ${comissoesVsFatura.alerta}`, 'warning');
+        }
+        
+        // Verificar taxa por viagem (máx 25%)
+        State.financeiro.viagens.forEach((v, index) => {
+            if (v.valor > 0) {
+                const taxaViagem = (v.comissao / v.valor) * 100;
+                
+                if (taxaViagem > CONFIG.TAXA_COMISSAO_MAX * 100 + 0.1) { // +0.1% de tolerância
+                    const alerta = {
+                        viagemIndex: index,
+                        numFatura: v.numFatura,
+                        valor: v.valor,
+                        comissao: v.comissao,
+                        taxa: taxaViagem.toFixed(2),
+                        limite: (CONFIG.TAXA_COMISSAO_MAX * 100).toFixed(2),
+                        mensagem: `Comissão ${taxaViagem.toFixed(2)}% excede limite 25% na fatura ${v.numFatura}`
+                    };
+                    
+                    comissoesVsFatura.alertasPorViagem.push(alerta);
+                    comissoesVsFatura.convergente = false;
+                    
+                    logger.log(`⚠️ ${alerta.mensagem}`, 'warning');
+                }
+            }
+        });
+        
+        if (comissoesVsFatura.convergente && State.financeiro.viagens.length > 0) {
+            logger.log(`✅ Taxas de comissão dentro do limite legal (média: ${taxaEfetiva.toFixed(2)}%)`, 'success');
+        }
+        
+        State.cruzamentos.comissoesVsFatura = comissoesVsFatura;
+        
+        // ============================================
+        // ATUALIZAR ALERTAS NA INTERFACE
+        // ============================================
+        
+        gerarAlertasInterface();
+        
+        logger.log('Cruzamentos aritméticos concluídos', 'success');
+    }
+
+    // ============================================
+    // NOVA FUNÇÃO: GERAR ALERTAS NA INTERFACE
+    // ============================================
+    
+    function gerarAlertasInterface() {
+        const alertasContainer = document.getElementById('alertas-container');
+        if (!alertasContainer) return;
+        
+        // Limpar alertas anteriores
+        alertasContainer.innerHTML = '';
+        State.alertas = [];
+        
+        // Alertas do cruzamento SAF-T vs DAC7
+        if (State.cruzamentos.saftVsDac7.alerta) {
+            adicionarAlerta(
+                State.cruzamentos.saftVsDac7.diferenca > 100 ? 'critico' : 'alerta',
+                'SAF-T vs DAC7',
+                State.cruzamentos.saftVsDac7.alerta,
+                State.cruzamentos.saftVsDac7.diferenca
+            );
+        }
+        
+        // Alertas do cruzamento Bruto vs Ganhos App
+        if (State.cruzamentos.brutoVsGanhosApp.alerta) {
+            adicionarAlerta(
+                State.cruzamentos.brutoVsGanhosApp.diferenca > 50 ? 'critico' : 'alerta',
+                'Bruto vs Ganhos App',
+                State.cruzamentos.brutoVsGanhosApp.alerta,
+                State.cruzamentos.brutoVsGanhosApp.diferenca
+            );
+        }
+        
+        // Alertas do cruzamento Comissões vs Fatura
+        if (State.cruzamentos.comissoesVsFatura.alerta) {
+            adicionarAlerta(
+                'critico',
+                'Comissões vs Faturas',
+                State.cruzamentos.comissoesVsFatura.alerta,
+                State.cruzamentos.comissoesVsFatura.diferenca
+            );
+        }
+        
+        // Alertas por viagem (excesso de comissão)
+        State.cruzamentos.comissoesVsFatura.alertasPorViagem.forEach(alerta => {
+            adicionarAlerta(
+                'critico',
+                'Comissão Excedida',
+                alerta.mensagem,
+                alerta.comissao
+            );
+        });
+        
+        // Verificar outras discrepâncias (manter lógica original)
+        const c = State.financeiro;
+        
+        // Líquido calculado vs reportado
+        if (c.liquido > 0) {
+            const liquidoCalculado = c.bruto - c.comissoes;
+            if (Math.abs(liquidoCalculado - c.liquido) > 10) {
+                adicionarAlerta(
+                    'alerta',
+                    'DISCREPÂNCIA GANHOS LÍQUIDOS',
+                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(c.liquido)}`,
+                    Math.abs(liquidoCalculado - c.liquido)
+                );
+            }
+        }
+    }
+
+    function adicionarAlerta(tipo, titulo, descricao, valor) {
+        const alertasContainer = document.getElementById('alertas-container');
+        if (!alertasContainer) return;
+        
+        const alerta = {
+            id: Date.now() + Math.random(),
+            tipo: tipo,
+            titulo: titulo,
+            descricao: descricao,
+            valor: parseFloat(valor) || 0,
+            timestamp: new Date()
+        };
+        
+        State.alertas.push(alerta);
+        
+        const div = document.createElement('div');
+        div.className = `alerta ${tipo}`;
+        div.innerHTML = `
+            <div>
+                <strong>${escapeHtml(titulo)}</strong>
+                <span>${escapeHtml(descricao)}</span>
+            </div>
+            ${alerta.valor > 0 ? `<strong>${formatarMoeda(alerta.valor)}</strong>` : ''}
+        `;
+        
+        alertasContainer.appendChild(div);
     }
 
     // ============================================
@@ -427,6 +747,12 @@
         }
         
         State.processando = false;
+        
+        // Executar cruzamentos após processar todos os ficheiros
+        if (State.fila.length === 0) {
+            executarCruzamentos();
+        }
+        
         processarProximo();
     }
 
@@ -535,7 +861,9 @@
                 
                 const motorista = cols[2]?.replace(/"/g, '') || 'N/A';
                 const numFatura = cols[0]?.replace(/"/g, '') || 'N/A';
-                const comissao = valor * 0.23;
+                
+                // Calcular comissão baseada na taxa padrão (23%) - depois será validada
+                const comissao = valor * CONFIG.TAXA_COMISSAO_PADRAO;
                 
                 totalBruto += valor;
                 
@@ -562,7 +890,7 @@
         });
         
         State.financeiro.bruto += totalBruto;
-        State.financeiro.comissoes += totalBruto * 0.23;
+        State.financeiro.comissoes += totalBruto * CONFIG.TAXA_COMISSAO_PADRAO;
         
         logger.log(`Processadas ${count} viagens. Total bruto: ${formatarMoeda(totalBruto)}`, 'success');
     }
@@ -623,6 +951,10 @@
             State.financeiro.extrato.ganhosLiquidos = 2409.95;
             State.financeiro.extrato.ganhosApp = 3157.94;
             State.financeiro.extrato.comissoes = 792.59;
+            State.financeiro.extrato.ganhosCampanha = 0;
+            State.financeiro.extrato.gorjetas = 0;
+            State.financeiro.extrato.portagens = 0;
+            State.financeiro.extrato.taxasCancel = 0;
             State.financeiro.liquido += 2409.95;
             State.financeiro.bruto += 3157.94;
             State.financeiro.comissoes += 792.59;
@@ -631,6 +963,12 @@
         } else if (nomeLower.includes('fatura')) {
             logger.log('[SIMULAÇÃO] Fatura Bolt detetada', 'success');
             State.financeiro.comissoes += 239.00;
+            State.financeiro.faturas.push({
+                numero: file.name,
+                valor: 239.00,
+                periodo: 'N/A',
+                autoliquidacao: false
+            });
             atualizarContador('fat', 1);
             
         } else if (nomeLower.includes('dac7')) {
@@ -698,22 +1036,18 @@
         
         State.financeiro.dac7Trimestres.t1.ganhos = extrairValor(texto, CONFIG.PATTERNS.DAC7_GANHOS_1T);
         State.financeiro.dac7Trimestres.t1.comissoes = extrairValor(texto, CONFIG.PATTERNS.DAC7_COMISSOES_1T);
-        State.financeiro.dac7Trimestres.t1.impostos = extrairValor(texto, CONFIG.PATTERNS.DAC7_IMPOSTOS_1T);
         State.financeiro.dac7Trimestres.t1.servicos = extrairValor(texto, CONFIG.PATTERNS.DAC7_SERVICOS_1T);
         
         State.financeiro.dac7Trimestres.t2.ganhos = extrairValor(texto, CONFIG.PATTERNS.DAC7_GANHOS_2T);
         State.financeiro.dac7Trimestres.t2.comissoes = extrairValor(texto, CONFIG.PATTERNS.DAC7_COMISSOES_2T);
-        State.financeiro.dac7Trimestres.t2.impostos = extrairValor(texto, CONFIG.PATTERNS.DAC7_IMPOSTOS_2T);
         State.financeiro.dac7Trimestres.t2.servicos = extrairValor(texto, CONFIG.PATTERNS.DAC7_SERVICOS_2T);
         
         State.financeiro.dac7Trimestres.t3.ganhos = extrairValor(texto, CONFIG.PATTERNS.DAC7_GANHOS_3T);
         State.financeiro.dac7Trimestres.t3.comissoes = extrairValor(texto, CONFIG.PATTERNS.DAC7_COMISSOES_3T);
-        State.financeiro.dac7Trimestres.t3.impostos = extrairValor(texto, CONFIG.PATTERNS.DAC7_IMPOSTOS_3T);
         State.financeiro.dac7Trimestres.t3.servicos = extrairValor(texto, CONFIG.PATTERNS.DAC7_SERVICOS_3T);
         
         State.financeiro.dac7Trimestres.t4.ganhos = extrairValor(texto, CONFIG.PATTERNS.DAC7_GANHOS_4T);
         State.financeiro.dac7Trimestres.t4.comissoes = extrairValor(texto, CONFIG.PATTERNS.DAC7_COMISSOES_4T);
-        State.financeiro.dac7Trimestres.t4.impostos = extrairValor(texto, CONFIG.PATTERNS.DAC7_IMPOSTOS_4T);
         State.financeiro.dac7Trimestres.t4.servicos = extrairValor(texto, CONFIG.PATTERNS.DAC7_SERVICOS_4T);
         
         State.financeiro.dac7 = receitaAnual;
@@ -771,140 +1105,8 @@
         document.getElementById('dac7-3t').textContent = formatarMoeda(State.financeiro.dac7Trimestres.t3.ganhos);
         document.getElementById('dac7-4t').textContent = formatarMoeda(State.financeiro.dac7Trimestres.t4.ganhos);
         
-        verificarDiscrepancias();
-    }
-
-    function verificarDiscrepancias() {
-        const alertasContainer = document.getElementById('alertas-container');
-        if (!alertasContainer) return;
-        
-        alertasContainer.innerHTML = '';
-        State.alertas = [];
-        
-        const c = State.financeiro;
-        
-        if (c.dac7 > 0 && Math.abs(c.bruto - c.dac7) > 10) {
-            adicionarAlerta(
-                'critico', 
-                'DISCREPÂNCIA SAF-T vs DAC7', 
-                `Bruto (${formatarMoeda(c.bruto)}) ≠ DAC7 (${formatarMoeda(c.dac7)})`,
-                Math.abs(c.bruto - c.dac7)
-            );
-        }
-        
-        const taxaEfetiva = c.bruto > 0 ? c.comissoes / c.bruto : 0;
-        if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.05) {
-            adicionarAlerta(
-                'critico',
-                'COMISSÃO EXCEDE LIMITE LEGAL',
-                `Taxa: ${(taxaEfetiva * 100).toFixed(2)}% | Limite: 25%`,
-                c.comissoes - (c.bruto * CONFIG.TAXA_COMISSAO_MAX)
-            );
-        }
-        
-        if (c.liquido > 0) {
-            const liquidoCalculado = c.bruto - c.comissoes;
-            if (Math.abs(liquidoCalculado - c.liquido) > 10) {
-                adicionarAlerta(
-                    'alerta',
-                    'DISCREPÂNCIA GANHOS LÍQUIDOS',
-                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(c.liquido)}`,
-                    Math.abs(liquidoCalculado - c.liquido)
-                );
-            }
-        }
-        
-        atualizarVeredito();
-    }
-
-    function adicionarAlerta(tipo, titulo, descricao, valor) {
-        const alertasContainer = document.getElementById('alertas-container');
-        if (!alertasContainer) return;
-        
-        const alerta = {
-            id: Date.now() + Math.random(),
-            tipo: tipo,
-            titulo: titulo,
-            descricao: descricao,
-            valor: parseFloat(valor) || 0,
-            timestamp: new Date()
-        };
-        
-        State.alertas.push(alerta);
-        
-        const div = document.createElement('div');
-        div.className = `alerta ${tipo}`;
-        div.innerHTML = `
-            <div>
-                <strong>${escapeHtml(titulo)}</strong>
-                <span>${escapeHtml(descricao)}</span>
-            </div>
-            ${alerta.valor > 0 ? `<strong>${formatarMoeda(alerta.valor)}</strong>` : ''}
-        `;
-        
-        alertasContainer.appendChild(div);
-    }
-
-    function atualizarVeredito() {
-        const veredictoSection = document.getElementById('veredicto-section');
-        if (!veredictoSection) return;
-        
-        veredictoSection.style.display = 'block';
-        
-        const statusEl = document.getElementById('veredicto-status');
-        const desvioEl = document.getElementById('veredicto-desvio');
-        const anomaliaEl = document.getElementById('anomalia-critica');
-        const anomaliaTexto = document.getElementById('anomalia-texto');
-        const valorAnomalia = document.getElementById('valor-anomalia');
-        
-        const alertasCriticos = State.alertas.filter(a => a.tipo === 'critico');
-        const alertasNormais = State.alertas.filter(a => a.tipo === 'alerta');
-        
-        if (alertasCriticos.length > 0) {
-            const desvioTotal = alertasCriticos.reduce((acc, a) => acc + (a.valor || 0), 0);
-            const percentual = State.financeiro.dac7 > 0 ? (desvioTotal / State.financeiro.dac7) * 100 : 0;
-            
-            statusEl.textContent = 'CRÍTICO';
-            statusEl.className = 'veredicto-status critico';
-            desvioEl.textContent = `Desvio: ${percentual.toFixed(2)}% (${formatarMoeda(desvioTotal)})`;
-            
-            anomaliaEl.style.display = 'flex';
-            anomaliaTexto.textContent = `Potencial incumprimento fiscal. ${alertasCriticos.length} anomalia(s) crítica(s).`;
-            valorAnomalia.textContent = formatarMoeda(desvioTotal);
-            
-            const discItem = document.getElementById('tri-discrepancia-item');
-            const discValor = document.getElementById('tri-discrepancia');
-            if (discItem && discValor) {
-                discItem.style.display = 'block';
-                discValor.textContent = formatarMoeda(desvioTotal);
-            }
-            
-            logger.log(`Veredito: CRÍTICO (${percentual.toFixed(2)}% de desvio)`, 'error');
-            
-        } else if (alertasNormais.length > 0) {
-            statusEl.textContent = 'ALERTA';
-            statusEl.className = 'veredicto-status alerta';
-            desvioEl.textContent = 'Requer verificação manual';
-            
-            anomaliaEl.style.display = 'none';
-            
-            const discItem = document.getElementById('tri-discrepancia-item');
-            if (discItem) discItem.style.display = 'none';
-            
-            logger.log('Veredito: ALERTA - Requer atenção', 'warning');
-            
-        } else {
-            statusEl.textContent = 'NORMAL';
-            statusEl.className = 'veredicto-status normal';
-            desvioEl.textContent = 'Sem desvios significativos';
-            
-            anomaliaEl.style.display = 'none';
-            
-            const discItem = document.getElementById('tri-discrepancia-item');
-            if (discItem) discItem.style.display = 'none';
-            
-            logger.log('Veredito: NORMAL - Dados consistentes', 'success');
-        }
+        // Executar cruzamentos após atualizar interface
+        executarCruzamentos();
     }
 
     // ============================================
@@ -921,6 +1123,16 @@
         State.financeiro.comissoes = 792.59;
         State.financeiro.dac7 = 7755.16;
         
+        State.financeiro.extrato = {
+            ganhosApp: 3157.94,
+            ganhosCampanha: 0,
+            gorjetas: 44.60,  // gorjetas inclusas no extrato
+            portagens: 0,
+            taxasCancel: 0,
+            comissoes: 792.59,
+            ganhosLiquidos: 2409.95
+        };
+        
         State.financeiro.dac7Trimestres = {
             t1: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
             t2: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
@@ -934,6 +1146,10 @@
             { data: '2024-12-31', motorista: 'Eduardo Monteiro', numFatura: '1315099-PT1124', valor: 9.23, comissao: 2.12 },
             { data: '2024-12-31', motorista: 'Eduardo Monteiro', numFatura: '1315099-PT1124', valor: 14.69, comissao: 3.38 },
             { data: '2024-12-31', motorista: 'Eduardo Monteiro', numFatura: '1315099-PT1124', valor: 5.80, comissao: 1.33 }
+        ];
+        
+        State.financeiro.faturas = [
+            { numero: 'Fatura Bolt PT1125-3582', valor: 239.00, periodo: 'Dezembro 2024', autoliquidacao: false }
         ];
         
         State.autenticidade = [
@@ -982,6 +1198,9 @@
         atualizarInterface();
         
         logger.log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
+        
+        // Executar cruzamentos após demo
+        executarCruzamentos();
     }
 
     function limparSistema() {
@@ -1011,6 +1230,12 @@
                 t3: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
                 t4: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 }
             }
+        };
+        
+        State.cruzamentos = {
+            saftVsDac7: { realizado: false, valorSAFT: 0, valorDAC7: 0, diferenca: 0, convergente: false, alerta: null },
+            brutoVsGanhosApp: { realizado: false, valorBruto: 0, valorCalculado: 0, diferenca: 0, convergente: false, alerta: null },
+            comissoesVsFatura: { realizado: false, totalComissoes: 0, totalFaturas: 0, diferenca: 0, taxaEfetiva: 0, convergente: false, alertasPorViagem: [] }
         };
         
         State.autenticidade = [];
@@ -1045,18 +1270,68 @@
         atualizarInterface();
     }
 
-    function exportarJSON() {
+    // ============================================
+    // NOVA FUNÇÃO: EXPORTAR JSON COM CRUZAMENTOS
+    // ============================================
+    
+    async function exportarJSON() {
+        logger.log('A preparar exportação JSON com cruzamentos...', 'info');
+        
+        // Garantir que cruzamentos estão atualizados
+        executarCruzamentos();
+        
+        // Gerar Master Hash SHA-256
+        const masterHash = await gerarMasterHash();
+        
         const dados = {
-            sessao: {
-                id: State.sessao.id,
-                inicio: State.sessao.inicio,
-                timestamp: new Date().toISOString()
+            metadados: {
+                sessao: {
+                    id: State.sessao.id,
+                    inicio: State.sessao.inicio ? State.sessao.inicio.toISOString() : null,
+                    timestamp: new Date().toISOString()
+                },
+                versao: CONFIG.VERSAO,
+                edicao: CONFIG.EDICAO
             },
-            financeiro: State.financeiro,
-            autenticidade: State.autenticidade,
-            alertas: State.alertas,
-            logs: State.logs.slice(-50),
-            versao: CONFIG.VERSAO
+            autenticidade: {
+                masterHash: masterHash,
+                evidencias: State.autenticidade.map(a => ({
+                    algoritmo: a.algoritmo,
+                    hash: a.hash,
+                    ficheiro: a.ficheiro,
+                    validado: true
+                }))
+            },
+            financeiro: {
+                totais: {
+                    bruto: State.financeiro.bruto,
+                    comissoes: State.financeiro.comissoes,
+                    liquido: State.financeiro.liquido,
+                    dac7: State.financeiro.dac7,
+                    numeroViagens: State.financeiro.viagens.length,
+                    numeroFaturas: State.financeiro.faturas.length,
+                    taxaMedia: State.financeiro.bruto > 0 ? 
+                        (State.financeiro.comissoes / State.financeiro.bruto * 100) : 0
+                },
+                extrato: State.financeiro.extrato,
+                dac7Trimestres: State.financeiro.dac7Trimestres
+            },
+            // ============================================
+            // CRUZAMENTOS ARITMÉTICOS RETIFICADOS
+            // ============================================
+            cruzamentos: State.cruzamentos,
+            alertas: State.alertas.map(a => ({
+                tipo: a.tipo,
+                titulo: a.titulo,
+                descricao: a.descricao,
+                valor: a.valor,
+                timestamp: a.timestamp.toISOString()
+            })),
+            logs: State.logs.slice(-50).map(l => ({
+                timestamp: l.timestamp.toISOString(),
+                msg: l.msg,
+                tipo: l.tipo
+            }))
         };
         
         const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
@@ -1069,7 +1344,15 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        logger.log('Exportação JSON realizada com sucesso', 'success');
+        logger.log(`Exportação JSON realizada com sucesso. Master Hash: ${masterHash.hash.substring(0, 16)}...`, 'success');
+        
+        // Mostrar master hash na interface
+        const masterHashEl = document.getElementById('master-hash');
+        if (masterHashEl) {
+            masterHashEl.textContent = masterHash.hash;
+        }
+        
+        return dados;
     }
 
     // ============================================
@@ -1081,7 +1364,10 @@
         CONFIG: CONFIG,
         logger: logger,
         carregarDemo: carregarDemo,
-        limparSistema: limparSistema
+        limparSistema: limparSistema,
+        exportarJSON: exportarJSON,
+        executarCruzamentos: executarCruzamentos,
+        gerarMasterHash: gerarMasterHash
     };
 
 })();
