@@ -1,32 +1,37 @@
 /**
- * VDC FORENSE v13.6 MASTER SCHEMA - CONSOLIDAÇÃO FINAL
+ * VDC FORENSE v13.6 MASTER SCHEMA - CONSOLIDAÇÃO FINAL UNIFICADA
  * Sistema de Peritagem Digital e Auditoria Fiscal
  * Motor de Extração e Processamento de Evidências
  * Data Aggregation Pipeline com Triangulação Aritmética e Verdade Material
  * 
- * Versão: 13.6.0-FINAL
+ * UNIFICAÇÃO DAS VERSÕES: v13.0 SYNC SCHEMA + v13.1 + v13.6 MASTER SCHEMA
+ * 
+ * Versão: 13.6.0-FINAL-UNIFICADA
  * 
  * CARACTERÍSTICAS:
- * - Processamento assíncrono de múltiplos ficheiros
+ * - Processamento assíncrono de múltiplos ficheiros (PDF, CSV, XML, JSON)
  * - Soma incremental sem sobreposição de estados
  * - Triangulação SAF-T vs DAC7 vs Extratos
  * - Cálculo da Verdade Material: Bruto - Comissões
  * - Master Hash SHA-256 com Web Crypto API
  * - Validação de metadados obrigatórios
  * - Alertas de discrepância e taxas excessivas
+ * - Questionário dinâmico de 30 perguntas (seleção de 6)
  * - Relatório PDF com prova legal
+ * - Exportação JSON com todos os cruzamentos
+ * - Histórico de estados (prevenção de sobreposição)
  */
 
 (function() {
     'use strict';
 
     // ============================================
-    // CONFIGURAÇÕES E CONSTANTES
+    // CONFIGURAÇÕES E CONSTANTES (v13.0 + v13.1 + v13.6)
     // ============================================
 
     const CONFIG = {
         VERSAO: '13.6',
-        EDICAO: 'MASTER SCHEMA FINAL',
+        EDICAO: 'MASTER SCHEMA FINAL UNIFICADO',
         DEBUG: true,
         MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
         ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml', '.json'],
@@ -34,6 +39,7 @@
         TAXA_COMISSAO_PADRAO: 0.23,     // 23% média observada
         TOLERANCIA_ERRO: 0.01,           // 1 cêntimo de tolerância
         TOLERANCIA_DIVERGENCIA: 50,       // 50€ de tolerância para divergências DAC7
+        MARGEM_ERRO_PERCENTUAL: 0.05,    // 5% margem para discrepâncias
         
         PATTERNS: {
             CLEAN: /[\n\r\t]+/g,
@@ -90,7 +96,44 @@
     };
 
     // ============================================
-    // ESTADO GLOBAL DO SISTEMA (BIG DATA ACCUMULATOR)
+    // POOL DE PERGUNTAS (30) - SELECIONAR 6 DINAMICAMENTE (v13.6)
+    // ============================================
+
+    const POOL_PERGUNTAS = [
+        { tag: 'fiscal', q: "A divergência entre o Proveito Real e o DAC7 foi justificada por lançamentos de gorjetas isentas?" },
+        { tag: 'legal', q: "As faturas de comissão da plataforma possuem NIF válido para efeitos de dedução de IVA?" },
+        { tag: 'btf', q: "Existe contrato de prestação de serviços que valide a retenção efetuada pela Fleet?" },
+        { tag: 'fraude', q: "Foi detetada discrepância superior a 10% entre o reportado e o extrato bancário?" },
+        { tag: 'colarinho', q: "Os fluxos financeiros indicam triangulação de contas não declaradas à AT?" },
+        { tag: 'geral', q: "Os documentos SAF-T foram submetidos dentro do prazo legal (dia 5)?" },
+        { tag: 'iva', q: "O IVA foi corretamente liquidado sobre a totalidade das comissões?" },
+        { tag: 'irs', q: "Foram efetuadas as devidas retenções na fonte sobre os rendimentos?" },
+        { tag: 'irs2', q: "Os titulares dos rendimentos estão corretamente identificados na declaração modelo 10?" },
+        { tag: 'faturação', q: "As faturas emitidas cumprem os requisitos do artigo 36.º do CIVA?" },
+        { tag: 'autoliquidação', q: "Foram emitidas faturas com autoliquidação de IVA indevida?" },
+        { tag: 'e-fatura', q: "Todas as faturas foram comunicadas ao e-fatura dentro do prazo?" },
+        { tag: 'dac7_valid', q: "O relatório DAC7 foi submetido dentro do prazo legal (janeiro)?" },
+        { tag: 'dac7_valores', q: "Os valores declarados no DAC7 coincidem com os extratos bancários?" },
+        { tag: 'saft_valid', q: "O ficheiro SAF-T foi submetido com a totalidade dos movimentos?" },
+        { tag: 'saft_periodo', q: "O período declarado no SAF-T corresponde ao período em análise?" },
+        { tag: 'comissão_legal', q: "As comissões praticadas respeitam o limite legal de 25%?" },
+        { tag: 'comissão_contrato', q: "As comissões cobradas estão em conformidade com o contrato?" },
+        { tag: 'gorjetas', q: "As gorjetas foram tratadas como rendimentos isentos ou sujeitos a IRS?" },
+        { tag: 'portagens', q: "As portagens foram faturadas com IVA à taxa legal?" },
+        { tag: 'cancelamentos', q: "Os cancelamentos foram devidamente justificados e documentados?" },
+        { tag: 'fleet', q: "A Fleet (se aplicável) está registada como tal na AT?" },
+        { tag: 'subcontratação', q: "Existem subcontratações não declaradas à AT?" },
+        { tag: 'bancário', q: "Os valores dos extratos bancários correspondem aos declarados?" },
+        { tag: 'cash', q: "Foram detetados movimentos em numerário não justificados?" },
+        { tag: 'provisionamento', q: "Os provisionamentos respeitam as regras contabilísticas?" },
+        { tag: 'intracomunitário', q: "Existem operações intracomunitárias não declaradas?" },
+        { tag: 'nif_cliente', q: "Os clientes (passageiros) estão devidamente identificados nos documentos?" },
+        { tag: 'retenção_fonte', q: "Foram aplicadas as taxas de retenção na fonte corretas?" },
+        { tag: 'veracidade', q: "Os documentos apresentados são originais ou cópias certificadas?" }
+    ];
+
+    // ============================================
+    // ESTADO GLOBAL DO SISTEMA (BIG DATA ACCUMULATOR) - v13.0 + v13.1 + v13.6
     // ============================================
 
     let State = {
@@ -137,6 +180,7 @@
         processando: false,
         alertas: [],
         logs: [],
+        selectedQuestions: [],
         
         // Resultados dos cruzamentos para exportação JSON
         cruzamentos: {
@@ -169,7 +213,7 @@
     };
 
     // ============================================
-    // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO)
+    // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO) - v13.0
     // ============================================
     
     let stateHistory = [];
@@ -187,7 +231,7 @@
     }
 
     // ============================================
-    // UTILITÁRIOS
+    // UTILITÁRIOS (v13.0 + v13.1 + v13.6)
     // ============================================
 
     function gerarIdSessao() {
@@ -249,6 +293,28 @@
         return div.innerHTML;
     }
 
+    function log(msg, tipo = 'info') {
+        const consoleEl = document.getElementById('audit-console');
+        const timestamp = new Date().toLocaleTimeString('pt-PT');
+        
+        if (consoleEl) {
+            const line = document.createElement('div');
+            line.className = `line ${tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : tipo === 'warning' ? 'yellow' : 'blue'}`;
+            line.textContent = `[${timestamp}] ${msg}`;
+            
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+        
+        State.logs.push({
+            timestamp: new Date(),
+            msg: msg,
+            tipo: tipo
+        });
+        
+        if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
+    }
+
     function atualizarRelogio() {
         const agora = new Date();
         const timeStr = agora.toLocaleTimeString('pt-PT');
@@ -257,14 +323,18 @@
         const timeEl = document.getElementById('session-time');
         const footerTime = document.getElementById('footer-time');
         const footerDate = document.getElementById('footer-date');
+        const currentDate = document.getElementById('currentDate');
+        const currentTime = document.getElementById('currentTime');
         
         if (timeEl) timeEl.textContent = timeStr;
         if (footerTime) footerTime.textContent = timeStr;
         if (footerDate) footerDate.textContent = dateStr;
+        if (currentDate) currentDate.textContent = dateStr;
+        if (currentTime) currentTime.textContent = timeStr;
     }
 
     // ============================================
-    // CARREGAR ANOS NO SELECTOR
+    // CARREGAR ANOS NO SELECTOR (v13.1 + v13.6)
     // ============================================
 
     function carregarAnos() {
@@ -286,7 +356,7 @@
     }
 
     // ============================================
-    // ATUALIZAR METADADOS
+    // ATUALIZAR METADADOS (v13.1 + v13.6)
     // ============================================
 
     function atualizarMetadados() {
@@ -298,7 +368,7 @@
     }
 
     // ============================================
-    // VALIDAR METADADOS
+    // VALIDAR METADADOS (v13.1 + v13.6)
     // ============================================
 
     function validarMetadados() {
@@ -328,31 +398,24 @@
     }
 
     // ============================================
-    // MOTOR DE LOGS
+    // SELECIONAR 6 PERGUNTAS ALEATÓRIAS DO POOL (v13.6)
+    // ============================================
+
+    function selecionarPerguntas() {
+        // Embaralhar array e pegar primeiras 6
+        const shuffled = [...POOL_PERGUNTAS].sort(() => 0.5 - Math.random());
+        State.selectedQuestions = shuffled.slice(0, 6);
+        log('Selecionadas 6 perguntas para questionário de conformidade', 'info');
+        return State.selectedQuestions;
+    }
+
+    // ============================================
+    // MOTOR DE LOGS (v13.0)
     // ============================================
 
     const logger = {
         log: function(msg, tipo = 'info') {
-            const consoleEl = document.getElementById('audit-console');
-            if (!consoleEl) {
-                if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
-                return;
-            }
-            
-            const line = document.createElement('div');
-            line.className = `line ${tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : tipo === 'warning' ? 'yellow' : 'blue'}`;
-            line.textContent = `[${new Date().toLocaleTimeString('pt-PT')}] ${msg}`;
-            
-            consoleEl.appendChild(line);
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-            
-            State.logs.push({
-                timestamp: new Date(),
-                msg: msg,
-                tipo: tipo
-            });
-            
-            if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
+            log(msg, tipo);
         },
         
         limpar: function() {
@@ -365,7 +428,7 @@
     };
 
     // ============================================
-    // GERAR MASTER HASH SHA-256
+    // GERAR MASTER HASH SHA-256 (v13.0 + v13.1 + v13.6)
     // ============================================
     
     async function gerarMasterHash() {
@@ -414,11 +477,14 @@
             
             // Atualizar interface
             const masterHashEl = document.getElementById('master-hash');
-            if (masterHashEl) {
-                masterHashEl.textContent = hashHex;
-            }
+            const integrityHashEl = document.getElementById('integrityHash');
+            const displayHashEl = document.getElementById('display-hash');
             
-            logger.log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
+            if (masterHashEl) masterHashEl.textContent = hashHex;
+            if (integrityHashEl) integrityHashEl.textContent = hashHex;
+            if (displayHashEl) displayHashEl.textContent = hashHex;
+            
+            log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
             
             return {
                 hash: hashHex,
@@ -427,7 +493,7 @@
             };
             
         } catch (err) {
-            logger.log(`Erro ao gerar Master Hash: ${err.message}`, 'error');
+            log(`Erro ao gerar Master Hash: ${err.message}`, 'error');
             return {
                 hash: 'ERRO_GERACAO_HASH',
                 timestamp: new Date().toISOString(),
@@ -438,11 +504,11 @@
     }
 
     // ============================================
-    // EXECUTAR CRUZAMENTOS ARITMÉTICOS
+    // EXECUTAR CRUZAMENTOS ARITMÉTICOS (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function executarCruzamentos() {
-        logger.log('A executar cruzamentos aritméticos...', 'info');
+        log('A executar cruzamentos aritméticos...', 'info');
         
         if (!validarMetadados()) {
             return false;
@@ -454,10 +520,10 @@
             State.financeiro.comissoes = 4437.01;
             State.financeiro.dac7 = 7755.16;
             State.financeiro.liquido = State.financeiro.bruto - State.financeiro.comissoes;
-            logger.log('Valores de demonstração carregados', 'info');
+            log('Valores de demonstração carregados', 'info');
         }
         
-        // CÁLCULO DA VERDADE MATERIAL
+        // CÁLCULO DA VERDADE MATERIAL (v13.6)
         State.financeiro.liquidoReal = State.financeiro.bruto - State.financeiro.comissoes;
         State.financeiro.divergencia = State.financeiro.liquidoReal - State.financeiro.dac7;
         
@@ -477,9 +543,9 @@
         if (State.financeiro.bruto > 0 && State.financeiro.dac7 > 0) {
             if (!saftVsDac7.convergente) {
                 saftVsDac7.alerta = `Discrepância SAF-T (${formatarMoeda(State.financeiro.bruto)}) vs DAC7 (${formatarMoeda(State.financeiro.dac7)}) - Diferença: ${formatarMoeda(saftVsDac7.diferenca)}`;
-                logger.log(`⚠️ ${saftVsDac7.alerta}`, 'warning');
+                log(`⚠️ ${saftVsDac7.alerta}`, 'warning');
             } else {
-                logger.log(`✅ SAF-T e DAC7 convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
+                log(`✅ SAF-T e DAC7 convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
             }
         }
         
@@ -526,9 +592,9 @@
         if (State.financeiro.bruto > 0 || valorCalculadoApp > 0) {
             if (!brutoVsGanhosApp.convergente && valorCalculadoApp > 0) {
                 brutoVsGanhosApp.alerta = `Discrepância Bruto (${formatarMoeda(State.financeiro.bruto)}) vs Soma Ganhos App (${formatarMoeda(valorCalculadoApp)}) - Diferença: ${formatarMoeda(brutoVsGanhosApp.diferenca)}`;
-                logger.log(`⚠️ ${brutoVsGanhosApp.alerta}`, 'warning');
+                log(`⚠️ ${brutoVsGanhosApp.alerta}`, 'warning');
             } else if (valorCalculadoApp > 0) {
-                logger.log(`✅ Bruto e soma dos ganhos App convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
+                log(`✅ Bruto e soma dos ganhos App convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
             }
         }
         
@@ -575,7 +641,7 @@
         if (totalFaturas > 0 && Math.abs(State.financeiro.comissoes - totalFaturas) > CONFIG.TOLERANCIA_ERRO) {
             comissoesVsFatura.convergente = false;
             comissoesVsFatura.alerta = `Discrepância Comissões (${formatarMoeda(State.financeiro.comissoes)}) vs Faturas (${formatarMoeda(totalFaturas)})`;
-            logger.log(`⚠️ ${comissoesVsFatura.alerta}`, 'warning');
+            log(`⚠️ ${comissoesVsFatura.alerta}`, 'warning');
         }
         
         // Verificar taxa por viagem (máx 25%)
@@ -597,13 +663,13 @@
                     comissoesVsFatura.alertasPorViagem.push(alerta);
                     comissoesVsFatura.convergente = false;
                     
-                    logger.log(`⚠️ ${alerta.mensagem}`, 'warning');
+                    log(`⚠️ ${alerta.mensagem}`, 'warning');
                 }
             }
         });
         
         if (comissoesVsFatura.convergente && State.financeiro.viagens.length > 0) {
-            logger.log(`✅ Taxas de comissão dentro do limite legal (média: ${taxaEfetiva.toFixed(2)}%)`, 'success');
+            log(`✅ Taxas de comissão dentro do limite legal (média: ${taxaEfetiva.toFixed(2)}%)`, 'success');
         }
         
         State.cruzamentos.comissoesVsFatura = comissoesVsFatura;
@@ -635,13 +701,16 @@
         
         gerarAlertasInterface();
         
-        logger.log('Cruzamentos aritméticos concluídos', 'success');
+        // Selecionar perguntas para o relatório (v13.6)
+        selecionarPerguntas();
+        
+        log('Cruzamentos aritméticos concluídos', 'success');
         
         return true;
     }
 
     // ============================================
-    // GERAR ALERTAS NA INTERFACE
+    // GERAR ALERTAS NA INTERFACE (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function gerarAlertasInterface() {
@@ -652,7 +721,7 @@
         alertasContainer.innerHTML = '';
         State.alertas = [];
         
-        // Alerta de divergência SAF-T vs DAC7 (crítico)
+        // Alerta de divergência SAF-T vs DAC7 (crítico) - v13.6
         if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
             const percentual = State.financeiro.dac7 > 0 ? (Math.abs(State.financeiro.divergencia) / State.financeiro.dac7) * 100 : 0;
             adicionarAlerta(
@@ -761,7 +830,7 @@
     }
 
     // ============================================
-    // ATUALIZAR VEREDITO FISCAL
+    // ATUALIZAR VEREDITO FISCAL (v13.0)
     // ============================================
     
     function atualizarVeredito() {
@@ -798,7 +867,7 @@
                 discValor.textContent = formatarMoeda(desvioTotal);
             }
             
-            logger.log(`Veredito: CRÍTICO (${percentual.toFixed(2)}% de desvio)`, 'error');
+            log(`Veredito: CRÍTICO (${percentual.toFixed(2)}% de desvio)`, 'error');
             
         } else if (alertasNormais.length > 0) {
             statusEl.textContent = 'ALERTA';
@@ -810,7 +879,7 @@
             const discItem = document.getElementById('tri-discrepancia-item');
             if (discItem) discItem.style.display = 'none';
             
-            logger.log('Veredito: ALERTA - Requer atenção', 'warning');
+            log('Veredito: ALERTA - Requer atenção', 'warning');
             
         } else {
             statusEl.textContent = 'NORMAL';
@@ -822,12 +891,12 @@
             const discItem = document.getElementById('tri-discrepancia-item');
             if (discItem) discItem.style.display = 'none';
             
-            logger.log('Veredito: NORMAL - Dados consistentes', 'success');
+            log('Veredito: NORMAL - Dados consistentes', 'success');
         }
     }
 
     // ============================================
-    // INICIALIZAÇÃO E BARREIRA DE ENTRADA
+    // INICIALIZAÇÃO E BARREIRA DE ENTRADA (v13.0 + v13.1)
     // ============================================
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -852,7 +921,9 @@
         
         // Atualizar IDs de sessão
         document.getElementById('session-id').textContent = State.sessao.id;
+        document.getElementById('sessionHash') && (document.getElementById('sessionHash').textContent = State.sessao.id);
         document.getElementById('footer-session').textContent = State.sessao.id;
+        document.getElementById('footerSession') && (document.getElementById('footerSession').textContent = State.sessao.id);
 
         if (btnProceed && barrier && app) {
             btnProceed.addEventListener('click', function() {
@@ -861,8 +932,8 @@
                 State.sessao.ativa = true;
                 State.sessao.inicio = new Date();
                 
-                logger.log(`Sessão iniciada. Versão ${CONFIG.VERSAO}`, 'success');
-                logger.log('Sistema pronto para receber evidências', 'info');
+                log(`Sessão iniciada. Versão ${CONFIG.VERSAO}`, 'success');
+                log('Sistema pronto para receber evidências', 'info');
                 
                 inicializarEventos();
             });
@@ -870,14 +941,14 @@
             console.error('Elementos da barreira não encontrados');
             if (app) {
                 app.classList.remove('hidden');
-                logger.log('Modo debug: barreira ignorada', 'warning');
+                log('Modo debug: barreira ignorada', 'warning');
                 inicializarEventos();
             }
         }
     });
 
     // ============================================
-    // INICIALIZAÇÃO DE EVENTOS
+    // INICIALIZAÇÃO DE EVENTOS (v13.0 + v13.1 + v13.6)
     // ============================================
 
     function inicializarEventos() {
@@ -985,15 +1056,15 @@
 
         document.querySelectorAll('.evidence-item').forEach(function(item) {
             item.addEventListener('click', function() {
-                logger.log('Sumário de evidências', 'info');
+                log('Sumário de evidências', 'info');
             });
         });
 
-        logger.log('Event listeners inicializados', 'info');
+        log('Event listeners inicializados', 'info');
     }
 
     // ============================================
-    // GESTÃO DE FILA DE PROCESSAMENTO
+    // GESTÃO DE FILA DE PROCESSAMENTO (v13.0 + v13.1)
     // ============================================
 
     async function adicionarFicheirosFila(files) {
@@ -1002,12 +1073,12 @@
         for (const file of fileArray) {
             const validacao = validarFicheiro(file);
             if (!validacao.valido) {
-                logger.log(`Ficheiro rejeitado: ${file.name} - ${validacao.erro}`, 'error');
+                log(`Ficheiro rejeitado: ${file.name} - ${validacao.erro}`, 'error');
                 continue;
             }
             
             State.fila.push(file);
-            logger.log(`Ficheiro em fila: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'info');
+            log(`Ficheiro em fila: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'info');
             
             adicionarFicheiroLista(file);
         }
@@ -1069,7 +1140,7 @@
         const file = State.fila.shift();
         
         try {
-            logger.log(`A processar: ${file.name}`, 'info');
+            log(`A processar: ${file.name}`, 'info');
             
             if (file.name.toLowerCase().endsWith('.csv')) {
                 await processarCSV(file);
@@ -1080,10 +1151,10 @@
             } else if (file.name.toLowerCase().endsWith('.json')) {
                 await processarJSON(file);
             } else {
-                logger.log(`Formato não suportado: ${file.name}`, 'error');
+                log(`Formato não suportado: ${file.name}`, 'error');
             }
         } catch (err) {
-            logger.log(`Erro ao processar ${file.name}: ${err.message}`, 'error');
+            log(`Erro ao processar ${file.name}: ${err.message}`, 'error');
         }
         
         State.processando = false;
@@ -1095,7 +1166,7 @@
     }
 
     // ============================================
-    // PROCESSAMENTO DE CSV
+    // PROCESSAMENTO DE CSV (v13.0)
     // ============================================
 
     async function processarCSV(file) {
@@ -1109,27 +1180,27 @@
                     const header = lines[0]?.toLowerCase() || '';
                     
                     if (header.includes('algorithm') || header.includes('hash')) {
-                        logger.log('Detetado: Ficheiro de Controlo de Autenticidade', 'success');
+                        log('Detetado: Ficheiro de Controlo de Autenticidade', 'success');
                         processarAutenticidade(lines);
                         atualizarContador('saft', 1);
                     } else if (header.includes('nº da fatura') || header.includes('viagem') || header.includes('motorista')) {
-                        logger.log('Detetado: Ficheiro de Viagens', 'success');
+                        log('Detetado: Ficheiro de Viagens', 'success');
                         processarViagens(lines);
                         atualizarContador('ext', 1);
                     } else {
-                        logger.log('Formato CSV não reconhecido', 'warning');
+                        log('Formato CSV não reconhecido', 'warning');
                     }
                     
                     atualizarInterface();
                 } catch (err) {
-                    logger.log(`Erro ao processar CSV: ${err.message}`, 'error');
+                    log(`Erro ao processar CSV: ${err.message}`, 'error');
                 }
                 
                 resolve();
             };
             
             reader.onerror = function() {
-                logger.log('Erro ao ler ficheiro CSV', 'error');
+                log('Erro ao ler ficheiro CSV', 'error');
                 resolve();
             };
             
@@ -1172,7 +1243,7 @@
             }
         });
         
-        logger.log(`Adicionados ${count} registos de autenticidade`, 'success');
+        log(`Adicionados ${count} registos de autenticidade`, 'success');
     }
 
     function processarViagens(lines) {
@@ -1241,16 +1312,16 @@
         State.financeiro.comissoes += totalBruto * CONFIG.TAXA_COMISSAO_PADRAO;
         State.financeiro.liquido += totalBruto * (1 - CONFIG.TAXA_COMISSAO_PADRAO);
         
-        logger.log(`Processadas ${count} viagens. Total bruto: ${formatarMoeda(totalBruto)}`, 'success');
+        log(`Processadas ${count} viagens. Total bruto: ${formatarMoeda(totalBruto)}`, 'success');
     }
 
     // ============================================
-    // PROCESSAMENTO DE PDF
+    // PROCESSAMENTO DE PDF (v13.0)
     // ============================================
 
     async function processarPDF(file) {
         if (typeof pdfjsLib === 'undefined') {
-            logger.log('PDF.js não carregado. A usar modo de simulação.', 'warning');
+            log('PDF.js não carregado. A usar modo de simulação.', 'warning');
             processarPDFSimulado(file);
             return;
         }
@@ -1269,25 +1340,25 @@
             const textoLimpo = textoCompleto.replace(CONFIG.PATTERNS.CLEAN, ' ').replace(CONFIG.PATTERNS.MULTISPACE, ' ');
             
             if (textoLimpo.includes('Ganhos líquidos') || textoLimpo.includes('Ganhos na app')) {
-                logger.log('Detetado: Extrato Bolt', 'success');
+                log('Detetado: Extrato Bolt', 'success');
                 processarExtratoBolt(textoLimpo, file);
                 atualizarContador('ext', 1);
             } else if (textoLimpo.includes('Fatura n.º') || textoLimpo.includes('Total com IVA')) {
-                logger.log('Detetado: Fatura Bolt', 'success');
+                log('Detetado: Fatura Bolt', 'success');
                 processarFaturaBolt(textoLimpo, file);
                 atualizarContador('fat', 1);
             } else if (textoLimpo.includes('DAC7') || textoLimpo.includes('receitas anuais')) {
-                logger.log('Detetado: Relatório DAC7', 'success');
+                log('Detetado: Relatório DAC7', 'success');
                 processarDAC7(textoLimpo, file);
                 atualizarContador('dac7', 1);
             } else {
-                logger.log('PDF não reconhecido como documento Bolt', 'warning');
+                log('PDF não reconhecido como documento Bolt', 'warning');
             }
             
             atualizarInterface();
             
         } catch (err) {
-            logger.log(`Erro ao processar PDF: ${err.message}`, 'error');
+            log(`Erro ao processar PDF: ${err.message}`, 'error');
             processarPDFSimulado(file);
         }
     }
@@ -1296,7 +1367,7 @@
         const nomeLower = file.name.toLowerCase();
         
         if (nomeLower.includes('ganhos') || nomeLower.includes('extrato')) {
-            logger.log('[SIMULAÇÃO] Extrato Bolt detetado', 'success');
+            log('[SIMULAÇÃO] Extrato Bolt detetado', 'success');
             State.financeiro.extrato.ganhosLiquidos = 2409.95;
             State.financeiro.extrato.ganhosApp = 3157.94;
             State.financeiro.extrato.comissoes = 792.59;
@@ -1320,7 +1391,7 @@
             atualizarContador('ext', 1);
             
         } else if (nomeLower.includes('fatura')) {
-            logger.log('[SIMULAÇÃO] Fatura Bolt detetada', 'success');
+            log('[SIMULAÇÃO] Fatura Bolt detetada', 'success');
             State.financeiro.faturas.push({
                 numero: file.name,
                 valor: 239.00,
@@ -1340,7 +1411,7 @@
             atualizarContador('fat', 1);
             
         } else if (nomeLower.includes('dac7')) {
-            logger.log('[SIMULAÇÃO] Relatório DAC7 detetado', 'success');
+            log('[SIMULAÇÃO] Relatório DAC7 detetado', 'success');
             State.financeiro.dac7 = 7755.16;
             State.financeiro.dac7Trimestres.t4.ganhos = 7755.16;
             State.financeiro.dac7Trimestres.t4.comissoes = 239.00;
@@ -1394,14 +1465,14 @@
             liquido: ganhosLiquidos
         });
         
-        logger.log(`Extrato: Bruto ${formatarMoeda(brutoCalculado)} | Líquido ${formatarMoeda(ganhosLiquidos)}`, 'success');
+        log(`Extrato: Bruto ${formatarMoeda(brutoCalculado)} | Líquido ${formatarMoeda(ganhosLiquidos)}`, 'success');
         
-        if (ganhosApp > 0) logger.log(`  Ganhos na app: ${formatarMoeda(ganhosApp)}`, 'info');
-        if (ganhosCampanha > 0) logger.log(`  Ganhos campanha: ${formatarMoeda(ganhosCampanha)}`, 'info');
-        if (gorjetas > 0) logger.log(`  Gorjetas: ${formatarMoeda(gorjetas)}`, 'info');
-        if (portagens > 0) logger.log(`  Portagens: ${formatarMoeda(portagens)}`, 'info');
-        if (taxasCancel > 0) logger.log(`  Taxas cancelamento: ${formatarMoeda(taxasCancel)}`, 'info');
-        if (comissoes > 0) logger.log(`  Comissões: ${formatarMoeda(comissoes)}`, 'info');
+        if (ganhosApp > 0) log(`  Ganhos na app: ${formatarMoeda(ganhosApp)}`, 'info');
+        if (ganhosCampanha > 0) log(`  Ganhos campanha: ${formatarMoeda(ganhosCampanha)}`, 'info');
+        if (gorjetas > 0) log(`  Gorjetas: ${formatarMoeda(gorjetas)}`, 'info');
+        if (portagens > 0) log(`  Portagens: ${formatarMoeda(portagens)}`, 'info');
+        if (taxasCancel > 0) log(`  Taxas cancelamento: ${formatarMoeda(taxasCancel)}`, 'info');
+        if (comissoes > 0) log(`  Comissões: ${formatarMoeda(comissoes)}`, 'info');
     }
 
     function processarFaturaBolt(texto, file) {
@@ -1428,7 +1499,7 @@
             liquido: 0
         });
         
-        logger.log(`Fatura: ${numFatura} | Valor ${formatarMoeda(valorTotal)} | ${isAutoliquidacao ? 'Autoliquidação' : 'IVA incluído'}`, 'success');
+        log(`Fatura: ${numFatura} | Valor ${formatarMoeda(valorTotal)} | ${isAutoliquidacao ? 'Autoliquidação' : 'IVA incluído'}`, 'success');
     }
 
     function processarDAC7(texto, file) {
@@ -1467,11 +1538,11 @@
             State.financeiro.dac7Trimestres.t3.servicos +
             State.financeiro.dac7Trimestres.t4.servicos;
         
-        logger.log(`DAC7: Receita anual ${formatarMoeda(receitaAnual)} | ${totalServicos} serviços`, 'success');
+        log(`DAC7: Receita anual ${formatarMoeda(receitaAnual)} | ${totalServicos} serviços`, 'success');
     }
 
     // ============================================
-    // PROCESSAMENTO DE XML E JSON
+    // PROCESSAMENTO DE XML E JSON (v13.6)
     // ============================================
 
     async function processarXML(file) {
@@ -1481,12 +1552,12 @@
             reader.onload = function(e) {
                 try {
                     const content = e.target.result;
-                    logger.log(`XML processado: ${file.name} (simulação)`, 'success');
+                    log(`XML processado: ${file.name} (simulação)`, 'success');
                     
                     // Simular extração de valores
                     if (file.name.toLowerCase().includes('saft')) {
                         State.financeiro.bruto += 9876.54;
-                        logger.log(`XML: SAF-T - Valor extraído`, 'info');
+                        log(`XML: SAF-T - Valor extraído`, 'info');
                         atualizarContador('saft', 1);
                     }
                     
@@ -1494,13 +1565,13 @@
                     atualizarInterface();
                     
                 } catch (err) {
-                    logger.log(`Erro ao processar XML: ${err.message}`, 'error');
+                    log(`Erro ao processar XML: ${err.message}`, 'error');
                 }
                 resolve();
             };
             
             reader.onerror = function() {
-                logger.log('Erro ao ler ficheiro XML', 'error');
+                log('Erro ao ler ficheiro XML', 'error');
                 resolve();
             };
             
@@ -1516,12 +1587,12 @@
                 try {
                     const content = e.target.result;
                     const jsonData = JSON.parse(content);
-                    logger.log(`JSON processado: ${file.name}`, 'success');
+                    log(`JSON processado: ${file.name}`, 'success');
                     
                     // Simular extração de valores
                     if (file.name.toLowerCase().includes('dac7') || file.name.toLowerCase().includes('report')) {
                         State.financeiro.dac7 += 5321.89;
-                        logger.log(`JSON: DAC7 - Valor extraído`, 'info');
+                        log(`JSON: DAC7 - Valor extraído`, 'info');
                         atualizarContador('dac7', 1);
                     }
                     
@@ -1529,13 +1600,13 @@
                     atualizarInterface();
                     
                 } catch (err) {
-                    logger.log(`Erro ao processar JSON: ${err.message}`, 'error');
+                    log(`Erro ao processar JSON: ${err.message}`, 'error');
                 }
                 resolve();
             };
             
             reader.onerror = function() {
-                logger.log('Erro ao ler ficheiro JSON', 'error');
+                log('Erro ao ler ficheiro JSON', 'error');
                 resolve();
             };
             
@@ -1559,7 +1630,7 @@
     }
 
     // ============================================
-    // ATUALIZAÇÃO DA INTERFACE
+    // ATUALIZAÇÃO DA INTERFACE (v13.0 + v13.1)
     // ============================================
 
     function atualizarInterface() {
@@ -1600,19 +1671,20 @@
             discItem.textContent = formatarMoeda(divergencia);
         }
         
-        verificarDiscrepancias();
-    }
-
-    function verificarDiscrepancias() {
-        // Esta função é mantida para compatibilidade, mas os alertas são gerados em gerarAlertasInterface
+        // v13.1
+        document.getElementById('totalSaft') && (document.getElementById('totalSaft').textContent = formatarMoeda(State.financeiro.bruto));
+        document.getElementById('totalComissoes') && (document.getElementById('totalComissoes').textContent = formatarMoeda(State.financeiro.comissoes));
+        document.getElementById('totalLiquido') && (document.getElementById('totalLiquido').textContent = formatarMoeda(State.financeiro.liquidoReal || (State.financeiro.bruto - State.financeiro.comissoes)));
+        document.getElementById('totalDac7') && (document.getElementById('totalDac7').textContent = formatarMoeda(State.financeiro.dac7));
+        document.getElementById('totalDivergencia') && (document.getElementById('totalDivergencia').textContent = formatarMoeda(State.financeiro.divergencia));
     }
 
     // ============================================
-    // FUNÇÕES DE DEMONSTRAÇÃO E LIMPEZA
+    // FUNÇÕES DE DEMONSTRAÇÃO E LIMPEZA (v13.0 + v13.1)
     // ============================================
 
     function carregarDemo() {
-        logger.log('A carregar dados de simulação forense...', 'info');
+        log('A carregar dados de simulação forense...', 'info');
         
         limparDadosInterface();
         
@@ -1710,7 +1782,7 @@
         executarCruzamentos();
         gerarMasterHash();
         
-        logger.log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
+        log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
     }
 
     function limparSistema() {
@@ -1756,12 +1828,14 @@
         State.alertas = [];
         
         logger.limpar();
-        logger.log('Sistema limpo. Todos os dados removidos.', 'warning');
+        log('Sistema limpo. Todos os dados removidos.', 'warning');
         
         const masterHashEl = document.getElementById('master-hash');
-        if (masterHashEl) {
-            masterHashEl.textContent = '---';
-        }
+        if (masterHashEl) masterHashEl.textContent = '---';
+        const integrityHashEl = document.getElementById('integrityHash');
+        if (integrityHashEl) integrityHashEl.textContent = '---';
+        const displayHashEl = document.getElementById('display-hash');
+        if (displayHashEl) displayHashEl.textContent = '---';
         
         atualizarInterface();
     }
@@ -1810,11 +1884,11 @@
     }
 
     // ============================================
-    // EXPORTAR JSON COM CRUZAMENTOS
+    // EXPORTAR JSON COM CRUZAMENTOS (v13.0)
     // ============================================
     
     async function exportarJSON() {
-        logger.log('A preparar exportação JSON com cruzamentos...', 'info');
+        log('A preparar exportação JSON com cruzamentos...', 'info');
         
         // Garantir que cruzamentos estão atualizados
         executarCruzamentos();
@@ -1886,17 +1960,17 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        logger.log(`Exportação JSON realizada com sucesso. Master Hash: ${masterHash.hash.substring(0, 16)}...`, 'success');
+        log(`Exportação JSON realizada com sucesso. Master Hash: ${masterHash.hash.substring(0, 16)}...`, 'success');
         
         return dados;
     }
     
     // ============================================
-    // EXPORTAR PDF COM RELATÓRIO PERICIAL
+    // EXPORTAR PDF COM RELATÓRIO PERICIAL (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function exportarPDF() {
-        logger.log('A gerar relatório pericial em PDF...', 'info');
+        log('A gerar relatório pericial em PDF...', 'info');
         
         if (!validarMetadados()) {
             return;
@@ -1909,7 +1983,7 @@
         
         if (typeof window.jspdf === 'undefined') {
             alert('Erro: Biblioteca jsPDF não carregada.');
-            logger.log('Biblioteca jsPDF não carregada', 'error');
+            log('Biblioteca jsPDF não carregada', 'error');
             return;
         }
         
@@ -1948,7 +2022,10 @@
             headStyles: { fillColor: [0, 210, 255] }
         });
         
-        const hashValue = document.getElementById('master-hash')?.textContent || '---';
+        const hashValue = document.getElementById('master-hash')?.textContent || 
+                          document.getElementById('integrityHash')?.textContent || 
+                          document.getElementById('display-hash')?.textContent || 
+                          '---';
         doc.text(`Master Hash SHA-256: ${hashValue}`, 14, doc.lastAutoTable.finalY + 10);
         
         doc.text(`Documentos processados: ${State.documentos.length}`, 14, doc.lastAutoTable.finalY + 15);
@@ -1960,17 +2037,34 @@
             });
         }
         
+        // Adicionar questionário de conformidade (v13.6)
+        if (State.selectedQuestions && State.selectedQuestions.length > 0) {
+            const questionY = doc.lastAutoTable.finalY + (State.alertas.length > 0 ? 35 + (State.alertas.length * 7) + 10 : 35);
+            doc.setFontSize(11);
+            doc.setTextColor(0, 210, 255);
+            doc.text('QUESTIONÁRIO DE CONFORMIDADE (6/30):', 14, questionY);
+            
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            
+            State.selectedQuestions.forEach((p, i) => {
+                const yPos = questionY + 10 + (i * 7);
+                doc.text(`${i+1}. ${p.q}`, 14, yPos);
+                doc.text(`[ ] SIM   [ ] NÃO`, 150, yPos);
+            });
+        }
+        
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         doc.text('Documento emitido para efeitos de prova legal. Art. 103.º RGIT.', 14, 280);
         
         doc.save(`VDC_Pericia_${State.metadados.nipc}_${Date.now()}.pdf`);
         
-        logger.log('Relatório PDF gerado com sucesso', 'success');
+        log('Relatório PDF gerado com sucesso', 'success');
     }
 
     // ============================================
-    // EXPOSIÇÃO PARA DEBUG
+    // EXPOSIÇÃO PARA DEBUG (v13.0)
     // ============================================
 
     window.VDC = {
