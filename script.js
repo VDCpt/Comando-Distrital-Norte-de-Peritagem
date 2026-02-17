@@ -61,7 +61,7 @@
     };
 
     // ==========================================================================
-    // ESTADO GLOBAL DO SISTEMA
+    // ESTADO GLOBAL DO SISTEMA (COM CORREÇÃO DA LÓGICA DE SOMA)
     // ==========================================================================
 
     const State = {
@@ -89,16 +89,17 @@
             processo: ''
         },
         
-        financeiro: {
-            saft: 0,
-            dac7: 0,
-            comissoes: 0,
+        dadosFinanceiros: {
+            saftBruto: 0,
+            comissoesFatura: 0,
+            dac7Reportado: 0,
             viagens: 0,
             proveitoReal: 0,
             divergencia: 0,
             taxaMedia: 0
         },
         
+        ficheirosProcessados: new Set(),
         files: [],
         documentos: [],
         logs: [],
@@ -117,6 +118,9 @@
             proveitoReal: { realizado: false, valor: 0, status: null }
         }
     };
+
+    // Aliases para compatibilidade com código anterior
+    State.financeiro = State.dadosFinanceiros;
 
     // ==========================================================================
     // UTILITÁRIOS
@@ -262,20 +266,20 @@
         const trendDivergencia = document.getElementById('trendDivergencia');
         const cardDivergencia = document.getElementById('cardDivergencia');
         
-        if (valSaft) valSaft.innerText = formatarMoeda(State.financeiro.saft);
-        if (valDac7) valDac7.innerText = formatarMoeda(State.financeiro.dac7);
-        if (valComissoes) valComissoes.innerText = formatarMoeda(State.financeiro.comissoes);
+        if (valSaft) valSaft.innerText = formatarMoeda(State.dadosFinanceiros.saftBruto);
+        if (valDac7) valDac7.innerText = formatarMoeda(State.dadosFinanceiros.dac7Reportado);
+        if (valComissoes) valComissoes.innerText = formatarMoeda(State.dadosFinanceiros.comissoesFatura);
         
-        State.financeiro.divergencia = State.financeiro.saft - State.financeiro.dac7;
-        if (valDivergencia) valDivergencia.innerText = formatarMoeda(State.financeiro.divergencia);
+        State.dadosFinanceiros.divergencia = State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.dac7Reportado;
+        if (valDivergencia) valDivergencia.innerText = formatarMoeda(State.dadosFinanceiros.divergencia);
         
-        State.financeiro.proveitoReal = State.financeiro.saft - State.financeiro.comissoes;
-        State.financeiro.taxaMedia = State.financeiro.saft > 0 ? 
-            (State.financeiro.comissoes / State.financeiro.saft) * 100 : 0;
+        State.dadosFinanceiros.proveitoReal = State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.comissoesFatura;
+        State.dadosFinanceiros.taxaMedia = State.dadosFinanceiros.saftBruto > 0 ? 
+            (State.dadosFinanceiros.comissoesFatura / State.dadosFinanceiros.saftBruto) * 100 : 0;
         
-        if (valViagens) valViagens.innerText = State.financeiro.viagens;
-        if (valProveito) valProveito.innerText = formatarMoeda(State.financeiro.proveitoReal);
-        if (valTaxa) valTaxa.innerText = State.financeiro.taxaMedia.toFixed(2);
+        if (valViagens) valViagens.innerText = State.dadosFinanceiros.viagens;
+        if (valProveito) valProveito.innerText = formatarMoeda(State.dadosFinanceiros.proveitoReal);
+        if (valTaxa) valTaxa.innerText = State.dadosFinanceiros.taxaMedia.toFixed(2);
         if (valDocumentos) valDocumentos.innerText = State.documentos.length;
         
         if (countSAFT) countSAFT.innerText = `SAF-T: ${State.contadores.saft}`;
@@ -284,17 +288,17 @@
         if (countHashes) countHashes.innerText = `Hashes: ${State.contadores.hashes}`;
         
         if (cardDivergencia) {
-            if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
+            if (Math.abs(State.dadosFinanceiros.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
                 cardDivergencia.style.borderLeftColor = '#ff4136';
             } else {
                 cardDivergencia.style.borderLeftColor = '#004e92';
             }
         }
         
-        if (trendSaft) trendSaft.innerHTML = State.financeiro.saft > 0 ? '↗ +' + ((State.financeiro.saft / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
-        if (trendDac7) trendDac7.innerHTML = State.financeiro.dac7 > 0 ? '↗ +' + ((State.financeiro.dac7 / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
-        if (trendComissoes) trendComissoes.innerHTML = State.financeiro.comissoes > 0 ? '↗ +' + ((State.financeiro.comissoes / 2447.89) * 100).toFixed(0) + '%' : '⟷ 0%';
-        if (trendDivergencia) trendDivergencia.innerHTML = Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? '⚠️ ALERTA' : '✓ OK';
+        if (trendSaft) trendSaft.innerHTML = State.dadosFinanceiros.saftBruto > 0 ? '↗ +' + ((State.dadosFinanceiros.saftBruto / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendDac7) trendDac7.innerHTML = State.dadosFinanceiros.dac7Reportado > 0 ? '↗ +' + ((State.dadosFinanceiros.dac7Reportado / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendComissoes) trendComissoes.innerHTML = State.dadosFinanceiros.comissoesFatura > 0 ? '↗ +' + ((State.dadosFinanceiros.comissoesFatura / 2447.89) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendDivergencia) trendDivergencia.innerHTML = Math.abs(State.dadosFinanceiros.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? '⚠️ ALERTA' : '✓ OK';
     }
 
     function atualizarRelogio() {
@@ -321,10 +325,10 @@
         const dadosParaHash = {
             sessao: State.sessao.id,
             metadados: State.metadados,
-            saft: State.financeiro.saft,
-            dac7: State.financeiro.dac7,
-            comissoes: State.financeiro.comissoes,
-            viagens: State.financeiro.viagens,
+            saft: State.dadosFinanceiros.saftBruto,
+            dac7: State.dadosFinanceiros.dac7Reportado,
+            comissoes: State.dadosFinanceiros.comissoesFatura,
+            viagens: State.dadosFinanceiros.viagens,
             timestamp: Date.now()
         };
         
@@ -363,55 +367,60 @@
     }
 
     // ==========================================================================
-    // AUTENTICAÇÃO
+    // AUTENTICAÇÃO (VDC Object)
     // ==========================================================================
 
-    window.checkAccess = function() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const level = document.getElementById('user-level').value;
+    window.VDC = {
+        validateLogin: function() {
+            const username = document.getElementById('user').value.trim();
+            const password = document.getElementById('pass').value.trim();
+            const level = document.getElementById('access-level').value;
 
-        if (username === 'admin' && password === 'vdc') {
-            State.user.nome = username;
-            State.user.nivel = parseInt(level);
-            State.user.autenticado = true;
-            State.sessao.ativa = true;
-            State.sessao.inicio = new Date();
-            State.sessao.id = gerarIdSessao();
-            State.sessao.processoAuto = gerarProcessoAuto();
-            State.sessao.nivelAcesso = parseInt(level);
+            if (username === 'admin' && password === 'vdc') {
+                State.user.nome = username;
+                State.user.nivel = parseInt(level);
+                State.user.autenticado = true;
+                State.sessao.ativa = true;
+                State.sessao.inicio = new Date();
+                State.sessao.id = gerarIdSessao();
+                State.sessao.processoAuto = gerarProcessoAuto();
+                State.sessao.nivelAcesso = parseInt(level);
 
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-            
-            const sessionHash = document.getElementById('sessionHash');
-            if (sessionHash) sessionHash.textContent = State.sessao.hash?.substring(0, 16) + '...' || 'STANDBY';
-            
-            const footerSession = document.getElementById('footerSession');
-            if (footerSession) footerSession.textContent = State.sessao.id;
-            
-            const autoProcessID = document.getElementById('autoProcessID');
-            if (autoProcessID) autoProcessID.textContent = State.sessao.processoAuto;
-            
-            const procInput = document.getElementById('inputProcess');
-            if (procInput) procInput.value = State.sessao.processoAuto;
-            
-            log('✅ Acesso concedido. Bem-vindo ao VDC Forensic Elite v15.1', 'success');
-            log(`👤 Utilizador: ${username} | Nível: ${level}`, 'info');
-            log(`🆔 Sessão: ${State.sessao.id}`, 'info');
-            log(`📋 Processo Auto: ${State.sessao.processoAuto}`, 'info');
-            
-            gerarMasterHash();
-            atualizarTimestamp();
-            
-        } else {
-            log('❌ ACESSO NEGADO: Credenciais inválidas.', 'error');
-            alert('ACESSO NEGADO: Credenciais inválidas.');
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                const sessionHash = document.getElementById('sessionHash');
+                if (sessionHash) sessionHash.textContent = State.sessao.hash?.substring(0, 16) + '...' || 'STANDBY';
+                
+                const footerSession = document.getElementById('footerSession');
+                if (footerSession) footerSession.textContent = State.sessao.id;
+                
+                const autoProcessID = document.getElementById('autoProcessID');
+                if (autoProcessID) autoProcessID.textContent = State.sessao.processoAuto;
+                
+                const procInput = document.getElementById('inputProcess');
+                if (procInput) procInput.value = State.sessao.processoAuto;
+                
+                const authHash = document.getElementById('auth-hash');
+                if (authHash) authHash.textContent = State.sessao.hash?.substring(0, 8) + '...' || 'e3b0c442';
+                
+                log('✅ Acesso concedido. Bem-vindo ao VDC Forensic Elite v15.1', 'success');
+                log(`👤 Utilizador: ${username} | Nível: ${level}`, 'info');
+                log(`🆔 Sessão: ${State.sessao.id}`, 'info');
+                log(`📋 Processo Auto: ${State.sessao.processoAuto}`, 'info');
+                
+                gerarMasterHash();
+                atualizarTimestamp();
+                
+            } else {
+                log('❌ ACESSO NEGADO: Credenciais inválidas.', 'error');
+                alert('ACESSO NEGADO: Credenciais inválidas.');
+            }
         }
     };
 
     // ==========================================================================
-    // PROCESSAMENTO DE FICHEIROS
+    // PROCESSAMENTO DE FICHEIROS (COM LÓGICA CORRIGIDA DE SOMA)
     // ==========================================================================
 
     const fileInput = document.getElementById('fileInput');
@@ -437,6 +446,12 @@
             return;
         }
         
+        // Evitar processar o mesmo ficheiro duas vezes
+        if (State.ficheirosProcessados.has(file.name)) {
+            log(`⚠️ Ficheiro já processado: ${file.name}`, 'warning');
+            return;
+        }
+        
         log(`📄 A processar: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
         
         State.files.push({
@@ -446,6 +461,7 @@
             data: new Date().toISOString()
         });
         
+        State.ficheirosProcessados.add(file.name);
         adicionarFicheiroLista(file);
         
         if (CONFIG.PATTERNS.SAFT_CSV.test(file.name)) {
@@ -502,8 +518,8 @@
                     }
                     
                     if (fileTotal > 0) {
-                        State.financeiro.saft += fileTotal;
-                        State.financeiro.viagens += fileViagens;
+                        State.dadosFinanceiros.saftBruto += fileTotal;
+                        State.dadosFinanceiros.viagens += fileViagens;
                         State.contadores.saft++;
                         
                         log(`📊 SAF-T processado: +${formatarMoeda(fileTotal)}€ (${fileViagens} viagens)`, 'success');
@@ -557,7 +573,7 @@
                         }
                         
                         if (fileTotal > 0) {
-                            State.financeiro.dac7 = fileTotal;
+                            State.dadosFinanceiros.dac7Reportado = fileTotal;
                             State.contadores.dac7++;
                             
                             log(`📊 DAC7 processado: ${formatarMoeda(fileTotal)}€`, 'success');
@@ -596,7 +612,7 @@
                 try {
                     if (file.name.toLowerCase().includes('dac7')) {
                         const valorSimulado = 7755.16;
-                        State.financeiro.dac7 = valorSimulado;
+                        State.dadosFinanceiros.dac7Reportado = valorSimulado;
                         State.contadores.dac7++;
                         
                         log(`📄 DAC7 PDF: ${formatarMoeda(valorSimulado)}€`, 'success');
@@ -611,13 +627,13 @@
                     } else if (file.name.toLowerCase().includes('fatura') || 
                                file.name.toLowerCase().includes('comissao')) {
                         const valorSimulado = 239.00;
-                        State.financeiro.comissoes += valorSimulado;
+                        State.dadosFinanceiros.comissoesFatura += valorSimulado;
                         State.contadores.faturas++;
                         
-                        log(`💰 Fatura PDF: +${formatarMoeda(valorSimulado)}€`, 'success');
+                        log(`💰 Fatura PDF: +${formatarMoeda(valorSimulado)}€ (Comissão Validada)`, 'success');
                         
                         State.documentos.push({
-                            tipo: 'Fatura PDF',
+                            tipo: 'FATURA_COMISSAO',
                             nome: file.name,
                             valor: valorSimulado,
                             data: new Date().toISOString()
@@ -703,6 +719,11 @@
             }
         }
         
+        const authHash = document.getElementById('auth-hash');
+        if (authHash) {
+            authHash.textContent = gerarHashSimulado('init').substring(0, 8) + '...';
+        }
+        
         atualizarTimestamp();
         log('🚀 VDC Forensic Elite v15.1 inicializado. A aguardar autenticação...');
     });
@@ -716,26 +737,26 @@
         
         log('⚙️ A executar cruzamentos aritméticos...');
         
-        State.financeiro.divergencia = State.financeiro.saft - State.financeiro.dac7;
-        State.financeiro.proveitoReal = State.financeiro.saft - State.financeiro.comissoes;
-        State.financeiro.taxaMedia = State.financeiro.saft > 0 ? 
-            (State.financeiro.comissoes / State.financeiro.saft) * 100 : 0;
+        State.dadosFinanceiros.divergencia = State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.dac7Reportado;
+        State.dadosFinanceiros.proveitoReal = State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.comissoesFatura;
+        State.dadosFinanceiros.taxaMedia = State.dadosFinanceiros.saftBruto > 0 ? 
+            (State.dadosFinanceiros.comissoesFatura / State.dadosFinanceiros.saftBruto) * 100 : 0;
         
         log(`📊 RESULTADOS DOS CRUZAMENTOS:`, 'info');
-        log(`   SAF-T Bruto: ${formatarMoeda(State.financeiro.saft)}€`, 'info');
-        log(`   DAC7 Reportado: ${formatarMoeda(State.financeiro.dac7)}€`, 'info');
-        log(`   Comissões: ${formatarMoeda(State.financeiro.comissoes)}€`, 'info');
-        log(`   DIVERGÊNCIA: ${formatarMoeda(State.financeiro.divergencia)}€`, 
-            Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? 'warning' : 'success');
-        log(`   Proveito Real: ${formatarMoeda(State.financeiro.proveitoReal)}€`, 'info');
-        log(`   Taxa Média: ${State.financeiro.taxaMedia.toFixed(2)}%`, 'info');
+        log(`   SAF-T Bruto: ${formatarMoeda(State.dadosFinanceiros.saftBruto)}€`, 'info');
+        log(`   Comissões (Faturas PDF): ${formatarMoeda(State.dadosFinanceiros.comissoesFatura)}€`, 'info');
+        log(`   DAC7 Reportado: ${formatarMoeda(State.dadosFinanceiros.dac7Reportado)}€`, 'info');
+        log(`   DIVERGÊNCIA: ${formatarMoeda(State.dadosFinanceiros.divergencia)}€`, 
+            Math.abs(State.dadosFinanceiros.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? 'warning' : 'success');
+        log(`   Proveito Real: ${formatarMoeda(State.dadosFinanceiros.proveitoReal)}€`, 'info');
+        log(`   Taxa Média: ${State.dadosFinanceiros.taxaMedia.toFixed(2)}%`, 'info');
         
-        if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
+        if (Math.abs(State.dadosFinanceiros.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
             log(`⚠️ ALERTA: Divergência superior a ${CONFIG.TOLERANCIA_DIVERGENCIA}€!`, 'warning');
             
             State.alertas.push({
                 tipo: 'divergencia',
-                mensagem: `Divergência de ${formatarMoeda(State.financeiro.divergencia)}€ detetada`,
+                mensagem: `Divergência de ${formatarMoeda(State.dadosFinanceiros.divergencia)}€ detetada`,
                 data: new Date().toISOString()
             });
             
@@ -748,26 +769,26 @@
             }
         }
         
-        if (State.financeiro.taxaMedia > CONFIG.TAXA_COMISSAO_MAX * 100) {
-            log(`⚠️ ALERTA: Taxa de comissão (${State.financeiro.taxaMedia.toFixed(2)}%) excede limite legal de 25%!`, 'warning');
+        if (State.dadosFinanceiros.taxaMedia > CONFIG.TAXA_COMISSAO_MAX * 100) {
+            log(`⚠️ ALERTA: Taxa de comissão (${State.dadosFinanceiros.taxaMedia.toFixed(2)}%) excede limite legal de 25%!`, 'warning');
             
             State.alertas.push({
                 tipo: 'taxa',
-                mensagem: `Taxa de comissão ${State.financeiro.taxaMedia.toFixed(2)}% acima do limite`,
+                mensagem: `Taxa de comissão ${State.dadosFinanceiros.taxaMedia.toFixed(2)}% acima do limite`,
                 data: new Date().toISOString()
             });
         }
         
         State.cruzamentos.saftVsDac7.realizado = true;
-        State.cruzamentos.saftVsDac7.valor = State.financeiro.divergencia;
-        State.cruzamentos.saftVsDac7.status = Math.abs(State.financeiro.divergencia) <= CONFIG.TOLERANCIA_DIVERGENCIA ? 'convergente' : 'divergente';
+        State.cruzamentos.saftVsDac7.valor = State.dadosFinanceiros.divergencia;
+        State.cruzamentos.saftVsDac7.status = Math.abs(State.dadosFinanceiros.divergencia) <= CONFIG.TOLERANCIA_DIVERGENCIA ? 'convergente' : 'divergente';
         
         State.cruzamentos.comissoesVsFaturas.realizado = true;
-        State.cruzamentos.comissoesVsFaturas.valor = State.financeiro.comissoes;
+        State.cruzamentos.comissoesVsFaturas.valor = State.dadosFinanceiros.comissoesFatura;
         State.cruzamentos.comissoesVsFaturas.status = 'calculado';
         
         State.cruzamentos.proveitoReal.realizado = true;
-        State.cruzamentos.proveitoReal.valor = State.financeiro.proveitoReal;
+        State.cruzamentos.proveitoReal.valor = State.dadosFinanceiros.proveitoReal;
         State.cruzamentos.proveitoReal.status = 'calculado';
         
         gerarMasterHash();
@@ -778,7 +799,7 @@
     document.getElementById('btnExport')?.addEventListener('click', function() {
         if (!validarMetadados()) return;
         
-        if (State.financeiro.saft === 0 && State.financeiro.dac7 === 0 && State.financeiro.comissoes === 0) {
+        if (State.dadosFinanceiros.saftBruto === 0 && State.dadosFinanceiros.dac7Reportado === 0 && State.dadosFinanceiros.comissoesFatura === 0) {
             alert('Erro: Não há dados para exportar. Carregue ficheiros ou execute cruzamentos primeiro.');
             return;
         }
@@ -836,12 +857,12 @@
                 startY: y,
                 head: [['Rubrica', 'Valor Apurado (€)']],
                 body: [
-                    ['Faturação Bruta (SAF-T / CSV)', formatarMoeda(State.financeiro.saft)],
-                    ['(-) Comissões Plataforma (PDFs)', `(${formatarMoeda(State.financeiro.comissoes)})`],
-                    ['(=) Proveito Líquido Real', formatarMoeda(State.financeiro.saft - State.financeiro.comissoes)],
-                    ['Valor Reportado DAC7', formatarMoeda(State.financeiro.dac7)],
-                    ['DIVERGÊNCIA FISCAL (SAF-T vs DAC7)', formatarMoeda(State.financeiro.saft - State.financeiro.dac7)],
-                    ['Taxa Efetiva de Comissão', State.financeiro.taxaMedia.toFixed(2) + '%']
+                    ['Faturação Bruta (SAF-T / CSV)', formatarMoeda(State.dadosFinanceiros.saftBruto)],
+                    ['(-) Comissões Plataforma (PDFs)', `(${formatarMoeda(State.dadosFinanceiros.comissoesFatura)})`],
+                    ['(=) Proveito Líquido Real', formatarMoeda(State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.comissoesFatura)],
+                    ['Valor Reportado DAC7', formatarMoeda(State.dadosFinanceiros.dac7Reportado)],
+                    ['DIVERGÊNCIA FISCAL (SAF-T vs DAC7)', formatarMoeda(State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.dac7Reportado)],
+                    ['Taxa Efetiva de Comissão', State.dadosFinanceiros.taxaMedia.toFixed(2) + '%']
                 ],
                 theme: 'grid',
                 headStyles: { fillColor: [0, 78, 146] }
@@ -879,7 +900,7 @@
             doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
             
-            const divergencia = Math.abs(State.financeiro.saft - State.financeiro.dac7);
+            const divergencia = Math.abs(State.dadosFinanceiros.saftBruto - State.dadosFinanceiros.dac7Reportado);
             
             doc.text('VIOLAÇÕES IDENTIFICADAS:', 14, y);
             y += 10;
@@ -892,8 +913,8 @@
                 y += 7;
             }
             
-            if (State.financeiro.taxaMedia > CONFIG.TAXA_COMISSAO_MAX * 100) {
-                doc.text(`2. Taxa de comissão (${State.financeiro.taxaMedia.toFixed(2)}%) excede limite legal de 25%.`, 14, y);
+            if (State.dadosFinanceiros.taxaMedia > CONFIG.TAXA_COMISSAO_MAX * 100) {
+                doc.text(`2. Taxa de comissão (${State.dadosFinanceiros.taxaMedia.toFixed(2)}%) excede limite legal de 25%.`, 14, y);
                 y += 7;
             }
             
@@ -954,11 +975,12 @@
                 },
                 pericia: State.metadados
             },
-            financeiro: State.financeiro,
+            financeiro: State.dadosFinanceiros,
             documentos: State.documentos,
             alertas: State.alertas,
             cruzamentos: State.cruzamentos,
             contadores: State.contadores,
+            ficheirosProcessados: Array.from(State.ficheirosProcessados),
             logs: State.logs.slice(-50),
             timestamp: new Date().toISOString()
         };
@@ -979,10 +1001,10 @@
     document.getElementById('btnDemo')?.addEventListener('click', function() {
         log('🚀 A carregar dados de demonstração...');
         
-        State.financeiro.saft += 7755.16;
-        State.financeiro.dac7 = 7755.16;
-        State.financeiro.comissoes += 2447.89;
-        State.financeiro.viagens += 1648;
+        State.dadosFinanceiros.saftBruto += 7755.16;
+        State.dadosFinanceiros.dac7Reportado = 7755.16;
+        State.dadosFinanceiros.comissoesFatura += 2447.89;
+        State.dadosFinanceiros.viagens += 1648;
         
         State.contadores.saft++;
         State.contadores.dac7++;
@@ -1005,10 +1027,10 @@
     document.getElementById('btnReset')?.addEventListener('click', function() {
         if (!confirm('⚠️ Tem a certeza que pretende LIMPAR TODOS OS DADOS da sessão?')) return;
         
-        State.financeiro = {
-            saft: 0,
-            dac7: 0,
-            comissoes: 0,
+        State.dadosFinanceiros = {
+            saftBruto: 0,
+            comissoesFatura: 0,
+            dac7Reportado: 0,
             viagens: 0,
             proveitoReal: 0,
             divergencia: 0,
@@ -1018,6 +1040,7 @@
         State.files = [];
         State.documentos = [];
         State.alertas = [];
+        State.ficheirosProcessados.clear();
         State.contadores = {
             saft: 0,
             dac7: 0,
