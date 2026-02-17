@@ -1,6 +1,7 @@
 /* ============================================
-   VDC FORENSE v13.1 - STYLESHEET
+   VDC FORENSE v13.6 MASTER SCHEMA - STYLESHEET
    Sistema de Peritagem Digital e Auditoria Fiscal
+   Versão com Verdade Material, Alertas e Hash
    ============================================ */
 
 :root {
@@ -105,7 +106,7 @@ body {
     font-weight: 600;
 }
 
-.version {
+.version-badge {
     background: rgba(255,255,255,0.2);
     padding: 4px 8px;
     border-radius: var(--radius-sm);
@@ -747,8 +748,19 @@ body {
     .export-section,
     .btn-primary,
     .btn-secondary,
-    .btn-export {
+    .btn-export,
+    #fileInput {
         display: none !important;
+    }
+    
+    body {
+        background: white;
+        padding: 0;
+    }
+    
+    .container {
+        box-shadow: none;
+        padding: 15px;
     }
     
     .app {
@@ -758,5 +770,15 @@ body {
     .card {
         break-inside: avoid;
         border: 1px solid var(--gray-300);
+        box-shadow: none;
+    }
+    
+    .hash-container {
+        border: 1px solid var(--gray-300);
+        background: var(--gray-100);
+    }
+    
+    .hash-value {
+        color: var(--black);
     }
 }
