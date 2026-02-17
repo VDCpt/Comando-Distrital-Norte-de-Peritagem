@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC FORENSIC ELITE v15.0 - SISTEMA DE PERITAGEM DIGITAL</title>
+    <title>VDC FORENSIC ELITE v15.1 - SISTEMA DE PERITAGEM DIGITAL</title>
     
     <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,23 +13,27 @@
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Scripts externos (carregamento assíncrono) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js" defer></script>
+    <!-- Scripts externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        window.pdfjsLib = window.pdfjsLib || {};
+        window.pdfjsLib.GlobalWorkerOptions = window.pdfjsLib.GlobalWorkerOptions || {};
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
 </head>
 <body>
-    <!-- ELEMENTOS DECORATIVOS LASER -->
-    <div class="laser-h"></div>
-    <div class="laser-v"></div>
-    <div class="laser-glow"></div>
-
     <!-- TELA DE LOGIN - BARREIRA DE SEGURANÇA -->
     <div id="login-screen" class="modal-overlay">
+        <div class="laser-h"></div>
+        <div class="laser-v"></div>
         <div class="login-box">
             <div class="security-header">
                 <div class="scale-icon">⚖️</div>
-                <div class="v-tag">V15.0</div>
+                <div class="v-tag">V15.1</div>
                 <h2>VDC FORENSE SYSTEM</h2>
                 <p class="subtitle">Protocolo de Integridade Digital | Certificação ISO/IEC 27037 | NIST SP 800-86</p>
                 <p class="badge-elite">FINAL LEGAL WEAPON · CADEIA DE CUSTÓDIA</p>
@@ -49,12 +53,12 @@
                 
                 <div class="form-group">
                     <label class="input-label">UTILIZADOR</label>
-                    <input type="text" id="username" placeholder="CREDENCIAIS DE ACESSO" class="input-elite">
+                    <input type="text" id="username" placeholder="CREDENCIAIS DE ACESSO" class="input-elite" value="admin">
                 </div>
                 
                 <div class="form-group">
                     <label class="input-label">PALAVRA-PASSE</label>
-                    <input type="password" id="password" placeholder="********" class="input-elite">
+                    <input type="password" id="password" placeholder="********" class="input-elite" value="vdc">
                 </div>
                 
                 <button onclick="checkAccess()" class="btn-laser">
@@ -70,27 +74,33 @@
         </div>
     </div>
 
-    <!-- APLICAÇÃO PRINCIPAL (INICIALMENTE OCULTA) -->
+    <!-- APLICAÇÃO PRINCIPAL -->
     <div class="container main-app" id="app-container" style="display: none;">
         <!-- HEADER PRINCIPAL -->
         <header class="forensic-header">
             <div class="header-left">
-                <div class="brand-container">
-                    <span class="badge">FORENSIC ELITE EDITION</span>
-                    <span class="version">v15.0 CORE</span>
+                <div class="logo-area">
+                    <span class="scale-small">⚖️</span>
+                    <div class="titles">
+                        <h1>FORENSIC ELITE EDITION v15.1</h1>
+                        <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital</p>
+                        <p>AMT / IMT Compliance | <strong>MOTOR BIG DATA · SOMA INCREMENTAL</strong></p>
+                    </div>
                 </div>
-                <p class="compliance">ISO/IEC 27037 · NIST SP 800-86 · Cadeia de Custódia Digital</p>
-                <p class="compliance">AMT / IMT Compliance · Motor Big Data · DAC7/SAF-T</p>
             </div>
             
             <div class="header-right">
-                <div class="session-timer" id="timer">
-                    <span class="label">SESSÃO:</span>
-                    <span class="value">00:00:00</span>
+                <div class="info-block">
+                    <label>Nº PROCESSO (AUTO)</label>
+                    <div id="autoProcessID" class="val-highlight">---</div>
                 </div>
-                <div class="session-hash" id="hash-live">
-                    <span class="label">HASH:</span>
-                    <span class="value">STANDBY</span>
+                <div class="info-block">
+                    <label>SESSÃO</label>
+                    <div id="sessionTimer" class="val-highlight">00:00:00</div>
+                </div>
+                <div class="info-block">
+                    <label>HASH</label>
+                    <div id="sessionHash" class="val-highlight">STANDBY</div>
                 </div>
                 <div class="status-online">
                     <span class="dot"></span>
@@ -113,6 +123,17 @@
                 </div>
                 
                 <div class="metadata-item">
+                    <label>PLATAFORMA TVDE</label>
+                    <select id="selectPlatform" class="input-elite">
+                        <option value="">-- SELECIONE A PLATAFORMA --</option>
+                        <option value="uber">Uber B.V.</option>
+                        <option value="bolt">Bolt Operations OÜ</option>
+                        <option value="freenow">FreeNow Portugal</option>
+                        <option value="outra">Outra Plataforma</option>
+                    </select>
+                </div>
+                
+                <div class="metadata-item">
                     <label>PERÍODO FISCAL</label>
                     <select id="selectPeriod" class="input-elite">
                         <option value="Anual">Anual</option>
@@ -120,31 +141,9 @@
                         <option value="2.º Trimestre">2.º Trimestre</option>
                         <option value="3.º Trimestre">3.º Trimestre</option>
                         <option value="4.º Trimestre">4.º Trimestre</option>
-                        <option value="1.º Semestre">1.º Semestre</option>
-                        <option value="2.º Semestre">2.º Semestre</option>
                         <option value="Janeiro">Janeiro</option>
                         <option value="Fevereiro">Fevereiro</option>
                         <option value="Março">Março</option>
-                        <option value="Abril">Abril</option>
-                        <option value="Maio">Maio</option>
-                        <option value="Junho">Junho</option>
-                        <option value="Julho">Julho</option>
-                        <option value="Agosto">Agosto</option>
-                        <option value="Setembro">Setembro</option>
-                        <option value="Outubro">Outubro</option>
-                        <option value="Novembro">Novembro</option>
-                        <option value="Dezembro">Dezembro</option>
-                    </select>
-                </div>
-                
-                <div class="metadata-item">
-                    <label>PLATAFORMA TVDE</label>
-                    <select id="selectPlatform" class="input-elite">
-                        <option value="">-- SELECIONE A PLATAFORMA --</option>
-                        <option value="uber">Uber B.V.</option>
-                        <option value="bolt">Bolt Operations OÜ</option>
-                        <option value="freenow">FreeNow</option>
-                        <option value="outra">Outra Plataforma</option>
                     </select>
                 </div>
                 
@@ -156,34 +155,36 @@
                         <option value="2024" selected>2024</option>
                         <option value="2023">2023</option>
                         <option value="2022">2022</option>
-                        <option value="2021">2021</option>
-                        <option value="2020">2020</option>
                     </select>
                 </div>
                 
                 <div class="metadata-item">
                     <label>Nº PROCESSO</label>
-                    <input type="text" id="inputProcess" placeholder="Opcional" class="input-elite">
+                    <input type="text" id="inputProcess" placeholder="Auto-gerado" class="input-elite" readonly>
                 </div>
             </div>
         </section>
 
-        <!-- ZONA DE UPLOAD COM RADAR ANIMADO -->
+        <!-- ZONA DE UPLOAD -->
         <section class="upload-zone" id="dropZone">
             <div class="upload-content">
                 <div class="radar"></div>
-                <h3>FONTES DE DADOS · UPLOAD FORENSE</h3>
+                <h3>FONTES DE DADOS · BIG DATA UPLOAD</h3>
                 <p class="upload-text">Arraste ficheiros ou clique para selecionar</p>
-                <p class="upload-formats">Formatos suportados: SAF-T (CSV), Relatórios DAC7 (PDF/CSV), Faturas (PDF)</p>
+                <p class="upload-formats">Formatos: SAF-T (131509*.csv), Relatórios DAC7 (PDF/CSV), Faturas (PDF)</p>
                 <p class="upload-limit">Tamanho máximo: 10MB por ficheiro</p>
+                <div class="file-counters">
+                    <span id="countSAFT">SAF-T: 0</span> | 
+                    <span id="countDAC7">DAC7: 0</span> | 
+                    <span id="countFaturas">Faturas: 0</span> | 
+                    <span id="countHashes">Hashes: 0</span>
+                </div>
                 <input type="file" id="fileInput" multiple accept=".csv,.pdf,application/pdf,text/csv" hidden>
             </div>
         </section>
 
-        <!-- FEEDBACK DE UPLOAD -->
+        <!-- FEEDBACK E LISTA DE FICHEIROS -->
         <div id="file-feedback" class="file-feedback"></div>
-        
-        <!-- LISTA DE FICHEIROS PROCESSADOS -->
         <div id="file-list" class="file-list"></div>
 
         <!-- MÉTRICAS PRINCIPAIS -->
@@ -194,16 +195,16 @@
                     <span class="val" id="valSaft">0.00</span>
                     <span class="currency">€</span>
                 </div>
-                <div class="trend" id="trendSaft">↗ 0%</div>
+                <div class="trend" id="trendSaft">⟷ 0%</div>
             </div>
             
-            <div class="stat-card highlight">
+            <div class="stat-card">
                 <label>BRUTO REPORTADO DAC7</label>
                 <div class="value-wrapper">
                     <span class="val" id="valDac7">0.00</span>
                     <span class="currency">€</span>
                 </div>
-                <div class="trend" id="trendDac7">↗ 0%</div>
+                <div class="trend" id="trendDac7">⟷ 0%</div>
             </div>
             
             <div class="stat-card">
@@ -212,10 +213,10 @@
                     <span class="val" id="valComissoes">0.00</span>
                     <span class="currency">€</span>
                 </div>
-                <div class="trend" id="trendComissoes">↗ 0%</div>
+                <div class="trend" id="trendComissoes">⟷ 0%</div>
             </div>
             
-            <div class="stat-card danger" id="cardDivergencia">
+            <div class="stat-card highlight" id="cardDivergencia">
                 <label>DIVERGÊNCIA (SAF-T - DAC7)</label>
                 <div class="value-wrapper">
                     <span class="val" id="valDivergencia">0.00</span>
@@ -250,61 +251,61 @@
         <!-- PAINEL DE CONTROLO -->
         <div class="control-panel">
             <div class="action-bar">
-                <button onclick="processData()" class="btn-main">
+                <button id="btnAnalyze" class="btn-main">
                     <span>🔍 EXECUTAR CRUZAMENTOS ARITMÉTICOS</span>
                 </button>
                 
-                <button onclick="exportReport()" class="btn-sec">
+                <button id="btnExport" class="btn-sec">
                     <span>📄 GERAR PROVA LEGAL (PDF)</span>
                 </button>
                 
-                <button onclick="exportJSON()" class="btn-sec">
+                <button id="btnJSON" class="btn-sec">
                     <span>📊 EXPORTAR JSON</span>
                 </button>
                 
-                <button onclick="loadDemoData()" class="btn-sec demo">
+                <button id="btnDemo" class="btn-sec demo">
                     <span>🚀 CARREGAR DEMO</span>
                 </button>
                 
-                <button onclick="resetSystem()" class="btn-sec danger">
+                <button id="btnReset" class="btn-sec danger">
                     <span>🗑️ LIMPAR SISTEMA</span>
                 </button>
             </div>
         </div>
 
-        <!-- TERMINAL DE AUDITORIA COM LOGS -->
+        <!-- TERMINAL DE AUDITORIA -->
         <div class="terminal-container">
             <div class="terminal-header">
                 <span class="terminal-title">CONSOLA DE AUDITORIA · CADEIA DE CUSTÓDIA</span>
-                <span class="terminal-status pulse">GRAVANDO</span>
+                <span class="terminal-status">GRAVANDO</span>
             </div>
             <div class="terminal" id="terminal">
-                <div class="log-line">> VDC Forensic Engine v15.0 ELITE inicializado...</div>
-                <div class="log-line">> Sistema aguardando fontes de dados forenses...</div>
-                <div class="log-line">> Protocolo de integridade ativo | SHA-256 ready</div>
+                <div class="log-line">> VDC Forensic Engine v15.1 ELITE inicializado...</div>
+                <div class="log-line">> Sistema aguardando autenticação...</div>
             </div>
         </div>
 
-        <!-- MASTER HASH E ASSINATURA DIGITAL -->
+        <!-- MASTER HASH E QR CODE -->
         <div class="master-hash-container">
             <div class="master-hash-left">
                 <span class="master-label">MASTER HASH SHA-256:</span>
                 <span class="master-value" id="masterHash">---</span>
             </div>
             <div class="master-hash-right">
+                <div id="qrcode-container" style="width: 64px; height: 64px;"></div>
                 <span class="timestamp" id="footerTimestamp"></span>
                 <span class="session-id" id="footerSession">---</span>
             </div>
         </div>
 
-        <!-- FOOTER COM STATUS DO SISTEMA -->
+        <!-- FOOTER -->
         <footer class="main-footer">
             <div class="footer-left">
-                <span class="copyright">VDC FORENSE ELITE v15.0 · Todos os direitos reservados</span>
+                <span class="copyright">VDC FORENSE ELITE v15.1 · Todos os direitos reservados</span>
             </div>
             <div class="footer-right">
                 <span class="system-status">ESTADO: <span class="status-ok">OPERACIONAL</span></span>
-                <span class="chain-status">CADEIA DE CUSTÓDIA: <span class="status-ok">INTEGRA</span></span>
+                <span class="chain-status">CADEIA DE CUSTÓDIA: <span class="status-ok">ÍNTEGRA</span></span>
             </div>
         </footer>
     </div>
