@@ -1,14 +1,17 @@
 /**
  * VDC FORENSE v13.0 SYNC SCHEMA - CONSOLIDAÇÃO FINAL
- * RETIFICAÇÃO DA LÓGICA DE CONCILIAÇÃO ARITMÉTICA
+ * Sistema de Peritagem Digital e Auditoria Fiscal
+ * Motor de Extração e Processamento de Evidências
+ * Data Aggregation Pipeline com Triangulação Aritmética
  * 
- * Engenheiro de Dados Forenses: Eduardo
- * Data: Fevereiro 2026
+ * Versão: 13.0.0-FINAL
+ * Analista: Eduardo Perito Forense Digital
  * 
- * CRUZAMENTOS RETIFICADOS:
- * - SAF-T vs DAC7
- * - Bruto vs Ganhos App (soma dos componentes)
- * - Comissões vs Fatura Plataforma (validação 25%)
+ * CARACTERÍSTICAS:
+ * - Processamento assíncrono de múltiplos ficheiros
+ * - Soma incremental sem sobreposição de estados
+ * - Triangulação SAF-T vs DAC7 vs Extratos
+ * - Master Hash SHA-256 com Web Crypto API
  */
 
 (function() {
@@ -18,15 +21,16 @@
     // CONFIGURAÇÕES E CONSTANTES
     // ============================================
 
-    const CONFIG = Object.freeze({
+    const CONFIG = {
         VERSAO: '13.0',
         EDICAO: 'SYNC SCHEMA FINAL',
         DEBUG: true,
-        MAX_FILE_SIZE: 10 * 1024 * 1024,
+        MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
         ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml'],
-        TAXA_COMISSAO_MAX: 0.25,
-        TAXA_COMISSAO_PADRAO: 0.23, // 23% (valor médio observado)
-        TOLERANCIA_ERRO: 0.01,       // 1 cêntimo de tolerância
+        TAXA_COMISSAO_MAX: 0.25,        // 25% limite legal
+        TAXA_COMISSAO_PADRAO: 0.23,     // 23% média observada
+        TOLERANCIA_ERRO: 0.01,           // 1 cêntimo de tolerância
+        MARGEM_ERRO_PERCENTUAL: 0.05,    // 5% margem para discrepâncias
         
         PATTERNS: {
             CLEAN: /[\n\r\t]+/g,
@@ -62,10 +66,10 @@
             NIF: /NIF:\s*(\d{9})/i,
             DATA: /(\d{4}-\d{2}-\d{2})/g
         }
-    });
+    };
 
     // ============================================
-    // ESTADO GLOBAL DO SISTEMA
+    // ESTADO GLOBAL DO SISTEMA (BIG DATA ACCUMULATOR)
     // ============================================
 
     let State = {
@@ -98,14 +102,11 @@
             }
         },
         autenticidade: [],
+        documentos: [],
         fila: [],
         processando: false,
         alertas: [],
         logs: [],
-        
-        // ============================================
-        // NOVAS PROPRIEDADES PARA CRUZAMENTOS ARITMÉTICOS
-        // ============================================
         
         // Resultados dos cruzamentos para exportação JSON
         cruzamentos: {
@@ -120,7 +121,7 @@
             brutoVsGanhosApp: {
                 realizado: false,
                 valorBruto: 0,
-                valorCalculado: 0, // ganhosApp + ganhosCampanha + gorjetas + portagens + taxasCancel
+                valorCalculado: 0,
                 diferenca: 0,
                 convergente: false,
                 alerta: null
@@ -136,6 +137,24 @@
             }
         }
     };
+
+    // ============================================
+    // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO)
+    // ============================================
+    
+    let stateHistory = [];
+    
+    function saveStateToHistory() {
+        stateHistory.push({
+            timestamp: new Date().toISOString(),
+            snapshot: JSON.parse(JSON.stringify(State))
+        });
+        
+        // Manter apenas últimos 10 estados
+        if (stateHistory.length > 10) {
+            stateHistory.shift();
+        }
+    }
 
     // ============================================
     // UTILITÁRIOS
@@ -154,6 +173,12 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }) + ' €';
+    }
+
+    function formatarMoedaSimples(valor) {
+        const num = parseFloat(valor);
+        if (isNaN(num)) return '0.00';
+        return num.toFixed(2);
     }
 
     function parseMoeda(valorStr) {
@@ -188,13 +213,51 @@
     }
 
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
     // ============================================
-    // NOVA FUNÇÃO: GERAR MASTER HASH SHA-256
+    // MOTOR DE LOGS
+    // ============================================
+
+    const logger = {
+        log: function(msg, tipo = 'info') {
+            const consoleEl = document.getElementById('audit-console');
+            if (!consoleEl) {
+                if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
+                return;
+            }
+            
+            const line = document.createElement('div');
+            line.className = `line ${tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : tipo === 'warning' ? 'yellow' : 'blue'}`;
+            line.textContent = `[${new Date().toLocaleTimeString('pt-PT')}] ${msg}`;
+            
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            
+            State.logs.push({
+                timestamp: new Date(),
+                msg: msg,
+                tipo: tipo
+            });
+            
+            if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
+        },
+        
+        limpar: function() {
+            const consoleEl = document.getElementById('audit-console');
+            if (consoleEl) {
+                consoleEl.innerHTML = '<div class="line green">[SISTEMA] A aguardar fontes de dados...</div>';
+            }
+            State.logs = [];
+        }
+    };
+
+    // ============================================
+    // GERAR MASTER HASH SHA-256
     // ============================================
     
     async function gerarMasterHash() {
@@ -222,19 +285,27 @@
                     hash: a.hash,
                     ficheiro: a.ficheiro
                 })),
-                cruzamentos: State.cruzamentos
+                cruzamentos: State.cruzamentos,
+                numDocumentos: State.documentos.length,
+                numAlertas: State.alertas.length
             };
             
             const jsonString = JSON.stringify(dadosParaHash, null, 2);
             
             // Usar Web Crypto API para gerar SHA-256
             const encoder = new TextEncoder();
-            const data = encoder.encode(jsonString + State.sessao.id);
+            const data = encoder.encode(jsonString + State.sessao.id + Date.now().toString());
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             
             // Converter para hexadecimal
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Atualizar interface
+            const masterHashEl = document.getElementById('master-hash');
+            if (masterHashEl) {
+                masterHashEl.textContent = hashHex;
+            }
             
             logger.log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
             
@@ -256,7 +327,7 @@
     }
 
     // ============================================
-    // NOVA FUNÇÃO: EXECUTAR CRUZAMENTOS ARITMÉTICOS
+    // EXECUTAR CRUZAMENTOS ARITMÉTICOS
     // ============================================
     
     function executarCruzamentos() {
@@ -286,6 +357,24 @@
         
         State.cruzamentos.saftVsDac7 = saftVsDac7;
         
+        // Atualizar interface
+        const statusSaftDac7 = document.getElementById('status-saft-dac7');
+        const triSaftDac7 = document.getElementById('tri-saft-dac7');
+        
+        if (statusSaftDac7) {
+            if (saftVsDac7.realizado && State.financeiro.dac7 > 0) {
+                statusSaftDac7.textContent = saftVsDac7.convergente ? 'CONVERGENTE' : 'DIVERGENTE';
+                statusSaftDac7.className = 'cruzamento-status ' + (saftVsDac7.convergente ? 'convergente' : 'divergente');
+            } else {
+                statusSaftDac7.textContent = 'Sem dados DAC7';
+                statusSaftDac7.className = 'cruzamento-status alerta';
+            }
+        }
+        
+        if (triSaftDac7) {
+            triSaftDac7.textContent = formatarMoedaSimples(saftVsDac7.diferenca) + '€';
+        }
+        
         // ============================================
         // CRUZAMENTO 2: Bruto vs Ganhos App (soma dos componentes)
         // ============================================
@@ -307,22 +396,40 @@
         };
         
         if (State.financeiro.bruto > 0 || valorCalculadoApp > 0) {
-            if (!brutoVsGanhosApp.convergente) {
+            if (!brutoVsGanhosApp.convergente && valorCalculadoApp > 0) {
                 brutoVsGanhosApp.alerta = `Discrepância Bruto (${formatarMoeda(State.financeiro.bruto)}) vs Soma Ganhos App (${formatarMoeda(valorCalculadoApp)}) - Diferença: ${formatarMoeda(brutoVsGanhosApp.diferenca)}`;
                 logger.log(`⚠️ ${brutoVsGanhosApp.alerta}`, 'warning');
-            } else {
+            } else if (valorCalculadoApp > 0) {
                 logger.log(`✅ Bruto e soma dos ganhos App convergentes: ${formatarMoeda(State.financeiro.bruto)}`, 'success');
             }
         }
         
         State.cruzamentos.brutoVsGanhosApp = brutoVsGanhosApp;
         
+        // Atualizar interface
+        const statusBrutoExtrato = document.getElementById('status-bruto-extrato');
+        const triBrutoExtrato = document.getElementById('tri-bruto-extrato');
+        
+        if (statusBrutoExtrato) {
+            if (brutoVsGanhosApp.realizado && valorCalculadoApp > 0) {
+                statusBrutoExtrato.textContent = brutoVsGanhosApp.convergente ? 'CONVERGENTE' : 'DIVERGENTE';
+                statusBrutoExtrato.className = 'cruzamento-status ' + (brutoVsGanhosApp.convergente ? 'convergente' : 'divergente');
+            } else {
+                statusBrutoExtrato.textContent = 'Sem dados extrato';
+                statusBrutoExtrato.className = 'cruzamento-status alerta';
+            }
+        }
+        
+        if (triBrutoExtrato) {
+            triBrutoExtrato.textContent = formatarMoedaSimples(brutoVsGanhosApp.diferenca) + '€';
+        }
+        
         // ============================================
         // CRUZAMENTO 3: Comissões vs Fatura Plataforma
         // Validação da taxa de 25% por viagem
         // ============================================
         
-        const totalFaturas = State.financeiro.faturas.reduce((acc, f) => acc + f.valor, 0);
+        const totalFaturas = State.financeiro.faturas.reduce((acc, f) => acc + (f.valor || 0), 0);
         const taxaEfetiva = State.financeiro.bruto > 0 ? 
             (State.financeiro.comissoes / State.financeiro.bruto) * 100 : 0;
         
@@ -332,7 +439,7 @@
             totalFaturas: totalFaturas,
             diferenca: Math.abs(State.financeiro.comissoes - totalFaturas),
             taxaEfetiva: taxaEfetiva,
-            convergente: true, // Assume convergente, será alterado se houver discrepâncias
+            convergente: true,
             alertasPorViagem: []
         };
         
@@ -348,15 +455,15 @@
             if (v.valor > 0) {
                 const taxaViagem = (v.comissao / v.valor) * 100;
                 
-                if (taxaViagem > CONFIG.TAXA_COMISSAO_MAX * 100 + 0.1) { // +0.1% de tolerância
+                if (taxaViagem > CONFIG.TAXA_COMISSAO_MAX * 100 + 0.1) {
                     const alerta = {
                         viagemIndex: index,
-                        numFatura: v.numFatura,
+                        numFatura: v.numFatura || `Viagem ${index+1}`,
                         valor: v.valor,
                         comissao: v.comissao,
                         taxa: taxaViagem.toFixed(2),
                         limite: (CONFIG.TAXA_COMISSAO_MAX * 100).toFixed(2),
-                        mensagem: `Comissão ${taxaViagem.toFixed(2)}% excede limite 25% na fatura ${v.numFatura}`
+                        mensagem: `Comissão ${taxaViagem.toFixed(2)}% excede limite 25% na fatura ${v.numFatura || index+1}`
                     };
                     
                     comissoesVsFatura.alertasPorViagem.push(alerta);
@@ -373,8 +480,29 @@
         
         State.cruzamentos.comissoesVsFatura = comissoesVsFatura;
         
+        // Atualizar interface
+        const statusComissoesFaturas = document.getElementById('status-comissoes-faturas');
+        const triComissoesFaturas = document.getElementById('tri-comissoes-faturas');
+        
+        if (statusComissoesFaturas) {
+            if (comissoesVsFatura.realizado && totalFaturas > 0) {
+                statusComissoesFaturas.textContent = comissoesVsFatura.convergente ? 'CONVERGENTE' : 'DIVERGENTE';
+                statusComissoesFaturas.className = 'cruzamento-status ' + (comissoesVsFatura.convergente ? 'convergente' : 'divergente');
+            } else if (State.financeiro.viagens.length > 0) {
+                statusComissoesFaturas.textContent = 'Sem faturas';
+                statusComissoesFaturas.className = 'cruzamento-status alerta';
+            } else {
+                statusComissoesFaturas.textContent = 'Sem dados';
+                statusComissoesFaturas.className = 'cruzamento-status alerta';
+            }
+        }
+        
+        if (triComissoesFaturas) {
+            triComissoesFaturas.textContent = formatarMoedaSimples(comissoesVsFatura.diferenca) + '€';
+        }
+        
         // ============================================
-        // ATUALIZAR ALERTAS NA INTERFACE
+        // GERAR ALERTAS NA INTERFACE
         // ============================================
         
         gerarAlertasInterface();
@@ -383,7 +511,7 @@
     }
 
     // ============================================
-    // NOVA FUNÇÃO: GERAR ALERTAS NA INTERFACE
+    // GERAR ALERTAS NA INTERFACE
     // ============================================
     
     function gerarAlertasInterface() {
@@ -434,18 +562,15 @@
             );
         });
         
-        // Verificar outras discrepâncias (manter lógica original)
-        const c = State.financeiro;
-        
-        // Líquido calculado vs reportado
-        if (c.liquido > 0) {
-            const liquidoCalculado = c.bruto - c.comissoes;
-            if (Math.abs(liquidoCalculado - c.liquido) > 10) {
+        // Verificar líquido calculado vs reportado
+        if (State.financeiro.liquido > 0) {
+            const liquidoCalculado = State.financeiro.bruto - State.financeiro.comissoes;
+            if (Math.abs(liquidoCalculado - State.financeiro.liquido) > 10) {
                 adicionarAlerta(
                     'alerta',
                     'DISCREPÂNCIA GANHOS LÍQUIDOS',
-                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(c.liquido)}`,
-                    Math.abs(liquidoCalculado - c.liquido)
+                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(State.financeiro.liquido)}`,
+                    Math.abs(liquidoCalculado - State.financeiro.liquido)
                 );
             }
         }
@@ -478,43 +603,6 @@
         
         alertasContainer.appendChild(div);
     }
-
-    // ============================================
-    // MOTOR DE LOGS
-    // ============================================
-
-    const logger = {
-        log: function(msg, tipo = 'info') {
-            const consoleEl = document.getElementById('audit-console');
-            if (!consoleEl) {
-                if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
-                return;
-            }
-            
-            const line = document.createElement('div');
-            line.className = `line ${tipo === 'success' ? 'green' : tipo === 'error' ? 'red' : tipo === 'warning' ? 'yellow' : 'blue'}`;
-            line.textContent = `[${new Date().toLocaleTimeString('pt-PT')}] ${msg}`;
-            
-            consoleEl.appendChild(line);
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-            
-            State.logs.push({
-                timestamp: new Date(),
-                msg: msg,
-                tipo: tipo
-            });
-            
-            if (CONFIG.DEBUG) console.log(`[VDC] ${msg}`);
-        },
-        
-        limpar: function() {
-            const consoleEl = document.getElementById('audit-console');
-            if (consoleEl) {
-                consoleEl.innerHTML = '<div class="line green">[SISTEMA] A aguardar fontes de dados...</div>';
-            }
-            State.logs = [];
-        }
-    };
 
     // ============================================
     // INICIALIZAÇÃO E BARREIRA DE ENTRADA
@@ -751,6 +839,8 @@
         // Executar cruzamentos após processar todos os ficheiros
         if (State.fila.length === 0) {
             executarCruzamentos();
+            await gerarMasterHash();
+            saveStateToHistory();
         }
         
         processarProximo();
@@ -775,7 +865,7 @@
                         processarAutenticidade(lines);
                         atualizarContador('saft', 1);
                     } else if (header.includes('nº da fatura') || header.includes('viagem') || header.includes('motorista')) {
-                        logger.log('Detetado: Ficheiro de Viagens (17 colunas)', 'success');
+                        logger.log('Detetado: Ficheiro de Viagens', 'success');
                         processarViagens(lines);
                         atualizarContador('ext', 1);
                     } else {
@@ -862,8 +952,8 @@
                 const motorista = cols[2]?.replace(/"/g, '') || 'N/A';
                 const numFatura = cols[0]?.replace(/"/g, '') || 'N/A';
                 
-                // Calcular comissão baseada na taxa padrão (23%) - depois será validada
                 const comissao = valor * CONFIG.TAXA_COMISSAO_PADRAO;
+                const taxa = ((comissao / valor) * 100).toFixed(2) + '%';
                 
                 totalBruto += valor;
                 
@@ -874,6 +964,7 @@
                     <td>${escapeHtml(numFatura.substring(0, 12))}</td>
                     <td>${formatarMoeda(valor)}</td>
                     <td>${formatarMoeda(comissao)}</td>
+                    <td>${escapeHtml(taxa)}</td>
                 `;
                 tbody.appendChild(tr);
                 
@@ -885,12 +976,22 @@
                     comissao: comissao
                 });
                 
+                State.documentos.push({
+                    timestamp: new Date().toISOString(),
+                    nome: 'CSV Viagens',
+                    tipo: 'Viagem',
+                    valorBruto: valor,
+                    comissao: comissao,
+                    liquido: valor - comissao
+                });
+                
                 count++;
             }
         });
         
         State.financeiro.bruto += totalBruto;
         State.financeiro.comissoes += totalBruto * CONFIG.TAXA_COMISSAO_PADRAO;
+        State.financeiro.liquido += totalBruto * (1 - CONFIG.TAXA_COMISSAO_PADRAO);
         
         logger.log(`Processadas ${count} viagens. Total bruto: ${formatarMoeda(totalBruto)}`, 'success');
     }
@@ -952,28 +1053,60 @@
             State.financeiro.extrato.ganhosApp = 3157.94;
             State.financeiro.extrato.comissoes = 792.59;
             State.financeiro.extrato.ganhosCampanha = 0;
-            State.financeiro.extrato.gorjetas = 0;
+            State.financeiro.extrato.gorjetas = 44.60;
             State.financeiro.extrato.portagens = 0;
             State.financeiro.extrato.taxasCancel = 0;
             State.financeiro.liquido += 2409.95;
             State.financeiro.bruto += 3157.94;
             State.financeiro.comissoes += 792.59;
+            
+            State.documentos.push({
+                timestamp: new Date().toISOString(),
+                nome: file.name,
+                tipo: 'Extrato',
+                valorBruto: 3157.94,
+                comissao: 792.59,
+                liquido: 2409.95
+            });
+            
             atualizarContador('ext', 1);
             
         } else if (nomeLower.includes('fatura')) {
             logger.log('[SIMULAÇÃO] Fatura Bolt detetada', 'success');
-            State.financeiro.comissoes += 239.00;
             State.financeiro.faturas.push({
                 numero: file.name,
                 valor: 239.00,
-                periodo: 'N/A',
+                periodo: 'Dezembro 2024',
                 autoliquidacao: false
             });
+            
+            State.documentos.push({
+                timestamp: new Date().toISOString(),
+                nome: file.name,
+                tipo: 'Fatura',
+                valorBruto: 239.00,
+                comissao: 0,
+                liquido: 0
+            });
+            
             atualizarContador('fat', 1);
             
         } else if (nomeLower.includes('dac7')) {
             logger.log('[SIMULAÇÃO] Relatório DAC7 detetado', 'success');
             State.financeiro.dac7 = 7755.16;
+            State.financeiro.dac7Trimestres.t4.ganhos = 7755.16;
+            State.financeiro.dac7Trimestres.t4.comissoes = 239.00;
+            State.financeiro.dac7Trimestres.t4.servicos = 1648;
+            
+            State.documentos.push({
+                timestamp: new Date().toISOString(),
+                nome: file.name,
+                tipo: 'DAC7',
+                valorBruto: 7755.16,
+                comissao: 0,
+                liquido: 0
+            });
+            
             atualizarContador('dac7', 1);
         }
         
@@ -1003,6 +1136,15 @@
         State.financeiro.comissoes += comissoes;
         State.financeiro.liquido += ganhosLiquidos;
         
+        State.documentos.push({
+            timestamp: new Date().toISOString(),
+            nome: file.name,
+            tipo: 'Extrato',
+            valorBruto: brutoCalculado,
+            comissao: comissoes,
+            liquido: ganhosLiquidos
+        });
+        
         logger.log(`Extrato: Bruto ${formatarMoeda(brutoCalculado)} | Líquido ${formatarMoeda(ganhosLiquidos)}`, 'success');
         
         if (ganhosApp > 0) logger.log(`  Ganhos na app: ${formatarMoeda(ganhosApp)}`, 'info');
@@ -1028,6 +1170,15 @@
             autoliquidacao: isAutoliquidacao
         });
         
+        State.documentos.push({
+            timestamp: new Date().toISOString(),
+            nome: file.name,
+            tipo: 'Fatura',
+            valorBruto: valorTotal,
+            comissao: 0,
+            liquido: 0
+        });
+        
         logger.log(`Fatura: ${numFatura} | Valor ${formatarMoeda(valorTotal)} | ${isAutoliquidacao ? 'Autoliquidação' : 'IVA incluído'}`, 'success');
     }
 
@@ -1051,6 +1202,15 @@
         State.financeiro.dac7Trimestres.t4.servicos = extrairValor(texto, CONFIG.PATTERNS.DAC7_SERVICOS_4T);
         
         State.financeiro.dac7 = receitaAnual;
+        
+        State.documentos.push({
+            timestamp: new Date().toISOString(),
+            nome: file.name,
+            tipo: 'DAC7',
+            valorBruto: receitaAnual,
+            comissao: 0,
+            liquido: 0
+        });
         
         const totalServicos = 
             State.financeiro.dac7Trimestres.t1.servicos +
@@ -1105,8 +1265,118 @@
         document.getElementById('dac7-3t').textContent = formatarMoeda(State.financeiro.dac7Trimestres.t3.ganhos);
         document.getElementById('dac7-4t').textContent = formatarMoeda(State.financeiro.dac7Trimestres.t4.ganhos);
         
-        // Executar cruzamentos após atualizar interface
-        executarCruzamentos();
+        // Atualizar contador de documentos
+        const docCount = document.getElementById('doc-count');
+        if (docCount) {
+            docCount.textContent = State.documentos.length;
+        }
+        
+        verificarDiscrepancias();
+    }
+
+    function verificarDiscrepancias() {
+        const alertasContainer = document.getElementById('alertas-container');
+        if (!alertasContainer) return;
+        
+        alertasContainer.innerHTML = '';
+        State.alertas = [];
+        
+        const c = State.financeiro;
+        
+        if (c.dac7 > 0 && Math.abs(c.bruto - c.dac7) > 10) {
+            adicionarAlerta(
+                'critico', 
+                'DISCREPÂNCIA SAF-T vs DAC7', 
+                `Bruto (${formatarMoeda(c.bruto)}) ≠ DAC7 (${formatarMoeda(c.dac7)})`,
+                Math.abs(c.bruto - c.dac7)
+            );
+        }
+        
+        const taxaEfetiva = c.bruto > 0 ? c.comissoes / c.bruto : 0;
+        if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.05) {
+            adicionarAlerta(
+                'critico',
+                'COMISSÃO EXCEDE LIMITE LEGAL',
+                `Taxa: ${(taxaEfetiva * 100).toFixed(2)}% | Limite: 25%`,
+                c.comissoes - (c.bruto * CONFIG.TAXA_COMISSAO_MAX)
+            );
+        }
+        
+        if (c.liquido > 0) {
+            const liquidoCalculado = c.bruto - c.comissoes;
+            if (Math.abs(liquidoCalculado - c.liquido) > 10) {
+                adicionarAlerta(
+                    'alerta',
+                    'DISCREPÂNCIA GANHOS LÍQUIDOS',
+                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(c.liquido)}`,
+                    Math.abs(liquidoCalculado - c.liquido)
+                );
+            }
+        }
+        
+        atualizarVeredito();
+    }
+
+    function atualizarVeredito() {
+        const veredictoSection = document.getElementById('veredicto-section');
+        if (!veredictoSection) return;
+        
+        veredictoSection.style.display = 'block';
+        
+        const statusEl = document.getElementById('veredicto-status');
+        const desvioEl = document.getElementById('veredicto-desvio');
+        const anomaliaEl = document.getElementById('anomalia-critica');
+        const anomaliaTexto = document.getElementById('anomalia-texto');
+        const valorAnomalia = document.getElementById('valor-anomalia');
+        
+        const alertasCriticos = State.alertas.filter(a => a.tipo === 'critico');
+        const alertasNormais = State.alertas.filter(a => a.tipo === 'alerta');
+        
+        if (alertasCriticos.length > 0) {
+            const desvioTotal = alertasCriticos.reduce((acc, a) => acc + (a.valor || 0), 0);
+            const percentual = State.financeiro.dac7 > 0 ? (desvioTotal / State.financeiro.dac7) * 100 : 0;
+            
+            statusEl.textContent = 'CRÍTICO';
+            statusEl.className = 'veredicto-status critico';
+            desvioEl.textContent = `Desvio: ${percentual.toFixed(2)}% (${formatarMoeda(desvioTotal)})`;
+            
+            anomaliaEl.style.display = 'flex';
+            anomaliaTexto.textContent = `Potencial incumprimento fiscal. ${alertasCriticos.length} anomalia(s) crítica(s).`;
+            valorAnomalia.textContent = formatarMoeda(desvioTotal);
+            
+            const discItem = document.getElementById('tri-discrepancia-item');
+            const discValor = document.getElementById('tri-discrepancia');
+            if (discItem && discValor) {
+                discItem.style.display = 'block';
+                discValor.textContent = formatarMoeda(desvioTotal);
+            }
+            
+            logger.log(`Veredito: CRÍTICO (${percentual.toFixed(2)}% de desvio)`, 'error');
+            
+        } else if (alertasNormais.length > 0) {
+            statusEl.textContent = 'ALERTA';
+            statusEl.className = 'veredicto-status alerta';
+            desvioEl.textContent = 'Requer verificação manual';
+            
+            anomaliaEl.style.display = 'none';
+            
+            const discItem = document.getElementById('tri-discrepancia-item');
+            if (discItem) discItem.style.display = 'none';
+            
+            logger.log('Veredito: ALERTA - Requer atenção', 'warning');
+            
+        } else {
+            statusEl.textContent = 'NORMAL';
+            statusEl.className = 'veredicto-status normal';
+            desvioEl.textContent = 'Sem desvios significativos';
+            
+            anomaliaEl.style.display = 'none';
+            
+            const discItem = document.getElementById('tri-discrepancia-item');
+            if (discItem) discItem.style.display = 'none';
+            
+            logger.log('Veredito: NORMAL - Dados consistentes', 'success');
+        }
     }
 
     // ============================================
@@ -1126,7 +1396,7 @@
         State.financeiro.extrato = {
             ganhosApp: 3157.94,
             ganhosCampanha: 0,
-            gorjetas: 44.60,  // gorjetas inclusas no extrato
+            gorjetas: 44.60,
             portagens: 0,
             taxasCancel: 0,
             comissoes: 792.59,
@@ -1158,6 +1428,12 @@
             { algoritmo: 'SHA256', hash: '533F00E20333570148C476CD2B00BA20', ficheiro: 'Ganhos da empresa.pdf' }
         ];
         
+        State.documentos = [
+            { timestamp: new Date().toISOString(), nome: '131509_202412.csv', tipo: 'CSV', valorBruto: 61.94, comissao: 14.25, liquido: 47.69 },
+            { timestamp: new Date().toISOString(), nome: 'Fatura Bolt PT1125-3582.pdf', tipo: 'Fatura', valorBruto: 239.00, comissao: 0, liquido: 0 },
+            { timestamp: new Date().toISOString(), nome: 'Ganhos da empresa.pdf', tipo: 'Extrato', valorBruto: 3157.94, comissao: 792.59, liquido: 2409.95 }
+        ];
+        
         const tbodyHash = document.querySelector('#table-hashes tbody');
         if (tbodyHash) {
             tbodyHash.innerHTML = '';
@@ -1177,6 +1453,7 @@
         if (tbodyViagens) {
             tbodyViagens.innerHTML = '';
             State.financeiro.viagens.forEach(function(v) {
+                const taxa = ((v.comissao / v.valor) * 100).toFixed(2) + '%';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${v.data}</td>
@@ -1184,6 +1461,7 @@
                     <td>${v.numFatura}</td>
                     <td>${formatarMoeda(v.valor)}</td>
                     <td>${formatarMoeda(v.comissao)}</td>
+                    <td>${taxa}</td>
                 `;
                 tbodyViagens.appendChild(tr);
             });
@@ -1197,10 +1475,11 @@
         
         atualizarInterface();
         
-        logger.log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
-        
         // Executar cruzamentos após demo
         executarCruzamentos();
+        gerarMasterHash();
+        
+        logger.log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
     }
 
     function limparSistema() {
@@ -1239,11 +1518,17 @@
         };
         
         State.autenticidade = [];
+        State.documentos = [];
         State.fila = [];
         State.alertas = [];
         
         logger.limpar();
         logger.log('Sistema limpo. Todos os dados removidos.', 'warning');
+        
+        const masterHashEl = document.getElementById('master-hash');
+        if (masterHashEl) {
+            masterHashEl.textContent = '---';
+        }
     }
 
     function limparDadosInterface() {
@@ -1267,11 +1552,28 @@
             if (el) el.textContent = '0';
         });
         
+        const statusElements = ['status-saft-dac7', 'status-bruto-extrato', 'status-comissoes-faturas'];
+        statusElements.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = 'A aguardar dados';
+                el.className = 'cruzamento-status';
+            }
+        });
+        
+        const triElements = ['tri-saft-dac7', 'tri-bruto-extrato', 'tri-comissoes-faturas'];
+        triElements.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = '---';
+            }
+        });
+        
         atualizarInterface();
     }
 
     // ============================================
-    // NOVA FUNÇÃO: EXPORTAR JSON COM CRUZAMENTOS
+    // EXPORTAR JSON COM CRUZAMENTOS
     // ============================================
     
     async function exportarJSON() {
@@ -1314,12 +1616,12 @@
                         (State.financeiro.comissoes / State.financeiro.bruto * 100) : 0
                 },
                 extrato: State.financeiro.extrato,
-                dac7Trimestres: State.financeiro.dac7Trimestres
+                dac7Trimestres: State.financeiro.dac7Trimestres,
+                viagens: State.financeiro.viagens,
+                faturas: State.financeiro.faturas
             },
-            // ============================================
-            // CRUZAMENTOS ARITMÉTICOS RETIFICADOS
-            // ============================================
             cruzamentos: State.cruzamentos,
+            documentos: State.documentos,
             alertas: State.alertas.map(a => ({
                 tipo: a.tipo,
                 titulo: a.titulo,
@@ -1346,12 +1648,6 @@
         
         logger.log(`Exportação JSON realizada com sucesso. Master Hash: ${masterHash.hash.substring(0, 16)}...`, 'success');
         
-        // Mostrar master hash na interface
-        const masterHashEl = document.getElementById('master-hash');
-        if (masterHashEl) {
-            masterHashEl.textContent = masterHash.hash;
-        }
-        
         return dados;
     }
 
@@ -1367,7 +1663,8 @@
         limparSistema: limparSistema,
         exportarJSON: exportarJSON,
         executarCruzamentos: executarCruzamentos,
-        gerarMasterHash: gerarMasterHash
+        gerarMasterHash: gerarMasterHash,
+        stateHistory: stateHistory
     };
 
 })();
