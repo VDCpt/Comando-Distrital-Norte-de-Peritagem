@@ -5,6 +5,7 @@
  * 
  * @author VDC Forensics Team
  * @version 15.1 ELITE
+ * @license CONFIDENTIAL
  */
 
 (function() {
@@ -128,8 +129,8 @@
     }
 
     function gerarHashSimulado(input) {
-        let hash = '';
         const chars = '0123456789ABCDEF';
+        let hash = '';
         for (let i = 0; i < 64; i++) {
             hash += chars[Math.floor(Math.random() * 16)];
         }
@@ -243,28 +244,45 @@
     }
 
     function updateUI() {
-        document.getElementById('valSaft').innerText = formatarMoeda(State.financeiro.saft);
-        document.getElementById('valDac7').innerText = formatarMoeda(State.financeiro.dac7);
-        document.getElementById('valComissoes').innerText = formatarMoeda(State.financeiro.comissoes);
+        const valSaft = document.getElementById('valSaft');
+        const valDac7 = document.getElementById('valDac7');
+        const valComissoes = document.getElementById('valComissoes');
+        const valDivergencia = document.getElementById('valDivergencia');
+        const valViagens = document.getElementById('valViagens');
+        const valProveito = document.getElementById('valProveito');
+        const valTaxa = document.getElementById('valTaxa');
+        const valDocumentos = document.getElementById('valDocumentos');
+        const countSAFT = document.getElementById('countSAFT');
+        const countDAC7 = document.getElementById('countDAC7');
+        const countFaturas = document.getElementById('countFaturas');
+        const countHashes = document.getElementById('countHashes');
+        const trendSaft = document.getElementById('trendSaft');
+        const trendDac7 = document.getElementById('trendDac7');
+        const trendComissoes = document.getElementById('trendComissoes');
+        const trendDivergencia = document.getElementById('trendDivergencia');
+        const cardDivergencia = document.getElementById('cardDivergencia');
+        
+        if (valSaft) valSaft.innerText = formatarMoeda(State.financeiro.saft);
+        if (valDac7) valDac7.innerText = formatarMoeda(State.financeiro.dac7);
+        if (valComissoes) valComissoes.innerText = formatarMoeda(State.financeiro.comissoes);
         
         State.financeiro.divergencia = State.financeiro.saft - State.financeiro.dac7;
-        document.getElementById('valDivergencia').innerText = formatarMoeda(State.financeiro.divergencia);
+        if (valDivergencia) valDivergencia.innerText = formatarMoeda(State.financeiro.divergencia);
         
         State.financeiro.proveitoReal = State.financeiro.saft - State.financeiro.comissoes;
         State.financeiro.taxaMedia = State.financeiro.saft > 0 ? 
             (State.financeiro.comissoes / State.financeiro.saft) * 100 : 0;
         
-        document.getElementById('valViagens').innerText = State.financeiro.viagens;
-        document.getElementById('valProveito').innerText = formatarMoeda(State.financeiro.proveitoReal);
-        document.getElementById('valTaxa').innerText = State.financeiro.taxaMedia.toFixed(2);
-        document.getElementById('valDocumentos').innerText = State.documentos.length;
+        if (valViagens) valViagens.innerText = State.financeiro.viagens;
+        if (valProveito) valProveito.innerText = formatarMoeda(State.financeiro.proveitoReal);
+        if (valTaxa) valTaxa.innerText = State.financeiro.taxaMedia.toFixed(2);
+        if (valDocumentos) valDocumentos.innerText = State.documentos.length;
         
-        document.getElementById('countSAFT').innerText = `SAF-T: ${State.contadores.saft}`;
-        document.getElementById('countDAC7').innerText = `DAC7: ${State.contadores.dac7}`;
-        document.getElementById('countFaturas').innerText = `Faturas: ${State.contadores.faturas}`;
-        document.getElementById('countHashes').innerText = `Hashes: ${State.contadores.hashes}`;
+        if (countSAFT) countSAFT.innerText = `SAF-T: ${State.contadores.saft}`;
+        if (countDAC7) countDAC7.innerText = `DAC7: ${State.contadores.dac7}`;
+        if (countFaturas) countFaturas.innerText = `Faturas: ${State.contadores.faturas}`;
+        if (countHashes) countHashes.innerText = `Hashes: ${State.contadores.hashes}`;
         
-        const cardDivergencia = document.getElementById('cardDivergencia');
         if (cardDivergencia) {
             if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
                 cardDivergencia.style.borderLeftColor = '#ff4136';
@@ -273,10 +291,10 @@
             }
         }
         
-        document.getElementById('trendSaft').innerHTML = State.financeiro.saft > 0 ? '↗ +' + ((State.financeiro.saft / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
-        document.getElementById('trendDac7').innerHTML = State.financeiro.dac7 > 0 ? '↗ +' + ((State.financeiro.dac7 / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
-        document.getElementById('trendComissoes').innerHTML = State.financeiro.comissoes > 0 ? '↗ +' + ((State.financeiro.comissoes / 2447.89) * 100).toFixed(0) + '%' : '⟷ 0%';
-        document.getElementById('trendDivergencia').innerHTML = Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? '⚠️ ALERTA' : '✓ OK';
+        if (trendSaft) trendSaft.innerHTML = State.financeiro.saft > 0 ? '↗ +' + ((State.financeiro.saft / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendDac7) trendDac7.innerHTML = State.financeiro.dac7 > 0 ? '↗ +' + ((State.financeiro.dac7 / 7755.16) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendComissoes) trendComissoes.innerHTML = State.financeiro.comissoes > 0 ? '↗ +' + ((State.financeiro.comissoes / 2447.89) * 100).toFixed(0) + '%' : '⟷ 0%';
+        if (trendDivergencia) trendDivergencia.innerHTML = Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA ? '⚠️ ALERTA' : '✓ OK';
     }
 
     function atualizarRelogio() {
@@ -313,12 +331,11 @@
         const jsonString = JSON.stringify(dadosParaHash);
         State.sessao.hash = gerarHashSimulado(jsonString);
         
-        document.getElementById('sessionHash').textContent = State.sessao.hash.substring(0, 16) + '...';
+        const sessionHash = document.getElementById('sessionHash');
+        if (sessionHash) sessionHash.textContent = State.sessao.hash.substring(0, 16) + '...';
         
         const masterHashEl = document.getElementById('masterHash');
-        if (masterHashEl) {
-            masterHashEl.textContent = State.sessao.hash;
-        }
+        if (masterHashEl) masterHashEl.textContent = State.sessao.hash;
         
         gerarQRCode(State.sessao.hash);
         
@@ -367,10 +384,14 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             
-            document.getElementById('sessionHash').querySelector('.value')?.textContent = 
-                State.sessao.hash?.substring(0, 16) + '...' || 'STANDBY';
-            document.getElementById('footerSession').textContent = State.sessao.id;
-            document.getElementById('autoProcessID').textContent = State.sessao.processoAuto;
+            const sessionHash = document.getElementById('sessionHash');
+            if (sessionHash) sessionHash.textContent = State.sessao.hash?.substring(0, 16) + '...' || 'STANDBY';
+            
+            const footerSession = document.getElementById('footerSession');
+            if (footerSession) footerSession.textContent = State.sessao.id;
+            
+            const autoProcessID = document.getElementById('autoProcessID');
+            if (autoProcessID) autoProcessID.textContent = State.sessao.processoAuto;
             
             const procInput = document.getElementById('inputProcess');
             if (procInput) procInput.value = State.sessao.processoAuto;
@@ -687,7 +708,7 @@
     });
 
     // ==========================================================================
-    // FUNÇÕES PRINCIPAIS
+    // FUNÇÕES PRINCIPAIS (BOTÕES)
     // ==========================================================================
 
     document.getElementById('btnAnalyze')?.addEventListener('click', function() {
@@ -718,10 +739,13 @@
                 data: new Date().toISOString()
             });
             
-            document.getElementById('cardDivergencia').classList.add('pulse');
-            setTimeout(() => {
-                document.getElementById('cardDivergencia').classList.remove('pulse');
-            }, 2000);
+            const cardDivergencia = document.getElementById('cardDivergencia');
+            if (cardDivergencia) {
+                cardDivergencia.classList.add('pulse');
+                setTimeout(() => {
+                    cardDivergencia.classList.remove('pulse');
+                }, 2000);
+            }
         }
         
         if (State.financeiro.taxaMedia > CONFIG.TAXA_COMISSAO_MAX * 100) {
@@ -902,7 +926,7 @@
             
             addFooter(4);
             
-            const filename = `VDC_Pericia_${State.metadados.nif}_${Date.now()}.pdf`;
+            const filename = `VDC_Pericia_${State.metadados.nif || 'SEMNIF'}_${Date.now()}.pdf`;
             doc.save(filename);
             
             log(`✅ Relatório PDF exportado: ${filename}`, 'success');
