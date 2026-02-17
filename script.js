@@ -1,14 +1,13 @@
 /**
- * VDC FORENSE v13.7 FINAL - CONSOLIDAÇÃO FINAL UNIFICADA
+ * VDC FORENSE v14.0 DINÂMICO - CONSOLIDAÇÃO FINAL UNIFICADA
  * Sistema de Peritagem Digital e Auditoria Fiscal
  * Motor de Extração e Processamento de Evidências
  * Data Aggregation Pipeline com Triangulação Aritmética e Verdade Material
  * 
- * UNIFICAÇÃO FINAL DE TODAS AS VERSÕES: v13.0, v13.1, v13.6, v13.7
- * 
- * Versão: 13.7.0-FINAL
+ * VERSÃO DINÂMICA COM RESET AUTOMÁTICO - CORREÇÃO DO ERRO DE ACUMULAÇÃO
  * 
  * CARACTERÍSTICAS:
+ * - Reset completo do estado antes de cada novo processamento
  * - Processamento assíncrono de múltiplos ficheiros (PDF, CSV, XML, JSON)
  * - Soma incremental sem sobreposição de estados
  * - Triangulação SAF-T vs DAC7 vs Extratos
@@ -30,8 +29,8 @@
     // ============================================
 
     const CONFIG = {
-        VERSAO: '13.7',
-        EDICAO: 'FINAL',
+        VERSAO: '14.0',
+        EDICAO: 'DINÂMICO',
         DEBUG: true,
         MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
         ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml', '.json'],
@@ -213,6 +212,52 @@
     };
 
     // ============================================
+    // FUNÇÃO DE RESET DO ESTADO FINANCEIRO
+    // ============================================
+    
+    function resetFinancialState() {
+        State.financeiro = {
+            bruto: 0,
+            comissoes: 0,
+            liquido: 0,
+            dac7: 0,
+            liquidoReal: 0,
+            divergencia: 0,
+            viagens: [],
+            faturas: [],
+            extrato: {
+                ganhosApp: 0,
+                ganhosCampanha: 0,
+                gorjetas: 0,
+                portagens: 0,
+                taxasCancel: 0,
+                comissoes: 0,
+                ganhosLiquidos: 0
+            },
+            dac7Trimestres: {
+                t1: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
+                t2: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
+                t3: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
+                t4: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 }
+            }
+        };
+        
+        State.cruzamentos = {
+            saftVsDac7: { realizado: false, valorSAFT: 0, valorDAC7: 0, diferenca: 0, convergente: false, alerta: null },
+            brutoVsGanhosApp: { realizado: false, valorBruto: 0, valorCalculado: 0, diferenca: 0, convergente: false, alerta: null },
+            comissoesVsFatura: { realizado: false, totalComissoes: 0, totalFaturas: 0, diferenca: 0, taxaEfetiva: 0, convergente: false, alertasPorViagem: [] }
+        };
+        
+        State.autenticidade = [];
+        State.documentos = [];
+        State.alertas = [];
+        
+        logger.limpar();
+        log('Estado financeiro reinicializado para novo processamento', 'info');
+        atualizarInterface();
+    }
+
+    // ============================================
     // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO)
     // ============================================
     
@@ -321,11 +366,9 @@
         const dateStr = agora.toLocaleDateString('pt-PT');
         
         const timeEl = document.getElementById('session-time');
-        const footerTime = document.getElementById('footer-time');
         const footerDate = document.getElementById('footer-date');
         
         if (timeEl) timeEl.textContent = timeStr;
-        if (footerTime) footerTime.textContent = timeStr;
         if (footerDate) footerDate.textContent = dateStr;
     }
 
@@ -417,7 +460,7 @@
         limpar: function() {
             const consoleEl = document.getElementById('audit-console');
             if (consoleEl) {
-                consoleEl.innerHTML = '<div class="line green">[SISTEMA] A aguardar fontes de dados...</div>';
+                consoleEl.innerHTML = '<div class="line green">[SISTEMA] A aguardar fontes de dados...</div><div class="line blue">[INFO] Utilize a zona de upload para anexar documentos</div>';
             }
             State.logs = [];
         }
@@ -473,7 +516,10 @@
             
             // Atualizar interface
             const masterHashEl = document.getElementById('master-hash');
+            const hashFooterEl = document.getElementById('hash-footer');
+            
             if (masterHashEl) masterHashEl.textContent = hashHex;
+            if (hashFooterEl) hashFooterEl.textContent = hashHex.substring(0, 16) + '...';
             
             log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
             
@@ -507,11 +553,11 @@
         
         // Se não houver valores, carregar valores de demonstração
         if (State.financeiro.bruto === 0 && State.financeiro.comissoes === 0 && State.financeiro.dac7 === 0) {
-            State.financeiro.bruto = 17774.78;
-            State.financeiro.comissoes = 4437.01;
+            State.financeiro.bruto = 7755.16;
+            State.financeiro.comissoes = 2447.89; // Valor corrigido para demonstração
             State.financeiro.dac7 = 7755.16;
             State.financeiro.liquido = State.financeiro.bruto - State.financeiro.comissoes;
-            log('Valores de demonstração carregados', 'info');
+            log('Valores de demonstração carregados (corrigidos)', 'info');
         }
         
         // CÁLCULO DA VERDADE MATERIAL
@@ -971,6 +1017,9 @@
             
             fileInput.addEventListener('change', function(e) {
                 if (e.target.files.length > 0) {
+                    // RESET AUTOMÁTICO ANTES DE NOVO UPLOAD
+                    resetFinancialState();
+                    limparDadosInterface();
                     adicionarFicheirosFila(e.target.files);
                 }
             });
@@ -997,6 +1046,9 @@
             dropZone.addEventListener('drop', function(e) {
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
+                    // RESET AUTOMÁTICO ANTES DE NOVO UPLOAD
+                    resetFinancialState();
+                    limparDadosInterface();
                     adicionarFicheirosFila(files);
                 }
             });
@@ -1670,11 +1722,13 @@
     function carregarDemo() {
         log('A carregar dados de simulação forense...', 'info');
         
+        // Reset completo antes de carregar demo
+        resetFinancialState();
         limparDadosInterface();
         
-        State.financeiro.bruto = 17774.78;
-        State.financeiro.comissoes = 4437.01;
-        State.financeiro.liquido = 13337.77;
+        State.financeiro.bruto = 7755.16;
+        State.financeiro.comissoes = 2447.89; // Valor corrigido
+        State.financeiro.liquido = 5307.27;
         State.financeiro.dac7 = 7755.16;
         State.financeiro.liquidoReal = State.financeiro.bruto - State.financeiro.comissoes;
         State.financeiro.divergencia = State.financeiro.liquidoReal - State.financeiro.dac7;
@@ -1766,56 +1820,21 @@
         executarCruzamentos();
         gerarMasterHash();
         
-        log('DEMO carregada com sucesso. Dados sincronizados com documentos reais.', 'success');
+        log('DEMO carregada com sucesso. Dados corrigidos sem acumulação.', 'success');
     }
 
     function limparSistema() {
         if (!confirm('Tem a certeza que pretende limpar todos os dados?')) return;
         
+        resetFinancialState();
         limparDadosInterface();
         
-        State.financeiro = {
-            bruto: 0,
-            comissoes: 0,
-            liquido: 0,
-            dac7: 0,
-            liquidoReal: 0,
-            divergencia: 0,
-            viagens: [],
-            faturas: [],
-            extrato: {
-                ganhosApp: 0,
-                ganhosCampanha: 0,
-                gorjetas: 0,
-                portagens: 0,
-                taxasCancel: 0,
-                comissoes: 0,
-                ganhosLiquidos: 0
-            },
-            dac7Trimestres: {
-                t1: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
-                t2: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
-                t3: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 },
-                t4: { ganhos: 0, comissoes: 0, impostos: 0, servicos: 0 }
-            }
-        };
-        
-        State.cruzamentos = {
-            saftVsDac7: { realizado: false, valorSAFT: 0, valorDAC7: 0, diferenca: 0, convergente: false, alerta: null },
-            brutoVsGanhosApp: { realizado: false, valorBruto: 0, valorCalculado: 0, diferenca: 0, convergente: false, alerta: null },
-            comissoesVsFatura: { realizado: false, totalComissoes: 0, totalFaturas: 0, diferenca: 0, taxaEfetiva: 0, convergente: false, alertasPorViagem: [] }
-        };
-        
-        State.autenticidade = [];
-        State.documentos = [];
-        State.fila = [];
-        State.alertas = [];
-        
-        logger.limpar();
-        log('Sistema limpo. Todos os dados removidos.', 'warning');
-        
         const masterHashEl = document.getElementById('master-hash');
+        const hashFooterEl = document.getElementById('hash-footer');
         if (masterHashEl) masterHashEl.textContent = '---';
+        if (hashFooterEl) hashFooterEl.textContent = '---';
+        
+        log('Sistema limpo. Todos os dados removidos.', 'warning');
         
         atualizarInterface();
     }
@@ -1831,9 +1850,6 @@
         
         const alertasContainer = document.getElementById('alertas-container');
         if (alertasContainer) alertasContainer.innerHTML = '';
-        
-        const veredictoSection = document.getElementById('veredicto-section');
-        if (veredictoSection) veredictoSection.style.display = 'none';
         
         const contadores = ['ctrl', 'saft', 'fat', 'ext', 'dac7'];
         contadores.forEach(function(id) {
@@ -2054,7 +2070,8 @@
         exportarPDF: exportarPDF,
         executarCruzamentos: executarCruzamentos,
         gerarMasterHash: gerarMasterHash,
-        stateHistory: stateHistory
+        stateHistory: stateHistory,
+        resetFinancialState: resetFinancialState
     };
 
 })();
