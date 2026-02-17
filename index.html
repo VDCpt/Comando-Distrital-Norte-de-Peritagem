@@ -21,7 +21,7 @@
             </div>
             <div class="modal-body">
                 <div class="perito-info">
-                    <p><strong>ANALISTA:</strong> EDUARDO · PERITO FORENSE DIGITAL</p>
+                    <p><strong>ANALISTA:</strong> PERITO FORENSE DIGITAL</p>
                     <p><strong>ENTIDADE:</strong> CONSULTORIA DE GESTÃO E I&D</p>
                     <p><strong>ALVO:</strong> AUDITORIA ECONÓMICO-FINANCEIRA · DAC7/SAF-T</p>
                 </div>
@@ -81,6 +81,7 @@
                     <div id="file-queue" class="file-list-mini">
                         <!-- Ficheiros serão listados aqui dinamicamente -->
                     </div>
+                    <div class="counter-box">Documentos no Lote: <span id="doc-count">0</span></div>
                     <div class="evidence-summary">
                         <div class="evidence-item" data-tipo="ctrl">
                             <span class="count" id="count-ctrl">0</span>
@@ -102,6 +103,9 @@
                             <span class="count" id="count-dac7">0</span>
                             <span class="label">DAC7</span>
                         </div>
+                    </div>
+                    <div class="actions" style="margin-top: 15px;">
+                        <button id="btn-analyze" class="btn-primary">ANALISAR DADOS</button>
                     </div>
                 </section>
             </aside>
@@ -224,7 +228,7 @@
                                     <span>FATURADO</span>
                                     <strong id="tri-faturado">0,00 €</strong>
                                 </div>
-                                <div class="tri-item discrepancia" id="tri-discrepancia-item" style="display: none;">
+                                <div class="tri-item" id="tri-discrepancia-item" style="display: none;">
                                     <span>DISCREPÂNCIA</span>
                                     <strong id="tri-discrepancia">0,00 €</strong>
                                 </div>
@@ -237,14 +241,17 @@
                             <div class="cruzamento-item" id="cruzamento-saft-dac7">
                                 <span class="cruzamento-label">SAF-T vs DAC7:</span>
                                 <span class="cruzamento-status" id="status-saft-dac7">A aguardar dados</span>
+                                <span id="tri-saft-dac7" style="display: none;"></span>
                             </div>
                             <div class="cruzamento-item" id="cruzamento-bruto-extrato">
                                 <span class="cruzamento-label">Bruto vs Ganhos App:</span>
                                 <span class="cruzamento-status" id="status-bruto-extrato">A aguardar dados</span>
+                                <span id="tri-bruto-extrato" style="display: none;"></span>
                             </div>
                             <div class="cruzamento-item" id="cruzamento-comissoes-faturas">
                                 <span class="cruzamento-label">Comissões vs Faturas:</span>
                                 <span class="cruzamento-status" id="status-comissoes-faturas">A aguardar dados</span>
+                                <span id="tri-comissoes-faturas" style="display: none;"></span>
                             </div>
                         </div>
                     </div>
@@ -324,6 +331,11 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- BOTÃO EXPORTAR RELATÓRIO PERICIAL -->
+                <div style="margin-top: 15px; text-align: right;">
+                    <button id="btn-export-pdf" class="btn-secondary">EXPORTAR RELATÓRIO PERICIAL (PDF)</button>
+                </div>
             </section>
         </main>
 
@@ -332,15 +344,15 @@
                 <span><strong>ESTADO:</strong> <span id="system-status" class="status-ok">OPERACIONAL</span></span>
                 <span><strong>SESSÃO:</strong> <span id="footer-session">---</span></span>
                 <span><strong>VERSÃO:</strong> 13.0.0-FINAL · SYNC SCHEMA</span>
-                <span><strong>PERITO:</strong> EDUARDO · <span id="footer-time"></span></span>
+                <span><strong>DATA:</strong> <span id="footer-date"></span></span>
             </div>
         </footer>
     </div>
 
     <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
