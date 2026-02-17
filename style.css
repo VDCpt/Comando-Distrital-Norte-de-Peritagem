@@ -1,8 +1,7 @@
 /* ============================================
-   VDC FORENSE v14.0 DINÂMICO - STYLESHEET
+   VDC FORENSE v15.0 CORE - STYLESHEET ÚNICO
    Sistema de Auditoria Digital e Análise Fiscal
-   Versão com Reset Automático e Verdade Material
-   UNIFICAÇÃO FINAL COM CORREÇÕES DINÂMICAS
+   Versão Consolidada com Verdade Material
    ============================================ */
 
 /* ============================================
@@ -126,6 +125,7 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    padding: 20px;
 }
 
 code, pre, .terminal-box, table, .hash-value, .master-hash-value {
@@ -277,7 +277,6 @@ code, pre, .terminal-box, table, .hash-value, .master-hash-value {
    ============================================ */
 
 #app-container {
-    padding: var(--spacing-lg);
     max-width: 1600px;
     margin: 0 auto;
 }
