@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC FORENSE v15.1 - LEGAL WEAPON</title>
+    <title>VDC FORENSE v12.0 - LEGAL WEAPON</title>
     
     <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,20 +19,71 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <div id="app-container">
+    <!-- TELA DE LOGIN - BARREIRA DE SEGURANÇA -->
+    <div id="login-screen" class="modal-overlay">
+        <div class="laser-h"></div>
+        <div class="laser-v"></div>
+        <div class="login-box">
+            <div class="security-header">
+                <div class="scale-icon">⚖️</div>
+                <div class="v-tag">V12.0</div>
+                <h2>VDC FORENSE SYSTEM</h2>
+                <p class="subtitle">Protocolo de Integridade Digital | Certificação ISO/IEC 27037</p>
+                <p class="badge-elite">FINAL LEGAL WEAPON · CADEIA DE CUSTÓDIA</p>
+            </div>
+            
+            <div class="login-form">
+                <div class="form-group">
+                    <label class="input-label">NÍVEL DE ACESSO</label>
+                    <select id="access-level" class="input-elite">
+                        <option value="1">NÍVEL 1 - CONSULTA</option>
+                        <option value="2">NÍVEL 2 - ANALISTA</option>
+                        <option value="3">NÍVEL 3 - INVESTIGADOR</option>
+                        <option value="4" selected>NÍVEL 4 - PERITO FORENSE</option>
+                        <option value="5">NÍVEL 5 - ADMINISTRADOR</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="input-label">UTILIZADOR</label>
+                    <input type="text" id="username" placeholder="CREDENCIAIS DE ACESSO" class="input-elite" value="admin">
+                </div>
+                
+                <div class="form-group">
+                    <label class="input-label">PALAVRA-PASSE</label>
+                    <input type="password" id="password" placeholder="********" class="input-elite" value="vdc">
+                </div>
+                
+                <button onclick="VDC.validateLogin()" class="btn-laser">
+                    <span class="btn-text">VALIDAR E INICIAR SESSÃO DE PERITAGEM</span>
+                    <span class="btn-glow"></span>
+                </button>
+                
+                <div class="security-footer">
+                    <span class="hash-display">SHA-256: <span id="auth-hash">e3b0c442...8b1a56</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div id="app-container" style="display: none;">
         <header class="forensic-header">
             <div class="logo-area">
-                <h1>VDC FORENSE ELITE v15.1</h1>
-                <p>MOTOR BIG DATA · SOMA ARITMÉTICA CERTIFICADA</p>
+                <span class="scale-small">⚖️</span>
+                <div class="titles">
+                    <h1>VDC FORENSE ELITE v12.0</h1>
+                    <p>MOTOR BIG DATA · SOMA ARITMÉTICA CERTIFICADA</p>
+                </div>
             </div>
             <div class="header-right">
                 <div class="info-block">
-                    <label>TOTAL ACUMULADO (COM IVA)</label>
-                    <span id="valSaft" class="val-highlight">0,00 €</span>
+                    <label>SESSÃO</label>
+                    <span id="sessionTimer" class="val-highlight">00:00:00</span>
                 </div>
                 <div class="info-block">
-                    <label>Nº VIAGENS</label>
-                    <span id="valViagens" class="val-highlight">0</span>
+                    <label>HASH</label>
+                    <span id="sessionHash" class="val-highlight">STANDBY</span>
                 </div>
                 <div class="status-online">
                     <span class="dot"></span>
@@ -42,6 +93,37 @@
         </header>
         
         <main class="container">
+            <!-- METADADOS DA PERÍCIA -->
+            <section class="audit-metadata">
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <label>SUJEITO PASSIVO</label>
+                        <input type="text" id="inputSubject" placeholder="Nome da Entidade" class="input-elite">
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>NIPC / NIF</label>
+                        <input type="text" id="inputNIF" placeholder="Número de Identificação Fiscal" class="input-elite" maxlength="9">
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>Nº PROCESSO</label>
+                        <input type="text" id="inputProcess" placeholder="Auto-gerado" class="input-elite" readonly>
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>ANO FISCAL</label>
+                        <select id="selectYear" class="input-elite">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024" selected>2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
             <!-- ZONA DE UPLOAD -->
             <section class="upload-zone" id="dropZone">
                 <div class="upload-content">
@@ -50,40 +132,67 @@
                     <p class="upload-text">Arraste ficheiro CSV ou clique para selecionar</p>
                     <p class="upload-formats">Formato: 131509_*.csv (SAF-T)</p>
                     <p class="upload-limit">Tamanho máximo: 10MB</p>
+                    <div class="file-counters">
+                        <span id="countSAFT">SAF-T: 0</span>
+                    </div>
                     <input type="file" id="fileInput" accept=".csv,text/csv" hidden>
                 </div>
             </section>
 
-            <!-- FEEDBACK -->
+            <!-- FEEDBACK E LISTA -->
             <div id="file-feedback" class="file-feedback"></div>
             <div id="file-list" class="file-list"></div>
 
             <!-- MÉTRICAS PRINCIPAIS -->
-            <div class="grid-stats">
-                <div class="stat-card" id="cardIVA">
-                    <label>IVA TOTAL (APURADO)</label>
-                    <div id="valIVA" class="val">0,00 €</div>
-                    <div class="trend" id="trendIVA">⟷ 0%</div>
+            <div class="metrics-grid">
+                <div class="stat-card" id="cardTotal">
+                    <label>TOTAL ACUMULADO (COM IVA)</label>
+                    <div class="value-wrapper">
+                        <span id="valTotal" class="val">0,00</span>
+                        <span class="currency">€</span>
+                    </div>
+                    <div class="trend" id="trendTotal">⟷ 0%</div>
                 </div>
+                
+                <div class="stat-card" id="cardIva">
+                    <label>IVA TOTAL APURADO</label>
+                    <div class="value-wrapper">
+                        <span id="valIva" class="val">0,00</span>
+                        <span class="currency">€</span>
+                    </div>
+                    <div class="trend" id="trendIva">⟷ 0%</div>
+                </div>
+                
                 <div class="stat-card" id="cardSemIva">
                     <label>PREÇO SEM IVA</label>
-                    <div id="valSemIva" class="val">0,00 €</div>
+                    <div class="value-wrapper">
+                        <span id="valSemIva" class="val">0,00</span>
+                        <span class="currency">€</span>
+                    </div>
                     <div class="trend" id="trendSemIva">⟷ 0%</div>
                 </div>
-                <div class="stat-card" id="cardComissao">
-                    <label>COMISSÕES (SIMULADO)</label>
-                    <div id="valComissao" class="val">0,00 €</div>
-                    <div class="trend" id="trendComissao">⟷ 0%</div>
-                </div>
-                <div class="stat-card" id="cardLiquido">
-                    <label>LÍQUIDO (TOTAL - COMISSÃO)</label>
-                    <div id="valLiquido" class="val">0,00 €</div>
-                    <div class="trend" id="trendLiquido">⟷ 0%</div>
+                
+                <div class="stat-card" id="cardViagens">
+                    <label>NÚMERO DE VIAGENS</label>
+                    <div class="value-wrapper">
+                        <span id="valViagens" class="val">0</span>
+                    </div>
+                    <div class="trend" id="trendViagens">⟷ 0%</div>
                 </div>
             </div>
 
             <!-- MÉTRICAS SECUNDÁRIAS -->
             <div class="secondary-metrics">
+                <div class="metric-small">
+                    <label>COMISSÃO (23%)</label>
+                    <span id="valComissao" class="val">0,00</span>
+                    <span class="currency">€</span>
+                </div>
+                <div class="metric-small">
+                    <label>LÍQUIDO</label>
+                    <span id="valLiquido" class="val">0,00</span>
+                    <span class="currency">€</span>
+                </div>
                 <div class="metric-small">
                     <label>TAXA MÉDIA</label>
                     <span id="valTaxa" class="val">0,00</span>
@@ -92,14 +201,6 @@
                 <div class="metric-small">
                     <label>DOCUMENTOS</label>
                     <span id="valDocumentos" class="val">0</span>
-                </div>
-                <div class="metric-small">
-                    <label>STATUS</label>
-                    <span id="valStatus" class="val status-ok">✓</span>
-                </div>
-                <div class="metric-small">
-                    <label>HASH</label>
-                    <span id="valHash" class="val" style="font-size: 10px;">---</span>
                 </div>
             </div>
 
@@ -134,13 +235,16 @@
                     <span class="terminal-title">CONSOLA DE AUDITORIA</span>
                     <span class="terminal-status">GRAVANDO</span>
                 </div>
-                <div id="terminal" class="terminal-body"></div>
+                <div id="terminal" class="terminal-body">
+                    <div class="log-line">> VDC Forensic Engine v12.0 inicializado...</div>
+                    <div class="log-line">> Sistema aguardando autenticação...</div>
+                </div>
             </div>
 
-            <!-- QR CODE E FOOTER -->
+            <!-- MASTER HASH E QR CODE -->
             <div class="master-hash-container">
                 <div class="master-hash-left">
-                    <span class="master-label">MASTER HASH:</span>
+                    <span class="master-label">MASTER HASH SHA-256:</span>
                     <span class="master-value" id="masterHash">---</span>
                 </div>
                 <div class="master-hash-right">
@@ -149,12 +253,14 @@
                 </div>
             </div>
 
+            <!-- FOOTER -->
             <footer class="main-footer">
                 <div class="footer-left">
-                    <span class="copyright">VDC FORENSE ELITE v15.1 · MOTOR DE SOMA PRECISA</span>
+                    <span class="copyright">VDC FORENSE ELITE v12.0 · MOTOR DE SOMA PRECISA</span>
                 </div>
                 <div class="footer-right">
                     <span class="system-status">ESTADO: <span class="status-ok">OPERACIONAL</span></span>
+                    <span class="chain-status">CADEIA DE CUSTÓDIA: <span class="status-ok">ÍNTEGRA</span></span>
                 </div>
             </footer>
         </main>
