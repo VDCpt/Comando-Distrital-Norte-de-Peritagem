@@ -5,7 +5,6 @@
  * Data Aggregation Pipeline com Triangulação Aritmética
  * 
  * Versão: 13.0.0-FINAL
- * Analista: Eduardo Perito Forense Digital
  * 
  * CARACTERÍSTICAS:
  * - Processamento assíncrono de múltiplos ficheiros
@@ -219,6 +218,26 @@
         return div.innerHTML;
     }
 
+    function atualizarRelogio() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-PT');
+        const timeStr = now.toLocaleTimeString('pt-PT');
+        
+        const headerDate = document.getElementById('header-date');
+        const footerDate = document.getElementById('footer-date');
+        const digitalClock = document.getElementById('digital-clock');
+        const sessionTime = document.getElementById('session-time');
+        const footerTime = document.getElementById('footer-time');
+        
+        if (headerDate) headerDate.innerText = dateStr;
+        if (footerDate) footerDate.innerText = dateStr;
+        if (digitalClock) digitalClock.innerText = timeStr;
+        if (sessionTime) sessionTime.textContent = timeStr;
+        if (footerTime) footerTime.textContent = timeStr;
+    }
+    
+    setInterval(atualizarRelogio, 1000);
+
     // ============================================
     // MOTOR DE LOGS
     // ============================================
@@ -303,8 +322,14 @@
             
             // Atualizar interface
             const masterHashEl = document.getElementById('master-hash');
+            const displayHashEl = document.getElementById('display-hash');
+            
             if (masterHashEl) {
                 masterHashEl.textContent = hashHex;
+            }
+            
+            if (displayHashEl) {
+                displayHashEl.textContent = hashHex;
             }
             
             logger.log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
@@ -574,6 +599,14 @@
                 );
             }
         }
+        
+        // Verificar divergência SAF-T vs DAC7 para exibição na zona de alertas
+        if (State.financeiro.dac7 > 0 && Math.abs(State.financeiro.bruto - State.financeiro.dac7) > 10) {
+            const diffDac7El = document.getElementById('diff-dac7');
+            if (diffDac7El) {
+                diffDac7El.innerText = (State.financeiro.bruto - State.financeiro.dac7).toFixed(2);
+            }
+        }
     }
 
     function adicionarAlerta(tipo, titulo, descricao, valor) {
@@ -631,10 +664,9 @@
                 document.getElementById('session-id').textContent = State.sessao.id;
                 document.getElementById('footer-session').textContent = State.sessao.id;
                 
-                logger.log(`Sessão iniciada por Eduardo. Versão ${CONFIG.VERSAO}`, 'success');
+                logger.log(`Sessão iniciada. Versão ${CONFIG.VERSAO}`, 'success');
                 logger.log('Sistema pronto para receber evidências', 'info');
                 
-                iniciarRelogio();
                 inicializarEventos();
             });
         } else {
@@ -642,23 +674,10 @@
             if (app) {
                 app.classList.remove('hidden');
                 logger.log('Modo debug: barreira ignorada', 'warning');
-                iniciarRelogio();
                 inicializarEventos();
             }
         }
     });
-
-    function iniciarRelogio() {
-        setInterval(function() {
-            const timeEl = document.getElementById('session-time');
-            const footerTime = document.getElementById('footer-time');
-            const agora = new Date();
-            const timeStr = agora.toLocaleTimeString('pt-PT');
-            
-            if (timeEl) timeEl.textContent = timeStr;
-            if (footerTime) footerTime.textContent = timeStr;
-        }, 1000);
-    }
 
     // ============================================
     // INICIALIZAÇÃO DE EVENTOS
@@ -670,6 +689,8 @@
         const btnDemo = document.getElementById('btn-demo');
         const btnClear = document.getElementById('btn-clear');
         const btnExportJson = document.getElementById('btn-export-json');
+        const btnAnalyze = document.getElementById('btn-analyze');
+        const btnExportPdf = document.getElementById('btn-export-pdf');
 
         if (dropZone && fileInput) {
             dropZone.addEventListener('click', function() {
@@ -720,6 +741,14 @@
         if (btnExportJson) {
             btnExportJson.addEventListener('click', exportarJSON);
         }
+        
+        if (btnAnalyze) {
+            btnAnalyze.addEventListener('click', analisarDados);
+        }
+        
+        if (btnExportPdf) {
+            btnExportPdf.addEventListener('click', exportarPDF);
+        }
 
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
@@ -746,6 +775,25 @@
         });
 
         logger.log('Event listeners inicializados', 'info');
+    }
+
+    // ============================================
+    // ANÁLISE DE DADOS (BOTÃO ANALISAR DADOS)
+    // ============================================
+    
+    async function analisarDados() {
+        logger.log('A iniciar análise de dados...', 'info');
+        
+        // Executar cruzamentos
+        executarCruzamentos();
+        
+        // Gerar Master Hash
+        await gerarMasterHash();
+        
+        // Atualizar interface com resultados
+        atualizarInterface();
+        
+        logger.log('Análise de dados concluída', 'success');
     }
 
     // ============================================
@@ -799,6 +847,7 @@
         fileQueue.appendChild(fileItem);
         
         atualizarContador('ctrl', 1);
+        atualizarContadorDocumentos(1);
     }
 
     function atualizarContador(tipo, incremento = 1) {
@@ -806,6 +855,14 @@
         if (elemento) {
             const atual = parseInt(elemento.textContent) || 0;
             elemento.textContent = atual + incremento;
+        }
+    }
+    
+    function atualizarContadorDocumentos(incremento = 1) {
+        const docCountEl = document.getElementById('doc-count');
+        if (docCountEl) {
+            const atual = parseInt(docCountEl.textContent) || 0;
+            docCountEl.textContent = atual + incremento;
         }
     }
 
@@ -836,12 +893,8 @@
         
         State.processando = false;
         
-        // Executar cruzamentos após processar todos os ficheiros
-        if (State.fila.length === 0) {
-            executarCruzamentos();
-            await gerarMasterHash();
-            saveStateToHistory();
-        }
+        // Atualizar interface após processar cada ficheiro
+        atualizarInterface();
         
         processarProximo();
     }
@@ -1110,6 +1163,7 @@
             atualizarContador('dac7', 1);
         }
         
+        atualizarContadorDocumentos(1);
         atualizarInterface();
     }
 
@@ -1271,6 +1325,24 @@
             docCount.textContent = State.documentos.length;
         }
         
+        // Atualizar diferença DAC7
+        const diffDac7 = document.getElementById('diff-dac7');
+        if (diffDac7) {
+            diffDac7.innerText = (State.financeiro.bruto - State.financeiro.dac7).toFixed(2);
+        }
+        
+        // Atualizar total SAF-T e líquido estimado
+        const totalSaft = document.getElementById('total-saft');
+        const totalLiquido = document.getElementById('total-liquido');
+        
+        if (totalSaft) {
+            totalSaft.innerText = State.financeiro.bruto.toFixed(2);
+        }
+        
+        if (totalLiquido) {
+            totalLiquido.innerText = State.financeiro.liquido.toFixed(2);
+        }
+        
         verificarDiscrepancias();
     }
 
@@ -1278,41 +1350,10 @@
         const alertasContainer = document.getElementById('alertas-container');
         if (!alertasContainer) return;
         
-        alertasContainer.innerHTML = '';
-        State.alertas = [];
-        
         const c = State.financeiro;
         
-        if (c.dac7 > 0 && Math.abs(c.bruto - c.dac7) > 10) {
-            adicionarAlerta(
-                'critico', 
-                'DISCREPÂNCIA SAF-T vs DAC7', 
-                `Bruto (${formatarMoeda(c.bruto)}) ≠ DAC7 (${formatarMoeda(c.dac7)})`,
-                Math.abs(c.bruto - c.dac7)
-            );
-        }
-        
-        const taxaEfetiva = c.bruto > 0 ? c.comissoes / c.bruto : 0;
-        if (taxaEfetiva > CONFIG.TAXA_COMISSAO_MAX + 0.05) {
-            adicionarAlerta(
-                'critico',
-                'COMISSÃO EXCEDE LIMITE LEGAL',
-                `Taxa: ${(taxaEfetiva * 100).toFixed(2)}% | Limite: 25%`,
-                c.comissoes - (c.bruto * CONFIG.TAXA_COMISSAO_MAX)
-            );
-        }
-        
-        if (c.liquido > 0) {
-            const liquidoCalculado = c.bruto - c.comissoes;
-            if (Math.abs(liquidoCalculado - c.liquido) > 10) {
-                adicionarAlerta(
-                    'alerta',
-                    'DISCREPÂNCIA GANHOS LÍQUIDOS',
-                    `Calculado: ${formatarMoeda(liquidoCalculado)} | Reportado: ${formatarMoeda(c.liquido)}`,
-                    Math.abs(liquidoCalculado - c.liquido)
-                );
-            }
-        }
+        // Remover alertas duplicados - a função gerarAlertasInterface já limpa o container
+        // e recria os alertas com base no estado atual
         
         atualizarVeredito();
     }
@@ -1526,8 +1567,30 @@
         logger.log('Sistema limpo. Todos os dados removidos.', 'warning');
         
         const masterHashEl = document.getElementById('master-hash');
+        const displayHashEl = document.getElementById('display-hash');
+        
         if (masterHashEl) {
             masterHashEl.textContent = '---';
+        }
+        
+        if (displayHashEl) {
+            displayHashEl.textContent = 'Aguardando análise...';
+        }
+        
+        const diffDac7 = document.getElementById('diff-dac7');
+        if (diffDac7) {
+            diffDac7.innerText = '0.00';
+        }
+        
+        const totalSaft = document.getElementById('total-saft');
+        const totalLiquido = document.getElementById('total-liquido');
+        
+        if (totalSaft) {
+            totalSaft.innerText = '0.00';
+        }
+        
+        if (totalLiquido) {
+            totalLiquido.innerText = '0.00';
         }
     }
 
@@ -1650,6 +1713,71 @@
         
         return dados;
     }
+    
+    // ============================================
+    // EXPORTAR PDF COM RELATÓRIO PERICIAL
+    // ============================================
+    
+    function exportarPDF() {
+        logger.log('A gerar relatório pericial em PDF...', 'info');
+        
+        if (typeof window.jspdf === 'undefined') {
+            logger.log('Biblioteca jsPDF não carregada', 'error');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO PERICIAL VDC - PROVA LEGAL", 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-PT')}`, 14, 30);
+        doc.text(`Hora: ${new Date().toLocaleTimeString('pt-PT')}`, 14, 35);
+        doc.text(`Sessão: ${State.sessao.id}`, 14, 40);
+        
+        const masterHashEl = document.getElementById('master-hash');
+        const masterHash = masterHashEl ? masterHashEl.textContent : '---';
+        doc.text(`Master Hash: ${masterHash}`, 14, 45);
+        
+        doc.autoTable({
+            startY: 55,
+            head: [['Descrição', 'Valor Acumulado']],
+            body: [
+                ['Total SAF-T', `${State.financeiro.bruto.toFixed(2)} €`],
+                ['Total Líquido', `${State.financeiro.liquido.toFixed(2)} €`],
+                ['Total Comissões', `${State.financeiro.comissoes.toFixed(2)} €`],
+                ['Total DAC7', `${State.financeiro.dac7.toFixed(2)} €`],
+                ['Diferença SAF-T vs DAC7', `${(State.financeiro.bruto - State.financeiro.dac7).toFixed(2)} €`],
+                ['N.º Viagens', State.financeiro.viagens.length.toString()],
+                ['Taxa Média', `${(State.financeiro.comissoes / (State.financeiro.bruto || 1) * 100).toFixed(2)}%`]
+            ]
+        });
+        
+        // Adicionar alertas se existirem
+        if (State.alertas.length > 0) {
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("Alertas Detectados", 14, 20);
+            doc.setFontSize(8);
+            
+            const alertasBody = State.alertas.map(a => [
+                a.tipo.toUpperCase(),
+                a.titulo,
+                a.descricao,
+                a.valor ? `${a.valor.toFixed(2)} €` : '-'
+            ]);
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Tipo', 'Título', 'Descrição', 'Valor']],
+                body: alertasBody
+            });
+        }
+        
+        doc.save(`VDC_Auditoria_${Date.now()}.pdf`);
+        logger.log('Relatório PDF gerado com sucesso', 'success');
+    }
 
     // ============================================
     // EXPOSIÇÃO PARA DEBUG
@@ -1662,8 +1790,10 @@
         carregarDemo: carregarDemo,
         limparSistema: limparSistema,
         exportarJSON: exportarJSON,
+        exportarPDF: exportarPDF,
         executarCruzamentos: executarCruzamentos,
         gerarMasterHash: gerarMasterHash,
+        analisarDados: analisarDados,
         stateHistory: stateHistory
     };
 
