@@ -140,6 +140,17 @@
                     </div>
                 </div>
 
+                <!-- ÁREA DE ALERTAS CRÍTICOS -->
+                <section class="card alerts-card">
+                    <div class="card-header">
+                        <h3>ALERTAS DE DISCREPÂNCIA · CRUZAMENTOS ARITMÉTICOS</h3>
+                        <span class="status-dot warning-pulse"></span>
+                    </div>
+                    <div id="alertas-container" class="alertas-container">
+                        <!-- Alertas serão inseridos dinamicamente -->
+                    </div>
+                </section>
+
                 <!-- PAINEL DE RESULTADOS COM TABS -->
                 <div class="card results-card">
                     <div class="tabs">
@@ -169,6 +180,10 @@
                         <div class="table-footer">
                             <span class="hash-verified">✓ Todos os ficheiros verificados por hash</span>
                         </div>
+                        <div class="master-hash-container">
+                            <span class="master-hash-label">MASTER HASH SHA-256:</span>
+                            <span id="master-hash" class="master-hash-value">---</span>
+                        </div>
                     </div>
 
                     <!-- TAB 2: CRUZAMENTO FINANCEIRO -->
@@ -182,6 +197,7 @@
                                         <th>N.º FATURA</th>
                                         <th>VALOR (€)</th>
                                         <th>COMISSÃO (€)</th>
+                                        <th>TAXA</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -212,6 +228,23 @@
                                     <span>DISCREPÂNCIA</span>
                                     <strong id="tri-discrepancia">0,00 €</strong>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- DETALHES DOS CRUZAMENTOS -->
+                        <div class="cruzamentos-detalhe">
+                            <h4>RESULTADOS DOS CRUZAMENTOS</h4>
+                            <div class="cruzamento-item" id="cruzamento-saft-dac7">
+                                <span class="cruzamento-label">SAF-T vs DAC7:</span>
+                                <span class="cruzamento-status" id="status-saft-dac7">A aguardar dados</span>
+                            </div>
+                            <div class="cruzamento-item" id="cruzamento-bruto-extrato">
+                                <span class="cruzamento-label">Bruto vs Ganhos App:</span>
+                                <span class="cruzamento-status" id="status-bruto-extrato">A aguardar dados</span>
+                            </div>
+                            <div class="cruzamento-item" id="cruzamento-comissoes-faturas">
+                                <span class="cruzamento-label">Comissões vs Faturas:</span>
+                                <span class="cruzamento-status" id="status-comissoes-faturas">A aguardar dados</span>
                             </div>
                         </div>
                     </div>
@@ -291,9 +324,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ALERTAS DINÂMICOS -->
-                <div id="alertas-container" class="alertas-container"></div>
             </section>
         </main>
 
