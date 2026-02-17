@@ -1,21 +1,20 @@
 /**
- * VDC FORENSE v14.0 DINÂMICO - CONSOLIDAÇÃO FINAL UNIFICADA
+ * VDC FORENSE v15.0 CORE - CONSOLIDAÇÃO FINAL
  * Sistema de Peritagem Digital e Auditoria Fiscal
  * Motor de Extração e Processamento de Evidências
  * Data Aggregation Pipeline com Triangulação Aritmética e Verdade Material
  * 
- * VERSÃO DINÂMICA COM RESET AUTOMÁTICO - CORREÇÃO DO ERRO DE ACUMULAÇÃO
+ * VERSÃO CORE COM RESET AUTOMÁTICO - CORREÇÃO DO ERRO DE ACUMULAÇÃO
  * 
  * CARACTERÍSTICAS:
  * - Reset completo do estado antes de cada novo processamento
- * - Processamento assíncrono de múltiplos ficheiros (PDF, CSV, XML, JSON)
+ * - Processamento assíncrono de múltiplos ficheiros (PDF, CSV)
  * - Soma incremental sem sobreposição de estados
  * - Triangulação SAF-T vs DAC7 vs Extratos
  * - Cálculo da Verdade Material: Bruto - Comissões
  * - Master Hash SHA-256 com Web Crypto API
  * - Validação de metadados obrigatórios
  * - Alertas de discrepância e taxas excessivas
- * - Questionário dinâmico de 30 perguntas (seleção de 6)
  * - Relatório PDF com prova legal
  * - Exportação JSON com todos os cruzamentos
  * - Histórico de estados (prevenção de sobreposição)
@@ -29,16 +28,16 @@
     // ============================================
 
     const CONFIG = {
-        VERSAO: '14.0',
-        EDICAO: 'DINÂMICO',
+        VERSAO: '15.0',
+        EDICAO: 'CORE',
         DEBUG: true,
         MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-        ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml', '.json'],
+        ALLOWED_EXTENSIONS: ['.pdf', '.csv'],
         TAXA_COMISSAO_MAX: 0.25,        // 25% limite legal
-        TAXA_COMISSAO_PADRAO: 0.23,     // 23% média observada
-        TOLERANCIA_ERRO: 0.01,           // 1 cêntimo de tolerância
+        TAXA_COMISSAO_PADRAO: 0.23,      // 23% média observada
+        TOLERANCIA_ERRO: 0.01,            // 1 cêntimo de tolerância
         TOLERANCIA_DIVERGENCIA: 50,       // 50€ de tolerância para divergências DAC7
-        MARGEM_ERRO_PERCENTUAL: 0.05,    // 5% margem para discrepâncias
+        MARGEM_ERRO_PERCENTUAL: 0.05,     // 5% margem para discrepâncias
         
         PATTERNS: {
             CLEAN: /[\n\r\t]+/g,
@@ -1134,7 +1133,7 @@
         
         const extensao = '.' + file.name.split('.').pop().toLowerCase();
         if (!CONFIG.ALLOWED_EXTENSIONS.includes(extensao)) {
-            return { valido: false, erro: 'Extensão não permitida. Use PDF, CSV, XML ou JSON' };
+            return { valido: false, erro: 'Extensão não permitida. Use PDF, CSV' };
         }
         
         if (file.size > CONFIG.MAX_FILE_SIZE) {
@@ -1189,10 +1188,6 @@
                 await processarCSV(file);
             } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                 await processarPDF(file);
-            } else if (file.name.toLowerCase().endsWith('.xml')) {
-                await processarXML(file);
-            } else if (file.name.toLowerCase().endsWith('.json')) {
-                await processarJSON(file);
             } else {
                 log(`Formato não suportado: ${file.name}`, 'error');
             }
@@ -1582,79 +1577,6 @@
             State.financeiro.dac7Trimestres.t4.servicos;
         
         log(`DAC7: Receita anual ${formatarMoeda(receitaAnual)} | ${totalServicos} serviços`, 'success');
-    }
-
-    // ============================================
-    // PROCESSAMENTO DE XML E JSON
-    // ============================================
-
-    async function processarXML(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    log(`XML processado: ${file.name} (simulação)`, 'success');
-                    
-                    // Simular extração de valores
-                    if (file.name.toLowerCase().includes('saft')) {
-                        State.financeiro.bruto += 9876.54;
-                        log(`XML: SAF-T - Valor extraído`, 'info');
-                        atualizarContador('saft', 1);
-                    }
-                    
-                    atualizarContadorDocumentos(1);
-                    atualizarInterface();
-                    
-                } catch (err) {
-                    log(`Erro ao processar XML: ${err.message}`, 'error');
-                }
-                resolve();
-            };
-            
-            reader.onerror = function() {
-                log('Erro ao ler ficheiro XML', 'error');
-                resolve();
-            };
-            
-            reader.readAsText(file, 'UTF-8');
-        });
-    }
-
-    async function processarJSON(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    const jsonData = JSON.parse(content);
-                    log(`JSON processado: ${file.name}`, 'success');
-                    
-                    // Simular extração de valores
-                    if (file.name.toLowerCase().includes('dac7') || file.name.toLowerCase().includes('report')) {
-                        State.financeiro.dac7 += 5321.89;
-                        log(`JSON: DAC7 - Valor extraído`, 'info');
-                        atualizarContador('dac7', 1);
-                    }
-                    
-                    atualizarContadorDocumentos(1);
-                    atualizarInterface();
-                    
-                } catch (err) {
-                    log(`Erro ao processar JSON: ${err.message}`, 'error');
-                }
-                resolve();
-            };
-            
-            reader.onerror = function() {
-                log('Erro ao ler ficheiro JSON', 'error');
-                resolve();
-            };
-            
-            reader.readAsText(file, 'UTF-8');
-        });
     }
 
     function extrairValor(texto, pattern) {
