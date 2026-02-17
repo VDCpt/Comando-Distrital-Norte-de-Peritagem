@@ -1,12 +1,12 @@
 /**
- * VDC FORENSE v13.7 FINAL - CONSOLIDAÇÃO FINAL UNIFICADA
+ * VDC FORENSE v13.6 MASTER SCHEMA - CONSOLIDAÇÃO FINAL UNIFICADA
  * Sistema de Peritagem Digital e Auditoria Fiscal
  * Motor de Extração e Processamento de Evidências
  * Data Aggregation Pipeline com Triangulação Aritmética e Verdade Material
  * 
- * UNIFICAÇÃO FINAL DE TODAS AS VERSÕES: v13.0, v13.1, v13.6, v13.7
+ * UNIFICAÇÃO DAS VERSÕES: v13.0 SYNC SCHEMA + v13.1 + v13.6 MASTER SCHEMA
  * 
- * Versão: 13.7.0-FINAL
+ * Versão: 13.6.0-FINAL-UNIFICADA
  * 
  * CARACTERÍSTICAS:
  * - Processamento assíncrono de múltiplos ficheiros (PDF, CSV, XML, JSON)
@@ -26,12 +26,12 @@
     'use strict';
 
     // ============================================
-    // CONFIGURAÇÕES E CONSTANTES
+    // CONFIGURAÇÕES E CONSTANTES (v13.0 + v13.1 + v13.6)
     // ============================================
 
     const CONFIG = {
-        VERSAO: '13.7',
-        EDICAO: 'FINAL',
+        VERSAO: '13.6',
+        EDICAO: 'MASTER SCHEMA FINAL UNIFICADO',
         DEBUG: true,
         MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
         ALLOWED_EXTENSIONS: ['.pdf', '.csv', '.xml', '.json'],
@@ -96,7 +96,7 @@
     };
 
     // ============================================
-    // POOL DE PERGUNTAS (30) - SELECIONAR 6 DINAMICAMENTE
+    // POOL DE PERGUNTAS (30) - SELECIONAR 6 DINAMICAMENTE (v13.6)
     // ============================================
 
     const POOL_PERGUNTAS = [
@@ -133,7 +133,7 @@
     ];
 
     // ============================================
-    // ESTADO GLOBAL DO SISTEMA (BIG DATA ACCUMULATOR)
+    // ESTADO GLOBAL DO SISTEMA (BIG DATA ACCUMULATOR) - v13.0 + v13.1 + v13.6
     // ============================================
 
     let State = {
@@ -213,7 +213,7 @@
     };
 
     // ============================================
-    // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO)
+    // HISTÓRICO DE ESTADOS (PREVENÇÃO DE SOBREPOSIÇÃO) - v13.0
     // ============================================
     
     let stateHistory = [];
@@ -231,7 +231,7 @@
     }
 
     // ============================================
-    // UTILITÁRIOS
+    // UTILITÁRIOS (v13.0 + v13.1 + v13.6)
     // ============================================
 
     function gerarIdSessao() {
@@ -323,14 +323,18 @@
         const timeEl = document.getElementById('session-time');
         const footerTime = document.getElementById('footer-time');
         const footerDate = document.getElementById('footer-date');
+        const currentDate = document.getElementById('currentDate');
+        const currentTime = document.getElementById('currentTime');
         
         if (timeEl) timeEl.textContent = timeStr;
         if (footerTime) footerTime.textContent = timeStr;
         if (footerDate) footerDate.textContent = dateStr;
+        if (currentDate) currentDate.textContent = dateStr;
+        if (currentTime) currentTime.textContent = timeStr;
     }
 
     // ============================================
-    // CARREGAR ANOS NO SELECTOR
+    // CARREGAR ANOS NO SELECTOR (v13.1 + v13.6)
     // ============================================
 
     function carregarAnos() {
@@ -352,7 +356,7 @@
     }
 
     // ============================================
-    // ATUALIZAR METADADOS
+    // ATUALIZAR METADADOS (v13.1 + v13.6)
     // ============================================
 
     function atualizarMetadados() {
@@ -364,7 +368,7 @@
     }
 
     // ============================================
-    // VALIDAR METADADOS
+    // VALIDAR METADADOS (v13.1 + v13.6)
     // ============================================
 
     function validarMetadados() {
@@ -394,7 +398,7 @@
     }
 
     // ============================================
-    // SELECIONAR 6 PERGUNTAS ALEATÓRIAS DO POOL
+    // SELECIONAR 6 PERGUNTAS ALEATÓRIAS DO POOL (v13.6)
     // ============================================
 
     function selecionarPerguntas() {
@@ -406,7 +410,7 @@
     }
 
     // ============================================
-    // MOTOR DE LOGS
+    // MOTOR DE LOGS (v13.0)
     // ============================================
 
     const logger = {
@@ -424,7 +428,7 @@
     };
 
     // ============================================
-    // GERAR MASTER HASH SHA-256
+    // GERAR MASTER HASH SHA-256 (v13.0 + v13.1 + v13.6)
     // ============================================
     
     async function gerarMasterHash() {
@@ -473,7 +477,12 @@
             
             // Atualizar interface
             const masterHashEl = document.getElementById('master-hash');
+            const integrityHashEl = document.getElementById('integrityHash');
+            const displayHashEl = document.getElementById('display-hash');
+            
             if (masterHashEl) masterHashEl.textContent = hashHex;
+            if (integrityHashEl) integrityHashEl.textContent = hashHex;
+            if (displayHashEl) displayHashEl.textContent = hashHex;
             
             log(`Master Hash SHA-256 gerado: ${hashHex.substring(0, 16)}...`, 'success');
             
@@ -495,7 +504,7 @@
     }
 
     // ============================================
-    // EXECUTAR CRUZAMENTOS ARITMÉTICOS
+    // EXECUTAR CRUZAMENTOS ARITMÉTICOS (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function executarCruzamentos() {
@@ -514,7 +523,7 @@
             log('Valores de demonstração carregados', 'info');
         }
         
-        // CÁLCULO DA VERDADE MATERIAL
+        // CÁLCULO DA VERDADE MATERIAL (v13.6)
         State.financeiro.liquidoReal = State.financeiro.bruto - State.financeiro.comissoes;
         State.financeiro.divergencia = State.financeiro.liquidoReal - State.financeiro.dac7;
         
@@ -692,7 +701,7 @@
         
         gerarAlertasInterface();
         
-        // Selecionar perguntas para o relatório
+        // Selecionar perguntas para o relatório (v13.6)
         selecionarPerguntas();
         
         log('Cruzamentos aritméticos concluídos', 'success');
@@ -701,7 +710,7 @@
     }
 
     // ============================================
-    // GERAR ALERTAS NA INTERFACE
+    // GERAR ALERTAS NA INTERFACE (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function gerarAlertasInterface() {
@@ -712,7 +721,7 @@
         alertasContainer.innerHTML = '';
         State.alertas = [];
         
-        // Alerta de divergência SAF-T vs DAC7 (crítico)
+        // Alerta de divergência SAF-T vs DAC7 (crítico) - v13.6
         if (Math.abs(State.financeiro.divergencia) > CONFIG.TOLERANCIA_DIVERGENCIA) {
             const percentual = State.financeiro.dac7 > 0 ? (Math.abs(State.financeiro.divergencia) / State.financeiro.dac7) * 100 : 0;
             adicionarAlerta(
@@ -821,7 +830,7 @@
     }
 
     // ============================================
-    // ATUALIZAR VEREDITO FISCAL
+    // ATUALIZAR VEREDITO FISCAL (v13.0)
     // ============================================
     
     function atualizarVeredito() {
@@ -887,7 +896,7 @@
     }
 
     // ============================================
-    // INICIALIZAÇÃO E BARREIRA DE ENTRADA
+    // INICIALIZAÇÃO E BARREIRA DE ENTRADA (v13.0 + v13.1)
     // ============================================
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -914,6 +923,7 @@
         document.getElementById('session-id').textContent = State.sessao.id;
         document.getElementById('sessionHash') && (document.getElementById('sessionHash').textContent = State.sessao.id);
         document.getElementById('footer-session').textContent = State.sessao.id;
+        document.getElementById('footerSession') && (document.getElementById('footerSession').textContent = State.sessao.id);
 
         if (btnProceed && barrier && app) {
             btnProceed.addEventListener('click', function() {
@@ -938,7 +948,7 @@
     });
 
     // ============================================
-    // INICIALIZAÇÃO DE EVENTOS
+    // INICIALIZAÇÃO DE EVENTOS (v13.0 + v13.1 + v13.6)
     // ============================================
 
     function inicializarEventos() {
@@ -1018,7 +1028,6 @@
             btnAnalyze.addEventListener('click', async function() {
                 if (executarCruzamentos()) {
                     await gerarMasterHash();
-                    saveStateToHistory();
                 }
             });
         }
@@ -1055,7 +1064,7 @@
     }
 
     // ============================================
-    // GESTÃO DE FILA DE PROCESSAMENTO
+    // GESTÃO DE FILA DE PROCESSAMENTO (v13.0 + v13.1)
     // ============================================
 
     async function adicionarFicheirosFila(files) {
@@ -1157,7 +1166,7 @@
     }
 
     // ============================================
-    // PROCESSAMENTO DE CSV
+    // PROCESSAMENTO DE CSV (v13.0)
     // ============================================
 
     async function processarCSV(file) {
@@ -1307,7 +1316,7 @@
     }
 
     // ============================================
-    // PROCESSAMENTO DE PDF
+    // PROCESSAMENTO DE PDF (v13.0)
     // ============================================
 
     async function processarPDF(file) {
@@ -1533,7 +1542,7 @@
     }
 
     // ============================================
-    // PROCESSAMENTO DE XML E JSON
+    // PROCESSAMENTO DE XML E JSON (v13.6)
     // ============================================
 
     async function processarXML(file) {
@@ -1621,7 +1630,7 @@
     }
 
     // ============================================
-    // ATUALIZAÇÃO DA INTERFACE
+    // ATUALIZAÇÃO DA INTERFACE (v13.0 + v13.1)
     // ============================================
 
     function atualizarInterface() {
@@ -1661,10 +1670,17 @@
         if (discItem) {
             discItem.textContent = formatarMoeda(divergencia);
         }
+        
+        // v13.1
+        document.getElementById('totalSaft') && (document.getElementById('totalSaft').textContent = formatarMoeda(State.financeiro.bruto));
+        document.getElementById('totalComissoes') && (document.getElementById('totalComissoes').textContent = formatarMoeda(State.financeiro.comissoes));
+        document.getElementById('totalLiquido') && (document.getElementById('totalLiquido').textContent = formatarMoeda(State.financeiro.liquidoReal || (State.financeiro.bruto - State.financeiro.comissoes)));
+        document.getElementById('totalDac7') && (document.getElementById('totalDac7').textContent = formatarMoeda(State.financeiro.dac7));
+        document.getElementById('totalDivergencia') && (document.getElementById('totalDivergencia').textContent = formatarMoeda(State.financeiro.divergencia));
     }
 
     // ============================================
-    // FUNÇÕES DE DEMONSTRAÇÃO E LIMPEZA
+    // FUNÇÕES DE DEMONSTRAÇÃO E LIMPEZA (v13.0 + v13.1)
     // ============================================
 
     function carregarDemo() {
@@ -1816,6 +1832,10 @@
         
         const masterHashEl = document.getElementById('master-hash');
         if (masterHashEl) masterHashEl.textContent = '---';
+        const integrityHashEl = document.getElementById('integrityHash');
+        if (integrityHashEl) integrityHashEl.textContent = '---';
+        const displayHashEl = document.getElementById('display-hash');
+        if (displayHashEl) displayHashEl.textContent = '---';
         
         atualizarInterface();
     }
@@ -1864,7 +1884,7 @@
     }
 
     // ============================================
-    // EXPORTAR JSON COM CRUZAMENTOS
+    // EXPORTAR JSON COM CRUZAMENTOS (v13.0)
     // ============================================
     
     async function exportarJSON() {
@@ -1946,7 +1966,7 @@
     }
     
     // ============================================
-    // EXPORTAR PDF COM RELATÓRIO PERICIAL
+    // EXPORTAR PDF COM RELATÓRIO PERICIAL (v13.0 + v13.1 + v13.6)
     // ============================================
     
     function exportarPDF() {
@@ -2002,7 +2022,10 @@
             headStyles: { fillColor: [0, 210, 255] }
         });
         
-        const hashValue = document.getElementById('master-hash')?.textContent || '---';
+        const hashValue = document.getElementById('master-hash')?.textContent || 
+                          document.getElementById('integrityHash')?.textContent || 
+                          document.getElementById('display-hash')?.textContent || 
+                          '---';
         doc.text(`Master Hash SHA-256: ${hashValue}`, 14, doc.lastAutoTable.finalY + 10);
         
         doc.text(`Documentos processados: ${State.documentos.length}`, 14, doc.lastAutoTable.finalY + 15);
@@ -2014,7 +2037,7 @@
             });
         }
         
-        // Adicionar questionário de conformidade
+        // Adicionar questionário de conformidade (v13.6)
         if (State.selectedQuestions && State.selectedQuestions.length > 0) {
             const questionY = doc.lastAutoTable.finalY + (State.alertas.length > 0 ? 35 + (State.alertas.length * 7) + 10 : 35);
             doc.setFontSize(11);
@@ -2041,7 +2064,7 @@
     }
 
     // ============================================
-    // EXPOSIÇÃO PARA DEBUG
+    // EXPOSIÇÃO PARA DEBUG (v13.0)
     // ============================================
 
     window.VDC = {
