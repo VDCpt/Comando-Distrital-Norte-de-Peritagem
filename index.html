@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Forense - Sistema de Peritagem Digital v13.6 MASTER SCHEMA">
-    <title>VDC FORENSE - v13.6 MASTER SCHEMA</title>
+    <meta name="description" content="VDC Forense - Sistema de Peritagem Digital v13.6 MASTER SCHEMA (UNIFICADO)">
+    <title>VDC FORENSE - v13.6 MASTER SCHEMA (UNIFICADO)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- BARREIRA DE ENTRADA - ACESSO RESTRITO -->
+    <!-- BARREIRA DE ENTRADA - ACESSO RESTRITO (v13.0 + v13.1) -->
     <div id="barrier-window" class="modal-overlay">
         <div class="modal-content barrier-box">
             <div class="modal-header">
@@ -28,7 +28,7 @@
                 <p class="disclaimer">O sistema irá processar fontes brutas (PDF, CSV, XML, JSON) para geração de prova legal de autenticidade (SHA-256) e cruzamento de dados fiscais. Todas as operações são registadas na cadeia de custódia.</p>
                 <div class="auth-hash" id="session-id-display">
                     <span class="hash-label">HASH DA SESSÃO:</span>
-                    <span class="hash-value">---</span>
+                    <span class="hash-value" id="sessionHash">---</span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -44,7 +44,11 @@
                 <div class="logo-icon">VDC</div>
                 <div class="brand-text">
                     <h1>SISTEMA <span>MASTER SCHEMA</span> <span class="version-badge">v13.6</span></h1>
-                    <div class="session-info">SESSÃO: <span id="session-id">---</span> | <span id="session-time">00:00:00</span> | <span class="status-online">ONLINE</span></div>
+                    <div class="session-info">
+                        SESSÃO: <span id="session-id">---</span> | 
+                        <span id="session-time">00:00:00</span> | 
+                        <span class="status-online">ONLINE</span>
+                    </div>
                 </div>
             </div>
             <div class="header-actions">
@@ -69,12 +73,14 @@
                     </div>
                 </section>
 
-                <!-- ZONA DE UPLOAD - FONTES DE DADOS -->
+                <!-- ZONA DE UPLOAD - FONTES DE DADOS (v13.1 + v13.6) -->
                 <section class="card upload-card">
                     <h3>FONTES DE DADOS · UPLOAD</h3>
+                    
+                    <!-- METADADOS DA PERÍCIA (v13.1 + v13.6) -->
                     <div class="metadata-audit">
                         <div class="metadata-item">
-                            <label>Sujeito Passivo:</label>
+                            <label>Sujeito Passivo / Empresa:</label>
                             <input type="text" id="subjectName" placeholder="Nome da Entidade" class="input-forense">
                         </div>
                         <div class="metadata-item">
@@ -82,9 +88,9 @@
                             <input type="text" id="nipc" placeholder="Número de Identificação Fiscal" class="input-forense" maxlength="9">
                         </div>
                         <div class="metadata-item">
-                            <label>Plataforma:</label>
+                            <label>Plataforma TVDE:</label>
                             <select id="platform" class="select-forense">
-                                <option value="">-- Selecione --</option>
+                                <option value="">-- Selecione a Plataforma --</option>
                                 <option value="uber">Uber B.V.</option>
                                 <option value="bolt">Bolt Operations OÜ</option>
                                 <option value="outra">Outra Plataforma</option>
@@ -93,7 +99,7 @@
                         </div>
                         <div class="metadata-row">
                             <div class="metadata-half">
-                                <label>Ano:</label>
+                                <label>Ano Fiscal:</label>
                                 <select id="fiscalYear" class="select-forense"></select>
                             </div>
                             <div class="metadata-half">
@@ -104,20 +110,29 @@
                                     <option value="2.º Trimestre">2.º Trimestre</option>
                                     <option value="3.º Trimestre">3.º Trimestre</option>
                                     <option value="4.º Trimestre">4.º Trimestre</option>
+                                    <option value="Mensal">Mensal</option>
                                 </select>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- ZONA DE DROP (v13.0) -->
                     <div class="drop-zone" id="drop-zone">
                         <span class="drop-icon">📁</span>
                         <p>Arraste ficheiros ou clique para selecionar</p>
                         <small>Formatos suportados: PDF, CSV, XML, JSON (máx. 10MB)</small>
                         <input type="file" id="file-input" multiple accept=".pdf,.csv,.xml,.json,application/pdf,text/csv,application/json" hidden>
                     </div>
+                    
+                    <!-- LISTA DE FICHEIROS (v13.0 + v13.1) -->
                     <div id="file-queue" class="file-list-mini">
                         <!-- Ficheiros serão listados aqui dinamicamente -->
                     </div>
+                    
+                    <!-- CONTADOR DE DOCUMENTOS (v13.6) -->
                     <div class="counter-box">Documentos no Lote: <span id="doc-count">0</span></div>
+                    
+                    <!-- SUMÁRIO DE EVIDÊNCIAS (v13.0) -->
                     <div class="evidence-summary">
                         <div class="evidence-item" data-tipo="ctrl">
                             <span class="count" id="count-ctrl">0</span>
@@ -140,6 +155,8 @@
                             <span class="label">DAC7</span>
                         </div>
                     </div>
+                    
+                    <!-- BOTÃO ANALISAR (v13.0 + v13.6) -->
                     <div class="actions" style="margin-top: 15px;">
                         <button id="btn-analyze" class="btn-primary">EXECUTAR CRUZAMENTOS</button>
                     </div>
@@ -148,7 +165,7 @@
 
             <!-- CONTEÚDO PRINCIPAL - MÉTRICAS E RESULTADOS -->
             <section class="main-content">
-                <!-- MÉTRICAS PRINCIPAIS -->
+                <!-- MÉTRICAS PRINCIPAIS (v13.0) -->
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <label>RECEITA BRUTA (SAF-T)</label>
@@ -164,7 +181,7 @@
                     </div>
                 </div>
 
-                <!-- MÉTRICAS SECUNDÁRIAS -->
+                <!-- MÉTRICAS SECUNDÁRIAS (v13.0) -->
                 <div class="metrics-grid secondary">
                     <div class="metric-card small">
                         <label>COMISSÕES TOTAIS</label>
@@ -180,7 +197,7 @@
                     </div>
                 </div>
 
-                <!-- ÁREA DE ALERTAS CRÍTICOS -->
+                <!-- ÁREA DE ALERTAS CRÍTICOS (v13.0) -->
                 <section class="card alerts-card">
                     <div class="card-header">
                         <h3>ALERTAS DE DISCREPÂNCIA · CRUZAMENTOS ARITMÉTICOS</h3>
@@ -191,7 +208,7 @@
                     </div>
                 </section>
 
-                <!-- PAINEL DE RESULTADOS COM TABS -->
+                <!-- PAINEL DE RESULTADOS COM TABS (v13.0) -->
                 <div class="card results-card">
                     <div class="tabs">
                         <button class="tab-btn active" data-tab="tab-autenticidade">CONTROLO DE AUTENTICIDADE (SHA-256)</button>
@@ -200,7 +217,7 @@
                         <button class="tab-btn" data-tab="tab-veredito">VEREDITO FISCAL</button>
                     </div>
 
-                    <!-- TAB 1: AUTENTICIDADE / HASHES -->
+                    <!-- TAB 1: AUTENTICIDADE / HASHES (v13.0) -->
                     <div class="tab-content" id="tab-autenticidade">
                         <div class="table-wrapper">
                             <table id="table-hashes">
@@ -226,7 +243,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: CRUZAMENTO FINANCEIRO -->
+                    <!-- TAB 2: CRUZAMENTO FINANCEIRO (v13.0 + v13.6) -->
                     <div class="tab-content hidden" id="tab-financeiro">
                         <div class="table-wrapper">
                             <table id="table-viagens">
@@ -271,7 +288,7 @@
                             </div>
                         </div>
                         
-                        <!-- DETALHES DOS CRUZAMENTOS -->
+                        <!-- DETALHES DOS CRUZAMENTOS (v13.0) -->
                         <div class="cruzamentos-detalhe">
                             <h4>RESULTADOS DOS CRUZAMENTOS</h4>
                             <div class="cruzamento-item" id="cruzamento-saft-dac7">
@@ -292,7 +309,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 3: RELATÓRIO DAC7 -->
+                    <!-- TAB 3: RELATÓRIO DAC7 (v13.0) -->
                     <div class="tab-content hidden" id="tab-dac7">
                         <div class="dac7-container">
                             <div class="dac7-header">
@@ -341,7 +358,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: VEREDITO FISCAL -->
+                    <!-- TAB 4: VEREDITO FISCAL (v13.0) -->
                     <div class="tab-content hidden" id="tab-veredito">
                         <div class="veredicto-section" id="veredicto-section">
                             <div class="veredicto-header">
@@ -369,7 +386,7 @@
                     </div>
                 </div>
                 
-                <!-- BOTÃO EXPORTAR RELATÓRIO PERICIAL -->
+                <!-- BOTÃO EXPORTAR RELATÓRIO PERICIAL (v13.0 + v13.6) -->
                 <div style="margin-top: 15px; text-align: right;">
                     <button id="btn-export-pdf" class="btn-secondary">EXPORTAR RELATÓRIO PERICIAL (PDF)</button>
                 </div>
