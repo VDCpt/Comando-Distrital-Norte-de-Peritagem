@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Forense - Sistema de Peritagem Digital v14.0 DINÂMICO">
-    <title>VDC FORENSE v14.0 - DINÂMICO</title>
+    <meta name="description" content="VDC Forense - Sistema de Peritagem Digital e Auditoria Fiscal v15.0 CORE">
+    <title>VDC FORENSE v15.0 - PERITAGEM DIGITAL</title>
+    
+    <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,8 +20,8 @@
         <div class="modal-content barrier-box">
             <div class="modal-header">
                 <div class="security-badge">ACESSO RESTRITO · NÍVEL 4</div>
-                <h2>VDC FORENSE v14.0</h2>
-                <p>Sistema de Auditoria Digital e Análise Fiscal · DINÂMICO</p>
+                <h2>VDC FORENSE v15.0</h2>
+                <p>Sistema de Auditoria Digital e Análise Fiscal · CORE</p>
             </div>
             <div class="modal-body">
                 <div class="perito-info">
@@ -25,7 +29,7 @@
                     <p><strong>ENTIDADE:</strong> CONSULTORIA DE GESTÃO E I&D</p>
                     <p><strong>ALVO:</strong> AUDITORIA ECONÓMICO-FINANCEIRA · DAC7/SAF-T</p>
                 </div>
-                <p class="disclaimer">O sistema irá processar fontes brutas (PDF, CSV, XML, JSON) para geração de prova legal de autenticidade (SHA-256) e cruzamento de dados fiscais. Todas as operações são registadas na cadeia de custódia.</p>
+                <p class="disclaimer">O sistema irá processar fontes brutas (PDF, CSV) para geração de prova legal de autenticidade (SHA-256) e cruzamento de dados fiscais. Todas as operações são registadas na cadeia de custódia.</p>
                 <div class="auth-hash" id="session-id-display">
                     <span class="hash-label">HASH DA SESSÃO:</span>
                     <span class="hash-value" id="sessionHash">---</span>
@@ -43,7 +47,7 @@
             <div class="brand">
                 <div class="logo-icon">VDC</div>
                 <div class="brand-text">
-                    <h1>SISTEMA <span>DINÂMICO</span> <span class="version-badge">v14.0</span></h1>
+                    <h1>SISTEMA <span>CORE</span> <span class="version-badge">v15.0</span></h1>
                     <div class="session-info">
                         SESSÃO: <span id="session-id">---</span> | 
                         <span id="session-time">00:00:00</span> | 
@@ -120,8 +124,8 @@
                     <div class="drop-zone" id="drop-zone">
                         <span class="drop-icon">📁</span>
                         <p>Arraste ficheiros ou clique para selecionar</p>
-                        <small>Formatos suportados: PDF, CSV, XML, JSON (máx. 10MB)</small>
-                        <input type="file" id="file-input" multiple accept=".pdf,.csv,.xml,.json,application/pdf,text/csv,application/json" hidden>
+                        <small>Formatos suportados: PDF, CSV (máx. 10MB)</small>
+                        <input type="file" id="file-input" multiple accept=".pdf,.csv,application/pdf,text/csv" hidden>
                     </div>
                     
                     <!-- LISTA DE FICHEIROS -->
@@ -338,17 +342,19 @@
             <div class="status-bar">
                 <span><strong>ESTADO:</strong> <span id="system-status" class="status-ok">OPERACIONAL</span></span>
                 <span><strong>SESSÃO:</strong> <span id="footer-session">---</span></span>
-                <span><strong>VERSÃO:</strong> 14.0.0-DINÂMICO</span>
+                <span><strong>VERSÃO:</strong> 15.0.0-CORE</span>
                 <span><strong>DATA:</strong> <span id="footer-date"></span></span>
                 <span><strong>MASTER HASH:</strong> <span id="hash-footer">---</span></span>
             </div>
         </footer>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- Scripts Externos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    
+    <!-- JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
