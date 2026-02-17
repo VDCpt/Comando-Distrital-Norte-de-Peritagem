@@ -3,38 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VDC FORENSE v12.0 - LEGAL WEAPON</title>
+    <title>VDC FORENSE v15.1 · SISTEMA DE PERITAGEM DIGITAL</title>
     
     <!-- Fontes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- CSS -->
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Scripts externos -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <!-- TELA DE LOGIN - BARREIRA DE SEGURANÇA -->
+    <!-- TELA DE LOGIN COM LASERS ANIMADOS -->
     <div id="login-screen" class="modal-overlay">
         <div class="laser-h"></div>
         <div class="laser-v"></div>
-        <div class="login-box">
-            <div class="security-header">
-                <div class="scale-icon">⚖️</div>
-                <div class="v-tag">V12.0</div>
-                <h2>VDC FORENSE SYSTEM</h2>
-                <p class="subtitle">Protocolo de Integridade Digital | Certificação ISO/IEC 27037</p>
-                <p class="badge-elite">FINAL LEGAL WEAPON · CADEIA DE CUSTÓDIA</p>
+        <div class="panoramic-box">
+            <div class="login-left">
+                <div class="system-badge">⚖️ v15.1 ELITE</div>
+                <h1>VDC FORENSE SYSTEM</h1>
+                <p class="protocol-text">Protocolo de Integridade Digital | Certificação ISO/IEC 27037 | NIST SP 800-86</p>
+                <div class="legal-footer">FINAL LEGAL WEAPON · CADEIA DE CUSTÓDIA</div>
             </div>
-            
-            <div class="login-form">
+
+            <div class="login-right">
                 <div class="form-group">
-                    <label class="input-label">NÍVEL DE ACESSO</label>
+                    <label>NÍVEL DE ACESSO</label>
                     <select id="access-level" class="input-elite">
                         <option value="1">NÍVEL 1 - CONSULTA</option>
                         <option value="2">NÍVEL 2 - ANALISTA</option>
@@ -43,201 +37,339 @@
                         <option value="5">NÍVEL 5 - ADMINISTRADOR</option>
                     </select>
                 </div>
-                
                 <div class="form-group">
-                    <label class="input-label">UTILIZADOR</label>
-                    <input type="text" id="username" placeholder="CREDENCIAIS DE ACESSO" class="input-elite" value="admin">
+                    <label>UTILIZADOR</label>
+                    <input type="text" id="user" placeholder="ID PERITO" class="input-elite" value="admin">
                 </div>
-                
                 <div class="form-group">
-                    <label class="input-label">PALAVRA-PASSE</label>
-                    <input type="password" id="password" placeholder="********" class="input-elite" value="vdc">
-                </div>
-                
-                <button onclick="VDC.validateLogin()" class="btn-laser">
-                    <span class="btn-text">VALIDAR E INICIAR SESSÃO DE PERITAGEM</span>
-                    <span class="btn-glow"></span>
-                </button>
-                
-                <div class="security-footer">
-                    <span class="hash-display">SHA-256: <span id="auth-hash">e3b0c442...8b1a56</span></span>
+                    <label>PALAVRA-PASSE</label>
+                    <input type="password" id="pass" placeholder="********" class="input-elite" value="vdc">
                 </div>
             </div>
         </div>
+        <div class="login-footer-action">
+            <button onclick="VDC.validateLogin()" class="btn-main-validate">VALIDAR E INICIAR SESSÃO DE PERITAGEM</button>
+            <div class="hash-display">SHA-256: <span id="auth-hash">e3b0c442...8b1a56</span></div>
+        </div>
     </div>
 
-    <!-- APLICAÇÃO PRINCIPAL -->
-    <div id="app-container" style="display: none;">
-        <header class="forensic-header">
-            <div class="logo-area">
-                <span class="scale-small">⚖️</span>
-                <div class="titles">
-                    <h1>VDC FORENSE ELITE v12.0</h1>
-                    <p>MOTOR BIG DATA · SOMA ARITMÉTICA CERTIFICADA</p>
+    <!-- APLICAÇÃO PRINCIPAL (INICIALMENTE OCULTA) -->
+    <main id="app-container" style="display:none;">
+        <div class="container">
+            <!-- HEADER PRINCIPAL -->
+            <header class="forensic-header">
+                <div class="header-left">
+                    <div class="logo-area">
+                        <span class="scale-small">⚖️</span>
+                        <div class="titles">
+                            <h1>FORENSIC ELITE EDITION v15.1</h1>
+                            <p>ISO/IEC 27037 | NIST SP 800-86 | Cadeia de Custódia Digital</p>
+                            <p>AMT / IMT Compliance | <strong>MOTOR BIG DATA · SOMA INCREMENTAL</strong></p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="header-right">
-                <div class="info-block">
-                    <label>SESSÃO</label>
-                    <span id="sessionTimer" class="val-highlight">00:00:00</span>
+                
+                <div class="header-right">
+                    <div class="info-block">
+                        <label>Nº PROCESSO (AUTO)</label>
+                        <div id="autoProcessID" class="val-highlight">---</div>
+                    </div>
+                    <div class="info-block">
+                        <label>SESSÃO</label>
+                        <div id="sessionTimer" class="val-highlight">00:00:00</div>
+                    </div>
+                    <div class="info-block">
+                        <label>HASH</label>
+                        <div id="sessionHash" class="val-highlight">STANDBY</div>
+                    </div>
+                    <div class="status-online">
+                        <span class="dot"></span>
+                        <span class="text">ONLINE</span>
+                    </div>
                 </div>
-                <div class="info-block">
-                    <label>HASH</label>
-                    <span id="sessionHash" class="val-highlight">STANDBY</span>
-                </div>
-                <div class="status-online">
-                    <span class="dot"></span>
-                    <span class="text">ONLINE</span>
-                </div>
-            </div>
-        </header>
-        
-        <main class="container">
+            </header>
+
             <!-- METADADOS DA PERÍCIA -->
             <section class="audit-metadata">
                 <div class="metadata-grid">
                     <div class="metadata-item">
-                        <label>SUJEITO PASSIVO</label>
-                        <input type="text" id="inputSubject" placeholder="Nome da Entidade" class="input-elite">
+                        <label>SUJEITO PASSIVO / EMPRESA</label>
+                        <input type="text" id="subjectName" placeholder="Nome da Entidade" class="input-elite">
                     </div>
                     
                     <div class="metadata-item">
                         <label>NIPC / NIF</label>
-                        <input type="text" id="inputNIF" placeholder="Número de Identificação Fiscal" class="input-elite" maxlength="9">
+                        <input type="text" id="nipc" placeholder="Número de Identificação Fiscal" class="input-elite" maxlength="9">
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>PLATAFORMA TVDE</label>
+                        <select id="platform" class="input-elite">
+                            <option value="">-- SELECIONE A PLATAFORMA --</option>
+                            <option value="uber">Uber B.V.</option>
+                            <option value="bolt">Bolt Operations OÜ</option>
+                            <option value="freenow">FreeNow Portugal</option>
+                            <option value="outra">Outra Plataforma</option>
+                        </select>
+                        <div id="platformDetails" class="platform-details"></div>
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>PERÍODO FISCAL</label>
+                        <select id="fiscalPeriod" class="input-elite">
+                            <option value="Anual">Anual</option>
+                            <option value="1.º Trimestre">1.º Trimestre</option>
+                            <option value="2.º Trimestre">2.º Trimestre</option>
+                            <option value="3.º Trimestre">3.º Trimestre</option>
+                            <option value="4.º Trimestre">4.º Trimestre</option>
+                            <option value="Janeiro">Janeiro</option>
+                            <option value="Fevereiro">Fevereiro</option>
+                            <option value="Março">Março</option>
+                        </select>
+                    </div>
+                    
+                    <div class="metadata-item">
+                        <label>ANO FISCAL</label>
+                        <select id="fiscalYear" class="input-elite">
+                            <!-- Options geradas por JS -->
+                        </select>
                     </div>
                     
                     <div class="metadata-item">
                         <label>Nº PROCESSO</label>
                         <input type="text" id="inputProcess" placeholder="Auto-gerado" class="input-elite" readonly>
                     </div>
-                    
-                    <div class="metadata-item">
-                        <label>ANO FISCAL</label>
-                        <select id="selectYear" class="input-elite">
-                            <option value="2026">2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024" selected>2024</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                        </select>
-                    </div>
                 </div>
             </section>
 
             <!-- ZONA DE UPLOAD -->
-            <section class="upload-zone" id="dropZone">
+            <section class="upload-zone" id="drop-zone">
                 <div class="upload-content">
                     <div class="radar"></div>
-                    <h3>FONTES DE DADOS · UPLOAD SAF-T</h3>
-                    <p class="upload-text">Arraste ficheiro CSV ou clique para selecionar</p>
-                    <p class="upload-formats">Formato: 131509_*.csv (SAF-T)</p>
-                    <p class="upload-limit">Tamanho máximo: 10MB</p>
+                    <h3>FONTES DE DADOS · BIG DATA UPLOAD</h3>
+                    <p class="upload-text">Arraste ficheiros ou clique para selecionar</p>
+                    <p class="upload-formats">Formatos suportados: PDF, CSV, XML, JSON (máx. 10MB)</p>
+                    <p class="upload-limit">SAF-T (131509*.csv), Relatórios DAC7, Faturas, Controlo de Autenticidade</p>
                     <div class="file-counters">
-                        <span id="countSAFT">SAF-T: 0</span>
+                        <span id="count-ctrl">CTRL: 0</span> | 
+                        <span id="count-saft">SAF-T: 0</span> | 
+                        <span id="count-fat">FAT: 0</span> | 
+                        <span id="count-ext">EXT: 0</span> | 
+                        <span id="count-dac7">DAC7: 0</span>
                     </div>
-                    <input type="file" id="fileInput" accept=".csv,text/csv" hidden>
+                    <input type="file" id="file-input" multiple accept=".pdf,.csv,.xml,.json,application/pdf,text/csv,application/json" hidden>
                 </div>
             </section>
 
-            <!-- FEEDBACK E LISTA -->
+            <!-- FEEDBACK E LISTA DE FICHEIROS -->
             <div id="file-feedback" class="file-feedback"></div>
-            <div id="file-list" class="file-list"></div>
+            <div id="file-queue" class="file-list"></div>
 
             <!-- MÉTRICAS PRINCIPAIS -->
             <div class="metrics-grid">
-                <div class="stat-card" id="cardTotal">
-                    <label>TOTAL ACUMULADO (COM IVA)</label>
+                <div class="stat-card">
+                    <label>RECEITA BRUTA (SAF-T)</label>
                     <div class="value-wrapper">
-                        <span id="valTotal" class="val">0,00</span>
+                        <span class="val" id="val-bruto">0,00</span>
                         <span class="currency">€</span>
                     </div>
-                    <div class="trend" id="trendTotal">⟷ 0%</div>
+                    <div class="trend" id="trendSaft">⟷ 0%</div>
                 </div>
                 
-                <div class="stat-card" id="cardIva">
-                    <label>IVA TOTAL APURADO</label>
+                <div class="stat-card">
+                    <label>COMISSÕES TOTAIS</label>
                     <div class="value-wrapper">
-                        <span id="valIva" class="val">0,00</span>
+                        <span class="val" id="val-comissoes">0,00</span>
                         <span class="currency">€</span>
                     </div>
-                    <div class="trend" id="trendIva">⟷ 0%</div>
+                    <div class="trend" id="trendComissoes">⟷ 0%</div>
                 </div>
                 
-                <div class="stat-card" id="cardSemIva">
-                    <label>PREÇO SEM IVA</label>
+                <div class="stat-card">
+                    <label>RECEITA ANUAL (DAC7)</label>
                     <div class="value-wrapper">
-                        <span id="valSemIva" class="val">0,00</span>
+                        <span class="val" id="val-dac7">0,00</span>
                         <span class="currency">€</span>
                     </div>
-                    <div class="trend" id="trendSemIva">⟷ 0%</div>
+                    <div class="trend" id="trendDac7">⟷ 0%</div>
                 </div>
                 
-                <div class="stat-card" id="cardViagens">
-                    <label>NÚMERO DE VIAGENS</label>
+                <div class="stat-card highlight" id="cardDivergencia">
+                    <label>DIVERGÊNCIA (SAF-T - DAC7)</label>
                     <div class="value-wrapper">
-                        <span id="valViagens" class="val">0</span>
+                        <span class="val" id="val-divergencia">0,00</span>
+                        <span class="currency">€</span>
                     </div>
-                    <div class="trend" id="trendViagens">⟷ 0%</div>
+                    <div class="trend" id="trendDivergencia">⟷ 0%</div>
                 </div>
             </div>
 
             <!-- MÉTRICAS SECUNDÁRIAS -->
             <div class="secondary-metrics">
                 <div class="metric-small">
-                    <label>COMISSÃO (23%)</label>
-                    <span id="valComissao" class="val">0,00</span>
-                    <span class="currency">€</span>
+                    <label>Nº VIAGENS</label>
+                    <span class="val" id="val-viagens">0</span>
                 </div>
                 <div class="metric-small">
-                    <label>LÍQUIDO</label>
-                    <span id="valLiquido" class="val">0,00</span>
+                    <label>GANHOS LÍQUIDOS</label>
+                    <span class="val" id="val-liquido">0,00</span>
                     <span class="currency">€</span>
                 </div>
                 <div class="metric-small">
                     <label>TAXA MÉDIA</label>
-                    <span id="valTaxa" class="val">0,00</span>
+                    <span class="val" id="val-taxa">0,00</span>
                     <span class="currency">%</span>
                 </div>
                 <div class="metric-small">
                     <label>DOCUMENTOS</label>
-                    <span id="valDocumentos" class="val">0</span>
+                    <span class="val" id="doc-count">0</span>
                 </div>
             </div>
 
             <!-- PAINEL DE CONTROLO -->
             <div class="control-panel">
                 <div class="action-bar">
-                    <button id="btnAnalyze" class="btn-main">
-                        <span>🔍 EXECUTAR CRUZAMENTOS</span>
+                    <button id="btn-analyze" class="btn-main">
+                        <span>🔍 EXECUTAR CRUZAMENTOS ARITMÉTICOS</span>
                     </button>
                     
-                    <button id="btnExport" class="btn-sec">
-                        <span>📄 GERAR PDF</span>
+                    <button id="btn-export-pdf" class="btn-sec">
+                        <span>📄 GERAR PROVA LEGAL (PDF)</span>
                     </button>
                     
-                    <button id="btnJSON" class="btn-sec">
+                    <button id="btn-export-json" class="btn-sec">
                         <span>📊 EXPORTAR JSON</span>
                     </button>
                     
-                    <button id="btnDemo" class="btn-sec demo">
-                        <span>🚀 DEMO</span>
+                    <button id="btn-demo" class="btn-sec demo">
+                        <span>🚀 CARREGAR DEMO</span>
                     </button>
                     
-                    <button id="btnReset" class="btn-sec danger">
-                        <span>🗑️ LIMPAR</span>
+                    <button id="btn-clear" class="btn-sec danger">
+                        <span>🗑️ LIMPAR SISTEMA</span>
                     </button>
                 </div>
             </div>
 
-            <!-- TERMINAL DE AUDITORIA -->
-            <div class="terminal-container">
-                <div class="terminal-header">
-                    <span class="terminal-title">CONSOLA DE AUDITORIA</span>
-                    <span class="terminal-status">GRAVANDO</span>
+            <!-- TABS DE RESULTADOS -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-autenticidade">CONTROLO DE AUTENTICIDADE</button>
+                    <button class="tab-btn" data-tab="tab-financeiro">CRUZAMENTO FINANCEIRO</button>
+                    <button class="tab-btn" data-tab="tab-dac7">RELATÓRIO DAC7</button>
+                    <button class="tab-btn" data-tab="tab-veredito">VEREDITO FISCAL</button>
                 </div>
-                <div id="terminal" class="terminal-body">
-                    <div class="log-line">> VDC Forensic Engine v12.0 inicializado...</div>
-                    <div class="log-line">> Sistema aguardando autenticação...</div>
+
+                <!-- TAB 1: AUTENTICIDADE -->
+                <div class="tab-content" id="tab-autenticidade">
+                    <div class="table-wrapper">
+                        <table id="table-hashes">
+                            <thead>
+                                <tr>
+                                    <th>ALGORITMO</th>
+                                    <th>HASH CALCULADO (SHA-256)</th>
+                                    <th>FICHEIRO ORIGEM</th>
+                                    <th>ESTADO</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: FINANCEIRO -->
+                <div class="tab-content hidden" id="tab-financeiro">
+                    <div class="table-wrapper">
+                        <table id="table-viagens">
+                            <thead>
+                                <tr>
+                                    <th>DATA</th>
+                                    <th>MOTORISTA</th>
+                                    <th>N.º FATURA</th>
+                                    <th>VALOR (€)</th>
+                                    <th>COMISSÃO (€)</th>
+                                    <th>TAXA</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- ÁREA DE ALERTAS CRÍTICOS -->
+                    <div class="alerts-section">
+                        <h4>ALERTAS DE DISCREPÂNCIA</h4>
+                        <div id="alertas-container" class="alertas-container"></div>
+                    </div>
+
+                    <div class="triangulacao-financeira">
+                        <h4>TRIANGULAÇÃO FINANCEIRA - VERDADE MATERIAL</h4>
+                        <div class="triangulacao-grid">
+                            <div class="tri-item"><span>BRUTO APP</span><strong id="tri-bruto">0,00 €</strong></div>
+                            <div class="tri-item"><span>COMISSÕES</span><strong id="tri-comissoes">0,00 €</strong></div>
+                            <div class="tri-item"><span>PROVEITO REAL</span><strong id="tri-liquido">0,00 €</strong></div>
+                            <div class="tri-item"><span>FATURADO</span><strong id="tri-faturado">0,00 €</strong></div>
+                            <div class="tri-item" id="tri-discrepancia-item" style="display: none;"><span>DISCREPÂNCIA</span><strong id="tri-discrepancia">0,00 €</strong></div>
+                        </div>
+                    </div>
+                    
+                    <div class="cruzamentos-detalhe">
+                        <h4>RESULTADOS DOS CRUZAMENTOS</h4>
+                        <div class="cruzamento-item"><span class="cruzamento-label">SAF-T vs DAC7:</span><span class="cruzamento-status" id="status-saft-dac7">A aguardar dados</span></div>
+                        <div class="cruzamento-item"><span class="cruzamento-label">Bruto vs Ganhos App:</span><span class="cruzamento-status" id="status-bruto-extrato">A aguardar dados</span></div>
+                        <div class="cruzamento-item"><span class="cruzamento-label">Comissões vs Faturas:</span><span class="cruzamento-status" id="status-comissoes-faturas">A aguardar dados</span></div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: DAC7 -->
+                <div class="tab-content hidden" id="tab-dac7">
+                    <div class="dac7-container">
+                        <div class="dac7-header">
+                            <h4>DECLARAÇÃO ANUAL · DIRETIVA DAC7</h4>
+                            <span class="dac7-badge">ART. 6.º</span>
+                        </div>
+                        <div class="dac7-content">
+                            <div class="dac7-row"><span>RECEITA TOTAL DECLARADA:</span><strong id="dac7-receita">0,00 €</strong></div>
+                            <div class="dac7-row"><span>COMISSÕES TOTAIS:</span><strong id="dac7-comissoes">0,00 €</strong></div>
+                            <div class="dac7-row"><span>SERVIÇOS PRESTADOS:</span><strong id="dac7-servicos">0</strong></div>
+                            <div class="dac7-row"><span>PERÍODO DECLARADO:</span><strong id="dac7-periodo">2024</strong></div>
+                        </div>
+                        <div class="dac7-trimestres">
+                            <h5>DETALHES TRIMESTRAIS</h5>
+                            <div class="trimestres-grid">
+                                <div class="trimestre-card"><span class="trimestre-label">1.º TRIMESTRE</span><span class="trimestre-value" id="dac7-1t">0,00 €</span></div>
+                                <div class="trimestre-card"><span class="trimestre-label">2.º TRIMESTRE</span><span class="trimestre-value" id="dac7-2t">0,00 €</span></div>
+                                <div class="trimestre-card"><span class="trimestre-label">3.º TRIMESTRE</span><span class="trimestre-value" id="dac7-3t">0,00 €</span></div>
+                                <div class="trimestre-card"><span class="trimestre-label">4.º TRIMESTRE</span><span class="trimestre-value" id="dac7-4t">0,00 €</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: VEREDITO -->
+                <div class="tab-content hidden" id="tab-veredito">
+                    <div class="veredicto-section" id="veredicto-section">
+                        <div class="veredicto-header">
+                            <h2>VEREDITO FISCAL · TRIANGULAÇÃO</h2>
+                            <div class="veredicto-status" id="veredicto-status">NORMAL</div>
+                            <div class="veredicto-desvio" id="veredicto-desvio">Sem desvios significativos</div>
+                        </div>
+                        <div class="anomalia-critica" id="anomalia-critica" style="display: none;">
+                            <span class="icon-warning">⚠️</span>
+                            <div>
+                                <strong>ANOMALIA CRÍTICA DETETADA</strong>
+                                <p id="anomalia-texto">Potencial incumprimento fiscal (Art. 103.º RGIT)</p>
+                                <span class="valor-anomalia" id="valor-anomalia">0,00 €</span>
+                            </div>
+                        </div>
+                        <div class="recomendacoes">
+                            <h4>RECOMENDAÇÕES TÉCNICAS</h4>
+                            <ul id="recomendacoes-lista">
+                                <li>Validar conciliação bancária dos valores declarados</li>
+                                <li>Verificar retenções na fonte e IVA</li>
+                                <li>Confrontar valores com extratos bancários</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -245,28 +377,41 @@
             <div class="master-hash-container">
                 <div class="master-hash-left">
                     <span class="master-label">MASTER HASH SHA-256:</span>
-                    <span class="master-value" id="masterHash">---</span>
+                    <span class="master-value" id="master-hash">---</span>
                 </div>
                 <div class="master-hash-right">
-                    <div id="qrcode-container" style="width: 48px; height: 48px;"></div>
+                    <div id="qrcode-container" style="width: 64px; height: 64px;"></div>
                     <span class="timestamp" id="footerTimestamp"></span>
+                    <span class="session-id" id="footer-session">---</span>
                 </div>
             </div>
 
             <!-- FOOTER -->
             <footer class="main-footer">
                 <div class="footer-left">
-                    <span class="copyright">VDC FORENSE ELITE v12.0 · MOTOR DE SOMA PRECISA</span>
+                    <span class="copyright">VDC FORENSE ELITE v15.1 · Todos os direitos reservados</span>
                 </div>
                 <div class="footer-right">
-                    <span class="system-status">ESTADO: <span class="status-ok">OPERACIONAL</span></span>
-                    <span class="chain-status">CADEIA DE CUSTÓDIA: <span class="status-ok">ÍNTEGRA</span></span>
+                    <span class="system-status">ESTADO: <span id="system-status" class="status-ok">OPERACIONAL</span></span>
+                    <span class="chain-status">CADEIA DE CUSTÓDIA: <span id="chain-status" class="status-ok">ÍNTEGRA</span></span>
                 </div>
             </footer>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <!-- JAVASCRIPT PRINCIPAL -->
+    <!-- Scripts Externos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        window.pdfjsLib = window.pdfjsLib || {};
+        window.pdfjsLib.GlobalWorkerOptions = window.pdfjsLib.GlobalWorkerOptions || {};
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+
+    <!-- JavaScript Principal -->
     <script src="script.js"></script>
 </body>
 </html>
