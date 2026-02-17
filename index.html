@@ -3,136 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Forense - Sistema de Peritagem Digital v13.6 MASTER SCHEMA (UNIFICADO)">
-    <title>VDC FORENSE - v13.6 MASTER SCHEMA (UNIFICADO)</title>
+    <title>VDC FORENSE - v12.8 CSI MIAMI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --accent-cyan: #06b6d4;
+            --accent-cyan-glow: rgba(6, 182, 212, 0.3);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(6, 182, 212, 0.3);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- BARREIRA DE ENTRADA - ACESSO RESTRITO (v13.0 + v13.1) -->
-    <div id="barrier-window" class="modal-overlay">
-        <div class="modal-content barrier-box">
-            <div class="modal-header">
-                <div class="security-badge">ACESSO RESTRITO · NÍVEL 4</div>
-                <h2>VDC FORENSE v13.6</h2>
-                <p>Sistema de Auditoria Digital e Análise Fiscal · MASTER SCHEMA</p>
-            </div>
-            <div class="modal-body">
-                <div class="perito-info">
-                    <p><strong>ANALISTA:</strong> PERITO FORENSE DIGITAL</p>
-                    <p><strong>ENTIDADE:</strong> CONSULTORIA DE GESTÃO E I&D</p>
-                    <p><strong>ALVO:</strong> AUDITORIA ECONÓMICO-FINANCEIRA · DAC7/SAF-T</p>
-                </div>
-                <p class="disclaimer">O sistema irá processar fontes brutas (PDF, CSV, XML, JSON) para geração de prova legal de autenticidade (SHA-256) e cruzamento de dados fiscais. Todas as operações são registadas na cadeia de custódia.</p>
-                <div class="auth-hash" id="session-id-display">
-                    <span class="hash-label">HASH DA SESSÃO:</span>
-                    <span class="hash-value" id="sessionHash">---</span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="btn-proceed" class="btn-primary-glow">VALIDAR ACESSO E INICIAR SESSÃO</button>
-            </div>
-        </div>
+    <div class="loading-screen" id="loading-screen">
+        <div class="spinner"></div>
     </div>
-
-    <!-- APLICAÇÃO PRINCIPAL (INICIALMENTE OCULTA) -->
-    <div id="app-container" class="hidden">
+    
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- HEADER -->
         <header class="main-header">
             <div class="brand">
-                <div class="logo-icon">VDC</div>
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
                 <div class="brand-text">
-                    <h1>SISTEMA <span>MASTER SCHEMA</span> <span class="version-badge">v13.6</span></h1>
-                    <div class="session-info">
-                        SESSÃO: <span id="session-id">---</span> | 
-                        <span id="session-time">00:00:00</span> | 
-                        <span class="status-online">ONLINE</span>
-                    </div>
+                    <h1>VDC FORENSE <span class="version">v12.8</span></h1>
+                    <p>ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics</p>
                 </div>
             </div>
-            <div class="header-actions">
-                <button id="btn-demo" class="btn-tool">CARREGAR DEMO</button>
-                <button id="btn-export-json" class="btn-tool">EXPORTAR JSON</button>
-                <button id="btn-clear" class="btn-tool btn-tool-danger">LIMPAR SISTEMA</button>
+            <div class="session-info">
+                <div class="badge simulated">CASO SIMULADO</div>
+                <div class="session-id">
+                    <span>SESSÃO: <span id="session-id">CARREGANDO...</span></span>
+                    <span id="session-time">--/--/---- | --:--:--</span>
+                </div>
             </div>
         </header>
 
-        <main class="dashboard-grid">
-            <!-- SIDEBAR ESQUERDA - CONSOLA E UPLOAD -->
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
+            <!-- SIDEBAR -->
             <aside class="sidebar">
-                <!-- CONSOLA DE AUDITORIA -->
-                <section class="card console-card">
-                    <div class="card-header">
-                        <h3>CONSOLA DE AUDITORIA · CADEIA DE CUSTÓDIA</h3>
-                        <span class="status-dot pulse"></span>
+                <!-- PAINEL: IDENTIFICAÇÃO DO SUJEITO -->
+                <section class="panel subject-panel">
+                    <h3>IDENTIFICAÇÃO DO SUJEITO</h3>
+                    <div class="form-group">
+                        <label for="subject-name">NOME / EMPRESA</label>
+                        <input type="text" id="subject-name" value="Momento Lda" placeholder="Nome ou Empresa">
                     </div>
-                    <div id="audit-console" class="terminal-box">
-                        <div class="line green">[SISTEMA] A aguardar fontes de dados...</div>
-                        <div class="line blue">[INFO] Utilize a zona de upload para anexar documentos</div>
+                    <div class="form-group">
+                        <label for="subject-nif">NIF</label>
+                        <input type="text" id="subject-nif" value="517905450" placeholder="NIF" maxlength="9">
+                    </div>
+                    <button class="btn-validate" id="btn-validar" type="button">
+                        <span class="icon">✓</span> VALIDAR
+                    </button>
+                    <div class="validation-status" id="validation-status">
+                        <span class="status-dot"></span>
+                        <span>Aguardando validação...</span>
                     </div>
                 </section>
 
-                <!-- ZONA DE UPLOAD - FONTES DE DADOS (v13.1 + v13.6) -->
-                <section class="card upload-card">
-                    <h3>FONTES DE DADOS · UPLOAD</h3>
-                    
-                    <!-- METADADOS DA PERÍCIA (v13.1 + v13.6) -->
-                    <div class="metadata-audit">
-                        <div class="metadata-item">
-                            <label>Sujeito Passivo / Empresa:</label>
-                            <input type="text" id="subjectName" placeholder="Nome da Entidade" class="input-forense">
-                        </div>
-                        <div class="metadata-item">
-                            <label>NIPC / NIF:</label>
-                            <input type="text" id="nipc" placeholder="Número de Identificação Fiscal" class="input-forense" maxlength="9">
-                        </div>
-                        <div class="metadata-item">
-                            <label>Plataforma TVDE:</label>
-                            <select id="platform" class="select-forense">
-                                <option value="">-- Selecione a Plataforma --</option>
-                                <option value="uber">Uber B.V.</option>
-                                <option value="bolt">Bolt Operations OÜ</option>
-                                <option value="outra">Outra Plataforma</option>
-                            </select>
-                            <div id="platformDetails" class="platform-details"></div>
-                        </div>
-                        <div class="metadata-row">
-                            <div class="metadata-half">
-                                <label>Ano Fiscal:</label>
-                                <select id="fiscalYear" class="select-forense"></select>
-                            </div>
-                            <div class="metadata-half">
-                                <label>Período:</label>
-                                <select id="fiscalPeriod" class="select-forense">
-                                    <option value="Anual">Anual</option>
-                                    <option value="1.º Trimestre">1.º Trimestre</option>
-                                    <option value="2.º Trimestre">2.º Trimestre</option>
-                                    <option value="3.º Trimestre">3.º Trimestre</option>
-                                    <option value="4.º Trimestre">4.º Trimestre</option>
-                                    <option value="Mensal">Mensal</option>
-                                </select>
-                            </div>
-                        </div>
+                <!-- PAINEL: PARÂMETROS -->
+                <section class="panel parameters-panel">
+                    <h3>PARÂMETROS</h3>
+                    <div class="form-group">
+                        <label for="ano-fiscal">ANO FISCAL</label>
+                        <select id="ano-fiscal">
+                            <option value="2024" selected>2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
                     </div>
-                    
-                    <!-- ZONA DE DROP (v13.0) -->
-                    <div class="drop-zone" id="drop-zone">
-                        <span class="drop-icon">📁</span>
-                        <p>Arraste ficheiros ou clique para selecionar</p>
-                        <small>Formatos suportados: PDF, CSV, XML, JSON (máx. 10MB)</small>
-                        <input type="file" id="file-input" multiple accept=".pdf,.csv,.xml,.json,application/pdf,text/csv,application/json" hidden>
+                    <div class="form-group">
+                        <label for="periodo">PERÍODO</label>
+                        <select id="periodo">
+                            <option value="1">1.º Semestre</option>
+                            <option value="2" selected>2.º Semestre</option>
+                        </select>
                     </div>
-                    
-                    <!-- LISTA DE FICHEIROS (v13.0 + v13.1) -->
-                    <div id="file-queue" class="file-list-mini">
-                        <!-- Ficheiros serão listados aqui dinamicamente -->
+                    <div class="form-group">
+                        <label for="plataforma">PLATAFORMA</label>
+                        <select id="plataforma">
+                            <option value="bolt" selected>Bolt (Estónia)</option>
+                            <option value="uber">Uber (EUA)</option>
+                            <option value="free">Free Now (Alemanha)</option>
+                        </select>
                     </div>
-                    
-                    <!-- CONTADOR DE DOCUMENTOS (v13.6) -->
-                    <div class="counter-box">Documentos no Lote: <span id="doc-count">0</span></div>
-                    
-                    <!-- SUMÁRIO DE EVIDÊNCIAS (v13.0) -->
+                </section>
+
+                <!-- PAINEL: GESTÃO DE EVIDÊNCIAS -->
+                <section class="panel evidence-panel">
+                    <h3>
+                        <button class="btn-toggle-evidence" id="btn-toggle-evidence" type="button">
+                            GESTÃO DE EVIDÊNCIAS
+                            <span class="badge-count" id="total-evidencias">0</span>
+                        </button>
+                    </h3>
                     <div class="evidence-summary">
                         <div class="evidence-item" data-tipo="ctrl">
                             <span class="count" id="count-ctrl">0</span>
@@ -155,258 +178,294 @@
                             <span class="label">DAC7</span>
                         </div>
                     </div>
-                    
-                    <!-- BOTÃO ANALISAR (v13.0 + v13.6) -->
-                    <div class="actions" style="margin-top: 15px;">
-                        <button id="btn-analyze" class="btn-primary">EXECUTAR CRUZAMENTOS</button>
+                    <div class="values-indicator">
+                        <span class="dot" id="values-dot"></span>
+                        <span id="total-valores">0 valor(es)</span>
                     </div>
+                </section>
+
+                <!-- PAINEL: AÇÕES -->
+                <section class="panel actions-panel">
+                    <button class="btn-primary" id="btn-executar" type="button">
+                        <span class="icon">🔍</span> EXECUTAR PERÍCIA
+                    </button>
+                    <button class="btn-secondary" id="btn-export-pdf" type="button">
+                        <span class="icon">⬇</span> EXPORTAR PDF
+                    </button>
                 </section>
             </aside>
 
-            <!-- CONTEÚDO PRINCIPAL - MÉTRICAS E RESULTADOS -->
-            <section class="main-content">
-                <!-- MÉTRICAS PRINCIPAIS (v13.0) -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <label>RECEITA BRUTA (SAF-T)</label>
-                        <div class="value positive" id="val-bruto">0,00 €</div>
-                    </div>
-                    <div class="metric-card">
-                        <label>GANHOS LÍQUIDOS (BOLT)</label>
-                        <div class="value positive" id="val-liquido">0,00 €</div>
-                    </div>
-                    <div class="metric-card">
-                        <label>RECEITA ANUAL (DAC7)</label>
-                        <div class="value positive" id="val-dac7">0,00 €</div>
-                    </div>
+            <!-- CONTEÚDO PRINCIPAL -->
+            <main class="content">
+                <!-- TOOLBAR -->
+                <div class="toolbar">
+                    <button class="btn-tool" id="btn-export-json" type="button">
+                        <span>{ }</span> EXPORTAR JSON
+                    </button>
+                    <button class="btn-tool" id="btn-reiniciar" type="button">
+                        <span>↻</span> REINICIAR
+                    </button>
+                    <button class="btn-tool" id="btn-limpar" type="button">
+                        <span>🗑</span> LIMPAR
+                    </button>
                 </div>
 
-                <!-- MÉTRICAS SECUNDÁRIAS (v13.0) -->
-                <div class="metrics-grid secondary">
-                    <div class="metric-card small">
-                        <label>COMISSÕES TOTAIS</label>
-                        <div class="value" id="val-comissoes">0,00 €</div>
-                    </div>
-                    <div class="metric-card small">
-                        <label>N.º VIAGENS</label>
-                        <div class="value" id="val-viagens">0</div>
-                    </div>
-                    <div class="metric-card small">
-                        <label>TAXA MÉDIA</label>
-                        <div class="value" id="val-taxa">0,00%</div>
-                    </div>
-                </div>
+                <!-- ALERTAS -->
+                <div id="alertas-container" class="alertas-container"></div>
 
-                <!-- ÁREA DE ALERTAS CRÍTICOS (v13.0) -->
-                <section class="card alerts-card">
-                    <div class="card-header">
-                        <h3>ALERTAS DE DISCREPÂNCIA · CRUZAMENTOS ARITMÉTICOS</h3>
-                        <span class="status-dot warning-pulse"></span>
-                    </div>
-                    <div id="alertas-container" class="alertas-container">
-                        <!-- Alertas serão inseridos dinamicamente -->
+                <!-- RESULTADOS FORENSES -->
+                <section class="results-section">
+                    <h3>RESULTADOS FORENSES</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="label">GANHOS APP</span>
+                            <span class="value positive" id="ganhos-app">0,00 €</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label">COMISSÕES</span>
+                            <span class="value" id="comissoes-total">0,00 €</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label">DAC7 ANUAL</span>
+                            <span class="value" id="dac7-anual">0,00 €</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label">TOTAL SAF-T</span>
+                            <span class="value positive" id="total-saft">0,00 €</span>
+                        </div>
                     </div>
                 </section>
 
-                <!-- PAINEL DE RESULTADOS COM TABS (v13.0) -->
-                <div class="card results-card">
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="tab-autenticidade">CONTROLO DE AUTENTICIDADE (SHA-256)</button>
-                        <button class="tab-btn" data-tab="tab-financeiro">CRUZAMENTO FINANCEIRO</button>
-                        <button class="tab-btn" data-tab="tab-dac7">RELATÓRIO DAC7</button>
-                        <button class="tab-btn" data-tab="tab-veredito">VEREDITO FISCAL</button>
-                    </div>
+                <!-- DETALHES GRID -->
+                <div class="details-grid">
+                    <!-- SAF-T -->
+                    <section class="detail-card">
+                        <h4>SAF-T (PT)</h4>
+                        <div class="detail-content">
+                            <div class="detail-row">
+                                <span>VALOR LÍQUIDO</span>
+                                <strong id="saft-liquido">0,00 €</strong>
+                            </div>
+                            <div class="detail-row autoliquidacao">
+                                <span>IVA</span>
+                                <strong id="saft-iva">---</strong>
+                                <small>Autoliquidação</small>
+                            </div>
+                            <div class="detail-row total">
+                                <span>TOTAL SAF-T</span>
+                                <strong id="saft-total">0,00 €</strong>
+                            </div>
+                        </div>
+                    </section>
 
-                    <!-- TAB 1: AUTENTICIDADE / HASHES (v13.0) -->
-                    <div class="tab-content" id="tab-autenticidade">
-                        <div class="table-wrapper">
-                            <table id="table-hashes">
-                                <thead>
-                                    <tr>
-                                        <th>ALGORITMO</th>
-                                        <th>HASH CALCULADO (SHA-256)</th>
-                                        <th>FICHEIRO ORIGEM</th>
-                                        <th>ESTADO</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Linhas inseridas via JavaScript -->
-                                </tbody>
-                            </table>
+                    <!-- EXTRATOS BOLT -->
+                    <section class="detail-card">
+                        <h4>EXTRATOS BOLT</h4>
+                        <div class="detail-content">
+                            <div class="detail-row">
+                                <span>GANHOS NA APP</span>
+                                <strong class="positive" id="ext-ganhos-app">0,00 €</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>GANHOS CAMPANHA</span>
+                                <strong id="ext-ganhos-campanha">0,00 €</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>GORJETAS</span>
+                                <strong id="ext-gorjetas">0,00 €</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>PORTAGENS</span>
+                                <strong id="ext-portagens">0,00 €</strong>
+                            </div>
+                            <div class="detail-row negative">
+                                <span>TAXAS CANCEL.</span>
+                                <strong id="ext-taxas-cancel">0,00 €</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>COMISSÕES</span>
+                                <strong id="ext-comissoes">0,00 €</strong>
+                            </div>
+                            <div class="detail-row total">
+                                <span>GANHOS LÍQUIDOS</span>
+                                <strong class="positive" id="ext-ganhos-liquidos">0,00 €</strong>
+                            </div>
                         </div>
-                        <div class="table-footer">
-                            <span class="hash-verified">✓ Todos os ficheiros verificados por hash</span>
-                        </div>
-                        <div class="master-hash-container">
-                            <span class="master-hash-label">MASTER HASH SHA-256:</span>
-                            <span id="master-hash" class="master-hash-value">---</span>
-                        </div>
-                    </div>
+                    </section>
 
-                    <!-- TAB 2: CRUZAMENTO FINANCEIRO (v13.0 + v13.6) -->
-                    <div class="tab-content hidden" id="tab-financeiro">
-                        <div class="table-wrapper">
-                            <table id="table-viagens">
-                                <thead>
-                                    <tr>
-                                        <th>DATA</th>
-                                        <th>MOTORISTA</th>
-                                        <th>N.º FATURA</th>
-                                        <th>VALOR (€)</th>
-                                        <th>COMISSÃO (€)</th>
-                                        <th>TAXA</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Linhas inseridas via JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="triangulacao-financeira">
-                            <h4>TRIANGULAÇÃO FINANCEIRA - VERDADE MATERIAL</h4>
-                            <div class="triangulacao-grid">
-                                <div class="tri-item">
-                                    <span>BRUTO APP</span>
-                                    <strong id="tri-bruto">0,00 €</strong>
-                                </div>
-                                <div class="tri-item">
-                                    <span>COMISSÕES</span>
-                                    <strong id="tri-comissoes">0,00 €</strong>
-                                </div>
-                                <div class="tri-item">
-                                    <span>PROVEITO REAL</span>
-                                    <strong id="tri-liquido">0,00 €</strong>
-                                </div>
-                                <div class="tri-item">
-                                    <span>FATURADO</span>
-                                    <strong id="tri-faturado">0,00 €</strong>
-                                </div>
-                                <div class="tri-item" id="tri-discrepancia-item" style="display: none;">
-                                    <span>DISCREPÂNCIA</span>
-                                    <strong id="tri-discrepancia">0,00 €</strong>
-                                </div>
+                    <!-- DAC7 -->
+                    <section class="detail-card dac7-card">
+                        <h4>DAC7</h4>
+                        <div class="detail-content">
+                            <div class="dac7-info">
+                                <span class="dac7-label">REPORTING ANUAL</span>
+                                <span class="dac7-value" id="dac7-valor">0,00 €</span>
+                            </div>
+                            <div class="dac7-meta">
+                                <span>Ano: <strong id="dac7-ano">2024</strong></span>
+                                <span>Data limite: <strong id="dac7-limite">31/01/2025</strong></span>
+                            </div>
+                            <div class="dac7-note">
+                                Valor reportado pela Bolt às autoridades fiscais (Art. 6.º DAC7)
                             </div>
                         </div>
-                        
-                        <!-- DETALHES DOS CRUZAMENTOS (v13.0) -->
-                        <div class="cruzamentos-detalhe">
-                            <h4>RESULTADOS DOS CRUZAMENTOS</h4>
-                            <div class="cruzamento-item" id="cruzamento-saft-dac7">
-                                <span class="cruzamento-label">SAF-T vs DAC7:</span>
-                                <span class="cruzamento-status" id="status-saft-dac7">A aguardar dados</span>
-                                <span id="tri-saft-dac7" style="display: none;"></span>
-                            </div>
-                            <div class="cruzamento-item" id="cruzamento-bruto-extrato">
-                                <span class="cruzamento-label">Bruto vs Ganhos App:</span>
-                                <span class="cruzamento-status" id="status-bruto-extrato">A aguardar dados</span>
-                                <span id="tri-bruto-extrato" style="display: none;"></span>
-                            </div>
-                            <div class="cruzamento-item" id="cruzamento-comissoes-faturas">
-                                <span class="cruzamento-label">Comissões vs Faturas:</span>
-                                <span class="cruzamento-status" id="status-comissoes-faturas">A aguardar dados</span>
-                                <span id="tri-comissoes-faturas" style="display: none;"></span>
-                            </div>
+                    </section>
+                </div>
+
+                <!-- FATURAS BOLT -->
+                <section class="invoices-section">
+                    <h4>FATURAS BOLT</h4>
+                    <div class="invoice-grid">
+                        <div class="invoice-item">
+                            <span class="label">N.º FATURA</span>
+                            <strong id="fat-numero">---</strong>
+                        </div>
+                        <div class="invoice-item">
+                            <span class="label">TOTAL</span>
+                            <strong class="positive" id="fat-total">0,00 €</strong>
+                        </div>
+                        <div class="invoice-item autoliquidacao">
+                            <span class="label">AUTOLIQUIDAÇÃO</span>
+                            <strong id="fat-autoliquidacao">0,00 €</strong>
+                            <small>IVA - Autoliquidação</small>
                         </div>
                     </div>
+                </section>
 
-                    <!-- TAB 3: RELATÓRIO DAC7 (v13.0) -->
-                    <div class="tab-content hidden" id="tab-dac7">
-                        <div class="dac7-container">
-                            <div class="dac7-header">
-                                <h4>DECLARAÇÃO ANUAL · DIRETIVA DAC7</h4>
-                                <span class="dac7-badge">ART. 6.º</span>
+                <!-- VEREDITO FISCAL -->
+                <section class="veredicto-section" id="veredicto-section" style="display: none;">
+                    <div class="veredicto-header">
+                        <h2>VEREDITO FISCAL</h2>
+                        <div class="veredicto-status" id="veredicto-status">NORMAL</div>
+                        <div class="veredicto-desvio" id="veredicto-desvio">Desvio: 0%</div>
+                    </div>
+                    <div class="anomalia-critica" id="anomalia-critica" style="display: none;">
+                        <span class="icon-warning">⚠</span>
+                        <div>
+                            <strong>ANOMALIA CRÍTICA</strong>
+                            <p id="anomalia-texto">Indício de fraude fiscal</p>
+                            <span class="valor-anomalia" id="valor-anomalia">0,00 €</span>
+                        </div>
+                    </div>
+                    <div class="triangulacao-financeira">
+                        <h4>TRIANGULAÇÃO FINANCEIRA</h4>
+                        <div class="triangulacao-grid">
+                            <div class="tri-item">
+                                <span>BRUTO APP</span>
+                                <strong id="tri-bruto">0,00 €</strong>
                             </div>
-                            <div class="dac7-content">
-                                <div class="dac7-row">
-                                    <span>RECEITA TOTAL DECLARADA:</span>
-                                    <strong id="dac7-receita">0,00 €</strong>
-                                </div>
-                                <div class="dac7-row">
-                                    <span>COMISSÕES TOTAIS:</span>
-                                    <strong id="dac7-comissoes">0,00 €</strong>
-                                </div>
-                                <div class="dac7-row">
-                                    <span>SERVIÇOS PRESTADOS:</span>
-                                    <strong id="dac7-servicos">0</strong>
-                                </div>
-                                <div class="dac7-row">
-                                    <span>PERÍODO DECLARADO:</span>
-                                    <strong id="dac7-periodo">2024</strong>
-                                </div>
+                            <div class="tri-item">
+                                <span>COMISSÕES</span>
+                                <strong id="tri-comissoes">0,00 €</strong>
                             </div>
-                            <div class="dac7-trimestres">
-                                <h5>DETALHES TRIMESTRAIS</h5>
-                                <div class="trimestres-grid">
-                                    <div class="trimestre-card">
-                                        <span class="trimestre-label">1.º TRIMESTRE</span>
-                                        <span class="trimestre-value" id="dac7-1t">0,00 €</span>
-                                    </div>
-                                    <div class="trimestre-card">
-                                        <span class="trimestre-label">2.º TRIMESTRE</span>
-                                        <span class="trimestre-value" id="dac7-2t">0,00 €</span>
-                                    </div>
-                                    <div class="trimestre-card">
-                                        <span class="trimestre-label">3.º TRIMESTRE</span>
-                                        <span class="trimestre-value" id="dac7-3t">0,00 €</span>
-                                    </div>
-                                    <div class="trimestre-card">
-                                        <span class="trimestre-label">4.º TRIMESTRE</span>
-                                        <span class="trimestre-value" id="dac7-4t">0,00 €</span>
-                                    </div>
-                                </div>
+                            <div class="tri-item">
+                                <span>LÍQUIDO</span>
+                                <strong id="tri-liquido">0,00 €</strong>
+                            </div>
+                            <div class="tri-item" id="tri-faturado-item">
+                                <span>FATURADO</span>
+                                <strong id="tri-faturado">0,00 €</strong>
+                            </div>
+                            <div class="tri-item discrepancia" id="tri-discrepancia-item" style="display: none;">
+                                <span>DISCREPÂNCIA</span>
+                                <strong id="tri-discrepancia">0,00 €</strong>
                             </div>
                         </div>
                     </div>
+                </section>
 
-                    <!-- TAB 4: VEREDITO FISCAL (v13.0) -->
-                    <div class="tab-content hidden" id="tab-veredito">
-                        <div class="veredicto-section" id="veredicto-section">
-                            <div class="veredicto-header">
-                                <h2>VEREDITO FISCAL · TRIANGULAÇÃO</h2>
-                                <div class="veredicto-status" id="veredicto-status">NORMAL</div>
-                                <div class="veredicto-desvio" id="veredicto-desvio">Sem desvios significativos</div>
-                            </div>
-                            <div class="anomalia-critica" id="anomalia-critica" style="display: none;">
-                                <span class="icon-warning">⚠</span>
-                                <div>
-                                    <strong>ANOMALIA CRÍTICA DETETADA</strong>
-                                    <p id="anomalia-texto">Potencial incumprimento fiscal (Art. 103.º RGIT)</p>
-                                    <span class="valor-anomalia" id="valor-anomalia">0,00 €</span>
-                                </div>
-                            </div>
-                            <div class="recomendacoes">
-                                <h4>RECOMENDAÇÕES TÉCNICAS</h4>
-                                <ul id="recomendacoes-lista">
-                                    <li>Validar conciliação bancária dos valores declarados</li>
-                                    <li>Verificar retenções na fonte e IVA</li>
-                                    <li>Confrontar valores com extratos bancários</li>
-                                </ul>
-                            </div>
+                <!-- ANÁLISE GRÁFICA -->
+                <section class="chart-section">
+                    <h4>ANÁLISE GRÁFICA</h4>
+                    <div class="chart-container">
+                        <canvas id="analiseGrafica"></canvas>
+                        <div id="chart-fallback" class="chart-fallback" style="display: none;">
+                            <p>Dados insuficientes para gerar gráfico</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- LOG FORENSE -->
+                <section class="log-section">
+                    <h4>LOG FORENSE</h4>
+                    <div class="log-container" id="log-container">
+                        <div class="log-entry">
+                            <span class="timestamp">[--:--:--]</span>
+                            <span class="icon info">ℹ</span>
+                            <span class="message">Sistema inicializado. Aguardando evidências...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- HASH -->
+                <section class="hash-section">
+                    <div class="hash-display">
+                        <span class="hash-label">HASH SHA-256</span>
+                        <span class="hash-value" id="hash-value">PENDENTE</span>
+                    </div>
+                    <div class="footer-info">
+                        VDC Systems © 2024/2026 | CSI MIAMI EDITION
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- MODAL: GESTÃO DE EVIDÊNCIAS -->
+        <div class="modal-overlay" id="evidence-modal" style="display: none;">
+            <div class="modal evidence-manager">
+                <div class="modal-header">
+                    <h3>GESTÃO DE EVIDÊNCIAS</h3>
+                    <button class="btn-close" id="btn-close-modal" type="button" aria-label="Fechar">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="evidence-stats">
+                        <span>Ficheiros: <strong id="modal-total-files">0</strong></span>
+                        <span>Valores: <strong id="modal-total-values">0,00 €</strong></span>
+                    </div>
+
+                    <!-- FATURAS BOLT -->
+                    <div class="evidence-category">
+                        <h4>FATURAS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-faturas">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-faturas" multiple accept=".pdf,application/pdf">
+                        </div>
+                        <div class="file-list" id="lista-faturas"></div>
+                        <div class="category-stats">
+                            <span>Ficheiros: <strong id="stats-faturas-files">0</strong></span>
+                            <span>Valores: <strong id="stats-faturas-values">0,00 €</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- EXTRATOS BOLT -->
+                    <div class="evidence-category">
+                        <h4>EXTRATOS BOLT (PDF)</h4>
+                        <div class="upload-zone" id="upload-extratos">
+                            <span class="icon-upload">⬆</span>
+                            <span>CLIQUE OU ARRASTE FICHEIROS AQUI</span>
+                            <input type="file" id="input-extratos" multiple accept=".pdf,application/pdf">
+                        </div>
+                        <div class="file-list" id="lista-extratos"></div>
+                        <div class="category-stats">
+                            <span>Ficheiros: <strong id="stats-extratos-files">0</strong></span>
+                            <span>Valores: <strong id="stats-extratos-values">0,00 €</strong></span>
                         </div>
                     </div>
                 </div>
-                
-                <!-- BOTÃO EXPORTAR RELATÓRIO PERICIAL (v13.0 + v13.6) -->
-                <div style="margin-top: 15px; text-align: right;">
-                    <button id="btn-export-pdf" class="btn-secondary">EXPORTAR RELATÓRIO PERICIAL (PDF)</button>
+                <div class="modal-footer">
+                    <button class="btn-primary" id="btn-modal-fechar" type="button">
+                        <span class="icon">✓</span> FECHAR
+                    </button>
+                    <button class="btn-danger" id="btn-modal-limpar" type="button">
+                        <span class="icon">🗑</span> LIMPAR TUDO
+                    </button>
                 </div>
-            </section>
-        </main>
-
-        <footer class="main-footer">
-            <div class="status-bar">
-                <span><strong>ESTADO:</strong> <span id="system-status" class="status-ok">OPERACIONAL</span></span>
-                <span><strong>SESSÃO:</strong> <span id="footer-session">---</span></span>
-                <span><strong>VERSÃO:</strong> 13.6.0-FINAL · MASTER SCHEMA</span>
-                <span><strong>DATA:</strong> <span id="footer-date"></span></span>
             </div>
-        </footer>
+        </div>
     </div>
 
-    <!-- SCRIPTS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
