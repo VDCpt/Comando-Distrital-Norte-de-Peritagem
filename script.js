@@ -1,6 +1,6 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
- * VERSÃO FINAL CONSOLIDADA - TODAS AS CORREÇÕES APLICADAS
+ * VERSÃO FINAL CORRIGIDA - Extração de meses corrigida, quantum correto
  * ====================================================================
  */
 
@@ -1086,15 +1086,53 @@ async function processFile(file, type) {
     });
 
     // ============================================================
-    // PROCESSAMENTO DE EXTRATOS - VERSÃO FINAL
+    // PROCESSAMENTO DE EXTRATOS - VERSÃO FINAL COM EXTRAÇÃO DE MÊS CORRIGIDA
     // ============================================================
     if (type === 'statement') {
         try {
-            const monthMatch = file.name.match(/(\d{4})[-_]?(\d{2})/);
-            if (monthMatch) {
-                const yearMonth = monthMatch[1] + monthMatch[2];
+            // EXTRAÇÃO DE MÊS CORRIGIDA - NÃO CAPTURA NÚMEROS ERRADOS
+            let yearMonth = null;
+            
+            // Padrão 1: "1 mai 2025" ou "1 dez 2024" (formato do nome do ficheiro)
+            const mesPattern = /(\d{1,2})\s*(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\s*(\d{4})/i;
+            const mesMatch = file.name.match(mesPattern);
+            
+            if (mesMatch) {
+                const meses = {
+                    'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04',
+                    'mai': '05', 'jun': '06', 'jul': '07', 'ago': '08',
+                    'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+                };
+                const ano = mesMatch[3];
+                const mes = meses[mesMatch[2].toLowerCase()];
+                if (mes) {
+                    yearMonth = ano + mes;
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir do nome do ficheiro)`, 'info');
+                }
+            }
+            
+            // Padrão 2: formato "2024-09-01" no conteúdo do PDF
+            if (!yearMonth) {
+                const dataPattern = /(\d{4})-(\d{2})-\d{2}/;
+                const dataMatch = text.match(dataPattern);
+                if (dataMatch) {
+                    yearMonth = dataMatch[1] + dataMatch[2];
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir de data no PDF)`, 'info');
+                }
+            }
+            
+            // Padrão 3: formato "01-09-2024" no conteúdo (PT)
+            if (!yearMonth) {
+                const dataPTPattern = /(\d{2})-(\d{2})-(\d{4})/;
+                const dataPTMatch = text.match(dataPTPattern);
+                if (dataPTMatch) {
+                    yearMonth = dataPTMatch[3] + dataPTMatch[2];
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir de data PT no PDF)`, 'info');
+                }
+            }
+            
+            if (yearMonth) {
                 VDCSystem.dataMonths.add(yearMonth);
-                logAudit(`   Mês detetado: ${yearMonth}`, 'info');
             }
             
             const isFormatoSetembro = text.includes('DESCRIÇÃO DA TARIFA') || 
@@ -1741,7 +1779,14 @@ function performForensicCrossings() {
     ev.jurosCompensatorios = forensicRound(ev.iva23 * 0.06);
     ev.multaDolo = forensicRound(maiorDiscrepancia * 0.10);
     
-    const mesesDados = VDCSystem.dataMonths.size;
+    // FILTRAR MESES VÁLIDOS (formato YYYYMM com mês entre 01-12)
+    const mesesValidos = Array.from(VDCSystem.dataMonths).filter(m => 
+        /^\d{6}$/.test(m) && 
+        parseInt(m.substring(4,6)) >= 1 && 
+        parseInt(m.substring(4,6)) <= 12
+    );
+    const mesesDados = mesesValidos.length;
+    
     if (mesesDados > 0) {
         const discrepanciaMensalMedia = maiorDiscrepancia / mesesDados;
         ev.quantumBeneficio = forensicRound(discrepanciaMensalMedia * 12 * 38000 * 7);
@@ -1821,10 +1866,17 @@ function updateDashboard() {
 
     setElementText('quantumValue', formatCurrency(ev.quantumBeneficio || 0));
 
+    // FILTRAR MESES VÁLIDOS PARA A FÓRMULA
+    const mesesValidos = Array.from(VDCSystem.dataMonths).filter(m => 
+        /^\d{6}$/.test(m) && 
+        parseInt(m.substring(4,6)) >= 1 && 
+        parseInt(m.substring(4,6)) <= 12
+    );
+    const mesesDados = mesesValidos.length || 1;
+    
     const quantumFormulaEl = document.getElementById('quantumFormula');
     if (quantumFormulaEl) {
-        const meses = VDCSystem.dataMonths.size || 1;
-        quantumFormulaEl.textContent = `Fórmula: (discrepância / ${meses} meses) × 12 meses × 38.000 motoristas × 7 anos`;
+        quantumFormulaEl.textContent = `Fórmula: (discrepância / ${mesesDados} meses) × 12 meses × 38.000 motoristas × 7 anos`;
     }
 
     const jurosCard = document.getElementById('jurosCard');
@@ -2346,5 +2398,5 @@ window.forensicDataSynchronization = forensicDataSynchronization;
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.7.1 FINAL
-   TODAS AS CORREÇÕES APLICADAS
+   CORREÇÃO: Extração de meses corrigida, quantum correto
    ===================================================================== */
