@@ -108,7 +108,7 @@
         <!-- APP CONTAINER (SIDEBAR + ANALYSIS AREA) -->
         <div class="app-container">
             
-            <!-- SIDEBAR ESQUERDA -->
+            <!-- SIDEBAR ESQUERDA - MAIS LARGA -->
             <aside class="sidebar">
                 
                 <!-- IDENTIFICAÇÃO DO SUJEITO PASSIVO -->
@@ -226,78 +226,78 @@
                     </div>
                 </div>
 
-                <!-- MÓDULOS DE EXTRAÇÃO -->
+                <!-- MÓDULOS DE EXTRAÇÃO - AGORA COM MESMO FORMATO DOS KPI CARDS -->
                 <div class="extraction-modules">
-                    <!-- MÓDULO SAF-T -->
+                    <!-- MÓDULO SAF-T - AGORA COM FORMATO KPI -->
                     <div class="module-card">
                         <h4 id="moduleSaftTitle"><i class="fas fa-file-code"></i> MÓDULO SAF-T (EXTRAÇÃO)</h4>
                         <div class="module-values">
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="saftIliquidoLabel">Valor Ilíquido Total</span>
-                                <span id="saftIliquidoValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card highlight" style="width: 100%; margin: 0;">
+                                <h4 id="saftIliquidoLabel">Valor Ilíquido Total</h4>
+                                <p id="saftIliquidoValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="saftIvaLabel">Total IVA</span>
-                                <span id="saftIvaValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card highlight" style="width: 100%; margin: 0;">
+                                <h4 id="saftIvaLabel">Total IVA</h4>
+                                <p id="saftIvaValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="saftBrutoLabel">Valor Bruto Total</span>
-                                <span id="saftBrutoValue" class="module-value-amount highlight">0,00 €</span>
+                            <div class="kpi-card highlight" style="width: 100%; margin: 0;">
+                                <h4 id="saftBrutoLabel">Valor Bruto Total</h4>
+                                <p id="saftBrutoValue" class="kpi-card-value">0,00 €</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- MÓDULO EXTRATOS -->
+                    <!-- MÓDULO EXTRATOS - AGORA COM FORMATO KPI -->
                     <div class="module-card">
                         <h4 id="moduleStatementTitle"><i class="fas fa-file-contract"></i> MÓDULO EXTRATOS (MAPEAMENTO)</h4>
                         <div class="module-values">
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="stmtGanhosLabel">Ganhos na App</span>
-                                <span id="stmtGanhosValue" class="module-value-amount highlight">0,00 €</span>
+                            <div class="kpi-card highlight" style="width: 100%; margin: 0;">
+                                <h4 id="stmtGanhosLabel">Ganhos na App</h4>
+                                <p id="stmtGanhosValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="stmtCampanhasLabel">Campanhas</span>
-                                <span id="stmtCampanhasValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card" style="width: 100%; margin: 0;">
+                                <h4 id="stmtCampanhasLabel">Campanhas</h4>
+                                <p id="stmtCampanhasValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="stmtGorjetasLabel">Gorjetas</span>
-                                <span id="stmtGorjetasValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card" style="width: 100%; margin: 0;">
+                                <h4 id="stmtGorjetasLabel">Gorjetas</h4>
+                                <p id="stmtGorjetasValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="stmtPortagensLabel">Portagens</span>
-                                <span id="stmtPortagensValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card" style="width: 100%; margin: 0;">
+                                <h4 id="stmtPortagensLabel">Portagens</h4>
+                                <p id="stmtPortagensValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label" id="stmtTaxasCancelLabel">Taxas Cancelamento</span>
-                                <span id="stmtTaxasCancelValue" class="module-value-amount alert">0,00 €</span>
+                            <div class="kpi-card danger" style="width: 100%; margin: 0;">
+                                <h4 id="stmtTaxasCancelLabel">Taxas Cancelamento</h4>
+                                <p id="stmtTaxasCancelValue" class="kpi-card-value">0,00 €</p>
                             </div>
-                            <div class="module-value-item">
-                                <span class="module-value-label">Comissões (Extrato)</span>
-                                <span id="stmtComissaoValue" class="module-value-amount">0,00 €</span>
+                            <div class="kpi-card" style="width: 100%; margin: 0;">
+                                <h4>Comissões (Extrato)</h4>
+                                <p id="stmtComissaoValue" class="kpi-card-value">0,00 €</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- MÓDULO DAC7 -->
+                    <!-- MÓDULO DAC7 - AGORA COM FORMATO KPI E EXPANDIDO -->
                     <div class="module-card">
                         <h4 id="moduleDac7Title"><i class="fas fa-envelope-open-text"></i> MÓDULO DAC7 (DECOMPOSIÇÃO)</h4>
                         <div class="module-values">
-                            <div class="dac7-breakdown">
-                                <div class="quarter-box">
-                                    <span class="quarter-label" id="dac7Q1Label">1.º TRI</span>
-                                    <span id="dac7Q1Value" class="quarter-value">0,00 €</span>
+                            <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); width: 100%; gap: 0.5rem;">
+                                <div class="kpi-card" style="width: 100%; margin: 0;">
+                                    <h4 id="dac7Q1Label">1.º TRI</h4>
+                                    <p id="dac7Q1Value" class="kpi-card-value">0,00 €</p>
                                 </div>
-                                <div class="quarter-box">
-                                    <span class="quarter-label" id="dac7Q2Label">2.º TRI</span>
-                                    <span id="dac7Q2Value" class="quarter-value">0,00 €</span>
+                                <div class="kpi-card" style="width: 100%; margin: 0;">
+                                    <h4 id="dac7Q2Label">2.º TRI</h4>
+                                    <p id="dac7Q2Value" class="kpi-card-value">0,00 €</p>
                                 </div>
-                                <div class="quarter-box">
-                                    <span class="quarter-label" id="dac7Q3Label">3.º TRI</span>
-                                    <span id="dac7Q3Value" class="quarter-value">0,00 €</span>
+                                <div class="kpi-card" style="width: 100%; margin: 0;">
+                                    <h4 id="dac7Q3Label">3.º TRI</h4>
+                                    <p id="dac7Q3Value" class="kpi-card-value">0,00 €</p>
                                 </div>
-                                <div class="quarter-box">
-                                    <span class="quarter-label" id="dac7Q4Label">4.º TRI</span>
-                                    <span id="dac7Q4Value" class="quarter-value">0,00 €</span>
+                                <div class="kpi-card" style="width: 100%; margin: 0;">
+                                    <h4 id="dac7Q4Label">4.º TRI</h4>
+                                    <p id="dac7Q4Value" class="kpi-card-value">0,00 €</p>
                                 </div>
                             </div>
                         </div>
@@ -381,7 +381,7 @@
                     </div>
                 </div>
 
-                <!-- CONSOLE DE AUDITORIA -->
+                <!-- CONSOLE DE AUDITORIA - MAIS LARGO -->
                 <div class="console-section">
                     <div class="console-header">
                         <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA · BIG DATA</h3>
@@ -404,7 +404,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS -->
+    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS - COM DRAG & DROP -->
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -415,6 +415,24 @@
             </div>
             <div class="modal-body">
                 <div class="upload-section-modal">
+                    
+                    <!-- ÁREA DE DRAG & DROP GLOBAL -->
+                    <div id="globalDropZone" class="upload-group-modal" style="border: 2px dashed var(--accent-primary); background: rgba(0, 229, 255, 0.05);">
+                        <label style="color: var(--accent-primary); font-size: 1rem;"><i class="fas fa-cloud-upload-alt"></i> ÁREA DE CARREGAMENTO RÁPIDO BIG DATA</label>
+                        <p style="color: var(--text-secondary); margin: 0.5rem 0; font-size: 0.9rem;">Arraste e solte todos os ficheiros aqui (o sistema classifica automaticamente)</p>
+                        <button id="globalUploadBtn" class="upload-btn" style="background: var(--accent-primary); color: #000;">
+                            <i class="fas fa-folder-open"></i> SELECIONAR MÚLTIPLOS FICHEIROS
+                        </button>
+                        <input type="file" id="globalFileInput" class="file-input-modal" accept=".csv,.pdf,.txt,.xml,.json" multiple>
+                        <div id="globalProcessingStatus" style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: var(--border-radius-sm); display: none;">
+                            <p><i class="fas fa-spinner fa-spin"></i> A processar ficheiros em lote...</p>
+                        </div>
+                    </div>
+
+                    <!-- SEPARADOR -->
+                    <div style="text-align: center; margin: 1rem 0; color: var(--text-tertiary);">
+                        <i class="fas fa-arrow-down"></i> OU CARREGAMENTO POR CATEGORIA <i class="fas fa-arrow-down"></i>
+                    </div>
                     
                     <!-- CONTROL FILES -->
                     <div class="upload-group-modal">
