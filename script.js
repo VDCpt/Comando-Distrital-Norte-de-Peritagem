@@ -1021,3 +1021,1455 @@ function registerClient() {
     showToast('Identidade validada com sucesso', 'success');
     updateAnalysisButton();
 }
+// ============================================================================
+// 11. PROCESSAMENTO DE FICHEIROS - VERSÃO FINAL CORRIGIDA
+// ============================================================================
+async function processFile(file, type) {
+    const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
+    if (VDCSystem.processedFiles.has(fileKey)) {
+        logAudit(`⚠️ Ficheiro duplicado ignorado: ${file.name}`, 'warning');
+        return;
+    }
+    VDCSystem.processedFiles.add(fileKey);
+
+    let text = "";
+    let isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    
+    if (isPDF) {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = "";
+            
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                fullText += content.items.map(item => item.str).join(" ") + "\n";
+            }
+            
+            text = fullText
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/[–—−]/g, '-')
+                .replace(/(\d)[\s\n\r]+(\d)/g, '$1$2')
+                .replace(/[""]/g, '"')
+                .replace(/''/g, "'");
+            
+            logAudit(`📄 PDF processado: ${file.name} - Texto extraído e limpo (${text.length} caracteres)`, 'info');
+        } catch (pdfError) {
+            console.warn('Erro no processamento PDF, a usar fallback:', pdfError);
+            text = "[PDF_PROCESSING_ERROR]";
+        }
+    } else {
+        text = await readFileAsText(file);
+    }
+    
+    const contentToHash = text;
+    const hash = CryptoJS.SHA256(contentToHash).toString();
+
+    if(!VDCSystem.documents[type]) {
+        VDCSystem.documents[type] = { files: [], hashes: {}, totals: { records: 0 } };
+    }
+
+    if (!VDCSystem.documents[type].files) {
+        VDCSystem.documents[type].files = [];
+    }
+
+    const fileExists = VDCSystem.documents[type].files.some(f => f.name === file.name);
+    if (!fileExists) {
+        VDCSystem.documents[type].files.push({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+        });
+    }
+
+    VDCSystem.documents[type].hashes[file.name] = hash;
+    VDCSystem.documents[type].totals.records = VDCSystem.documents[type].files.length;
+
+    VDCSystem.analysis.evidenceIntegrity.push({
+        filename: file.name, type, hash,
+        timestamp: new Date().toLocaleString(),
+        size: file.size,
+        timestampUnix: Math.floor(Date.now() / 1000)
+    });
+
+    VDCSystem.fileSources.set(file.name, {
+        type: type,
+        hash: hash,
+        processedAt: new Date().toISOString()
+    });
+
+    // ============================================================
+    // PROCESSAMENTO DE EXTRATOS - VERSÃO FINAL COM EXTRAÇÃO DE MÊS CORRIGIDA
+    // ============================================================
+    if (type === 'statement') {
+        try {
+            let yearMonth = null;
+            
+            const mesPattern = /(\d{1,2})\s*(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\s*(\d{4})/i;
+            const mesMatch = file.name.match(mesPattern);
+            
+            if (mesMatch) {
+                const meses = {
+                    'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04',
+                    'mai': '05', 'jun': '06', 'jul': '07', 'ago': '08',
+                    'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+                };
+                const ano = mesMatch[3];
+                const mes = meses[mesMatch[2].toLowerCase()];
+                if (mes) {
+                    yearMonth = ano + mes;
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir do nome do ficheiro)`, 'info');
+                }
+            }
+            
+            if (!yearMonth) {
+                const dataPattern = /(\d{4})-(\d{2})-\d{2}/;
+                const dataMatch = text.match(dataPattern);
+                if (dataMatch) {
+                    yearMonth = dataMatch[1] + dataMatch[2];
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir de data no PDF)`, 'info');
+                }
+            }
+            
+            if (!yearMonth) {
+                const dataPTPattern = /(\d{2})-(\d{2})-(\d{4})/;
+                const dataPTMatch = text.match(dataPTPattern);
+                if (dataPTMatch) {
+                    yearMonth = dataPTMatch[3] + dataPTMatch[2];
+                    logAudit(`   Mês detetado: ${yearMonth} (a partir de data PT no PDF)`, 'info');
+                }
+            }
+            
+            if (yearMonth) {
+                VDCSystem.dataMonths.add(yearMonth);
+            }
+            
+            const isFormatoSetembro = text.includes('DESCRIÇÃO DA TARIFA') || 
+                                      text.includes('Taxa de viagem') ||
+                                      text.includes('OUTRAS EVENTUAIS DEDUÇÕES');
+            
+            let ganhos = 0, campanhas = 0, gorjetas = 0, taxasCancel = 0, comissao = 0;
+            let portagens = 0, ganhosLiq = 0;
+            
+            if (isFormatoSetembro) {
+                logAudit(`   Formato setembro detetado`, 'info');
+                
+                const taxaViagemMatch = text.match(/Taxa de viagem\s*€?\s*([\d\s,.]+)/i);
+                if (taxaViagemMatch) {
+                    ganhos = toForensicNumber(taxaViagemMatch[1]);
+                    logAudit(`   Taxa de viagem: ${formatCurrency(ganhos)}`, 'success');
+                }
+                
+                const taxaCancelMatch = text.match(/Taxa de cancelamento\s*€?\s*([\d\s,.]+)/i);
+                if (taxaCancelMatch) {
+                    taxasCancel = toForensicNumber(taxaCancelMatch[1]);
+                    logAudit(`   Taxa de cancelamento: ${formatCurrency(taxasCancel)}`, 'info');
+                }
+                
+                const portagemMatch = text.match(/Portagem\s*€?\s*([\d\s,.]+)/i);
+                if (portagemMatch) {
+                    portagens = toForensicNumber(portagemMatch[1]);
+                    logAudit(`   Portagem: ${formatCurrency(portagens)}`, 'info');
+                }
+                
+                const comissaoBoltMatch = text.match(/Comissão da Bolt\s*€?\s*([\d\s,.]+)/i);
+                if (comissaoBoltMatch) {
+                    comissao = toForensicNumber(comissaoBoltMatch[1]);
+                    logAudit(`   Comissão da Bolt: ${formatCurrency(comissao)}`, 'info');
+                }
+                
+                const outrasComissõesMatch = text.match(/Outras comissões\s*€?\s*([\d\s,.]+)/i);
+                if (outrasComissõesMatch) {
+                    comissao += toForensicNumber(outrasComissõesMatch[1]);
+                    logAudit(`   Outras comissões: +${formatCurrency(toForensicNumber(outrasComissõesMatch[1]))}`, 'info');
+                }
+                
+                const ganhosTotais = ganhos + taxasCancel + portagens;
+                ganhos = ganhosTotais;
+                ganhosLiq = ganhos - comissao;
+                
+                logAudit(`   Ganhos totais: ${formatCurrency(ganhos)}`, 'success');
+                logAudit(`   Comissões totais: ${formatCurrency(comissao)}`, 'info');
+                logAudit(`   Ganhos líquidos: ${formatCurrency(ganhosLiq)}`, 'success');
+                
+            } else {
+                const ganhosPattern = /Ganhos na app\s*([\d\s,.]+)/i;
+                const campanhasPattern = /Ganhos da campanha\s*([\d\s,.]+)/i;
+                const gorjetasPattern = /Gorjetas dos passageiros\s*([\d\s,.]+)/i;
+                const taxasCancelPattern = /Taxas de cancelamento\s*([\d\s,.]+)/i;
+                const comissaoPattern = /Comissão da app\s*-?\s*([\d\s,.]+)/i;
+                
+                const liquidosPattern = /Ganhos líquidos[\s\S]*?Ganhos\s*([\d\s,.]+)[\s\S]*?Despesas\s*-?\s*([\d\s,.]+)[\s\S]*?Ganhos líquidos\s*([\d\s,.]+)/i;
+                
+                const ganhosMatch = text.match(ganhosPattern);
+                if (ganhosMatch) {
+                    ganhos = toForensicNumber(ganhosMatch[1]);
+                }
+                
+                const campanhasMatch = text.match(campanhasPattern);
+                if (campanhasMatch) {
+                    campanhas = toForensicNumber(campanhasMatch[1]);
+                }
+                
+                const gorjetasMatch = text.match(gorjetasPattern);
+                if (gorjetasMatch) {
+                    gorjetas = toForensicNumber(gorjetasMatch[1]);
+                }
+                
+                const taxasCancelMatch = text.match(taxasCancelPattern);
+                if (taxasCancelMatch) {
+                    taxasCancel = toForensicNumber(taxasCancelMatch[1]);
+                }
+                
+                const comissaoMatch = text.match(comissaoPattern);
+                if (comissaoMatch) {
+                    comissao = toForensicNumber(comissaoMatch[1]);
+                }
+                
+                const liquidosMatch = text.match(liquidosPattern);
+                if (liquidosMatch) {
+                    ganhosLiq = toForensicNumber(liquidosMatch[3]);
+                } else {
+                    ganhosLiq = ganhos + campanhas + gorjetas - comissao - taxasCancel;
+                }
+            }
+            
+            VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
+            VDCSystem.documents.statements.totals.campanhas = (VDCSystem.documents.statements.totals.campanhas || 0) + campanhas;
+            VDCSystem.documents.statements.totals.gorjetas = (VDCSystem.documents.statements.totals.gorjetas || 0) + gorjetas;
+            VDCSystem.documents.statements.totals.portagens = (VDCSystem.documents.statements.totals.portagens || 0) + portagens;
+            VDCSystem.documents.statements.totals.taxasCancelamento = (VDCSystem.documents.statements.totals.taxasCancelamento || 0) + taxasCancel;
+            VDCSystem.documents.statements.totals.despesasComissao = (VDCSystem.documents.statements.totals.despesasComissao || 0) + comissao;
+            VDCSystem.documents.statements.totals.ganhosLiquidos = (VDCSystem.documents.statements.totals.ganhosLiquidos || 0) + ganhosLiq;
+            
+            ValueSource.registerValue('stmtGanhosValue', ganhos, file.name, isFormatoSetembro ? 'tabela DESCRIÇÃO DA TARIFA' : 'tabela Transações');
+            ValueSource.registerValue('stmtComissaoValue', comissao, file.name, isFormatoSetembro ? 'tabela OUTRAS EVENTUAIS DEDUÇÕES' : 'tabela Transações');
+            
+            logAudit(`📊 Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Comissões: ${formatCurrency(comissao)} | Líquido: ${formatCurrency(ganhosLiq)}`, 'success');
+            
+        } catch(e) {
+            console.warn(`Erro ao processar extrato ${file.name}:`, e);
+            logAudit(`⚠️ Erro no processamento do extrato: ${e.message}`, 'warning');
+        }
+    }
+
+    // ============================================================
+    // PROCESSAMENTO DE FATURAS - VERSÃO FINAL
+    // ============================================================
+    if (type === 'invoice' || (type === 'unknown' && file.name.match(/pt\d{4}-\d{5}/i))) {
+        try {
+            if (type === 'unknown') {
+                type = 'invoice';
+                logAudit(`📌 Ficheiro reclassificado como fatura: ${file.name}`, 'info');
+            }
+            
+            const faturaPattern = /Fatura n\.º\s*([A-Z0-9\-\s]+)/i;
+            const ptPattern = /(PT\d{4,5}-\d{3,5})/i;
+            
+            const faturaMatch = text.match(faturaPattern);
+            const ptMatch = text.match(ptPattern) || file.name.match(ptPattern);
+            
+            if (faturaMatch) {
+                logAudit(`   Nº Fatura: ${faturaMatch[1].trim()}`, 'info');
+            } else if (ptMatch) {
+                logAudit(`   Nº Fatura: ${ptMatch[1]}`, 'info');
+            }
+            
+            const periodoPattern = /Período:\s*(\d{2}-\d{2}-\d{4})\s*-\s*(\d{2}-\d{2}-\d{4})/i;
+            const periodoMatch = text.match(periodoPattern);
+            if (periodoMatch) {
+                logAudit(`   Período: ${periodoMatch[1]} a ${periodoMatch[2]}`, 'info');
+            }
+            
+            let valorFatura = 0;
+            
+            const tabelaPattern = /Comissões da Bolt.*?(\d+\.\d+).*?(\d+\.\d+).*?(\d+\.\d+).*?(\d+\.\d+)/is;
+            const tabelaMatch = text.match(tabelaPattern);
+            
+            if (tabelaMatch) {
+                valorFatura = toForensicNumber(tabelaMatch[4]);
+                logAudit(`   Valor da tabela (coluna Total): ${formatCurrency(valorFatura)}`, 'success');
+            }
+            
+            if (valorFatura === 0) {
+                const totalIVAPattern = /Total com IVA\s*\(EUR\)\s*([\d\s,.]+)/i;
+                const totalIVAMatch = text.match(totalIVAPattern);
+                if (totalIVAMatch) {
+                    valorFatura = toForensicNumber(totalIVAMatch[1]);
+                    logAudit(`   Total com IVA (EUR): ${formatCurrency(valorFatura)}`, 'success');
+                }
+            }
+            
+            if (valorFatura === 0) {
+                const valorPattern = /(\d+\.\d{2})/g;
+                const valores = [...text.matchAll(valorPattern)];
+                for (const match of valores) {
+                    const val = parseFloat(match[1]);
+                    if (val > 0 && val < 1000) {
+                        valorFatura = val;
+                    }
+                }
+                if (valorFatura > 0) {
+                    logAudit(`   Valor encontrado: ${formatCurrency(valorFatura)}`, 'info');
+                }
+            }
+            
+            if (valorFatura > 0) {
+                if (!VDCSystem.documents.invoices.totals) {
+                    VDCSystem.documents.invoices.totals = { invoiceValue: 0, records: 0 };
+                }
+                
+                VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + valorFatura;
+                VDCSystem.documents.invoices.totals.records = (VDCSystem.documents.invoices.totals.records || 0) + 1;
+                
+                ValueSource.registerValue('kpiInvValue', valorFatura, file.name, 'extração de fatura');
+                
+                logAudit(`💰 Fatura processada: ${file.name} | +${formatCurrency(valorFatura)} | Total acumulado: ${formatCurrency(VDCSystem.documents.invoices.totals.invoiceValue)} (${VDCSystem.documents.invoices.totals.records} faturas)`, 'success');
+            } else {
+                logAudit(`⚠️ Não foi possível extrair valor da fatura: ${file.name}`, 'warning');
+            }
+            
+        } catch(e) {
+            console.warn(`Erro ao processar fatura ${file.name}:`, e);
+            logAudit(`⚠️ Erro no processamento da fatura: ${e.message}`, 'warning');
+        }
+    }
+
+    // ============================================================
+    // PROCESSAMENTO DE SAF-T
+    // ============================================================
+    if (type === 'saft' && file.name.match(/131509.*\.csv$/i)) {
+        try {
+            const monthMatch = file.name.match(/131509_(\d{6})/);
+            if (monthMatch && monthMatch[1]) {
+                const yearMonth = monthMatch[1];
+                VDCSystem.dataMonths.add(yearMonth);
+                logAudit(`   Mês detetado: ${yearMonth}`, 'info');
+            }
+            
+            if (text.charCodeAt(0) === 0xFEFF || text.charCodeAt(0) === 0xFFFE) {
+                text = text.substring(1);
+            }
+            
+            const parseResult = Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true,
+                quotes: true,
+                delimiter: ','
+            });
+            
+            let fileTotal = 0;
+            let fileIVA = 0;
+            let fileSemIVA = 0;
+            let fileCount = 0;
+            
+            const columns = Object.keys(parseResult.data[0] || {});
+            
+            let ivacol = columns.find(c => 
+                c.toLowerCase().includes('iva') && !c.toLowerCase().includes('preço')
+            );
+            let semIVAcol = columns.find(c => 
+                c.toLowerCase().includes('sem iva') || 
+                c.toLowerCase().includes('preço da viagem (sem iva)')
+            );
+            let totalCol = columns.find(c => 
+                c.toLowerCase().includes('preço da viagem') && 
+                !c.toLowerCase().includes('sem')
+            );
+            
+            if (!ivacol && parseResult.data[0] && parseResult.data[0].length > 13) {
+                ivacol = 13;
+                semIVAcol = 14;
+                totalCol = 15;
+            }
+            
+            for (const row of parseResult.data) {
+                if (!row) continue;
+                
+                let valorIVA = 0;
+                let valorSemIVA = 0;
+                let valorTotal = 0;
+                
+                if (ivacol !== undefined) {
+                    if (typeof ivacol === 'number') {
+                        valorIVA = toForensicNumber(Object.values(row)[ivacol] || '0');
+                    } else {
+                        valorIVA = toForensicNumber(row[ivacol] || '0');
+                    }
+                }
+                
+                if (semIVAcol !== undefined) {
+                    if (typeof semIVAcol === 'number') {
+                        valorSemIVA = toForensicNumber(Object.values(row)[semIVAcol] || '0');
+                    } else {
+                        valorSemIVA = toForensicNumber(row[semIVAcol] || '0');
+                    }
+                }
+                
+                if (totalCol !== undefined) {
+                    if (typeof totalCol === 'number') {
+                        valorTotal = toForensicNumber(Object.values(row)[totalCol] || '0');
+                    } else {
+                        valorTotal = toForensicNumber(row[totalCol] || '0');
+                    }
+                }
+                
+                if (valorTotal > 0.01 && valorTotal < 1000) {
+                    fileTotal += valorTotal;
+                    fileIVA += valorIVA;
+                    fileSemIVA += valorSemIVA;
+                    fileCount++;
+                }
+            }
+            
+            if (!VDCSystem.documents.saft.totals) {
+                VDCSystem.documents.saft.totals = { records: 0, iliquido: 0, iva: 0, bruto: 0 };
+            }
+            
+            VDCSystem.documents.saft.totals.bruto = (VDCSystem.documents.saft.totals.bruto || 0) + fileTotal;
+            VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + fileIVA;
+            VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + fileSemIVA;
+            
+            ValueSource.registerValue('saftBrutoValue', fileTotal, file.name, 'soma de valores totais do CSV');
+            ValueSource.registerValue('saftIvaValue', fileIVA, file.name, 'soma de IVA do CSV');
+            ValueSource.registerValue('saftIliquidoValue', fileSemIVA, file.name, 'soma de valores sem IVA');
+            
+            logAudit(`📊 SAF-T CSV: ${file.name} | +${formatCurrency(fileTotal)} (${fileCount} registos) | IVA: +${formatCurrency(fileIVA)}`, 'success');
+            
+        } catch(e) {
+            console.warn(`Erro ao processar SAF-T ${file.name}:`, e);
+            logAudit(`⚠️ Erro no processamento SAF-T: ${e.message}`, 'warning');
+        }
+    }
+
+    // ============================================================
+    // PROCESSAMENTO DE DAC7
+    // ============================================================
+    if (type === 'dac7') {
+        try {
+            const dac7AnualRegex = /Total de receitas anuais:\s*([\d\s,.]+)€/i;
+            const dac7Q4Regex = /Ganhos do 4\.º trimestre:\s*([\d\s,.]+)€/i;
+            
+            const anualMatch = text.match(dac7AnualRegex);
+            if (anualMatch) {
+                const val = toForensicNumber(anualMatch[1]);
+                if (VDCSystem.documents.dac7.totals.q4 === 0) {
+                    VDCSystem.documents.dac7.totals.q4 = val;
+                    ValueSource.registerValue('dac7Q4Value', val, file.name, 'extração DAC7 anual');
+                    logAudit(`📈 DAC7 anual extraído: ${formatCurrency(val)}`, 'success');
+                }
+            }
+            
+            const q4Match = text.match(dac7Q4Regex);
+            if (q4Match && VDCSystem.documents.dac7.totals.q4 === 0) {
+                const val = toForensicNumber(q4Match[1]);
+                VDCSystem.documents.dac7.totals.q4 = val;
+                ValueSource.registerValue('dac7Q4Value', val, file.name, 'extração DAC7 Q4');
+            }
+            
+        } catch(e) {
+            console.warn(`Erro ao processar DAC7 ${file.name}:`, e);
+            logAudit(`⚠️ Erro no processamento DAC7: ${e.message}`, 'warning');
+        }
+    }
+
+    // ============================================================
+    // PROCESSAMENTO DE CONTROLO
+    // ============================================================
+    if (type === 'control') {
+        logAudit(`🔐 Ficheiro de controlo registado: ${file.name}`, 'info');
+    }
+
+    const listId = getListIdForType(type);
+    const listEl = document.getElementById(listId);
+    
+    const iconClass = isPDF ? 'fa-file-pdf' : 'fa-file-csv';
+    const iconColor = isPDF ? '#e74c3c' : '#2ecc71';
+
+    if(listEl) {
+        listEl.style.display = 'block';
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item-modal';
+        
+        const demoBadge = VDCSystem.demoMode ? '<span class="demo-badge">DEMO</span>' : '';
+        
+        fileItem.innerHTML = `
+            <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
+            <span class="file-name-modal">${file.name} ${demoBadge}</span>
+            <span class="file-hash-modal">${hash.substring(0,8)}...</span>
+        `;
+        listEl.appendChild(fileItem);
+    }
+    
+    forensicDataSynchronization();
+}
+
+function getListIdForType(type) {
+    switch(type) {
+        case 'invoice': return 'invoicesFileListModal';
+        case 'statement': return 'statementsFileListModal';
+        case 'dac7': return 'dac7FileListModal';
+        case 'control': return 'controlFileListModal';
+        case 'saft': return 'saftFileListModal';
+        default: return 'globalFileListModal';
+    }
+}
+
+function updateEvidenceSummary() {
+    const tipos = {
+        control: 'summaryControl',
+        saft: 'summarySaft',
+        invoices: 'summaryInvoices',
+        statements: 'summaryStatements',
+        dac7: 'summaryDac7'
+    };
+    
+    Object.keys(tipos).forEach(k => {
+        const count = VDCSystem.documents[k]?.files?.length || 0;
+        const elId = tipos[k];
+        const el = document.getElementById(elId);
+        if(el) el.textContent = count;
+    });
+    
+    let total = 0;
+    ['control', 'saft', 'invoices', 'statements', 'dac7'].forEach(k => {
+        total += VDCSystem.documents[k]?.files?.length || 0;
+    });
+    setElementText('summaryTotal', total);
+    VDCSystem.counts.total = total;
+}
+
+function updateCounters() {
+    let total = 0;
+    const tipoMap = {
+        control: 'controlCountCompact',
+        saft: 'saftCountCompact',
+        invoices: 'invoiceCountCompact',
+        statements: 'statementCountCompact',
+        dac7: 'dac7CountCompact'
+    };
+    
+    Object.keys(tipoMap).forEach(k => {
+        const count = VDCSystem.documents[k]?.files?.length || 0;
+        total += count;
+        setElementText(tipoMap[k], count);
+    });
+    
+    document.getElementById('evidenceCountTotal').textContent = total;
+    VDCSystem.counts.total = total;
+}
+
+// ============================================================================
+// 12. MODO DEMO
+// ============================================================================
+function activateDemoMode() {
+    if(VDCSystem.processing) return;
+    VDCSystem.demoMode = true;
+    VDCSystem.processing = true;
+
+    const demoBtn = document.getElementById('demoModeBtn');
+    if(demoBtn) {
+        demoBtn.disabled = true;
+        demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
+    }
+
+    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.1 SMOKING GUN...', 'info');
+
+    document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
+    document.getElementById('clientNIFFixed').value = '503244732';
+    registerClient();
+
+    VDCSystem.dataMonths.add('202409');
+    VDCSystem.dataMonths.add('202410');
+    VDCSystem.dataMonths.add('202411');
+    VDCSystem.dataMonths.add('202412');
+
+    simulateUpload('control', 1);
+    simulateUpload('saft', 4);
+    simulateUpload('invoices', 2);
+    simulateUpload('statements', 4);
+    simulateUpload('dac7', 1);
+
+    setTimeout(() => {
+        VDCSystem.documents.saft.totals.bruto = forensicRound(8758.03);
+        VDCSystem.documents.saft.totals.iliquido = forensicRound(8261.32);
+        VDCSystem.documents.saft.totals.iva = forensicRound(496.71);
+        
+        VDCSystem.documents.statements.totals.ganhosApp = forensicRound(9652.13);
+        VDCSystem.documents.statements.totals.campanhas = forensicRound(405.00);
+        VDCSystem.documents.statements.totals.gorjetas = forensicRound(46.00);
+        VDCSystem.documents.statements.totals.taxasCancelamento = forensicRound(58.10);
+        VDCSystem.documents.statements.totals.despesasComissao = forensicRound(2425.04);
+        VDCSystem.documents.statements.totals.ganhosLiquidos = forensicRound(7722.05);
+        
+        VDCSystem.documents.dac7.totals.q4 = forensicRound(7755.16);
+        VDCSystem.documents.invoices.totals.invoiceValue = forensicRound(262.94);
+
+        ValueSource.registerValue('saftBrutoValue', 8758.03, 'demo_saft_combined.csv', 'dados simulados');
+        ValueSource.registerValue('stmtGanhosValue', 9652.13, 'demo_statements_combined.pdf', 'dados simulados');
+        ValueSource.registerValue('dac7Q4Value', 7755.16, 'demo_dac7.pdf', 'dados simulados');
+
+        performAudit();
+
+        logAudit('✅ Perícia simulada concluída.', 'success');
+        VDCSystem.processing = false;
+        if(demoBtn) {
+            demoBtn.disabled = false;
+            demoBtn.innerHTML = `<i class="fas fa-flask"></i> ${translations[currentLang].navDemo}`;
+        }
+        
+        forensicDataSynchronization();
+    }, 1500);
+}
+
+function simulateUpload(type, count) {
+    if (!VDCSystem.documents[type]) {
+        VDCSystem.documents[type] = { files: [], hashes: {}, totals: { records: 0 } };
+    }
+    
+    if (!VDCSystem.documents[type].files) {
+        VDCSystem.documents[type].files = [];
+    }
+    
+    for (let i = 0; i < count; i++) {
+        const fileName = `demo_${type}_${i + 1}.${type === 'invoices' ? 'pdf' : type === 'saft' ? 'csv' : 'csv'}`;
+        const fileObj = { name: fileName, size: 1024 * (i + 1) };
+        
+        const fileExists = VDCSystem.documents[type].files.some(f => f.name === fileName);
+        if (!fileExists) {
+            VDCSystem.documents[type].files.push(fileObj);
+        }
+        
+        VDCSystem.documents[type].totals.records = VDCSystem.documents[type].files.length;
+
+        const demoHash = 'DEMO-' + CryptoJS.SHA256(Date.now().toString() + i).toString().substring(0, 8) + '...';
+        VDCSystem.analysis.evidenceIntegrity.push({ 
+            filename: fileName, 
+            type: type === 'invoices' ? 'invoice' : type, 
+            hash: demoHash, 
+            timestamp: new Date().toLocaleString(), 
+            size: 1024 * (i + 1), 
+            timestampUnix: Math.floor(Date.now() / 1000) 
+        });
+        
+        const listId = getListIdForType(type === 'invoices' ? 'invoice' : type);
+        const listEl = document.getElementById(listId);
+        if (listEl) {
+            listEl.innerHTML += `<div class="file-item-modal">
+                <i class="fas fa-flask" style="color: #f59e0b;"></i>
+                <span class="file-name-modal">${fileName} <span class="demo-badge">DEMO</span></span>
+                <span class="file-hash-modal">${demoHash.substring(0,8)}</span>
+            </div>`;
+        }
+    }
+    updateCounters();
+    updateEvidenceSummary();
+}
+
+// ============================================================================
+// 13. MOTOR DE PERÍCIA FORENSE - NOVAS REGRAS DE CRUZAMENTO
+// ============================================================================
+function performAudit() {
+    if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
+
+    const hasFiles = Object.values(VDCSystem.documents).some(d => d.files && d.files.length > 0);
+    if (!hasFiles) {
+        return showToast('Carregue pelo menos um ficheiro de evidência antes de executar a perícia.', 'error');
+    }
+
+    VDCSystem.forensicMetadata = getForensicMetadata();
+    VDCSystem.performanceTiming.start = performance.now();
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if(analyzeBtn) {
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A EXECUTAR PERÍCIA BIG DATA...';
+    }
+
+    setTimeout(() => {
+        try {
+            const saftBruto = VDCSystem.documents.saft?.totals?.bruto || 0;
+            const saftIliquido = VDCSystem.documents.saft?.totals?.iliquido || 0;
+            const saftIva = VDCSystem.documents.saft?.totals?.iva || 0;
+            
+            const stmtGross = VDCSystem.documents.statements?.totals?.ganhosApp || 0;
+            const stmtCommission = VDCSystem.documents.statements?.totals?.despesasComissao || 0;
+            const stmtCampanhas = VDCSystem.documents.statements?.totals?.campanhas || 0;
+            const stmtGorjetas = VDCSystem.documents.statements?.totals?.gorjetas || 0;
+            const stmtPortagens = VDCSystem.documents.statements?.totals?.portagens || 0;
+            const stmtCancelamentos = VDCSystem.documents.statements?.totals?.taxasCancelamento || 0;
+            const stmtLiquido = VDCSystem.documents.statements?.totals?.ganhosLiquidos || 0;
+            
+            const invoiceVal = VDCSystem.documents.invoices?.totals?.invoiceValue || 0;
+            
+            const dac7Q4 = VDCSystem.documents.dac7?.totals?.q4 || 0;
+            
+            const grossRevenue = stmtGross > 0 ? stmtGross : saftBruto;
+            const platformCommission = stmtCommission;
+            
+            VDCSystem.analysis.extractedValues = {
+                saftBruto: saftBruto,
+                saftIliquido: saftIliquido,
+                saftIva: saftIva,
+                ganhosApp: stmtGross,
+                comissaoApp: platformCommission,
+                campanhas: stmtCampanhas,
+                gorjetas: stmtGorjetas,
+                portagens: stmtPortagens,
+                taxasCancelamento: stmtCancelamentos,
+                ganhosLiquidos: stmtLiquido,
+                faturaPlataforma: invoiceVal,
+                dac7Q4: dac7Q4,
+                rendimentosBrutos: grossRevenue,
+                comissaoTotal: platformCommission
+            };
+
+            performForensicCrossings();
+            selectQuestions(VDCSystem.analysis.verdict ? VDCSystem.analysis.verdict.key : 'low');
+            updateDashboard();
+            updateModulesUI();
+            renderChart();
+            showAlerts();
+
+            VDCSystem.performanceTiming.end = performance.now();
+            const duration = (VDCSystem.performanceTiming.end - VDCSystem.performanceTiming.start).toFixed(2);
+            
+            logAudit(`📊 VALORES UTILIZADOS NA PERÍCIA:`, 'info');
+            logAudit(`   Ganhos App: ${formatCurrency(stmtGross)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   Comissões Extrato: ${formatCurrency(platformCommission)}`, 'info');
+            logAudit(`   Fatura Comissões: ${formatCurrency(invoiceVal)} (${VDCSystem.documents.invoices?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   Discrepância Crítica: ${formatCurrency(platformCommission - invoiceVal)}`, 'info');
+            logAudit(`   Meses com dados: ${VDCSystem.dataMonths.size}`, 'info');
+            
+            logAudit(`✅ Perícia BIG DATA concluída em ${duration}ms. SMOKING GUN DETETADA: ${VDCSystem.analysis.crossings.discrepanciaCritica > 0 ? 'SIM' : 'NÃO'}`, 'success');
+            
+            forensicDataSynchronization();
+
+        } catch(error) {
+            console.error('Erro na perícia:', error);
+            logAudit(`❌ ERRO CRÍTICO NA PERÍCIA: ${error.message}`, 'error');
+            showToast('Erro durante a execução da perícia. Verifique os ficheiros carregados.', 'error');
+        } finally {
+            if(analyzeBtn) {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = `<i class="fas fa-search-dollar"></i> ${translations[currentLang].btnAnalyze}`;
+            }
+        }
+    }, 1000);
+}
+
+function performForensicCrossings() {
+    const ev = VDCSystem.analysis.extractedValues;
+    const cross = VDCSystem.analysis.crossings;
+
+    const saftBruto = ev.saftBruto || 0;
+    const ganhosApp = ev.ganhosApp || 0;
+    const comissaoTotal = ev.comissaoTotal || 0;
+    const faturaPlataforma = ev.faturaPlataforma || 0;
+    const dac7Q4 = ev.dac7Q4 || 0;
+    const ganhosLiquidos = ev.ganhosLiquidos || 0;
+
+    // REGRA 1: Soma Total SAF-T vs DAC7
+    cross.saftVsDac7Alert = Math.abs(saftBruto - dac7Q4) > 0.01;
+    
+    // REGRA 2: SAF-T - Comissão vs Ganhos Líquidos
+    const saftMenosComissao = saftBruto - comissaoTotal;
+    cross.saftMenosComissaoVsLiquidoAlert = Math.abs(saftMenosComissao - ganhosLiquidos) > 0.01;
+    
+    // REGRA 3: SAF-T vs Ganhos Brutos
+    cross.saftVsGanhosAlert = Math.abs(saftBruto - ganhosApp) > 0.01;
+    
+    // REGRA 4: Comissões vs Fatura (PROVA RAINHA)
+    cross.discrepanciaCritica = comissaoTotal - faturaPlataforma;
+    cross.percentagemOmissao = comissaoTotal > 0 ? (cross.discrepanciaCritica / comissaoTotal) * 100 : 0;
+    cross.ivaFalta = cross.discrepanciaCritica * 0.23;
+    
+    // REGRA 5: Taxas Cancelamento incluídas em Ganhos (já é feito no processamento)
+    
+    // REGRA 6: Ganhos Campanha + Gorjetas + Portagens (já são somados no processamento)
+    
+    // Cálculo do Impacto no Mercado (38.000 motoristas, 7 anos)
+    const mesesDados = VDCSystem.dataMonths.size || 1;
+    const discrepanciaMensalMedia = cross.discrepanciaCritica / mesesDados;
+    
+    cross.btor = comissaoTotal; // Base Tributável Operacional Retida
+    cross.btf = faturaPlataforma; // Base Tributável Faturada
+    
+    cross.impactoMensalMercado = discrepanciaMensalMedia * 38000;
+    cross.impactoAnualMercado = cross.impactoMensalMercado * 12;
+    cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+    
+    // Ativar alerta principal se houver discrepância crítica
+    cross.bigDataAlertActive = Math.abs(cross.discrepanciaCritica) > 0.01;
+    
+    // Verdict baseado na percentagem de omissão
+    const baseComparacao = Math.max(saftBruto, ganhosApp, dac7Q4);
+    VDCSystem.analysis.verdict = getRiskVerdict(Math.abs(cross.discrepanciaCritica), baseComparacao);
+    
+    logAudit(`🔫 SMOKING GUN: Comissões ${formatCurrency(comissaoTotal)} vs Fatura ${formatCurrency(faturaPlataforma)} = ${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)`, 'error');
+    logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)}`, 'error');
+}
+
+function selectQuestions(riskKey) {
+    const filtered = QUESTIONS_CACHE.filter(q => {
+        if (riskKey === 'high') return true;
+        if (riskKey === 'med') return q.type !== 'high';
+        if (riskKey === 'low') return q.type === 'low';
+        return true;
+    });
+    
+    const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+    VDCSystem.analysis.selectedQuestions = shuffled.slice(0, 6);
+}
+
+function updateDashboard() {
+    const ev = VDCSystem.analysis.extractedValues;
+    const cross = VDCSystem.analysis.crossings;
+    
+    const netValue = (ev.rendimentosBrutos || 0) - (ev.comissaoTotal || 0);
+
+    setElementText('statNet', formatCurrency(netValue));
+    setElementText('statComm', formatCurrency(ev.comissaoTotal || 0));
+    setElementText('statJuros', formatCurrency(cross.discrepanciaCritica || 0));
+
+    setElementText('kpiGrossValue', formatCurrency(ev.rendimentosBrutos || 0));
+    setElementText('kpiCommValue', formatCurrency(ev.comissaoTotal || 0));
+    setElementText('kpiNetValue', formatCurrency(netValue));
+    setElementText('kpiInvValue', formatCurrency(ev.faturaPlataforma || 0));
+
+    setElementText('quantumValue', formatCurrency(cross.impactoSeteAnosMercado || 0));
+
+    const mesesDados = VDCSystem.dataMonths.size || 1;
+    
+    const quantumFormulaEl = document.getElementById('quantumFormula');
+    if (quantumFormulaEl) {
+        quantumFormulaEl.textContent = `Base Omitida: ${formatCurrency(cross.discrepanciaCritica)} | ${cross.percentagemOmissao.toFixed(2)}%`;
+    }
+    
+    const quantumNoteEl = document.getElementById('quantumNote');
+    if (quantumNoteEl) {
+        quantumNoteEl.textContent = `IVA em falta (23%): ${formatCurrency(cross.ivaFalta)}`;
+    }
+
+    const quantumBreakdownEl = document.getElementById('quantumBreakdown');
+    if (quantumBreakdownEl) {
+        quantumBreakdownEl.innerHTML = `
+            <div class="quantum-breakdown-item">
+                <span>BTOR (Base Operacional):</span>
+                <span>${formatCurrency(cross.btor)}</span>
+            </div>
+            <div class="quantum-breakdown-item">
+                <span>BTF (Base Faturada):</span>
+                <span>${formatCurrency(cross.btf)}</span>
+            </div>
+            <div class="quantum-breakdown-item" style="border-top: 1px solid rgba(239,68,68,0.3); margin-top:0.3rem; padding-top:0.3rem;">
+                <span>DISCREPÂNCIA (Omissão):</span>
+                <span style="color:var(--warn-primary);">${formatCurrency(cross.discrepanciaCritica)}</span>
+            </div>
+            <div class="quantum-breakdown-item">
+                <span>Meses com dados:</span>
+                <span>${mesesDados}</span>
+            </div>
+            <div class="quantum-breakdown-item">
+                <span>Média mensal:</span>
+                <span>${formatCurrency(cross.discrepanciaCritica / mesesDados)}</span>
+            </div>
+            <div class="quantum-breakdown-item" style="border-top: 1px solid rgba(239,68,68,0.3); margin-top:0.3rem; padding-top:0.3rem;">
+                <span>Impacto Mensal Mercado (38k):</span>
+                <span>${formatCurrency(cross.impactoMensalMercado)}</span>
+            </div>
+            <div class="quantum-breakdown-item">
+                <span>Impacto Anual Mercado:</span>
+                <span>${formatCurrency(cross.impactoAnualMercado)}</span>
+            </div>
+            <div class="quantum-breakdown-item">
+                <span>IMPACTO 7 ANOS:</span>
+                <span style="color:var(--warn-primary); font-weight:800;">${formatCurrency(cross.impactoSeteAnosMercado)}</span>
+            </div>
+        `;
+    }
+
+    const jurosCard = document.getElementById('jurosCard');
+    if(jurosCard) jurosCard.style.display = (Math.abs(cross.discrepanciaCritica) > 0) ? 'block' : 'none';
+    
+    const quantumBox = document.getElementById('quantumBox');
+    if (quantumBox) {
+        quantumBox.style.display = (Math.abs(cross.impactoSeteAnosMercado) > 0) ? 'block' : 'none';
+    }
+}
+
+function updateModulesUI() {
+    const ev = VDCSystem.analysis.extractedValues;
+    
+    setElementText('saftIliquidoValue', formatCurrency(ev.saftIliquido || 0));
+    setElementText('saftIvaValue', formatCurrency(ev.saftIva || 0));
+    setElementText('saftBrutoValue', formatCurrency(ev.saftBruto || 0));
+    
+    setElementText('stmtGanhosValue', formatCurrency(ev.ganhosApp || 0));
+    setElementText('stmtCampanhasValue', formatCurrency(ev.campanhas || 0));
+    setElementText('stmtGorjetasValue', formatCurrency(ev.gorjetas || 0));
+    setElementText('stmtPortagensValue', formatCurrency(ev.portagens || 0));
+    setElementText('stmtTaxasCancelValue', formatCurrency(ev.taxasCancelamento || 0));
+    
+    const comissaoEl = document.getElementById('stmtComissaoValue');
+    if (comissaoEl) {
+        const comissao = ev.comissaoTotal || 0;
+        comissaoEl.textContent = formatCurrency(comissao);
+        if (VDCSystem.analysis.crossings?.discrepanciaCritica > 0.01) {
+            comissaoEl.classList.add('alert');
+        } else {
+            comissaoEl.classList.remove('alert');
+        }
+    }
+    
+    setElementText('dac7Q1Value', formatCurrency(ev.dac7Q1 || 0));
+    setElementText('dac7Q2Value', formatCurrency(ev.dac7Q2 || 0));
+    setElementText('dac7Q3Value', formatCurrency(ev.dac7Q3 || 0));
+    setElementText('dac7Q4Value', formatCurrency(ev.dac7Q4 || 0));
+    
+    const sourceElements = document.querySelectorAll('[id$="Source"]');
+    sourceElements.forEach(el => {
+        const baseId = el.id.replace('Source', '');
+        const source = ValueSource.getBreakdown(baseId);
+        if (source && el) {
+            const fileName = source.sourceFile.length > 30 ? source.sourceFile.substring(0, 27) + '...' : source.sourceFile;
+            el.textContent = `Fonte: ${fileName}`;
+            el.setAttribute('data-tooltip', `Cálculo: ${source.calculationMethod}\nFicheiro: ${source.sourceFile}\nValor: ${formatCurrency(source.value)}`);
+        }
+    });
+}
+
+function showAlerts() {
+    const ev = VDCSystem.analysis.extractedValues;
+    const cross = VDCSystem.analysis.crossings;
+
+    // Verdict Display - Agora Parecer Técnico
+    const verdictDisplay = document.getElementById('verdictDisplay');
+    if(verdictDisplay && VDCSystem.analysis.verdict) {
+        verdictDisplay.style.display = 'block';
+        verdictDisplay.className = `verdict-display active verdict-${VDCSystem.analysis.verdict.key}`;
+        setElementText('verdictLevel', VDCSystem.analysis.verdict.level);
+        
+        // Construir parecer técnico detalhado
+        const platform = PLATFORM_DATA[VDCSystem.selectedPlatform] || PLATFORM_DATA.outra;
+        const mesesDados = VDCSystem.dataMonths.size || 1;
+        
+        const parecerHTML = `
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--accent-primary);">I. ANÁLISE PERICIAL:</strong><br>
+                <span style="color: var(--text-secondary);">Discrepância grave detetada entre valores retidos pela ${platform.name} e valores faturados.</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--accent-primary);">II. FATOS CONSTATADOS:</strong><br>
+                <span style="color: var(--text-secondary);">Comissão Real Retida (Extrato): ${formatCurrency(ev.comissaoTotal || 0)}.</span><br>
+                <span style="color: var(--text-secondary);">Valor Faturado (Fatura): ${formatCurrency(ev.faturaPlataforma || 0)}.</span><br>
+                <span style="color: var(--warn-primary); font-weight: 700;">Diferença Omitida: ${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}% do valor retido).</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--accent-primary);">III. ENQUADRAMENTO LEGAL:</strong><br>
+                <span style="color: var(--text-secondary);">Artigo 2.º, n.º 1, alínea i) do CIVA (Autoliquidação). Artigo 108.º do CIVA (Infrações).</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--accent-primary);">IV. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO:</strong><br>
+                <span style="color: var(--text-secondary);">IVA em falta (23%): ${formatCurrency(cross.ivaFalta)} omitidos ao erário público.</span><br>
+                <span style="color: var(--text-secondary);">Agravamento Bruto/IRC: A diferença de ${formatCurrency(cross.discrepanciaCritica)} não faturada pela plataforma impacta diretamente a contabilidade do cliente. Este valor, ao não ser reconhecido como custo faturado, aumenta artificialmente o lucro tributável, agravando o IRC (estimativa de 21% + Derrama) no final do exercício. Projeção anual de base omitida: ${formatCurrency(cross.discrepanciaCritica * 12)}.</span><br>
+                <span style="color: var(--text-secondary);">Impacto IRC: A discrepância de ${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%) agrava consideravelmente a posição do cliente, pois ao não ser reconhecida como custo faturado, aumenta o lucro tributável em sede de IRC/Derrama (est. 21% + Derrama), com um impacto anual projetado de ${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}.</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <strong style="color: var(--accent-primary);">V. CADEIA DE CUSTÓDIA:</strong><br>
+                <span style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.7rem;">Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura).</span><br>
+                <span style="color: var(--accent-secondary); font-family: var(--font-mono); font-size: 0.7rem; word-break: break-all;">${VDCSystem.masterHash || 'A calcular...'}</span>
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                <strong style="color: var(--warn-primary);">VI. CONCLUSÃO:</strong><br>
+                <span style="color: var(--text-secondary);">Indícios de infração ao Artigo 108.º do Código do IVA.</span>
+            </div>
+        `;
+        
+        document.getElementById('verdictDesc').innerHTML = parecerHTML;
+        document.getElementById('verdictLevel').style.color = VDCSystem.analysis.verdict.color;
+    }
+
+    // Big Data Alert - Agora Smoking Gun
+    const bigDataAlert = document.getElementById('bigDataAlert');
+    if(bigDataAlert) {
+        if(cross.bigDataAlertActive && Math.abs(cross.discrepanciaCritica) > 0.01) {
+            bigDataAlert.style.display = 'flex';
+            bigDataAlert.classList.add('alert-active');
+            
+            setElementText('alertDeltaValue', formatCurrency(cross.discrepanciaCritica));
+            
+            const alertOmissionText = document.getElementById('alertOmissionText');
+            if (alertOmissionText) {
+                alertOmissionText.innerHTML = `Comissão Retida (Extrato): ${formatCurrency(cross.btor)} | Faturada: ${formatCurrency(cross.btf)}<br><strong style="color: var(--warn-primary);">DIVERGÊNCIA DE BASE (OMISSÃO): ${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)</strong>`;
+            }
+        } else {
+            bigDataAlert.style.display = 'none';
+            bigDataAlert.classList.remove('alert-active');
+        }
+    }
+}
+
+function renderChart() {
+    const ctx = document.getElementById('mainChart');
+    if(!ctx) return;
+    if(VDCSystem.chart) VDCSystem.chart.destroy();
+
+    const ev = VDCSystem.analysis.extractedValues;
+    const cross = VDCSystem.analysis.crossings;
+    
+    const labels = ['SAF-T Bruto', 'Ganhos App', 'Comissões', 'Faturado', 'DAC7 Q4', 'Líquido', 'IVA Falta'];
+    const data = [
+        ev.saftBruto || 0,
+        ev.ganhosApp || 0,
+        ev.comissaoTotal || 0,
+        ev.faturaPlataforma || 0,
+        ev.dac7Q4 || 0,
+        ev.ganhosLiquidos || 0,
+        cross.ivaFalta || 0
+    ];
+    
+    const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6', '#ff0000'];
+
+    VDCSystem.chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Valor (€)',
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            return context.raw.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { 
+                        color: '#b8c6e0', 
+                        callback: (v) => v.toLocaleString('pt-PT') + ' €'
+                    }
+                },
+                x: { 
+                    grid: { color: 'rgba(255,255,255,0.05)' }, 
+                    ticks: { color: '#b8c6e0' } 
+                }
+            }
+        }
+    });
+}
+
+// ============================================================================
+// 14. EXPORTAÇÕES
+// ============================================================================
+function exportDataJSON() {
+    const sources = {};
+    ValueSource.sources.forEach((value, key) => {
+        sources[key] = value;
+    });
+    
+    const exportData = {
+        metadata: {
+            version: VDCSystem.version,
+            sessionId: VDCSystem.sessionId,
+            timestamp: new Date().toISOString(),
+            timestampUnix: Math.floor(Date.now() / 1000),
+            timestampRFC3161: new Date().toUTCString(),
+            language: currentLang,
+            client: VDCSystem.client,
+            anoFiscal: VDCSystem.selectedYear,
+            periodoAnalise: VDCSystem.selectedPeriodo,
+            platform: VDCSystem.selectedPlatform,
+            demoMode: VDCSystem.demoMode,
+            forensicMetadata: VDCSystem.forensicMetadata || getForensicMetadata(),
+            dataMonths: Array.from(VDCSystem.dataMonths)
+        },
+        analysis: {
+            totals: VDCSystem.analysis.extractedValues,
+            discrepancies: VDCSystem.analysis.crossings,
+            verdict: VDCSystem.analysis.verdict,
+            selectedQuestions: VDCSystem.analysis.selectedQuestions,
+            evidenceCount: VDCSystem.counts?.total || 0,
+            valueSources: sources
+        },
+        evidence: {
+            integrity: VDCSystem.analysis.evidenceIntegrity,
+            invoices: {
+                count: VDCSystem.documents.invoices?.files?.length || 0,
+                totalValue: VDCSystem.documents.invoices?.totals?.invoiceValue || 0,
+                files: VDCSystem.documents.invoices?.files?.map(f => f.name) || []
+            },
+            statements: {
+                count: VDCSystem.documents.statements?.files?.length || 0,
+                ganhos: VDCSystem.documents.statements?.totals?.ganhosApp || 0,
+                campanhas: VDCSystem.documents.statements?.totals?.campanhas || 0,
+                gorjetas: VDCSystem.documents.statements?.totals?.gorjetas || 0,
+                portagens: VDCSystem.documents.statements?.totals?.portagens || 0,
+                taxasCancelamento: VDCSystem.documents.statements?.totals?.taxasCancelamento || 0,
+                comissao: VDCSystem.documents.statements?.totals?.despesasComissao || 0,
+                files: VDCSystem.documents.statements?.files?.map(f => f.name) || []
+            },
+            saft: {
+                count: VDCSystem.documents.saft?.files?.length || 0,
+                bruto: VDCSystem.documents.saft?.totals?.bruto || 0,
+                iliquido: VDCSystem.documents.saft?.totals?.iliquido || 0,
+                iva: VDCSystem.documents.saft?.totals?.iva || 0,
+                files: VDCSystem.documents.saft?.files?.map(f => f.name) || []
+            },
+            dac7: {
+                count: VDCSystem.documents.dac7?.files?.length || 0,
+                q4: VDCSystem.documents.dac7?.totals?.q4 || 0,
+                files: VDCSystem.documents.dac7?.files?.map(f => f.name) || []
+            }
+        },
+        auditLog: VDCSystem.logs.slice(-50)
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `VDC_PERITIA_${VDCSystem.sessionId}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    logAudit('📊 Relatório JSON exportado com rastreabilidade completa.', 'success');
+    showToast('JSON probatório exportado', 'success');
+}
+
+function exportPDF() {
+    if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
+    if (typeof window.jspdf === 'undefined') {
+        logAudit('❌ Erro: jsPDF não carregado.', 'error');
+        return showToast('Erro de sistema (jsPDF)', 'error');
+    }
+
+    logAudit('📄 A gerar Parecer Pericial...', 'info');
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const t = translations[currentLang];
+        const platform = PLATFORM_DATA[VDCSystem.selectedPlatform] || PLATFORM_DATA.outra;
+        const ev = VDCSystem.analysis.extractedValues;
+        const cross = VDCSystem.analysis.crossings;
+        const verdict = VDCSystem.analysis.verdict || { level: 'N/A', key: 'low', color: '#8c7ae6', description: 'Perícia não executada.', percent: '0.00%' };
+
+        let y = 45;
+        const left = 14;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 0, 210, 35, 'F');
+        doc.setTextColor(0, 229, 255);
+        doc.setFontSize(22);
+        doc.text('VDC FORENSE', 105, 15, { align: 'center' });
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text(t.pdfTitle, 105, 25, { align: 'center' });
+        
+        doc.setTextColor(0, 229, 255);
+        doc.setFontSize(12);
+        doc.text(t.pdfSection1, left, y); y += 8;
+        
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(10);
+        doc.text(`${t.pdfLabelName}: ${VDCSystem.client.name}`, left, y); y += 6;
+        doc.text(`${t.pdfLabelNIF}: ${VDCSystem.client.nif}`, left, y); y += 6;
+        doc.text(`${t.pdfLabelSession}: ${VDCSystem.sessionId}`, left, y); y += 6;
+        doc.text(`${t.pdfLabelPlatform}: ${platform.name}`, left, y); y += 6;
+        doc.text(`${t.pdfLabelAddress}: ${platform.address}`, left, y); y += 10;
+        
+        doc.setTextColor(0, 229, 255);
+        doc.text(t.pdfSection2, left, y); y += 8;
+        
+        doc.setTextColor(60, 60, 60);
+        doc.text(`SAF-T Bruto: ${formatCurrency(ev.saftBruto || 0)} (${VDCSystem.documents.saft?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`Ganhos App: ${formatCurrency(ev.ganhosApp || 0)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`Comissões Extrato: ${formatCurrency(ev.comissaoTotal || 0)}`, left, y); y += 6;
+        doc.text(`Fatura Comissões: ${formatCurrency(ev.faturaPlataforma || 0)} (${VDCSystem.documents.invoices?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`DAC7 Q4: ${formatCurrency(ev.dac7Q4 || 0)} (${VDCSystem.documents.dac7?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`DISCREPÂNCIA CRÍTICA: ${formatCurrency(cross.discrepanciaCritica || 0)} (${cross.percentagemOmissao?.toFixed(2) || '0.00'}%)`, left, y); y += 6;
+        doc.text(`IVA em falta (23%): ${formatCurrency(cross.ivaFalta || 0)}`, left, y); y += 10;
+        
+        doc.setTextColor(0, 229, 255);
+        doc.text(t.pdfSection3, left, y); y += 8;
+        
+        let r = 139, g = 92, b = 246;
+        if (verdict.color === '#ef4444') { r = 239; g = 68; b = 68; }
+        else if (verdict.color === '#f59e0b') { r = 245; g = 158; b = 11; }
+        else if (verdict.color === '#44bd32') { r = 68; g = 189; b = 50; }
+        
+        doc.setTextColor(r, g, b);
+        doc.setFontSize(14);
+        doc.text(`VEREDICTO: ${verdict.level}`, left, y); y += 8;
+        
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(10);
+        doc.text(`Desvio: ${verdict.percent}`, left, y); y += 6;
+        doc.text(verdict.description, left, y, { maxWidth: pageWidth - 30 }); y += 15;
+        
+        if (Math.abs(cross.impactoSeteAnosMercado) > 0) {
+            doc.setTextColor(239, 68, 68);
+            doc.setFontSize(11);
+            doc.text('CÁLCULO DO IMPACTO NO MERCADO:', left, y); y += 6;
+            doc.setTextColor(60, 60, 60);
+            doc.setFontSize(9);
+            doc.text(`Discrepância base: ${formatCurrency(cross.discrepanciaCritica || 0)}`, left, y); y += 5;
+            doc.text(`Meses com dados: ${VDCSystem.dataMonths.size || 1}`, left, y); y += 5;
+            doc.text(`Média mensal: ${formatCurrency((cross.discrepanciaCritica || 0) / (VDCSystem.dataMonths.size || 1))}`, left, y); y += 5;
+            doc.text(`Impacto Mensal Mercado (38k): ${formatCurrency(cross.impactoMensalMercado || 0)}`, left, y); y += 5;
+            doc.text(`Impacto Anual Mercado: ${formatCurrency(cross.impactoAnualMercado || 0)}`, left, y); y += 5;
+            doc.text(`IMPACTO 7 ANOS: ${formatCurrency(cross.impactoSeteAnosMercado || 0)}`, left, y); y += 10;
+        }
+        
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`* Valores calculados com base em ${VDCSystem.counts.total || 0} ficheiro(s) processados (BIG DATA ACCUMULATOR)`, left, y);
+        y += 10;
+        
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 280, 210, 17, 'F');
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(8);
+        doc.text(t.pdfFooterLine1, 105, 290, { align: 'center' });
+        doc.text(`HASH: ${VDCSystem.masterHash || 'NÃO GERADA'} · RFC 3161`, 105, 295, { align: 'center' });
+        
+        doc.save(`VDC_Parecer_${VDCSystem.sessionId}.pdf`);
+        logAudit('✅ PDF exportado com sucesso', 'success');
+        showToast('PDF gerado', 'success');
+
+    } catch (error) {
+        console.error('Erro PDF:', error);
+        logAudit(`❌ Erro ao gerar PDF: ${error.message}`, 'error');
+        showToast('Erro ao gerar PDF', 'error');
+    }
+}
+
+// ============================================================================
+// 15. FUNÇÕES AUXILIARES
+// ============================================================================
+function generateMasterHash() {
+    const data = JSON.stringify({
+        client: VDCSystem.client,
+        docs: VDCSystem.documents,
+        session: VDCSystem.sessionId,
+        months: Array.from(VDCSystem.dataMonths),
+        sources: Array.from(ValueSource.sources.entries()),
+        timestamp: Date.now(),
+        timestampRFC3161: new Date().toUTCString()
+    });
+    VDCSystem.masterHash = CryptoJS.SHA256(data).toString();
+    setElementText('masterHashValue', VDCSystem.masterHash);
+}
+
+function logAudit(message, type = 'info') {
+    const now = Date.now();
+    if (now - lastLogTime < LOG_THROTTLE && type !== 'error' && type !== 'success') {
+        return;
+    }
+    lastLogTime = now;
+    
+    const timestamp = new Date().toLocaleTimeString('pt-PT');
+    const entry = { timestamp, message, type };
+    VDCSystem.logs.push(entry);
+
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        const logEl = document.createElement('div');
+        logEl.className = `log-entry log-${type}`;
+        logEl.textContent = `[${timestamp}] ${message}`;
+        consoleOutput.appendChild(logEl);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-triangle',
+        warning: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+    };
+
+    toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><p>${message}</p>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+function clearConsole() {
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        consoleOutput.innerHTML = '';
+    }
+    
+    VDCSystem.logs = [];
+    
+    resetAllValues();
+    
+    const timestamp = new Date().toLocaleTimeString('pt-PT');
+    const logEl = document.createElement('div');
+    logEl.className = 'log-entry log-info';
+    logEl.textContent = `[${timestamp}] 🧹 Console limpo e todos os valores resetados.`;
+    if (consoleOutput) {
+        consoleOutput.appendChild(logEl);
+    }
+    
+    VDCSystem.logs.push({ timestamp, message: '🧹 Console limpo e todos os valores resetados.', type: 'info' });
+    
+    showToast('Sistema resetado com sucesso', 'success');
+}
+
+function resetAllValues() {
+    VDCSystem.documents.saft.totals = { records: 0, iliquido: 0, iva: 0, bruto: 0 };
+    VDCSystem.documents.statements.totals = { records: 0, ganhosApp: 0, campanhas: 0, gorjetas: 0, portagens: 0, taxasCancelamento: 0, despesasComissao: 0, ganhosLiquidos: 0 };
+    VDCSystem.documents.invoices.totals = { invoiceValue: 0, records: 0 };
+    VDCSystem.documents.dac7.totals = { records: 0, q1: 0, q2: 0, q3: 0, q4: 0, servicosQ1: 0, servicosQ2: 0, servicosQ3: 0, servicosQ4: 0, comissoesQ4: 0 };
+    VDCSystem.documents.control.totals = { records: 0 };
+    
+    VDCSystem.documents.statements.files = [];
+    VDCSystem.documents.invoices.files = [];
+    VDCSystem.documents.saft.files = [];
+    VDCSystem.documents.control.files = [];
+    VDCSystem.documents.dac7.files = [];
+    
+    VDCSystem.processedFiles.clear();
+    VDCSystem.dataMonths.clear();
+    VDCSystem.analysis.evidenceIntegrity = [];
+    ValueSource.sources.clear();
+    
+    VDCSystem.analysis.extractedValues = {};
+    VDCSystem.analysis.crossings = { 
+        delta: 0, 
+        bigDataAlertActive: false, 
+        invoiceDivergence: false, 
+        comissaoDivergencia: 0,
+        saftVsDac7Alert: false,
+        saftVsGanhosAlert: false,
+        saftMenosComissaoVsLiquidoAlert: false,
+        discrepanciaCritica: 0,
+        percentagemOmissao: 0,
+        ivaFalta: 0,
+        btor: 0,
+        btf: 0,
+        impactoMensalMercado: 0,
+        impactoAnualMercado: 0,
+        impactoSeteAnosMercado: 0
+    };
+    VDCSystem.analysis.verdict = null;
+    VDCSystem.analysis.selectedQuestions = [];
+    
+    const elementsToReset = [
+        'saftIliquidoValue', 'saftIvaValue', 'saftBrutoValue',
+        'stmtGanhosValue', 'stmtCampanhasValue', 'stmtGorjetasValue',
+        'stmtPortagensValue', 'stmtTaxasCancelValue', 'stmtComissaoValue',
+        'dac7Q1Value', 'dac7Q2Value', 'dac7Q3Value', 'dac7Q4Value',
+        'statNet', 'statComm', 'statJuros',
+        'kpiGrossValue', 'kpiCommValue', 'kpiNetValue', 'kpiInvValue',
+        'quantumValue', 'verdictLevel', 'verdictPercentValue', 'alertDeltaValue'
+    ];
+    
+    elementsToReset.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id.includes('Value') || id.includes('stat') || id.includes('kpi') || id.includes('quantum') || id.includes('alert')) {
+                el.textContent = '0,00 €';
+            } else {
+                el.textContent = 'AGUARDANDO ANÁLISE';
+            }
+        }
+    });
+    
+    document.getElementById('verdictDesc').innerHTML = 'Execute a perícia para obter o veredicto.';
+    
+    const sourceElements = document.querySelectorAll('[id$="Source"]');
+    sourceElements.forEach(el => {
+        el.textContent = '';
+        el.removeAttribute('data-tooltip');
+    });
+    
+    const listIds = ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 'statementsFileListModal', 'dac7FileListModal'];
+    listIds.forEach(id => {
+        const list = document.getElementById(id);
+        if (list) {
+            list.innerHTML = '';
+            list.style.display = 'none';
+        }
+    });
+    
+    const bigDataAlert = document.getElementById('bigDataAlert');
+    if (bigDataAlert) bigDataAlert.style.display = 'none';
+    
+    const quantumBox = document.getElementById('quantumBox');
+    if (quantumBox) {
+        quantumBox.style.display = 'none';
+        const breakdown = document.getElementById('quantumBreakdown');
+        if (breakdown) breakdown.innerHTML = '';
+    }
+    
+    const verdictDisplay = document.getElementById('verdictDisplay');
+    if (verdictDisplay) verdictDisplay.style.display = 'none';
+    
+    const jurosCard = document.getElementById('jurosCard');
+    if (jurosCard) jurosCard.style.display = 'none';
+    
+    updateCounters();
+    updateEvidenceSummary();
+    
+    if (VDCSystem.chart) {
+        VDCSystem.chart.destroy();
+        VDCSystem.chart = null;
+    }
+    
+    generateMasterHash();
+}
+
+function resetSystem() {
+    if (!confirm('⚠️ Tem a certeza que deseja reiniciar o sistema? Todos os dados serão perdidos.')) return;
+
+    localStorage.removeItem('vdc_client_data_bd_v12_7');
+    location.reload();
+}
+
+function updateAnalysisButton() {
+    const btn = document.getElementById('analyzeBtn');
+    if (btn) {
+        const hasFiles = Object.values(VDCSystem.documents).some(d => d.files && d.files.length > 0);
+        const hasClient = VDCSystem.client !== null;
+        btn.disabled = !(hasFiles && hasClient);
+    }
+}
+
+window.VDCSystem = VDCSystem;
+window.ValueSource = ValueSource;
+window.forensicDataSynchronization = forensicDataSynchronization;
+
+/* =====================================================================
+   FIM DO FICHEIRO SCRIPT.JS · v12.7.1 SMOKING GUN
+   ===================================================================== */
