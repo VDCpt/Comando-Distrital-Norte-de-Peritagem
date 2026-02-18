@@ -2,7 +2,7 @@
    VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL FORENSE
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    MECANISMO DE LIMPEZA BINÁRIA · BIG DATA ACCUMULATOR
-   TODOS OS BLOCOS FECHADOS · VERSÃO FINAL
+   CORREÇÕES: Sidebar mais larga, letra maior, módulos expandidos
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -57,7 +57,7 @@ body {
     line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
-    font-size: 14px;
+    font-size: 15px; /* Aumentado de 14px */
 }
 
 /* ---------------------------------------------------------------------
@@ -442,9 +442,12 @@ body {
     color: var(--success-primary);
 }
 
+/* ---------------------------------------------------------------------
+   5. SIDEBAR - CORRIGIDA: MAIS LARGA
+   --------------------------------------------------------------------- */
 .app-container {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 380px 1fr; /* Aumentado de 320px para 380px */
     flex: 1;
     height: calc(100vh - 60px);
     max-width: 100%;
@@ -452,9 +455,6 @@ body {
     overflow: hidden;
 }
 
-/* ---------------------------------------------------------------------
-   5. SIDEBAR
-   --------------------------------------------------------------------- */
 .sidebar {
     background: #020617;
     border-right: 1px solid var(--border-color);
@@ -463,9 +463,9 @@ body {
     flex-direction: column;
     gap: 2rem;
     overflow-y: auto;
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
+    width: 380px !important; /* Aumentado */
+    min-width: 380px !important; /* Aumentado */
+    max-width: 380px !important; /* Aumentado */
     flex-shrink: 0 !important;
 }
 
@@ -718,7 +718,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD & MÓDULOS
+   6. DASHBOARD & MÓDULOS - CORRIGIDOS: MAIORES E EXPANDIDOS
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
@@ -742,15 +742,16 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1rem;
+    padding: 1.2rem; /* Aumentado */
     border-radius: var(--border-radius-sm);
     position: relative;
     display: flex;
     flex-direction: column;
+    width: 100%; /* Garantir largura total */
 }
 
 .module-card h4 {
-    font-size: 0.75rem;
+    font-size: 0.85rem; /* Aumentado */
     color: var(--accent-primary);
     margin-bottom: 0.75rem;
     text-transform: uppercase;
@@ -764,19 +765,21 @@ body {
 .module-values {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
+    gap: 1rem; /* Aumentado */
     flex: 1;
+    width: 100%;
 }
 
 .module-value-item {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0.8rem;
+    padding: 1rem; /* Aumentado */
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-sm);
     transition: all 0.2s ease;
+    width: 100%;
 }
 
 .module-value-item:hover {
@@ -785,16 +788,16 @@ body {
 }
 
 .module-value-label {
-    font-size: 0.65rem;
+    font-size: 0.75rem; /* Aumentado */
     color: var(--text-tertiary);
     font-weight: 600;
     text-transform: uppercase;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.4rem;
     display: block;
 }
 
 .module-value-amount {
-    font-size: 0.95rem;
+    font-size: 1.1rem; /* Aumentado */
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
@@ -818,26 +821,28 @@ body {
 .dac7-breakdown {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.8rem;
+    gap: 1rem; /* Aumentado */
     margin-top: 0;
     padding-top: 0;
     border-top: none;
     height: 100%;
+    width: 100%;
 }
 
 .quarter-box {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.8rem;
+    padding: 1rem; /* Aumentado */
     text-align: center;
     border-radius: var(--border-radius-sm);
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 100%;
 }
 
 .quarter-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem; /* Aumentado */
     color: var(--text-tertiary);
     text-transform: uppercase;
     font-weight: 700;
@@ -845,7 +850,7 @@ body {
 }
 
 .quarter-value {
-    font-size: 0.95rem;
+    font-size: 1rem; /* Aumentado */
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
@@ -895,7 +900,7 @@ body {
 
 .dashboard-fixed {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Aumentado min-width */
     gap: 1rem;
     margin-bottom: 1.5rem;
     position: relative;
@@ -907,15 +912,16 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
+    padding: 1.8rem; /* Aumentado */
     border-left: 3px solid var(--accent-primary);
     position: relative;
     overflow: hidden;
     border-radius: var(--border-radius-sm);
+    width: 100%;
 }
 
 .stat-card h4 {
-    font-size: 0.8rem;
+    font-size: 0.9rem; /* Aumentado */
     color: var(--text-tertiary);
     margin-bottom: 0.5rem;
     text-transform: uppercase;
@@ -926,7 +932,7 @@ body {
 }
 
 .stat-card p {
-    font-size: 1.8rem;
+    font-size: 2rem; /* Aumentado */
     font-weight: 700;
     font-family: var(--font-mono);
     color: #fff;
@@ -934,7 +940,7 @@ body {
 }
 
 .stat-card .stat-desc {
-    font-size: 0.7rem;
+    font-size: 0.8rem; /* Aumentado */
     color: var(--text-tertiary);
     font-family: var(--font-mono);
 }
@@ -976,20 +982,21 @@ body {
 
 .kpi-card {
     background: #020617;
-    padding: 1rem;
+    padding: 1.2rem; /* Aumentado */
     border-top: 2px solid var(--border-color);
     border-radius: var(--border-radius-sm);
+    width: 100%;
 }
 
 .kpi-card h4 {
-    font-size: 0.75rem;
+    font-size: 0.85rem; /* Aumentado */
     color: var(--text-tertiary);
     margin-bottom: 0.5rem;
     font-weight: 700;
 }
 
 .kpi-card p {
-    font-size: 1.4rem;
+    font-size: 1.6rem; /* Aumentado */
     font-weight: 700;
     font-family: var(--font-mono);
     color: var(--text-primary);
