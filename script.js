@@ -1,16 +1,17 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
+ * CORREÇÕES DE CREDIBILIDADE PROFISSIONAL v12.7.1
  * ====================================================================
- * CORREÇÕES FINAIS:
- * - Botão LIMPAR CONSOLE com reset total de todos os valores visíveis
- * - Visibilidade garantida de faturas e extratos no modal
- * - Layout corrigido dos módulos (3 linhas)
+ * - Contadores sincronizados com ficheiros reais
+ * - Rastreabilidade origem/destino dos valores
+ * - Quantum com breakdown detalhado
+ * - Distinção clara entre dados reais e demo
  * ====================================================================
  */
 
 'use strict';
 
-console.log('VDC SCRIPT v12.7 RETA FINAL · BIG DATA ACCUMULATOR CARREGADO');
+console.log('VDC SCRIPT v12.7.1 · MODO PROFISSIONAL ATIVADO');
 
 // ============================================================================
 // 1. CONFIGURAÇÃO DO PDF.JS
@@ -229,7 +230,51 @@ const getForensicMetadata = () => {
 };
 
 // ============================================================================
-// 4. SISTEMA DE TRADUÇÕES (COMPLETO PT-PT / EN)
+// 4. SISTEMA DE RASTREABILIDADE (NOVO)
+// ============================================================================
+const ValueSource = {
+    sources: new Map(), // Mapa de origem dos valores
+    
+    registerValue(elementId, value, sourceFile, calculationMethod = 'extração direta') {
+        const key = `${elementId}_${Date.now()}`;
+        this.sources.set(elementId, {
+            value: value,
+            sourceFile: sourceFile,
+            calculationMethod: calculationMethod,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Atualizar badge na UI se existir
+        const badgeEl = document.getElementById(elementId + 'Source');
+        if (badgeEl) {
+            const fileName = sourceFile.length > 30 ? sourceFile.substring(0, 27) + '...' : sourceFile;
+            badgeEl.textContent = `Fonte: ${fileName}`;
+            badgeEl.setAttribute('data-tooltip', `Cálculo: ${calculationMethod}\nFicheiro: ${sourceFile}\nValor: ${formatCurrency(value)}`);
+        }
+    },
+    
+    getBreakdown(elementId) {
+        return this.sources.get(elementId) || null;
+    },
+    
+    getQuantumBreakdown(discrepancy, months, drivers = 38000, years = 7) {
+        const monthlyAvg = discrepancy / months;
+        const annualImpact = monthlyAvg * 12;
+        const totalImpact = annualImpact * drivers * years;
+        
+        return {
+            discrepanciaMensalMedia: monthlyAvg,
+            impactoAnualPorMotorista: annualImpact,
+            totalMotoristas: drivers,
+            anos: years,
+            impactoTotal: totalImpact,
+            formula: `(${formatCurrency(discrepancy)} / ${months} meses) × 12 × ${drivers.toLocaleString()} × ${years}`
+        };
+    }
+};
+
+// ============================================================================
+// 5. SISTEMA DE TRADUÇÕES (COMPLETO PT-PT / EN)
 // ============================================================================
 const translations = {
     pt: {
@@ -399,10 +444,10 @@ const translations = {
 let currentLang = 'pt';
 
 // ============================================================================
-// 5. ESTADO GLOBAL - BIG DATA ACCUMULATOR (SOMA INCREMENTAL)
+// 6. ESTADO GLOBAL - BIG DATA ACCUMULATOR (SOMA INCREMENTAL)
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.7-RETA-FINAL-BIGDATA',
+    version: 'v12.7.1-PROFESSIONAL',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPeriodo: 'anual',
@@ -415,6 +460,7 @@ const VDCSystem = {
     masterHash: '',
     processedFiles: new Set(),
     dataMonths: new Set(),
+    fileSources: new Map(), // Mapa de ficheiros para valores
     documents: {
         control: { files: [], hashes: {}, totals: { records: 0 } },
         saft: { files: [], hashes: {}, totals: { records: 0, iliquido: 0, iva: 0, bruto: 0 } },
@@ -463,7 +509,67 @@ const fileProcessingQueue = [];
 let isProcessingQueue = false;
 
 // ============================================================================
-// 6. INICIALIZAÇÃO
+// 7. FUNÇÃO DE CREDIBILIDADE (NOVA)
+// ============================================================================
+function emergencyCredibilityFix() {
+    console.log('🚨 APLICANDO CORREÇÃO DE CREDIBILIDADE PROFISSIONAL...');
+    
+    // 1. CORRIGIR CONTADORES PARA REFLETIR A REALIDADE
+    const realCounts = {
+        control: VDCSystem.documents.control?.files?.length || 0,
+        saft: VDCSystem.documents.saft?.files?.length || 0,
+        invoices: VDCSystem.documents.invoices?.files?.length || 0,
+        statements: VDCSystem.documents.statements?.files?.length || 0,
+        dac7: VDCSystem.documents.dac7?.files?.length || 0
+    };
+    
+    // Atualizar contadores compactos
+    setElementText('controlCountCompact', realCounts.control);
+    setElementText('saftCountCompact', realCounts.saft);
+    setElementText('invoiceCountCompact', realCounts.invoices);
+    setElementText('statementCountCompact', realCounts.statements);
+    setElementText('dac7CountCompact', realCounts.dac7);
+    
+    // Atualizar total
+    const total = Object.values(realCounts).reduce((a, b) => a + b, 0);
+    document.getElementById('evidenceCountTotal').textContent = total;
+    VDCSystem.counts.total = total;
+    
+    // 2. ATUALIZAR RESUMO DO MODAL
+    setElementText('summaryControl', realCounts.control);
+    setElementText('summarySaft', realCounts.saft);
+    setElementText('summaryInvoices', realCounts.invoices);
+    setElementText('summaryStatements', realCounts.statements);
+    setElementText('summaryDac7', realCounts.dac7);
+    setElementText('summaryTotal', total);
+    
+    // 3. CORRIGIR LABELS SE NECESSÁRIO
+    const fatLabels = document.querySelectorAll('.summary-label');
+    fatLabels.forEach(label => {
+        if (label.textContent === 'FATORES') {
+            label.textContent = 'FATURAS';
+        }
+    });
+    
+    // 4. SE HOUVER VALORES, ATUALIZAR UI
+    if (Object.keys(VDCSystem.analysis.extractedValues).length > 0) {
+        updateModulesUI();
+    }
+    
+    // 5. LOG DE TRANSPARÊNCIA
+    logAudit(`📊 TRANSPARÊNCIA: ${total} ficheiro(s) processados (${realCounts.saft} SAF-T, ${realCounts.statements} extratos, ${realCounts.invoices} faturas, ${realCounts.dac7} DAC7)`, 'success');
+    
+    // 6. VERIFICAR CONSISTÊNCIA
+    const summaryTotal = document.getElementById('summaryTotal')?.textContent || '0';
+    if (parseInt(summaryTotal) !== total) {
+        showToast('⚠️ Inconsistência detetada e corrigida automaticamente', 'warning');
+    }
+    
+    console.log('✅ CORREÇÃO DE CREDIBILIDADE APLICADA');
+}
+
+// ============================================================================
+// 8. INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     setupStaticListeners();
@@ -476,7 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garantir que o botão "Limpar Console" funciona
     const clearBtn = document.getElementById('clearConsoleBtn');
     if (clearBtn) {
-        // Remover listeners antigos
         const newClearBtn = clearBtn.cloneNode(true);
         clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
         newClearBtn.addEventListener('click', clearConsole);
@@ -541,11 +646,14 @@ function showMainInterface() {
             setTimeout(() => main.style.opacity = '1', 50);
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.7 RETA FINAL · BIG DATA ACCUMULATOR ONLINE · MODO PERÍCIA ATIVO', 'success');
+    logAudit('SISTEMA VDC v12.7.1 MODO PROFISSIONAL ATIVADO · BIG DATA ACCUMULATOR ONLINE', 'success');
     
     document.getElementById('analyzeBtn').disabled = false;
     document.getElementById('exportPDFBtn').disabled = false;
     document.getElementById('exportJSONBtn').disabled = false;
+    
+    // Aplicar correção de credibilidade
+    setTimeout(emergencyCredibilityFix, 1000);
 }
 
 function loadSystemRecursively() {
@@ -634,11 +742,13 @@ function setupMainListeners() {
     document.getElementById('openEvidenceModalBtn')?.addEventListener('click', () => {
         document.getElementById('evidenceModal').style.display = 'flex';
         updateEvidenceSummary();
+        emergencyCredibilityFix(); // Garantir consistência ao abrir modal
     });
 
     const closeModal = () => {
         document.getElementById('evidenceModal').style.display = 'none';
         updateAnalysisButton();
+        emergencyCredibilityFix(); // Garantir consistência ao fechar modal
     };
 
     document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
@@ -649,14 +759,12 @@ function setupMainListeners() {
     document.getElementById('exportPDFBtn')?.addEventListener('click', exportPDF);
     document.getElementById('exportJSONBtn')?.addEventListener('click', exportDataJSON);
     document.getElementById('resetBtn')?.addEventListener('click', resetSystem);
-    
-    // Já temos o listener do clearConsole garantido no DOMContentLoaded
 
     setupUploadListeners();
 }
 
 // ============================================================================
-// 7. DRAG & DROP GLOBAL
+// 9. DRAG & DROP GLOBAL
 // ============================================================================
 function setupDragAndDrop() {
     const dropZone = document.getElementById('globalDropZone');
@@ -711,7 +819,7 @@ function handleGlobalFileSelect(e) {
 }
 
 // ============================================================================
-// 8. PROCESSAMENTO EM LOTE
+// 10. PROCESSAMENTO EM LOTE
 // ============================================================================
 async function processBatchFiles(files) {
     if (files.length === 0) return;
@@ -769,6 +877,10 @@ async function processQueue() {
     updateEvidenceSummary();
     updateCounters();
     generateMasterHash();
+    
+    // Aplicar correção de credibilidade após processamento
+    emergencyCredibilityFix();
+    
     showToast(`${total} ficheiro(s) processados em lote`, 'success');
 }
 
@@ -890,7 +1002,7 @@ function switchLanguage() {
 }
 
 // ============================================================================
-// 9. REGISTO DE CLIENTE
+// 11. REGISTO DE CLIENTE
 // ============================================================================
 function registerClient() {
     const name = document.getElementById('clientNameFixed').value.trim();
@@ -912,7 +1024,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 10. GESTÃO DE EVIDÊNCIAS
+// 12. GESTÃO DE EVIDÊNCIAS
 // ============================================================================
 async function processFile(file, type) {
     const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
@@ -970,6 +1082,13 @@ async function processFile(file, type) {
         timestamp: new Date().toLocaleString(),
         size: file.size,
         timestampUnix: Math.floor(Date.now() / 1000)
+    });
+
+    // Guardar fonte para rastreabilidade
+    VDCSystem.fileSources.set(file.name, {
+        type: type,
+        hash: hash,
+        processedAt: new Date().toISOString()
     });
 
     // Processamento específico por tipo
@@ -1065,6 +1184,11 @@ async function processFile(file, type) {
             VDCSystem.documents.saft.totals.iva = (VDCSystem.documents.saft.totals.iva || 0) + fileIVA;
             VDCSystem.documents.saft.totals.iliquido = (VDCSystem.documents.saft.totals.iliquido || 0) + fileSemIVA;
             
+            // Registar fonte dos valores
+            ValueSource.registerValue('saftBrutoValue', fileTotal, file.name, 'soma de valores totais do CSV');
+            ValueSource.registerValue('saftIvaValue', fileIVA, file.name, 'soma de IVA do CSV');
+            ValueSource.registerValue('saftIliquidoValue', fileSemIVA, file.name, 'soma de valores sem IVA');
+            
             logAudit(`📊 SAF-T CSV: ${file.name} | +${formatCurrency(fileTotal)} (${fileCount} registos) | IVA: +${formatCurrency(fileIVA)}`, 'success');
             
         } catch(e) {
@@ -1151,6 +1275,13 @@ async function processFile(file, type) {
             VDCSystem.documents.statements.totals.campanhas = (VDCSystem.documents.statements.totals.campanhas || 0) + campanhas;
             VDCSystem.documents.statements.totals.ganhosLiquidos = (VDCSystem.documents.statements.totals.ganhosLiquidos || 0) + ganhosLiquidos;
             
+            // Registar fontes
+            ValueSource.registerValue('stmtGanhosValue', ganhos, file.name, 'extração de texto');
+            ValueSource.registerValue('stmtComissaoValue', comissao, file.name, 'extração de texto');
+            ValueSource.registerValue('stmtGorjetasValue', gorjetas, file.name, 'extração de texto');
+            ValueSource.registerValue('stmtTaxasCancelValue', cancelamentos, file.name, 'extração de texto');
+            ValueSource.registerValue('stmtCampanhasValue', campanhas, file.name, 'extração de texto');
+            
             logAudit(`📊 Extrato processado: ${file.name} | Ganhos acumulados: ${formatCurrency(VDCSystem.documents.statements.totals.ganhosApp)}`, 'info');
             
         } catch(e) {
@@ -1174,6 +1305,10 @@ async function processFile(file, type) {
             if (valorMatch) {
                 const val = toForensicNumber(valorMatch[1]);
                 VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
+                
+                // Registar fonte
+                ValueSource.registerValue('kpiInvValue', val, file.name, 'extração de fatura');
+                
                 logAudit(`💰 Fatura processada: ${file.name} | +${formatCurrency(val)} | Total acumulado: ${formatCurrency(VDCSystem.documents.invoices.totals.invoiceValue)}`, 'success');
                 
                 const numFaturaMatch = text.match(faturaRegex);
@@ -1185,6 +1320,10 @@ async function processFile(file, type) {
                 if (fallbackMatch) {
                     const val = toForensicNumber(fallbackMatch[1]);
                     VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + val;
+                    
+                    // Registar fonte
+                    ValueSource.registerValue('kpiInvValue', val, file.name, 'extração fallback');
+                    
                     logAudit(`💰 Fatura processada (fallback): ${file.name} | +${formatCurrency(val)}`, 'info');
                 }
             }
@@ -1205,6 +1344,7 @@ async function processFile(file, type) {
                 const val = toForensicNumber(anualMatch[1]);
                 if (VDCSystem.documents.dac7.totals.q4 === 0) {
                     VDCSystem.documents.dac7.totals.q4 = val;
+                    ValueSource.registerValue('dac7Q4Value', val, file.name, 'extração DAC7 anual');
                     logAudit(`📈 DAC7 anual extraído: ${formatCurrency(val)}`, 'success');
                 } else {
                     logAudit(`⚠️ DAC7 já processado, valor ignorado`, 'warning');
@@ -1215,6 +1355,7 @@ async function processFile(file, type) {
             if (q4Match && VDCSystem.documents.dac7.totals.q4 === 0) {
                 const val = toForensicNumber(q4Match[1]);
                 VDCSystem.documents.dac7.totals.q4 = val;
+                ValueSource.registerValue('dac7Q4Value', val, file.name, 'extração DAC7 Q4');
             }
             
             const comissoesQ4Match = text.match(comissoesQ4Regex);
@@ -1235,7 +1376,7 @@ async function processFile(file, type) {
         }
     }
 
-    // CORREÇÃO: Garantir que a lista correta é atualizada
+    // Atualizar lista no modal
     const listId = getListIdForType(type);
     const listEl = document.getElementById(listId);
     
@@ -1246,9 +1387,12 @@ async function processFile(file, type) {
         listEl.style.display = 'block';
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item-modal';
+        
+        const demoBadge = VDCSystem.demoMode ? '<span class="demo-badge">DEMO</span>' : '';
+        
         fileItem.innerHTML = `
             <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
-            <span class="file-name-modal">${file.name}</span>
+            <span class="file-name-modal">${file.name} ${demoBadge}</span>
             <span class="file-hash-modal">${hash.substring(0,8)}...</span>
         `;
         listEl.appendChild(fileItem);
@@ -1311,7 +1455,7 @@ function updateCounters() {
 }
 
 // ============================================================================
-// 11. MODO DEMO (CASO SIMULADO)
+// 13. MODO DEMO (CASO SIMULADO)
 // ============================================================================
 function activateDemoMode() {
     if(VDCSystem.processing) return;
@@ -1363,6 +1507,11 @@ function activateDemoMode() {
         
         VDCSystem.documents.invoices.totals.invoiceValue = forensicRound(262.94);
 
+        // Registar fontes demo
+        ValueSource.registerValue('saftBrutoValue', 8758.03, 'demo_saft_combined.csv', 'dados simulados');
+        ValueSource.registerValue('stmtGanhosValue', 9652.13, 'demo_statements_combined.pdf', 'dados simulados');
+        ValueSource.registerValue('dac7Q4Value', 7755.16, 'demo_dac7.pdf', 'dados simulados');
+
         performAudit();
 
         logAudit('✅ Perícia simulada concluída.', 'success');
@@ -1371,6 +1520,8 @@ function activateDemoMode() {
             demoBtn.disabled = false;
             demoBtn.innerHTML = `<i class="fas fa-flask"></i> ${translations[currentLang].navDemo}`;
         }
+        
+        emergencyCredibilityFix();
     }, 1500);
 }
 
@@ -1400,7 +1551,7 @@ function simulateUpload(type, count) {
         if (listEl) {
             listEl.innerHTML += `<div class="file-item-modal">
                 <i class="fas fa-flask" style="color: #f59e0b;"></i>
-                <span class="file-name-modal">${fileName} (DEMO)</span>
+                <span class="file-name-modal">${fileName} <span class="demo-badge">DEMO</span></span>
                 <span class="file-hash-modal">${demoHash.substring(0,8)}</span>
             </div>`;
         }
@@ -1410,7 +1561,7 @@ function simulateUpload(type, count) {
 }
 
 // ============================================================================
-// 12. MOTOR DE PERÍCIA FORENSE
+// 14. MOTOR DE PERÍCIA FORENSE
 // ============================================================================
 function performAudit() {
     if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
@@ -1484,14 +1635,15 @@ function performAudit() {
             const duration = (VDCSystem.performanceTiming.end - VDCSystem.performanceTiming.start).toFixed(2);
             
             logAudit(`📊 VALORES UTILIZADOS NA PERÍCIA:`, 'info');
-            logAudit(`   SAF-T Bruto: ${formatCurrency(saftBruto)}`, 'info');
-            logAudit(`   Ganhos App: ${formatCurrency(stmtGross)}`, 'info');
+            logAudit(`   SAF-T Bruto: ${formatCurrency(saftBruto)} (${VDCSystem.documents.saft?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   Ganhos App: ${formatCurrency(stmtGross)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, 'info');
             logAudit(`   Comissões: ${formatCurrency(platformCommission)}`, 'info');
-            logAudit(`   Faturas: ${formatCurrency(invoiceVal)}`, 'info');
-            logAudit(`   DAC7 Q4: ${formatCurrency(dac7Q4)}`, 'info');
-            logAudit(`   Líquido Extrato: ${formatCurrency(stmtLiquido)}`, 'info');
+            logAudit(`   Faturas: ${formatCurrency(invoiceVal)} (${VDCSystem.documents.invoices?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   DAC7 Q4: ${formatCurrency(dac7Q4)} (${VDCSystem.documents.dac7?.files?.length || 0} ficheiros)`, 'info');
             
             logAudit(`✅ Perícia BIG DATA concluída em ${duration}ms. VEREDICTO: ${VDCSystem.analysis.verdict ? VDCSystem.analysis.verdict.level : 'N/A'}`, 'success');
+            
+            emergencyCredibilityFix();
 
         } catch(error) {
             console.error('Erro na perícia:', error);
@@ -1545,6 +1697,37 @@ function performForensicCrossings() {
     if (mesesDados > 0) {
         const discrepanciaMensalMedia = maiorDiscrepancia / mesesDados;
         ev.quantumBeneficio = forensicRound(discrepanciaMensalMedia * 12 * 38000 * 7);
+        
+        // Guardar breakdown do quantum
+        const breakdown = ValueSource.getQuantumBreakdown(maiorDiscrepancia, mesesDados);
+        ev.quantumBreakdown = breakdown;
+        
+        // Atualizar breakdown na UI
+        const quantumBreakdownEl = document.getElementById('quantumBreakdown');
+        if (quantumBreakdownEl) {
+            quantumBreakdownEl.innerHTML = `
+                <div class="quantum-breakdown-item">
+                    <span>Discrepância base:</span>
+                    <span>${formatCurrency(maiorDiscrepancia)}</span>
+                </div>
+                <div class="quantum-breakdown-item">
+                    <span>Meses com dados:</span>
+                    <span>${mesesDados}</span>
+                </div>
+                <div class="quantum-breakdown-item">
+                    <span>Média mensal:</span>
+                    <span>${formatCurrency(discrepanciaMensalMedia)}</span>
+                </div>
+                <div class="quantum-breakdown-item">
+                    <span>Impacto anual por motorista:</span>
+                    <span>${formatCurrency(discrepanciaMensalMedia * 12)}</span>
+                </div>
+                <div class="quantum-breakdown-item" style="border-top: 1px solid rgba(239,68,68,0.3); margin-top:0.3rem; padding-top:0.3rem;">
+                    <span>QUANTUM TOTAL (7 anos):</span>
+                    <span style="color:var(--warn-primary); font-weight:800;">${formatCurrency(ev.quantumBeneficio)}</span>
+                </div>
+            `;
+        }
     } else {
         ev.quantumBeneficio = 0;
     }
@@ -1635,6 +1818,18 @@ function updateModulesUI() {
     setElementText('dac7Q2Value', formatCurrency(ev.dac7Q2 || 0));
     setElementText('dac7Q3Value', formatCurrency(ev.dac7Q3 || 0));
     setElementText('dac7Q4Value', formatCurrency(ev.dac7Q4 || 0));
+    
+    // Atualizar badges de fonte se existirem
+    const sourceElements = document.querySelectorAll('[id$="Source"]');
+    sourceElements.forEach(el => {
+        const baseId = el.id.replace('Source', '');
+        const source = ValueSource.getBreakdown(baseId);
+        if (source && el) {
+            const fileName = source.sourceFile.length > 30 ? source.sourceFile.substring(0, 27) + '...' : source.sourceFile;
+            el.textContent = `Fonte: ${fileName}`;
+            el.setAttribute('data-tooltip', `Cálculo: ${source.calculationMethod}\nFicheiro: ${source.sourceFile}\nValor: ${formatCurrency(source.value)}`);
+        }
+    });
 }
 
 function showAlerts() {
@@ -1737,9 +1932,15 @@ function renderChart() {
 }
 
 // ============================================================================
-// 13. EXPORTAÇÕES
+// 15. EXPORTAÇÕES
 // ============================================================================
 function exportDataJSON() {
+    // Recolher breakdown de fontes
+    const sources = {};
+    ValueSource.sources.forEach((value, key) => {
+        sources[key] = value;
+    });
+    
     const exportData = {
         metadata: {
             version: VDCSystem.version,
@@ -1760,13 +1961,16 @@ function exportDataJSON() {
             discrepancies: VDCSystem.analysis.crossings,
             verdict: VDCSystem.analysis.verdict,
             selectedQuestions: VDCSystem.analysis.selectedQuestions,
-            evidenceCount: VDCSystem.counts?.total || 0
+            evidenceCount: VDCSystem.counts?.total || 0,
+            valueSources: sources,
+            quantumBreakdown: VDCSystem.analysis.extractedValues?.quantumBreakdown || null
         },
         evidence: {
             integrity: VDCSystem.analysis.evidenceIntegrity,
             invoices: {
                 count: VDCSystem.documents.invoices?.files?.length || 0,
-                totalValue: VDCSystem.documents.invoices?.totals?.invoiceValue || 0
+                totalValue: VDCSystem.documents.invoices?.totals?.invoiceValue || 0,
+                files: VDCSystem.documents.invoices?.files?.map(f => f.name) || []
             },
             statements: {
                 count: VDCSystem.documents.statements?.files?.length || 0,
@@ -1775,20 +1979,23 @@ function exportDataJSON() {
                 gorjetas: VDCSystem.documents.statements?.totals?.gorjetas || 0,
                 portagens: VDCSystem.documents.statements?.totals?.portagens || 0,
                 taxasCancelamento: VDCSystem.documents.statements?.totals?.taxasCancelamento || 0,
-                comissao: VDCSystem.documents.statements?.totals?.despesasComissao || 0
+                comissao: VDCSystem.documents.statements?.totals?.despesasComissao || 0,
+                files: VDCSystem.documents.statements?.files?.map(f => f.name) || []
             },
             saft: {
                 count: VDCSystem.documents.saft?.files?.length || 0,
                 bruto: VDCSystem.documents.saft?.totals?.bruto || 0,
                 iliquido: VDCSystem.documents.saft?.totals?.iliquido || 0,
-                iva: VDCSystem.documents.saft?.totals?.iva || 0
+                iva: VDCSystem.documents.saft?.totals?.iva || 0,
+                files: VDCSystem.documents.saft?.files?.map(f => f.name) || []
             },
             dac7: {
                 count: VDCSystem.documents.dac7?.files?.length || 0,
                 q1: VDCSystem.documents.dac7?.totals?.q1 || 0,
                 q2: VDCSystem.documents.dac7?.totals?.q2 || 0,
                 q3: VDCSystem.documents.dac7?.totals?.q3 || 0,
-                q4: VDCSystem.documents.dac7?.totals?.q4 || 0
+                q4: VDCSystem.documents.dac7?.totals?.q4 || 0,
+                files: VDCSystem.documents.dac7?.files?.map(f => f.name) || []
             }
         },
         auditLog: VDCSystem.logs.slice(-50)
@@ -1801,7 +2008,7 @@ function exportDataJSON() {
     a.click();
     URL.revokeObjectURL(a.href);
 
-    logAudit('📊 Relatório JSON exportado com valor probatório.', 'success');
+    logAudit('📊 Relatório JSON exportado com valor probatório e rastreabilidade completa.', 'success');
     showToast('JSON probatório exportado', 'success');
 }
 
@@ -1852,11 +2059,11 @@ function exportPDF() {
         doc.text(t.pdfSection2, left, y); y += 8;
         
         doc.setTextColor(60, 60, 60);
-        doc.text(`SAF-T Bruto: ${formatCurrency(ev.saftBruto || 0)}`, left, y); y += 6;
-        doc.text(`Ganhos App: ${formatCurrency(ev.ganhosApp || 0)}`, left, y); y += 6;
+        doc.text(`SAF-T Bruto: ${formatCurrency(ev.saftBruto || 0)} (${VDCSystem.documents.saft?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`Ganhos App: ${formatCurrency(ev.ganhosApp || 0)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, left, y); y += 6;
         doc.text(`Comissões: ${formatCurrency(ev.comissaoTotal || 0)}`, left, y); y += 6;
-        doc.text(`Faturado: ${formatCurrency(ev.faturaPlataforma || 0)}`, left, y); y += 6;
-        doc.text(`DAC7 Q4: ${formatCurrency(ev.dac7Q4 || 0)}`, left, y); y += 6;
+        doc.text(`Faturado: ${formatCurrency(ev.faturaPlataforma || 0)} (${VDCSystem.documents.invoices?.files?.length || 0} ficheiros)`, left, y); y += 6;
+        doc.text(`DAC7 Q4: ${formatCurrency(ev.dac7Q4 || 0)} (${VDCSystem.documents.dac7?.files?.length || 0} ficheiros)`, left, y); y += 6;
         doc.text(`Discrepância: ${formatCurrency(ev.diferencialComissoes || 0)}`, left, y); y += 10;
         
         doc.setTextColor(0, 229, 255);
@@ -1874,7 +2081,21 @@ function exportPDF() {
         doc.setTextColor(60, 60, 60);
         doc.setFontSize(10);
         doc.text(`Desvio: ${verdict.percent}`, left, y); y += 6;
-        doc.text(verdict.description, left, y, { maxWidth: pageWidth - 30 }); y += 20;
+        doc.text(verdict.description, left, y, { maxWidth: pageWidth - 30 }); y += 15;
+        
+        // Adicionar breakdown do quantum se existir
+        if (ev.quantumBreakdown) {
+            doc.setTextColor(239, 68, 68);
+            doc.setFontSize(11);
+            doc.text('CÁLCULO DO QUANTUM (ART. 103 RGIT):', left, y); y += 6;
+            doc.setTextColor(60, 60, 60);
+            doc.setFontSize(9);
+            doc.text(`Discrepância base: ${formatCurrency(ev.diferencialComissoes || 0)}`, left, y); y += 5;
+            doc.text(`Meses com dados: ${VDCSystem.dataMonths.size}`, left, y); y += 5;
+            doc.text(`Média mensal: ${formatCurrency(ev.quantumBreakdown.discrepanciaMensalMedia)}`, left, y); y += 5;
+            doc.text(`Impacto anual por motorista: ${formatCurrency(ev.quantumBreakdown.impactoAnualPorMotorista)}`, left, y); y += 5;
+            doc.text(`QUANTUM TOTAL (7 anos): ${formatCurrency(ev.quantumBeneficio || 0)}`, left, y); y += 10;
+        }
         
         doc.setFontSize(9);
         doc.setTextColor(100, 100, 100);
@@ -1900,7 +2121,7 @@ function exportPDF() {
 }
 
 // ============================================================================
-// 14. FUNÇÕES AUXILIARES
+// 16. FUNÇÕES AUXILIARES
 // ============================================================================
 function generateMasterHash() {
     const data = JSON.stringify({
@@ -1908,6 +2129,7 @@ function generateMasterHash() {
         docs: VDCSystem.documents,
         session: VDCSystem.sessionId,
         months: Array.from(VDCSystem.dataMonths),
+        sources: Array.from(ValueSource.sources.entries()),
         timestamp: Date.now()
     });
     VDCSystem.masterHash = CryptoJS.SHA256(data).toString();
@@ -2000,6 +2222,7 @@ function resetAllValues() {
     VDCSystem.processedFiles.clear();
     VDCSystem.dataMonths.clear();
     VDCSystem.analysis.evidenceIntegrity = [];
+    ValueSource.sources.clear();
     
     // Reset dos valores extraídos
     VDCSystem.analysis.extractedValues = {};
@@ -2030,6 +2253,13 @@ function resetAllValues() {
         }
     });
     
+    // Reset dos badges de fonte
+    const sourceElements = document.querySelectorAll('[id$="Source"]');
+    sourceElements.forEach(el => {
+        el.textContent = '';
+        el.removeAttribute('data-tooltip');
+    });
+    
     // Reset das listas de ficheiros no modal
     const listIds = ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 'statementsFileListModal', 'dac7FileListModal'];
     listIds.forEach(id => {
@@ -2041,10 +2271,21 @@ function resetAllValues() {
     });
     
     // Esconder alertas e boxes
-    document.getElementById('bigDataAlert').style.display = 'none';
-    document.getElementById('quantumBox').style.display = 'none';
-    document.getElementById('verdictDisplay').style.display = 'none';
-    document.getElementById('jurosCard').style.display = 'none';
+    const bigDataAlert = document.getElementById('bigDataAlert');
+    if (bigDataAlert) bigDataAlert.style.display = 'none';
+    
+    const quantumBox = document.getElementById('quantumBox');
+    if (quantumBox) {
+        quantumBox.style.display = 'none';
+        const breakdown = document.getElementById('quantumBreakdown');
+        if (breakdown) breakdown.innerHTML = '';
+    }
+    
+    const verdictDisplay = document.getElementById('verdictDisplay');
+    if (verdictDisplay) verdictDisplay.style.display = 'none';
+    
+    const jurosCard = document.getElementById('jurosCard');
+    if (jurosCard) jurosCard.style.display = 'none';
     
     // Reset dos contadores
     updateCounters();
@@ -2076,11 +2317,19 @@ function updateAnalysisButton() {
     }
 }
 
+// ============================================================================
+// EXPOR OBJETOS GLOBAIS PARA DEBUG (OPCIONAL)
+// ============================================================================
+window.VDCSystem = VDCSystem;
+window.ValueSource = ValueSource;
+window.emergencyCredibilityFix = emergencyCredibilityFix;
+
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v12.7 RETA FINAL FORENSE
-   TODAS AS CORREÇÕES APLICADAS:
-   - Layout dos módulos em 3 linhas
-   - Botão LIMPAR CONSOLE com reset total
-   - Visibilidade garantida de faturas e extratos
-   - Quantum dinâmico baseado nos meses reais
+   FIM DO FICHEIRO SCRIPT.JS · v12.7.1 MODO PROFISSIONAL
+   CORREÇÕES APLICADAS:
+   - Rastreabilidade completa origem/destino dos valores
+   - Contadores sempre sincronizados com ficheiros reais
+   - Quantum com breakdown detalhado
+   - Distinção clara entre dados reais e demo
+   - Badges de fonte em todos os cards
    ===================================================================== */
