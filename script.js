@@ -2,11 +2,13 @@
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
  * ====================================================================
  * CONSOLIDAÇÃO FINAL COM CORREÇÕES:
+ * - Processamento correto de CSV com PapaParse (resolve problema dos SAF-T)
  * - Processamento correto de valores decimais (ponto vs vírgula)
- * - Acumulação correta de valores SAF-T (IVA, ilíquido, bruto)
  * - Suporte para formato alternativo de extratos (setembro/2024)
  * - Prevenção de duplicação de ficheiros
  * - Cálculos forenses precisos com valores reais
+ * - Throttle de logs para melhor performance
+ * - Botão "Limpar Console" funcional
  * ====================================================================
  */
 
@@ -455,6 +457,10 @@ const VDCSystem = {
     counts: { total: 0 }
 };
 
+// Throttle para logs (melhorar performance)
+let lastLogTime = 0;
+const LOG_THROTTLE = 100; // ms
+
 // ============================================================================
 // 6. INICIALIZAÇÃO
 // ============================================================================
@@ -855,33 +861,79 @@ async function processFile(file, type) {
         logAudit(`🔐 Ficheiro de controlo registado: ${file.name}`, 'info');
     }
     
-    // SAF-T CSV (131509_*.csv) - CORRIGIDO: EXTRAI COLUNAS 14,15,16 E ACUMULA
+    // SAF-T CSV (131509_*.csv) - CORRIGIDO COM PAPAPARSE
     if (type === 'saft' && file.name.match(/131509.*\.csv$/i)) {
         try {
-            const lines = text.split(/\r?\n/);
+            // Remover BOM se existir
+            if (text.charCodeAt(0) === 0xFEFF || text.charCodeAt(0) === 0xFFFE) {
+                text = text.substring(1);
+            }
+            
+            // Usar PapaParse para parsear o CSV corretamente
+            const parseResult = Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true,
+                quotes: true,
+                delimiter: ','
+            });
+            
             let fileTotal = 0;
             let fileIVA = 0;
             let fileSemIVA = 0;
             let fileCount = 0;
             
-            // Pular cabeçalho (linha 0)
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+            // Mapear nomes das colunas
+            const columns = Object.keys(parseResult.data[0] || {});
+            
+            // Encontrar colunas pelos nomes (case insensitive)
+            let ivacol = columns.find(c => 
+                c.toLowerCase().includes('iva') && !c.toLowerCase().includes('preço')
+            );
+            let semIVAcol = columns.find(c => 
+                c.toLowerCase().includes('sem iva') || 
+                c.toLowerCase().includes('preço da viagem (sem iva)')
+            );
+            let totalCol = columns.find(c => 
+                c.toLowerCase().includes('preço da viagem') && 
+                !c.toLowerCase().includes('sem')
+            );
+            
+            // Fallback para índices se não encontrar pelos nomes
+            if (!ivacol && parseResult.data[0] && parseResult.data[0].length > 13) {
+                ivacol = 13;
+                semIVAcol = 14;
+                totalCol = 15;
+            }
+            
+            for (const row of parseResult.data) {
+                if (!row) continue;
                 
-                const cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
-                
-                // Extrair valores das colunas corretas (índices base 0)
-                // Coluna 14 (índice 13) = IVA
-                // Coluna 15 (índice 14) = Preço sem IVA
-                // Coluna 16 (índice 15) = Preço com IVA (TOTAL DA VIAGEM)
                 let valorIVA = 0;
                 let valorSemIVA = 0;
                 let valorTotal = 0;
                 
-                if (cols.length > 15) {
-                    valorIVA = toForensicNumber(cols[13]);
-                    valorSemIVA = toForensicNumber(cols[14]);
-                    valorTotal = toForensicNumber(cols[15]);
+                if (ivacol !== undefined) {
+                    if (typeof ivacol === 'number') {
+                        valorIVA = toForensicNumber(Object.values(row)[ivacol] || '0');
+                    } else {
+                        valorIVA = toForensicNumber(row[ivacol] || '0');
+                    }
+                }
+                
+                if (semIVAcol !== undefined) {
+                    if (typeof semIVAcol === 'number') {
+                        valorSemIVA = toForensicNumber(Object.values(row)[semIVAcol] || '0');
+                    } else {
+                        valorSemIVA = toForensicNumber(row[semIVAcol] || '0');
+                    }
+                }
+                
+                if (totalCol !== undefined) {
+                    if (typeof totalCol === 'number') {
+                        valorTotal = toForensicNumber(Object.values(row)[totalCol] || '0');
+                    } else {
+                        valorTotal = toForensicNumber(row[totalCol] || '0');
+                    }
                 }
                 
                 // Validar valores (devem ser razoáveis)
@@ -1776,6 +1828,13 @@ function generateMasterHash() {
 }
 
 function logAudit(message, type = 'info') {
+    const now = Date.now();
+    // Throttle logs para não sobrecarregar
+    if (now - lastLogTime < LOG_THROTTLE && type !== 'error' && type !== 'success') {
+        return;
+    }
+    lastLogTime = now;
+    
     const timestamp = new Date().toLocaleTimeString('pt-PT');
     const entry = { timestamp, message, type };
     VDCSystem.logs.push(entry);
