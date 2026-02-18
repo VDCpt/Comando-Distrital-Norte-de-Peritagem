@@ -1,14 +1,12 @@
 /* =====================================================================
    VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL FORENSE
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
-   MECANISMO DE LIMPEZA BINÁRIA · BIG DATA ACCUMULATOR
-   CORREÇÕES: Sidebar mais larga (420px), letra maior (16px), 
-              módulos expandidos com formato KPI IDÊNTICO à triangulação,
-              drag & drop global, visualização de ficheiros corrigida
+   BIG DATA ACCUMULATOR · CORREÇÕES: Sidebar mais larga (420px), 
+   letra maior (16px), módulos expandidos, drag & drop global
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
-   1. VARIÁVEIS GLOBAIS (ELITE DARK MODE)
+   1. VARIÁVEIS GLOBAIS
    --------------------------------------------------------------------- */
 :root {
     --bg-primary: #020617;
@@ -63,7 +61,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   2. SPLASH SCREEN PANORÂMICO (LASERS A 8s)
+   2. SPLASH SCREEN PANORÂMICO
    --------------------------------------------------------------------- */
 .splash-screen {
     position: fixed;
@@ -445,7 +443,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   5. SIDEBAR - CORRIGIDA: MAIS LARGA (420px)
+   5. SIDEBAR - MAIS LARGA (420px)
    --------------------------------------------------------------------- */
 .app-container {
     display: grid;
@@ -732,11 +730,14 @@ body {
     max-width: 100%;
 }
 
-.extraction-modules {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+.module-row {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.module-card.full-width {
+    width: 100%;
+    margin: 0;
 }
 
 .module-card {
@@ -769,6 +770,20 @@ body {
     flex-direction: column;
     gap: 0.75rem;
     flex: 1;
+    width: 100%;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
     width: 100%;
 }
 
@@ -821,26 +836,6 @@ body {
 .module-card .kpi-card.alert p {
     color: var(--warn-primary);
     animation: blink-alert 1s infinite;
-}
-
-.module-card .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.module-card .kpi-grid .kpi-card {
-    padding: 1rem;
-}
-
-.module-card .kpi-grid .kpi-card h4 {
-    font-size: 0.75rem;
-    margin-bottom: 0.3rem;
-}
-
-.module-card .kpi-grid .kpi-card p {
-    font-size: 1.1rem;
 }
 
 .toolbar-section {
@@ -1314,7 +1309,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   7. MODAL - COM DRAG & DROP GLOBAL E LISTAS CORRIGIDAS
+   7. MODAL
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1670,40 +1665,9 @@ body {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* =====================================================================
-   NOVAS CLASSES PARA LAYOUT DOS MÓDULOS E CREDIBILIDADE
-   ===================================================================== */
-
-.module-row {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.module-card.full-width {
-    width: 100%;
-    margin: 0;
-}
-
-.grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.grid-4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.module-values .grid-3 .kpi-card,
-.module-values .grid-4 .kpi-card {
-    margin: 0;
-    width: 100%;
-}
-
+/* ---------------------------------------------------------------------
+   9. CLASSES DE CREDIBILIDADE
+   --------------------------------------------------------------------- */
 .file-source-badge {
     display: block;
     font-size: 0.6rem;
@@ -1783,24 +1747,15 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   9. RESPONSIVIDADE
+   10. RESPONSIVIDADE
    --------------------------------------------------------------------- */
 @media (max-width: 1400px) {
-    .extraction-modules {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .module-card .kpi-grid {
+    .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 1200px) {
-    .extraction-modules {
-        grid-template-columns: 1fr;
-    }
-    .module-card .kpi-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1836,9 +1791,6 @@ body {
     }
     .toolbar-grid {
         flex-wrap: wrap;
-    }
-    .module-card .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -1890,12 +1842,6 @@ body {
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .module-card .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    .extraction-modules {
-        grid-template-columns: 1fr;
-    }
     .grid-3, .grid-4 {
         grid-template-columns: 1fr;
     }
@@ -1928,7 +1874,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   10. PRINT
+   11. PRINT
    --------------------------------------------------------------------- */
 @media print {
     .splash-screen,
