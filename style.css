@@ -1,8 +1,8 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL FORENSE
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.1 SMOKING GUN
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
-   BIG DATA ACCUMULATOR · CORREÇÕES: Sidebar mais larga (420px), 
-   letra maior (16px), módulos expandidos, drag & drop global
+   BIG DATA ACCUMULATOR · CORREÇÕES: LETRA MAIOR (16px), DRAG & DROP GLOBAL
+   NOVO: LUZ FBI/CSI, BOX AZUL TAXAS CANCELAMENTO
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -36,6 +36,11 @@
     --shadow-glow-red: 0 0 15px rgba(239, 68, 68, 0.4);
     --shadow-glow-green: 0 0 15px rgba(16, 185, 129, 0.4);
     --shadow-glow-orange: 0 0 15px rgba(245, 158, 11, 0.4);
+    
+    /* NOVOS BRILHOS FBI/CSI */
+    --shadow-glow-fbi-red: 0 0 25px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
+    --shadow-glow-fbi-blue: 0 0 25px rgba(0, 100, 255, 0.8), 0 0 40px rgba(0, 100, 255, 0.4);
+    --shadow-glow-fbi-yellow: 0 0 25px rgba(255, 200, 0, 0.8), 0 0 40px rgba(255, 200, 0, 0.4);
 }
 
 *,
@@ -1000,18 +1005,25 @@ body {
     border-top-color: var(--warn-primary);
 }
 
+/* QUANTUM BOX - AGORA CÁLCULO TRIBUTÁRIO PERICIAL */
 .quantum-box {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
     border: 2px solid var(--warn-primary);
     border-radius: var(--border-radius-sm);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     text-align: center;
+    box-shadow: var(--shadow-glow-fbi-red);
+    transition: box-shadow 0.3s ease;
+}
+
+.quantum-box:hover {
+    box-shadow: var(--shadow-glow-fbi-yellow);
 }
 
 .quantum-box h4 {
     color: var(--warn-primary);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     margin-bottom: 0.5rem;
     font-weight: 800;
@@ -1027,22 +1039,51 @@ body {
 }
 
 .quantum-formula {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin-top: 0.5rem;
     font-family: var(--font-mono);
 }
 
+.quantum-breakdown {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(0,0,0,0.4);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    text-align: left;
+    border-left: 3px solid var(--warn-primary);
+}
+
+.quantum-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+}
+
+.quantum-breakdown-item span:first-child {
+    color: var(--text-tertiary);
+}
+
+.quantum-breakdown-item span:last-child {
+    color: var(--warn-primary);
+    font-weight: 700;
+}
+
+/* VERDICT DISPLAY - AGORA PARECER TÉCNICO */
 .verdict-display {
     display: none;
-    text-align: center;
-    padding: 2rem;
-    background: rgba(0,0,0,0.5);
+    text-align: left;
+    padding: 1.5rem;
+    background: rgba(0,0,0,0.6);
     border: 1px solid var(--border-color);
     margin-bottom: 1.5rem;
     border-radius: var(--border-radius-sm);
     position: relative;
     z-index: 10;
+    backdrop-filter: blur(5px);
 }
 
 .verdict-display.active {
@@ -1052,8 +1093,10 @@ body {
 .verdict-title {
     font-size: 0.9rem;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--accent-primary);
     margin-bottom: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 .verdict-level {
@@ -1062,70 +1105,60 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 0.5rem;
+    color: var(--warn-primary);
 }
 
 .verdict-percent {
     font-size: 0.9rem;
     font-family: var(--font-mono);
     margin-bottom: 0.5rem;
+    color: var(--text-secondary);
 }
 
 .verdict-desc {
     font-size: 0.85rem;
     color: var(--text-secondary);
+    margin-bottom: 0.5rem;
 }
 
-.verdict-low {
-    color: var(--success-primary);
-    border-color: var(--success-primary);
-    box-shadow: var(--shadow-glow-green);
+.verdict-legal {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.5rem;
 }
 
-.verdict-med {
-    color: var(--warn-secondary);
-    border-color: var(--warn-secondary);
-    box-shadow: var(--shadow-glow-orange);
-}
-
-.verdict-high {
-    color: var(--warn-primary);
-    border-color: var(--warn-primary);
-    box-shadow: var(--shadow-glow-red);
-    animation: pulse-border 2s infinite;
-}
-
-@keyframes pulse-border {
-    0% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    50% { border-color: var(--warn-secondary); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-    100% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-
-@keyframes blink-alert {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
+/* BIG DATA ALERT - AGORA SMOKING GUN */
 .bigdata-alert {
-    background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(232, 65, 24, 0.2) 0%, rgba(255, 159, 26, 0.2) 100%);
     border: 3px solid var(--warn-primary);
     border-radius: var(--border-radius-sm);
-    padding: 1rem;
+    padding: 1.2rem;
     display: none;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
     position: relative;
     z-index: 10;
+    box-shadow: var(--shadow-glow-fbi-red);
+    transition: box-shadow 0.3s ease;
+}
+
+.bigdata-alert.smoking-gun:hover {
+    box-shadow: var(--shadow-glow-fbi-yellow);
 }
 
 .bigdata-alert i {
     font-size: 2rem;
     color: var(--warn-primary);
+    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8));
 }
 
 .bigdata-alert h4 {
     color: var(--warn-primary);
     margin-bottom: 0.25rem;
+    font-size: 1rem;
+    letter-spacing: 1px;
 }
 
 .bigdata-alert p {
@@ -1143,6 +1176,17 @@ body {
 
 .alert-active {
     animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+    0% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    50% { border-color: var(--warn-secondary); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes blink-alert {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .chart-section {
@@ -1684,33 +1728,6 @@ body {
 .file-source-badge::before {
     content: "📁 ";
     opacity: 0.7;
-}
-
-.quantum-breakdown {
-    margin-top: 1rem;
-    padding: 0.8rem;
-    background: rgba(0,0,0,0.3);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    text-align: left;
-    border-left: 3px solid var(--warn-primary);
-}
-
-.quantum-breakdown-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.3rem;
-}
-
-.quantum-breakdown-item span:first-child {
-    color: var(--text-tertiary);
-}
-
-.quantum-breakdown-item span:last-child {
-    color: var(--warn-primary);
-    font-weight: 700;
 }
 
 [data-tooltip] {
