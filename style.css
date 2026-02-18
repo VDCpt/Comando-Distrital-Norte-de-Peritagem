@@ -3,7 +3,8 @@
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    MECANISMO DE LIMPEZA BINÁRIA · BIG DATA ACCUMULATOR
    CORREÇÕES: Sidebar mais larga (420px), letra maior (16px), 
-              módulos expandidos com formato KPI, drag & drop global
+              módulos expandidos com formato KPI IDÊNTICO à triangulação,
+              drag & drop global, visualização de ficheiros corrigida
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -719,7 +720,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD & MÓDULOS - CORRIGIDOS: EXPANDIDOS COM FORMATO KPI
+   6. DASHBOARD & MÓDULOS - CORRIGIDOS: MESMO FORMATO DOS KPI CARDS
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
@@ -754,7 +755,7 @@ body {
 .module-card h4 {
     font-size: 0.85rem;
     color: var(--accent-primary);
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     text-transform: uppercase;
     font-weight: 700;
     display: flex;
@@ -764,104 +765,87 @@ body {
 }
 
 .module-values {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     flex: 1;
     width: 100%;
 }
 
-/* Estilo para os cards dentro dos módulos - mesmo formato dos KPI cards */
-.module-values .kpi-card {
+/* ===== CARDS DOS MÓDULOS COM MESMO FORMATO DOS KPI CARDS ===== */
+.module-card .kpi-card {
     background: #020617;
-    padding: 1rem;
+    padding: 1.2rem;
     border-top: 2px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     width: 100%;
     margin: 0;
     transition: all 0.2s ease;
+    display: block;
 }
 
-.module-values .kpi-card:hover {
+.module-card .kpi-card:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-glow-cyan);
     border-top-color: var(--accent-primary);
 }
 
-.module-values .kpi-card h4 {
-    font-size: 0.75rem;
+.module-card .kpi-card h4 {
+    font-size: 0.8rem;
     color: var(--text-tertiary);
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
     font-weight: 700;
     text-transform: uppercase;
     font-family: var(--font-mono);
+    border: none;
+    background: transparent;
+    padding: 0;
 }
 
-.module-values .kpi-card p {
-    font-size: 1.2rem;
+.module-card .kpi-card p {
+    font-size: 1.4rem;
     font-weight: 700;
     font-family: var(--font-mono);
     color: var(--text-primary);
     line-height: 1.2;
+    margin: 0;
 }
 
-.module-values .kpi-card.highlight {
+.module-card .kpi-card.highlight {
     border-top-color: var(--success-primary);
 }
 
-.module-values .kpi-card.danger {
+.module-card .kpi-card.danger {
     border-top-color: var(--warn-primary);
 }
 
-.module-values .kpi-card .kpi-card-value {
-    color: var(--text-primary);
+.module-card .kpi-card.alert p {
+    color: var(--warn-primary);
+    animation: blink-alert 1s infinite;
 }
 
-/* Grid específico para o DAC7 */
-.module-values .kpi-grid {
+/* Grid específico para o DAC7 - MESMO FORMATO */
+.module-card .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+    gap: 0.75rem;
     width: 100%;
 }
 
-.dac7-breakdown {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-    height: 100%;
-    width: 100%;
-}
-
-.quarter-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.module-card .kpi-grid .kpi-card {
     padding: 1rem;
-    text-align: center;
-    border-radius: var(--border-radius-sm);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 100%;
 }
 
-.quarter-label {
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    font-weight: 700;
+.module-card .kpi-grid .kpi-card h4 {
+    font-size: 0.75rem;
     margin-bottom: 0.3rem;
 }
 
-.quarter-value {
-    font-size: 1rem;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-weight: 700;
+.module-card .kpi-grid .kpi-card p {
+    font-size: 1.1rem;
 }
+
+/* ===== FIM DOS CARDS DOS MÓDULOS ===== */
 
 .toolbar-section {
     margin-bottom: 1.5rem;
@@ -999,6 +983,7 @@ body {
 .kpi-card:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-glow-cyan);
+    border-top-color: var(--accent-primary);
 }
 
 .kpi-card h4 {
@@ -1006,6 +991,7 @@ body {
     color: var(--text-tertiary);
     margin-bottom: 0.5rem;
     font-weight: 700;
+    text-transform: uppercase;
 }
 
 .kpi-card p {
@@ -1123,6 +1109,11 @@ body {
     100% { border-color: var(--warn-primary); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
+@keyframes blink-alert {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 .bigdata-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.1) 0%, rgba(255, 159, 26, 0.1) 100%);
     border: 3px solid var(--warn-primary);
@@ -1194,7 +1185,7 @@ body {
 .console-section {
     background: #000;
     border: 1px solid var(--border-color);
-    height: 200px; /* Aumentado de 150px para 200px */
+    height: 220px; /* Aumentado de 200px para 220px */
     display: flex;
     flex-direction: column;
     border-radius: var(--border-radius-sm);
@@ -1328,7 +1319,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   7. MODAL - COM DRAG & DROP GLOBAL
+   7. MODAL - COM DRAG & DROP GLOBAL E LISTAS CORRIGIDAS
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1349,7 +1340,7 @@ body {
     background: #0f172a;
     border: 1px solid var(--accent-primary);
     width: 90%;
-    max-width: 700px; /* Aumentado de 600px para 700px */
+    max-width: 750px; /* Aumentado de 700px para 750px */
     max-height: 85vh;
     overflow: hidden;
     display: flex;
@@ -1492,6 +1483,7 @@ body {
     display: none;
 }
 
+/* LISTAS DE FICHEIROS - CORRIGIDO PARA GARANTIR VISIBILIDADE */
 .file-list-modal {
     margin-top: 1rem;
     max-height: 150px;
@@ -1503,19 +1495,26 @@ body {
     min-height: 60px;
     position: relative;
     z-index: 10;
+    border: 1px solid var(--border-color);
 }
 
 .file-item-modal {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    padding: 0.4rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 0.6rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     font-size: 0.8rem;
     background: rgba(0, 229, 255, 0.05);
-    border-left: 2px solid var(--accent-primary);
-    margin-bottom: 0.3rem;
+    border-left: 3px solid var(--accent-primary);
+    margin-bottom: 0.4rem;
     border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.file-item-modal:hover {
+    background: rgba(0, 229, 255, 0.15);
+    transform: translateX(2px);
 }
 
 .file-name-modal {
@@ -1525,12 +1524,16 @@ body {
     text-overflow: ellipsis;
     font-family: var(--font-mono);
     color: var(--text-primary);
+    font-weight: 500;
 }
 
 .file-hash-modal {
     color: var(--text-tertiary);
     font-size: 0.7rem;
     font-family: var(--font-mono);
+    background: rgba(0,0,0,0.3);
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--border-radius-sm);
 }
 
 .processing-summary {
@@ -1681,7 +1684,7 @@ body {
     .extraction-modules {
         grid-template-columns: repeat(2, 1fr);
     }
-    .module-values .kpi-grid {
+    .module-card .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1690,7 +1693,7 @@ body {
     .extraction-modules {
         grid-template-columns: 1fr;
     }
-    .module-values .kpi-grid {
+    .module-card .kpi-grid {
         grid-template-columns: repeat(4, 1fr);
     }
     .kpi-grid {
@@ -1726,7 +1729,7 @@ body {
     .toolbar-grid {
         flex-wrap: wrap;
     }
-    .module-values .kpi-grid {
+    .module-card .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1779,7 +1782,7 @@ body {
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .module-values .kpi-grid {
+    .module-card .kpi-grid {
         grid-template-columns: 1fr;
     }
     .extraction-modules {
@@ -1868,13 +1871,13 @@ body {
         border: 1px solid #333;
         color: #333;
     }
-    .module-values .kpi-card {
+    .module-card .kpi-card {
         border: 1px solid #000;
         background: #fff !important;
         color: #000 !important;
     }
-    .module-values .kpi-card h4,
-    .module-values .kpi-card p {
+    .module-card .kpi-card h4,
+    .module-card .kpi-card p {
         color: #000 !important;
     }
 }
