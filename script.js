@@ -1,6 +1,6 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
- * VERSÃO FINAL CORRIGIDA - Extração formato europeu (ponto milhar, vírgula decimal)
+ * VERSÃO FINAL CORRIGIDA - TODAS AS RETIFICAÇÕES APLICADAS
  * ====================================================================
  */
 
@@ -887,16 +887,23 @@ async function processQueue() {
     showToast(`${total} ficheiro(s) processados em lote`, 'success');
 }
 
+// ============================================================================
+// FUNÇÃO DETECT FILE TYPE - VERSÃO CORRIGIDA (RECONHECE FATURAS PELO PADRÃO PT)
+// ============================================================================
 function detectFileType(file) {
     const name = file.name.toLowerCase();
     
-    if (name.match(/131509.*\.csv$/) || name.includes('saf-t') || name.includes('saft')) {
-        return 'saft';
+    // Padrões para faturas - MAIS ABRANGENTE
+    if (name.includes('fatura') || 
+        name.includes('invoice') || 
+        name.match(/pt\d{4}-\d{5}/i) ||  // Padrão PT1124-91599
+        name.match(/pt\d{4,5}-\d{3,5}/i) ||
+        (file.type === 'application/pdf' && name.match(/\d{4}-\d{5}/))) {
+        return 'invoice';
     }
     
-    if (name.includes('fatura') || name.includes('invoice') || 
-        (file.type === 'application/pdf' && (name.includes('fatura') || name.includes('invoice')))) {
-        return 'invoice';
+    if (name.match(/131509.*\.csv$/) || name.includes('saf-t') || name.includes('saft')) {
+        return 'saft';
     }
     
     if (name.includes('extrato') || name.includes('statement') || 
@@ -1027,7 +1034,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 12. PROCESSAMENTO DE FICHEIROS - VERSÃO CORRIGIDA
+// 12. PROCESSAMENTO DE FICHEIROS - VERSÃO CORRIGIDA FINAL
 // ============================================================================
 async function processFile(file, type) {
     const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
@@ -1203,24 +1210,40 @@ async function processFile(file, type) {
     }
 
     // ============================================================
-    // PROCESSAMENTO DE FATURAS
+    // PROCESSAMENTO DE FATURAS - VERSÃO MELHORADA
     // ============================================================
-    if (type === 'invoice') {
+    if (type === 'invoice' || (type === 'unknown' && file.name.match(/pt\d{4}-\d{5}/i))) {
         try {
-            const faturaPattern = /Fatura n\.º\s*([A-Z0-9\-\s]+)/i;
-            const faturaMatch = text.match(faturaPattern);
-            if (faturaMatch) {
-                logAudit(`   Nº Fatura: ${faturaMatch[1].trim()}`, 'info');
+            // Se veio como unknown mas é fatura, reclassificar
+            if (type === 'unknown') {
+                type = 'invoice';
+                logAudit(`📌 Ficheiro reclassificado como fatura: ${file.name}`, 'info');
             }
             
+            // Extrair número da fatura
+            const faturaPattern = /Fatura n\.º\s*([A-Z0-9\-\s]+)/i;
+            const ptPattern = /(PT\d{4,5}-\d{3,5})/i;
+            
+            const faturaMatch = text.match(faturaPattern);
+            const ptMatch = text.match(ptPattern) || file.name.match(ptPattern);
+            
+            if (faturaMatch) {
+                logAudit(`   Nº Fatura: ${faturaMatch[1].trim()}`, 'info');
+            } else if (ptMatch) {
+                logAudit(`   Nº Fatura: ${ptMatch[1]}`, 'info');
+            }
+            
+            // Extrair período
             const periodoPattern = /Período:\s*(\d{2}-\d{2}-\d{4})\s*-\s*(\d{2}-\d{2}-\d{4})/i;
             const periodoMatch = text.match(periodoPattern);
             if (periodoMatch) {
                 logAudit(`   Período: ${periodoMatch[1]} a ${periodoMatch[2]}`, 'info');
             }
             
+            // EXTRAIR VALOR - MÚLTIPLAS ESTRATÉGIAS
             let valorFatura = 0;
             
+            // Estratégia 1: Procurar por "Comissões da Bolt" seguido de valor
             const comissaoPattern = /Comissões da Bolt.*?([\d\s,.]+)/i;
             const comissaoMatch = text.match(comissaoPattern);
             
@@ -1232,6 +1255,7 @@ async function processFile(file, type) {
                 }
             }
             
+            // Estratégia 2: Procurar valores no formato europeu (ex: 239,00)
             if (valorFatura === 0) {
                 const valorPattern = /(\d{1,3}(?:\.\d{3})*,\d{2})/g;
                 const valores = [...text.matchAll(valorPattern)];
@@ -1246,6 +1270,17 @@ async function processFile(file, type) {
                 }
             }
             
+            // Estratégia 3: Procurar "A pagar: X€"
+            if (valorFatura === 0) {
+                const aPagarPattern = /A pagar:\s*([\d\s,.]+)€/i;
+                const aPagarMatch = text.match(aPagarPattern);
+                if (aPagarMatch) {
+                    valorFatura = toForensicNumber(aPagarMatch[1]);
+                    logAudit(`   Valor "A pagar": ${formatCurrency(valorFatura)}`, 'info');
+                }
+            }
+            
+            // Estratégia 4: Fallback - qualquer valor com 2 casas decimais
             if (valorFatura === 0) {
                 const fallbackPattern = /(\d+[.,]\d{2})/g;
                 const matches = [...text.matchAll(fallbackPattern)];
@@ -1265,12 +1300,31 @@ async function processFile(file, type) {
                 }
                 
                 VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + valorFatura;
+                VDCSystem.documents.invoices.totals.records = (VDCSystem.documents.invoices.totals.records || 0) + 1;
+                
+                if (!VDCSystem.documents.invoices.files) {
+                    VDCSystem.documents.invoices.files = [];
+                }
+                
+                const fileExists = VDCSystem.documents.invoices.files.some(f => f.name === file.name);
+                if (!fileExists) {
+                    VDCSystem.documents.invoices.files.push({
+                        name: file.name,
+                        size: file.size,
+                        valor: valorFatura
+                    });
+                }
                 
                 ValueSource.registerValue('kpiInvValue', valorFatura, file.name, 'extração de fatura');
                 
-                logAudit(`💰 Fatura processada: ${file.name} | +${formatCurrency(valorFatura)} | Total acumulado: ${formatCurrency(VDCSystem.documents.invoices.totals.invoiceValue)}`, 'success');
+                logAudit(`💰 Fatura processada: ${file.name} | +${formatCurrency(valorFatura)} | Total acumulado: ${formatCurrency(VDCSystem.documents.invoices.totals.invoiceValue)} (${VDCSystem.documents.invoices.totals.records} faturas)`, 'success');
             } else {
                 logAudit(`⚠️ Não foi possível extrair valor da fatura: ${file.name}`, 'warning');
+                // Mesmo sem valor, contar como fatura para contadores
+                if (!VDCSystem.documents.invoices.totals) {
+                    VDCSystem.documents.invoices.totals = { invoiceValue: 0, records: 0 };
+                }
+                VDCSystem.documents.invoices.totals.records = (VDCSystem.documents.invoices.totals.records || 0) + 1;
             }
             
         } catch(e) {
@@ -1280,7 +1334,7 @@ async function processFile(file, type) {
     }
 
     // ============================================================
-    // PROCESSAMENTO DE SAF-T (MANTER O EXISTENTE)
+    // PROCESSAMENTO DE SAF-T
     // ============================================================
     if (type === 'saft' && file.name.match(/131509.*\.csv$/i)) {
         try {
@@ -1415,6 +1469,13 @@ async function processFile(file, type) {
             console.warn(`Erro ao processar DAC7 ${file.name}:`, e);
             logAudit(`⚠️ Erro no processamento DAC7: ${e.message}`, 'warning');
         }
+    }
+
+    // ============================================================
+    // PROCESSAMENTO DE CONTROLO
+    // ============================================================
+    if (type === 'control') {
+        logAudit(`🔐 Ficheiro de controlo registado: ${file.name}`, 'info');
     }
 
     // Atualizar lista no modal
@@ -2330,4 +2391,5 @@ window.forensicDataSynchronization = forensicDataSynchronization;
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.7.1 FINAL
+   TODAS AS RETIFICAÇÕES APLICADAS
    ===================================================================== */
