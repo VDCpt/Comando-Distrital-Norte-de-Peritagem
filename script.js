@@ -8,7 +8,9 @@
  * - Prevenção de duplicação de ficheiros
  * - Cálculos forenses precisos com valores reais
  * - Throttle de logs para melhor performance
- * - Botão "Limpar Console" funcional
+ * - Botão "Limpar Console" FUNCIONAL (corrigido)
+ * - DRAG & DROP GLOBAL para upload rápido de múltiplos ficheiros
+ * - Processamento ASSÍNCRONO OTIMIZADO (sem bloqueios)
  * ====================================================================
  */
 
@@ -461,6 +463,10 @@ const VDCSystem = {
 let lastLogTime = 0;
 const LOG_THROTTLE = 100; // ms
 
+// Queue para processamento assíncrono de ficheiros
+const fileProcessingQueue = [];
+let isProcessingQueue = false;
+
 // ============================================================================
 // 6. INICIALIZAÇÃO
 // ============================================================================
@@ -470,11 +476,20 @@ document.addEventListener('DOMContentLoaded', () => {
     populateYears();
     startClockAndDate();
     loadSystemRecursively();
+    setupDragAndDrop(); // Nova função para drag & drop
 });
 
 function setupStaticListeners() {
     document.getElementById('startSessionBtn')?.addEventListener('click', startGatekeeperSession);
     document.getElementById('langToggleBtn')?.addEventListener('click', switchLanguage);
+    
+    // CORREÇÃO: Garantir que o botão "Limpar Console" funciona
+    const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+    if (clearConsoleBtn) {
+        // Remover event listeners antigos (se houver) e adicionar novo
+        clearConsoleBtn.replaceWith(clearConsoleBtn.cloneNode(true));
+        document.getElementById('clearConsoleBtn')?.addEventListener('click', clearConsole);
+    }
 }
 
 function startGatekeeperSession() {
@@ -638,9 +653,176 @@ function setupMainListeners() {
     document.getElementById('exportPDFBtn')?.addEventListener('click', exportPDF);
     document.getElementById('exportJSONBtn')?.addEventListener('click', exportDataJSON);
     document.getElementById('resetBtn')?.addEventListener('click', resetSystem);
-    document.getElementById('clearConsoleBtn')?.addEventListener('click', clearConsole);
+    
+    // CORREÇÃO: Garantir que o botão "Limpar Console" tem o listener correto
+    const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+    if (clearConsoleBtn) {
+        clearConsoleBtn.addEventListener('click', clearConsole);
+    }
 
     setupUploadListeners();
+}
+
+// ============================================================================
+// 7. NOVA FUNÇÃO: SETUP DRAG & DROP GLOBAL
+// ============================================================================
+function setupDragAndDrop() {
+    const dropZone = document.getElementById('globalDropZone');
+    const fileInput = document.getElementById('globalFileInput');
+    
+    if (!dropZone || !fileInput) return;
+    
+    // Clique na área de drop abre o seletor de ficheiros
+    dropZone.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // Prevenir comportamento padrão do browser
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight da área de drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    // Processar ficheiros quando soltos
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    // Processar ficheiros quando selecionados pelo input
+    fileInput.addEventListener('change', handleGlobalFileSelect);
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight() {
+    document.getElementById('globalDropZone').classList.add('drag-over');
+}
+
+function unhighlight() {
+    document.getElementById('globalDropZone').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = Array.from(dt.files);
+    processBatchFiles(files);
+}
+
+function handleGlobalFileSelect(e) {
+    const files = Array.from(e.target.files);
+    processBatchFiles(files);
+    e.target.value = ''; // Limpar para permitir selecionar os mesmos ficheiros novamente
+}
+
+// ============================================================================
+// 8. PROCESSAMENTO EM LOTE (OTIMIZADO)
+// ============================================================================
+async function processBatchFiles(files) {
+    if (files.length === 0) return;
+    
+    // Mostrar indicador de processamento
+    const statusEl = document.getElementById('globalProcessingStatus');
+    if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<p><i class="fas fa-spinner fa-spin"></i> A processar ${files.length} ficheiro(s) em lote...</p>`;
+    }
+    
+    logAudit(`🚀 INICIANDO PROCESSAMENTO EM LOTE: ${files.length} ficheiro(s)`, 'info');
+    
+    // Adicionar à queue de processamento
+    for (const file of files) {
+        fileProcessingQueue.push(file);
+    }
+    
+    // Iniciar processamento da queue se não estiver já a processar
+    if (!isProcessingQueue) {
+        processQueue();
+    }
+}
+
+async function processQueue() {
+    isProcessingQueue = true;
+    const statusEl = document.getElementById('globalProcessingStatus');
+    let processed = 0;
+    const total = fileProcessingQueue.length;
+    
+    while (fileProcessingQueue.length > 0) {
+        const file = fileProcessingQueue.shift();
+        processed++;
+        
+        if (statusEl) {
+            statusEl.innerHTML = `<p><i class="fas fa-spinner fa-spin"></i> A processar ${processed}/${total}: ${file.name}</p>`;
+        }
+        
+        // Determinar tipo do ficheiro baseado no nome e conteúdo
+        const fileType = detectFileType(file);
+        
+        try {
+            await processFile(file, fileType);
+        } catch (error) {
+            console.error(`Erro ao processar ${file.name}:`, error);
+            logAudit(`❌ Erro ao processar ${file.name}: ${error.message}`, 'error');
+        }
+        
+        // Pequena pausa para não bloquear a UI
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    
+    isProcessingQueue = false;
+    
+    if (statusEl) {
+        statusEl.style.display = 'none';
+    }
+    
+    logAudit(`✅ Processamento em lote concluído. Total: ${total} ficheiro(s)`, 'success');
+    updateEvidenceSummary();
+    updateCounters();
+    generateMasterHash();
+    showToast(`${total} ficheiro(s) processados em lote`, 'success');
+}
+
+function detectFileType(file) {
+    const name = file.name.toLowerCase();
+    
+    // SAF-T: normalmente começa com 131509 ou tem saf-t no nome
+    if (name.match(/131509.*\.csv$/) || name.includes('saf-t') || name.includes('saft')) {
+        return 'saft';
+    }
+    
+    // Faturas: PDF com fatura, invoice no nome
+    if (name.includes('fatura') || name.includes('invoice') || 
+        (file.type === 'application/pdf' && (name.includes('fatura') || name.includes('invoice')))) {
+        return 'invoice';
+    }
+    
+    // Extratos: statement, extrato, ganhos, etc.
+    if (name.includes('extrato') || name.includes('statement') || 
+        name.includes('ganhos') || name.includes('earnings')) {
+        return 'statement';
+    }
+    
+    // DAC7
+    if (name.includes('dac7') || name.includes('dac-7')) {
+        return 'dac7';
+    }
+    
+    // Controlo: ficheiros de controlo
+    if (name.includes('controlo') || name.includes('control')) {
+        return 'control';
+    }
+    
+    // Default: tenta inferir pelo conteúdo (será feito no processamento)
+    return 'unknown';
 }
 
 function setupUploadListeners() {
@@ -650,7 +832,11 @@ function setupUploadListeners() {
         const input = document.getElementById(`${type}FileModal`);
         if (btn && input) {
             btn.addEventListener('click', () => input.click());
-            input.addEventListener('change', (e) => handleFileUpload(e, type));
+            input.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                processBatchFiles(files);
+                e.target.value = '';
+            });
         }
     });
 }
@@ -729,7 +915,7 @@ function switchLanguage() {
 }
 
 // ============================================================================
-// 7. REGISTO DE CLIENTE
+// 9. REGISTO DE CLIENTE
 // ============================================================================
 function registerClient() {
     const name = document.getElementById('clientNameFixed').value.trim();
@@ -751,7 +937,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 8. GESTÃO DE EVIDÊNCIAS COM MECANISMO DE LIMPEZA BINÁRIA E SOMA INCREMENTAL
+// 10. GESTÃO DE EVIDÊNCIAS COM MECANISMO DE LIMPEZA BINÁRIA E SOMA INCREMENTAL
 // ============================================================================
 async function handleFileUpload(e, type) {
     const files = Array.from(e.target.files);
@@ -1188,7 +1374,7 @@ function updateCounters() {
 }
 
 // ============================================================================
-// 9. MODO DEMO (CASO SIMULADO)
+// 11. MODO DEMO (CASO SIMULADO)
 // ============================================================================
 function activateDemoMode() {
     if(VDCSystem.processing) return;
@@ -1254,7 +1440,7 @@ function simulateUpload(type, count) {
     }
     
     for (let i = 0; i < count; i++) {
-        const fileName = `demo_${type}_${i + 1}.${type === 'saft' ? 'csv' : type === 'invoices' ? 'pdf' : 'csv'}`;
+        const fileName = `demo_${type}_${i + 1}.${type === 'invoices' ? 'pdf' : type === 'saft' ? 'csv' : 'csv'}`;
         const fileObj = { name: fileName, size: 1024 * (i + 1) };
         VDCSystem.documents[type].files.push(fileObj);
         VDCSystem.documents[type].totals.records = (VDCSystem.documents[type].totals.records || 0) + 1;
@@ -1288,7 +1474,7 @@ function simulateUpload(type, count) {
 }
 
 // ============================================================================
-// 10. MOTOR DE PERÍCIA FORENSE BIG DATA (CORRIGIDO)
+// 12. MOTOR DE PERÍCIA FORENSE BIG DATA (CORRIGIDO)
 // ============================================================================
 function performAudit() {
     if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
@@ -1508,6 +1694,12 @@ function updateDashboard() {
 
     const jurosCard = document.getElementById('jurosCard');
     if(jurosCard) jurosCard.style.display = (ev.diferencialComissoes > 0) ? 'block' : 'none';
+    
+    // Mostrar quantum box se houver discrepância
+    const quantumBox = document.getElementById('quantumBox');
+    if (quantumBox) {
+        quantumBox.style.display = (ev.quantumBeneficio > 0) ? 'block' : 'none';
+    }
 }
 
 function updateModulesUI() {
@@ -1571,9 +1763,9 @@ function showAlerts() {
             const alertOmissionText = document.getElementById('alertOmissionText');
             if (alertOmissionText) {
                 if (ev.diferencialComissoes > ev.saftVsDac7) {
-                    alertOmissionText.textContent = 'Discrepância entre comissões do extrato e fatura:';
+                    alertOmissionText.textContent = translations[currentLang].alertOmissionText + ' Discrepância entre comissões do extrato e fatura:';
                 } else {
-                    alertOmissionText.textContent = 'Discrepância entre SAF-T e DAC7:';
+                    alertOmissionText.textContent = translations[currentLang].alertOmissionText + ' Discrepância entre SAF-T e DAC7:';
                 }
             }
         } else {
@@ -1646,7 +1838,7 @@ function renderChart() {
 }
 
 // ============================================================================
-// 11. EXPORTAÇÕES (JSON E PDF FORENSE)
+// 13. EXPORTAÇÕES (JSON E PDF FORENSE)
 // ============================================================================
 function exportDataJSON() {
     const exportData = {
@@ -1814,7 +2006,7 @@ function exportPDF() {
 }
 
 // ============================================================================
-// 12. FUNÇÕES AUXILIARES
+// 14. FUNÇÕES AUXILIARES
 // ============================================================================
 function generateMasterHash() {
     const data = JSON.stringify({
@@ -1872,13 +2064,20 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
+// CORREÇÃO: Função clearConsole completamente reescrita
 function clearConsole() {
     const consoleOutput = document.getElementById('consoleOutput');
     if (consoleOutput) {
         consoleOutput.innerHTML = '';
+        VDCSystem.logs = [];
+        // Adicionar mensagem de confirmação
+        const timestamp = new Date().toLocaleTimeString('pt-PT');
+        const logEl = document.createElement('div');
+        logEl.className = 'log-entry log-info';
+        logEl.textContent = `[${timestamp}] 🧹 Console limpo pelo utilizador.`;
+        consoleOutput.appendChild(logEl);
+        logAudit('🧹 Console limpo pelo utilizador.', 'info');
     }
-    VDCSystem.logs = [];
-    logAudit('🧹 Console limpo pelo utilizador.', 'info');
 }
 
 function resetSystem() {
@@ -1899,6 +2098,6 @@ function updateAnalysisButton() {
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.7 RETA FINAL FORENSE
-   BIG DATA ACCUMULATOR · SOMA INCREMENTAL · CORREÇÃO DE ACUMULAÇÃO
-   TODOS OS BLOCOS FECHADOS · SINTAXE VERIFICADA
+   BIG DATA ACCUMULATOR · SOMA INCREMENTAL · DRAG & DROP GLOBAL
+   BOTÃO LIMPAR CONSOLE CORRIGIDO · PROCESSAMENTO OTIMIZADO
    ===================================================================== */
