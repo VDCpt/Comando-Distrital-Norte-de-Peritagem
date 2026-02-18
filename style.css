@@ -2,7 +2,8 @@
    VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL FORENSE
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    MECANISMO DE LIMPEZA BINÁRIA · BIG DATA ACCUMULATOR
-   CORREÇÕES: Sidebar mais larga, letra maior, módulos expandidos
+   CORREÇÕES: Sidebar mais larga (420px), letra maior (16px), 
+              módulos expandidos com formato KPI, drag & drop global
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -57,7 +58,7 @@ body {
     line-height: 1.5;
     min-height: 100vh;
     overflow-x: hidden;
-    font-size: 15px; /* Aumentado de 14px */
+    font-size: 16px; /* Aumentado de 15px para 16px */
 }
 
 /* ---------------------------------------------------------------------
@@ -443,11 +444,11 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   5. SIDEBAR - CORRIGIDA: MAIS LARGA
+   5. SIDEBAR - CORRIGIDA: MAIS LARGA (420px)
    --------------------------------------------------------------------- */
 .app-container {
     display: grid;
-    grid-template-columns: 380px 1fr; /* Aumentado de 320px para 380px */
+    grid-template-columns: 420px 1fr; /* Aumentado de 380px para 420px */
     flex: 1;
     height: calc(100vh - 60px);
     max-width: 100%;
@@ -463,9 +464,9 @@ body {
     flex-direction: column;
     gap: 2rem;
     overflow-y: auto;
-    width: 380px !important; /* Aumentado */
-    min-width: 380px !important; /* Aumentado */
-    max-width: 380px !important; /* Aumentado */
+    width: 420px !important; /* Aumentado */
+    min-width: 420px !important; /* Aumentado */
+    max-width: 420px !important; /* Aumentado */
     flex-shrink: 0 !important;
 }
 
@@ -718,7 +719,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   6. DASHBOARD & MÓDULOS - CORRIGIDOS: MAIORES E EXPANDIDOS
+   6. DASHBOARD & MÓDULOS - CORRIGIDOS: EXPANDIDOS COM FORMATO KPI
    --------------------------------------------------------------------- */
 .analysis-area {
     background: var(--bg-secondary);
@@ -742,16 +743,16 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.2rem; /* Aumentado */
+    padding: 1.2rem;
     border-radius: var(--border-radius-sm);
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 100%; /* Garantir largura total */
+    width: 100%;
 }
 
 .module-card h4 {
-    font-size: 0.85rem; /* Aumentado */
+    font-size: 0.85rem;
     color: var(--accent-primary);
     margin-bottom: 0.75rem;
     text-transform: uppercase;
@@ -764,64 +765,70 @@ body {
 
 .module-values {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem; /* Aumentado */
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
     flex: 1;
     width: 100%;
 }
 
-.module-value-item {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 1rem; /* Aumentado */
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+/* Estilo para os cards dentro dos módulos - mesmo formato dos KPI cards */
+.module-values .kpi-card {
+    background: #020617;
+    padding: 1rem;
+    border-top: 2px solid var(--border-color);
     border-radius: var(--border-radius-sm);
-    transition: all 0.2s ease;
     width: 100%;
+    margin: 0;
+    transition: all 0.2s ease;
 }
 
-.module-value-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--accent-secondary);
+.module-values .kpi-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow-cyan);
+    border-top-color: var(--accent-primary);
 }
 
-.module-value-label {
-    font-size: 0.75rem; /* Aumentado */
+.module-values .kpi-card h4 {
+    font-size: 0.75rem;
     color: var(--text-tertiary);
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
-    display: block;
-}
-
-.module-value-amount {
-    font-size: 1.1rem; /* Aumentado */
-    color: var(--text-primary);
-    font-family: var(--font-mono);
+    margin-bottom: 0.3rem;
     font-weight: 700;
-    word-break: break-all;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
 }
 
-.module-value-amount.highlight {
-    color: var(--success-primary);
+.module-values .kpi-card p {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    line-height: 1.2;
 }
 
-.module-value-amount.alert {
-    color: var(--warn-primary);
-    animation: blink-alert 1s infinite;
+.module-values .kpi-card.highlight {
+    border-top-color: var(--success-primary);
 }
 
-@keyframes blink-alert {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+.module-values .kpi-card.danger {
+    border-top-color: var(--warn-primary);
+}
+
+.module-values .kpi-card .kpi-card-value {
+    color: var(--text-primary);
+}
+
+/* Grid específico para o DAC7 */
+.module-values .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    width: 100%;
 }
 
 .dac7-breakdown {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem; /* Aumentado */
+    gap: 1rem;
     margin-top: 0;
     padding-top: 0;
     border-top: none;
@@ -832,7 +839,7 @@ body {
 .quarter-box {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1rem; /* Aumentado */
+    padding: 1rem;
     text-align: center;
     border-radius: var(--border-radius-sm);
     display: flex;
@@ -842,7 +849,7 @@ body {
 }
 
 .quarter-label {
-    font-size: 0.7rem; /* Aumentado */
+    font-size: 0.7rem;
     color: var(--text-tertiary);
     text-transform: uppercase;
     font-weight: 700;
@@ -850,7 +857,7 @@ body {
 }
 
 .quarter-value {
-    font-size: 1rem; /* Aumentado */
+    font-size: 1rem;
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-weight: 700;
@@ -900,7 +907,7 @@ body {
 
 .dashboard-fixed {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Aumentado min-width */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
     position: relative;
@@ -912,7 +919,7 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.8rem; /* Aumentado */
+    padding: 1.8rem;
     border-left: 3px solid var(--accent-primary);
     position: relative;
     overflow: hidden;
@@ -921,7 +928,7 @@ body {
 }
 
 .stat-card h4 {
-    font-size: 0.9rem; /* Aumentado */
+    font-size: 0.9rem;
     color: var(--text-tertiary);
     margin-bottom: 0.5rem;
     text-transform: uppercase;
@@ -932,7 +939,7 @@ body {
 }
 
 .stat-card p {
-    font-size: 2rem; /* Aumentado */
+    font-size: 2rem;
     font-weight: 700;
     font-family: var(--font-mono);
     color: #fff;
@@ -940,7 +947,7 @@ body {
 }
 
 .stat-card .stat-desc {
-    font-size: 0.8rem; /* Aumentado */
+    font-size: 0.8rem;
     color: var(--text-tertiary);
     font-family: var(--font-mono);
 }
@@ -982,21 +989,27 @@ body {
 
 .kpi-card {
     background: #020617;
-    padding: 1.2rem; /* Aumentado */
+    padding: 1.2rem;
     border-top: 2px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     width: 100%;
+    transition: all 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow-cyan);
 }
 
 .kpi-card h4 {
-    font-size: 0.85rem; /* Aumentado */
+    font-size: 0.85rem;
     color: var(--text-tertiary);
     margin-bottom: 0.5rem;
     font-weight: 700;
 }
 
 .kpi-card p {
-    font-size: 1.6rem; /* Aumentado */
+    font-size: 1.6rem;
     font-weight: 700;
     font-family: var(--font-mono);
     color: var(--text-primary);
@@ -1177,16 +1190,18 @@ body {
     width: 100%;
 }
 
+/* CONSOLE DE AUDITORIA - MAIS LARGO */
 .console-section {
     background: #000;
     border: 1px solid var(--border-color);
-    height: 150px;
+    height: 200px; /* Aumentado de 150px para 200px */
     display: flex;
     flex-direction: column;
     border-radius: var(--border-radius-sm);
     overflow: hidden;
     position: relative;
     z-index: 10;
+    width: 100%;
 }
 
 .console-header {
@@ -1215,6 +1230,7 @@ body {
     font-size: 0.75rem;
     color: var(--success-primary);
     background: #000;
+    line-height: 1.4;
 }
 
 .log-entry {
@@ -1312,7 +1328,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   7. MODAL
+   7. MODAL - COM DRAG & DROP GLOBAL
    --------------------------------------------------------------------- */
 .modal-overlay {
     position: fixed;
@@ -1333,7 +1349,7 @@ body {
     background: #0f172a;
     border: 1px solid var(--accent-primary);
     width: 90%;
-    max-width: 600px;
+    max-width: 700px; /* Aumentado de 600px para 700px */
     max-height: 85vh;
     overflow: hidden;
     display: flex;
@@ -1393,11 +1409,41 @@ body {
     gap: 1rem;
 }
 
+/* ÁREA DE DRAG & DROP GLOBAL */
+#globalDropZone {
+    border: 2px dashed var(--accent-primary);
+    background: rgba(0, 229, 255, 0.05);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+#globalDropZone:hover {
+    background: rgba(0, 229, 255, 0.1);
+    border-color: var(--accent-secondary);
+    transform: scale(1.02);
+}
+
+#globalDropZone.drag-over {
+    background: rgba(0, 229, 255, 0.2);
+    border-color: var(--success-primary);
+    box-shadow: var(--shadow-glow-green);
+}
+
+#globalProcessingStatus {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--border-radius-sm);
+    color: var(--accent-primary);
+}
+
 .upload-group-modal {
     margin-bottom: 0.5rem;
     background: rgba(255,255,255,0.03);
     padding: 1rem;
-    border: 1px dashed var(--border-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
 }
 
@@ -1631,15 +1677,24 @@ body {
 /* ---------------------------------------------------------------------
    9. RESPONSIVIDADE
    --------------------------------------------------------------------- */
+@media (max-width: 1400px) {
+    .extraction-modules {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .module-values .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 1200px) {
     .extraction-modules {
         grid-template-columns: 1fr;
     }
-    .dac7-breakdown {
-        grid-template-columns: repeat(2, 1fr);
+    .module-values .kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
-    .module-values {
-        grid-template-columns: 1fr;
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -1670,6 +1725,9 @@ body {
     }
     .toolbar-grid {
         flex-wrap: wrap;
+    }
+    .module-values .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -1720,6 +1778,12 @@ body {
     }
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .module-values .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    .extraction-modules {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1804,15 +1868,14 @@ body {
         border: 1px solid #333;
         color: #333;
     }
-    .module-values {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    .module-value-item {
+    .module-values .kpi-card {
         border: 1px solid #000;
-        color: #000;
-        background: #fff;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .module-values .kpi-card h4,
+    .module-values .kpi-card p {
+        color: #000 !important;
     }
 }
 
