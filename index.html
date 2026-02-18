@@ -226,12 +226,12 @@
                     </div>
                 </div>
 
-                <!-- MÓDULOS DE EXTRAÇÃO - AGORA COM MESMO FORMATO DOS KPI CARDS -->
-                <div class="extraction-modules">
-                    <!-- MÓDULO SAF-T -->
-                    <div class="module-card">
+                <!-- MÓDULOS DE EXTRAÇÃO - LAYOUT CORRIGIDO -->
+                <!-- LINHA 1: MÓDULO SAF-T (3 CARDS) -->
+                <div class="module-row">
+                    <div class="module-card full-width">
                         <h4 id="moduleSaftTitle"><i class="fas fa-file-code"></i> MÓDULO SAF-T (EXTRAÇÃO)</h4>
-                        <div class="module-values">
+                        <div class="module-values grid-3">
                             <div class="kpi-card highlight">
                                 <h4 id="saftIliquidoLabel">Valor Ilíquido Total</h4>
                                 <p id="saftIliquidoValue">0,00 €</p>
@@ -246,59 +246,67 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- MÓDULO EXTRATOS -->
-                    <div class="module-card">
+                <!-- LINHA 2: MÓDULO EXTRATOS (6 CARDS - 2 LINHAS DE 3) -->
+                <div class="module-row">
+                    <div class="module-card full-width">
                         <h4 id="moduleStatementTitle"><i class="fas fa-file-contract"></i> MÓDULO EXTRATOS (MAPEAMENTO)</h4>
                         <div class="module-values">
-                            <div class="kpi-card highlight">
-                                <h4 id="stmtGanhosLabel">Ganhos na App</h4>
-                                <p id="stmtGanhosValue">0,00 €</p>
+                            <!-- Primeira linha de 3 cards -->
+                            <div class="grid-3" style="margin-bottom: 0.75rem;">
+                                <div class="kpi-card highlight">
+                                    <h4 id="stmtGanhosLabel">Ganhos na App</h4>
+                                    <p id="stmtGanhosValue">0,00 €</p>
+                                </div>
+                                <div class="kpi-card">
+                                    <h4 id="stmtCampanhasLabel">Campanhas</h4>
+                                    <p id="stmtCampanhasValue">0,00 €</p>
+                                </div>
+                                <div class="kpi-card">
+                                    <h4 id="stmtGorjetasLabel">Gorjetas</h4>
+                                    <p id="stmtGorjetasValue">0,00 €</p>
+                                </div>
                             </div>
-                            <div class="kpi-card">
-                                <h4 id="stmtCampanhasLabel">Campanhas</h4>
-                                <p id="stmtCampanhasValue">0,00 €</p>
-                            </div>
-                            <div class="kpi-card">
-                                <h4 id="stmtGorjetasLabel">Gorjetas</h4>
-                                <p id="stmtGorjetasValue">0,00 €</p>
-                            </div>
-                            <div class="kpi-card">
-                                <h4 id="stmtPortagensLabel">Portagens</h4>
-                                <p id="stmtPortagensValue">0,00 €</p>
-                            </div>
-                            <div class="kpi-card danger">
-                                <h4 id="stmtTaxasCancelLabel">Taxas Cancelamento</h4>
-                                <p id="stmtTaxasCancelValue">0,00 €</p>
-                            </div>
-                            <div class="kpi-card">
-                                <h4>Comissões (Extrato)</h4>
-                                <p id="stmtComissaoValue">0,00 €</p>
+                            <!-- Segunda linha de 3 cards -->
+                            <div class="grid-3">
+                                <div class="kpi-card">
+                                    <h4 id="stmtPortagensLabel">Portagens</h4>
+                                    <p id="stmtPortagensValue">0,00 €</p>
+                                </div>
+                                <div class="kpi-card danger">
+                                    <h4 id="stmtTaxasCancelLabel">Taxas Cancelamento</h4>
+                                    <p id="stmtTaxasCancelValue">0,00 €</p>
+                                </div>
+                                <div class="kpi-card">
+                                    <h4>Comissões (Extrato)</h4>
+                                    <p id="stmtComissaoValue">0,00 €</p>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- MÓDULO DAC7 -->
-                    <div class="module-card">
+                <!-- LINHA 3: MÓDULO DAC7 (4 CARDS) -->
+                <div class="module-row">
+                    <div class="module-card full-width">
                         <h4 id="moduleDac7Title"><i class="fas fa-envelope-open-text"></i> MÓDULO DAC7 (DECOMPOSIÇÃO)</h4>
-                        <div class="module-values">
-                            <div class="kpi-grid">
-                                <div class="kpi-card">
-                                    <h4 id="dac7Q1Label">1.º TRI</h4>
-                                    <p id="dac7Q1Value">0,00 €</p>
-                                </div>
-                                <div class="kpi-card">
-                                    <h4 id="dac7Q2Label">2.º TRI</h4>
-                                    <p id="dac7Q2Value">0,00 €</p>
-                                </div>
-                                <div class="kpi-card">
-                                    <h4 id="dac7Q3Label">3.º TRI</h4>
-                                    <p id="dac7Q3Value">0,00 €</p>
-                                </div>
-                                <div class="kpi-card">
-                                    <h4 id="dac7Q4Label">4.º TRI</h4>
-                                    <p id="dac7Q4Value">0,00 €</p>
-                                </div>
+                        <div class="module-values grid-4">
+                            <div class="kpi-card">
+                                <h4 id="dac7Q1Label">1.º TRI</h4>
+                                <p id="dac7Q1Value">0,00 €</p>
+                            </div>
+                            <div class="kpi-card">
+                                <h4 id="dac7Q2Label">2.º TRI</h4>
+                                <p id="dac7Q2Value">0,00 €</p>
+                            </div>
+                            <div class="kpi-card">
+                                <h4 id="dac7Q3Label">3.º TRI</h4>
+                                <p id="dac7Q3Value">0,00 €</p>
+                            </div>
+                            <div class="kpi-card">
+                                <h4 id="dac7Q4Label">4.º TRI</h4>
+                                <p id="dac7Q4Value">0,00 €</p>
                             </div>
                         </div>
                     </div>
