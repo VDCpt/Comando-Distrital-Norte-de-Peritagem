@@ -2,15 +2,10 @@
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
  * ====================================================================
  * CONSOLIDAÇÃO FINAL COM CORREÇÕES:
- * - Processamento correto de CSV com PapaParse (resolve problema dos SAF-T)
- * - Processamento correto de valores decimais (ponto vs vírgula)
- * - Suporte para formato alternativo de extratos (setembro/2024)
- * - Prevenção de duplicação de ficheiros
- * - Cálculos forenses precisos com valores reais
- * - Throttle de logs para melhor performance
- * - Botão "Limpar Console" FUNCIONAL (corrigido)
- * - DRAG & DROP GLOBAL para upload rápido de múltiplos ficheiros
- * - Processamento ASSÍNCRONO OTIMIZADO (sem bloqueios)
+ * - Cálculo do QUANTUM dinâmico baseado nos meses reais dos dados
+ * - Cards dos módulos com mesmo formato dos KPI cards
+ * - Correção da visualização de faturas e extratos no modal
+ * - Botão "Limpar Console" definitivamente funcional
  * ====================================================================
  */
 
@@ -292,7 +287,7 @@ const translations = {
         dac7Q3: "3.º Trimestre",
         dac7Q4: "4.º Trimestre",
         quantumTitle: "QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)",
-        quantumFormula: "Fórmula: 38.000 motoristas × 12 meses × 7 anos",
+        quantumFormula: "Fórmula: {meses} meses de dados × 38.000 motoristas × projeção anual × 7 anos",
         quantumNote: "Impacto Global Estimado de Mercado (Acumulado 7 Anos)",
         verdictPercent: "Desvio Calculado",
         pdfTitle: "PARECER PERICIAL DE INVESTIGAÇÃO DIGITAL",
@@ -373,7 +368,7 @@ const translations = {
         dac7Q3: "3rd Quarter",
         dac7Q4: "4th Quarter",
         quantumTitle: "ILLICIT BENEFIT AMOUNT (ART. 103 RGIT)",
-        quantumFormula: "Formula: 38,000 drivers × 12 months × 7 years",
+        quantumFormula: "Formula: {months} months data × 38,000 drivers × annual projection × 7 years",
         quantumNote: "Estimated Global Market Impact (7-Year Cumulative)",
         verdictPercent: "Calculated Deviation",
         pdfTitle: "DIGITAL FORENSIC EXPERT REPORT",
@@ -420,6 +415,8 @@ const VDCSystem = {
     logs: [],
     masterHash: '',
     processedFiles: new Set(), // Para evitar duplicados
+    // NOVO: Mapeamento de meses presentes nos dados
+    dataMonths: new Set(),
     documents: {
         control: { files: [], hashes: {}, totals: { records: 0 } },
         saft: { files: [], hashes: {}, totals: { records: 0, iliquido: 0, iva: 0, bruto: 0 } },
@@ -482,14 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupStaticListeners() {
     document.getElementById('startSessionBtn')?.addEventListener('click', startGatekeeperSession);
     document.getElementById('langToggleBtn')?.addEventListener('click', switchLanguage);
-    
-    // CORREÇÃO: Garantir que o botão "Limpar Console" funciona
-    const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-    if (clearConsoleBtn) {
-        // Remover event listeners antigos (se houver) e adicionar novo
-        clearConsoleBtn.replaceWith(clearConsoleBtn.cloneNode(true));
-        document.getElementById('clearConsoleBtn')?.addEventListener('click', clearConsole);
-    }
 }
 
 function startGatekeeperSession() {
@@ -657,7 +646,10 @@ function setupMainListeners() {
     // CORREÇÃO: Garantir que o botão "Limpar Console" tem o listener correto
     const clearConsoleBtn = document.getElementById('clearConsoleBtn');
     if (clearConsoleBtn) {
-        clearConsoleBtn.addEventListener('click', clearConsole);
+        // Remover listeners antigos
+        const newClearBtn = clearConsoleBtn.cloneNode(true);
+        clearConsoleBtn.parentNode.replaceChild(newClearBtn, clearConsoleBtn);
+        newClearBtn.addEventListener('click', clearConsole);
     }
 
     setupUploadListeners();
@@ -1050,6 +1042,14 @@ async function processFile(file, type) {
     // SAF-T CSV (131509_*.csv) - CORRIGIDO COM PAPAPARSE
     if (type === 'saft' && file.name.match(/131509.*\.csv$/i)) {
         try {
+            // Extrair mês do nome do ficheiro (YYYYMM)
+            const monthMatch = file.name.match(/131509_(\d{6})/);
+            if (monthMatch && monthMatch[1]) {
+                const yearMonth = monthMatch[1];
+                VDCSystem.dataMonths.add(yearMonth);
+                logAudit(`   Mês detetado: ${yearMonth}`, 'info');
+            }
+            
             // Remover BOM se existir
             if (text.charCodeAt(0) === 0xFEFF || text.charCodeAt(0) === 0xFFFE) {
                 text = text.substring(1);
@@ -1147,6 +1147,14 @@ async function processFile(file, type) {
     // EXTRATOS BANCÁRIOS / DADOS DA PLATAFORMA - CORRIGIDO: SUPORTA FORMATO ALTERNATIVO (SETEMBRO)
     if (type === 'statement') {
         try {
+            // Extrair mês do nome do ficheiro
+            const monthMatch = file.name.match(/(\d{4})[-_]?(\d{2})/);
+            if (monthMatch) {
+                const yearMonth = monthMatch[1] + monthMatch[2];
+                VDCSystem.dataMonths.add(yearMonth);
+                logAudit(`   Mês detetado: ${yearMonth}`, 'info');
+            }
+            
             // Regex para formato padrão (out, nov, dez)
             const ganhosRegex = /Ganhos na app\s*[:.]?\s*([\d\s,.]+)/i;
             const comissaoRegex = /Comissão da app\s*[:.]?\s*-?\s*([\d\s,.]+)/i;
@@ -1235,6 +1243,12 @@ async function processFile(file, type) {
     // FATURAS
     if (type === 'invoice') {
         try {
+            // Extrair mês do nome do ficheiro
+            const monthMatch = file.name.match(/(\d{4})/);
+            if (monthMatch) {
+                VDCSystem.dataMonths.add(monthMatch[1] + '01'); // Assumir janeiro como fallback
+            }
+            
             // Regex para faturas da Bolt
             const valorRegex = /Total com IVA\s*\(EUR\)\s*([\d\s,.]+)/i;
             const faturaRegex = /Fatura n\.º\s*([A-Z0-9-]+)/i;
@@ -1309,11 +1323,8 @@ async function processFile(file, type) {
         }
     }
 
-    // Atualizar lista de ficheiros no modal
-    const listId = type === 'invoice' ? 'invoicesFileListModal' : 
-                   type === 'statement' ? 'statementsFileListModal' : 
-                   type === 'dac7' ? 'dac7FileListModal' :
-                   `${type}FileListModal`;
+    // Atualizar lista de ficheiros no modal - CORREÇÃO: Garantir que todos os tipos aparecem
+    const listId = getListIdForType(type);
     const listEl = document.getElementById(listId);
     
     const iconClass = isPDF ? 'fa-file-pdf' : 'fa-file-csv';
@@ -1321,11 +1332,26 @@ async function processFile(file, type) {
 
     if(listEl) {
         listEl.style.display = 'block';
-        listEl.innerHTML += `<div class="file-item-modal">
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item-modal';
+        fileItem.innerHTML = `
             <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
             <span class="file-name-modal">${file.name}</span>
             <span class="file-hash-modal">${hash.substring(0,8)}...</span>
-        </div>`;
+        `;
+        listEl.appendChild(fileItem);
+    }
+}
+
+// CORREÇÃO: Função auxiliar para obter o ID da lista correta
+function getListIdForType(type) {
+    switch(type) {
+        case 'invoice': return 'invoicesFileListModal';
+        case 'statement': return 'statementsFileListModal';
+        case 'dac7': return 'dac7FileListModal';
+        case 'control': return 'controlFileListModal';
+        case 'saft': return 'saftFileListModal';
+        default: return 'globalFileListModal';
     }
 }
 
@@ -1393,6 +1419,12 @@ function activateDemoMode() {
     document.getElementById('clientNIFFixed').value = '503244732';
     registerClient();
 
+    // Adicionar meses de exemplo ao Set
+    VDCSystem.dataMonths.add('202409');
+    VDCSystem.dataMonths.add('202410');
+    VDCSystem.dataMonths.add('202411');
+    VDCSystem.dataMonths.add('202412');
+
     simulateUpload('control', 1);
     simulateUpload('saft', 4);
     simulateUpload('invoices', 2);
@@ -1425,7 +1457,7 @@ function activateDemoMode() {
         // Executar cruzamentos com os valores acumulados
         performAudit();
 
-        logAudit('✅ Perícia simulada concluída. Quantum do benefício ilícito calculado: 3.192.000,00 €', 'success');
+        logAudit('✅ Perícia simulada concluída.', 'success');
         VDCSystem.processing = false;
         if(demoBtn) {
             demoBtn.disabled = false;
@@ -1456,10 +1488,7 @@ function simulateUpload(type, count) {
         });
         
         // Adicionar à lista visual
-        const listId = type === 'invoices' ? 'invoicesFileListModal' : 
-                       type === 'statements' ? 'statementsFileListModal' : 
-                       type === 'dac7' ? 'dac7FileListModal' :
-                       `${type}FileListModal`;
+        const listId = getListIdForType(type === 'invoices' ? 'invoice' : type);
         const listEl = document.getElementById(listId);
         if (listEl) {
             listEl.innerHTML += `<div class="file-item-modal">
@@ -1642,8 +1671,15 @@ function performForensicCrossings() {
     ev.jurosCompensatorios = forensicRound(ev.iva23 * 0.06);
     ev.multaDolo = forensicRound(maiorDiscrepancia * 0.10);
     
-    // 8. QUANTUM DO BENEFÍCIO ILÍCITO (fórmula do sistema)
-    ev.quantumBeneficio = 38000 * 12 * 7;
+    // 8. QUANTUM DO BENEFÍCIO ILÍCITO - CORRIGIDO: Baseado nos meses reais
+    const mesesDados = VDCSystem.dataMonths.size;
+    if (mesesDados > 0) {
+        // (discrepância / meses) * 12 meses * 38.000 motoristas * 7 anos
+        const discrepanciaMensalMedia = maiorDiscrepancia / mesesDados;
+        ev.quantumBeneficio = forensicRound(discrepanciaMensalMedia * 12 * 38000 * 7);
+    } else {
+        ev.quantumBeneficio = 0;
+    }
     
     // 9. ATIVAR ALERTAS
     cross.invoiceDivergence = diferencialComissoes > 0.01;
@@ -1659,6 +1695,8 @@ function performForensicCrossings() {
     logAudit(`   Comissões vs Faturas: ${formatCurrency(diferencialComissoes)}`, diferencialComissoes > 10 ? 'warning' : 'info');
     logAudit(`   Taxa Real: ${taxaReal.toFixed(2)}%`, taxaReal > 25 ? 'warning' : 'info');
     logAudit(`   Excesso Comissão: ${formatCurrency(excessoComissao)}`, excessoComissao > 0 ? 'warning' : 'info');
+    logAudit(`   Meses com dados: ${mesesDados}`, 'info');
+    logAudit(`   Quantum calculado: ${formatCurrency(ev.quantumBeneficio)}`, 'info');
 }
 
 function selectQuestions(riskKey) {
@@ -1692,10 +1730,17 @@ function updateDashboard() {
 
     setElementText('quantumValue', formatCurrency(ev.quantumBeneficio || 0));
 
+    // CORREÇÃO: Atualizar fórmula do quantum com número de meses
+    const quantumFormulaEl = document.getElementById('quantumFormula');
+    if (quantumFormulaEl) {
+        const meses = VDCSystem.dataMonths.size || 1;
+        quantumFormulaEl.textContent = `Fórmula: (discrepância / ${meses} meses) × 12 meses × 38.000 motoristas × 7 anos`;
+    }
+
     const jurosCard = document.getElementById('jurosCard');
     if(jurosCard) jurosCard.style.display = (ev.diferencialComissoes > 0) ? 'block' : 'none';
     
-    // Mostrar quantum box se houver discrepância
+    // Mostrar quantum box se houver valor
     const quantumBox = document.getElementById('quantumBox');
     if (quantumBox) {
         quantumBox.style.display = (ev.quantumBeneficio > 0) ? 'block' : 'none';
@@ -1853,7 +1898,8 @@ function exportDataJSON() {
             periodoAnalise: VDCSystem.selectedPeriodo,
             platform: VDCSystem.selectedPlatform,
             demoMode: VDCSystem.demoMode,
-            forensicMetadata: VDCSystem.forensicMetadata || getForensicMetadata()
+            forensicMetadata: VDCSystem.forensicMetadata || getForensicMetadata(),
+            dataMonths: Array.from(VDCSystem.dataMonths) // Incluir meses no export
         },
         analysis: {
             totals: VDCSystem.analysis.extractedValues,
@@ -2013,6 +2059,7 @@ function generateMasterHash() {
         client: VDCSystem.client,
         docs: VDCSystem.documents,
         session: VDCSystem.sessionId,
+        months: Array.from(VDCSystem.dataMonths),
         timestamp: Date.now()
     });
     VDCSystem.masterHash = CryptoJS.SHA256(data).toString();
@@ -2064,7 +2111,7 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
-// CORREÇÃO: Função clearConsole completamente reescrita
+// CORREÇÃO: Função clearConsole completamente reescrita e garantida
 function clearConsole() {
     const consoleOutput = document.getElementById('consoleOutput');
     if (consoleOutput) {
@@ -2076,7 +2123,8 @@ function clearConsole() {
         logEl.className = 'log-entry log-info';
         logEl.textContent = `[${timestamp}] 🧹 Console limpo pelo utilizador.`;
         consoleOutput.appendChild(logEl);
-        logAudit('🧹 Console limpo pelo utilizador.', 'info');
+        // Adicionar ao array de logs também
+        VDCSystem.logs.push({ timestamp, message: '🧹 Console limpo pelo utilizador.', type: 'info' });
     }
 }
 
@@ -2098,6 +2146,6 @@ function updateAnalysisButton() {
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.7 RETA FINAL FORENSE
-   BIG DATA ACCUMULATOR · SOMA INCREMENTAL · DRAG & DROP GLOBAL
-   BOTÃO LIMPAR CONSOLE CORRIGIDO · PROCESSAMENTO OTIMIZADO
+   BIG DATA ACCUMULATOR · QUANTUM DINÂMICO · VISUALIZAÇÃO CORRIGIDA
+   BOTÃO LIMPAR CONSOLE FUNCIONAL
    ===================================================================== */
