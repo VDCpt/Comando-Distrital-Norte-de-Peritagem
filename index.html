@@ -25,7 +25,7 @@
 </head>
 <body>
 
-    <!-- SPLASH SCREEN PANORÂMICO COM LASERS (8s) -->
+    <!-- SPLASH SCREEN PANORÂMICO COM LASERS -->
     <div id="splashScreen" class="splash-screen">
         <div class="laser-h"></div>
         <div class="laser-v"></div>
@@ -68,7 +68,7 @@
         </div>
     </div>
 
-    <!-- MAIN CONTAINER (INICIALMENTE OCULTO) -->
+    <!-- MAIN CONTAINER -->
     <div id="mainContainer" class="main-container">
         
         <!-- HEADER PRINCIPAL -->
@@ -105,10 +105,10 @@
             </div>
         </header>
 
-        <!-- APP CONTAINER (SIDEBAR + ANALYSIS AREA) -->
+        <!-- APP CONTAINER -->
         <div class="app-container">
             
-            <!-- SIDEBAR ESQUERDA - MAIS LARGA -->
+            <!-- SIDEBAR ESQUERDA -->
             <aside class="sidebar">
                 
                 <!-- IDENTIFICAÇÃO DO SUJEITO PASSIVO -->
@@ -226,8 +226,7 @@
                     </div>
                 </div>
 
-                <!-- MÓDULOS DE EXTRAÇÃO - LAYOUT CORRIGIDO -->
-                <!-- LINHA 1: MÓDULO SAF-T (3 CARDS) -->
+                <!-- LINHA 1: MÓDULO SAF-T -->
                 <div class="module-row">
                     <div class="module-card full-width">
                         <h4 id="moduleSaftTitle"><i class="fas fa-file-code"></i> MÓDULO SAF-T (EXTRAÇÃO)</h4>
@@ -251,12 +250,11 @@
                     </div>
                 </div>
 
-                <!-- LINHA 2: MÓDULO EXTRATOS (6 CARDS - 2 LINHAS DE 3) -->
+                <!-- LINHA 2: MÓDULO EXTRATOS -->
                 <div class="module-row">
                     <div class="module-card full-width">
                         <h4 id="moduleStatementTitle"><i class="fas fa-file-contract"></i> MÓDULO EXTRATOS (MAPEAMENTO)</h4>
                         <div class="module-values">
-                            <!-- Primeira linha de 3 cards -->
                             <div class="grid-3" style="margin-bottom: 0.75rem;">
                                 <div class="kpi-card highlight">
                                     <h4 id="stmtGanhosLabel">Ganhos na App</h4>
@@ -274,7 +272,6 @@
                                     <span class="file-source-badge" id="stmtGorjetasSource"></span>
                                 </div>
                             </div>
-                            <!-- Segunda linha de 3 cards -->
                             <div class="grid-3">
                                 <div class="kpi-card">
                                     <h4 id="stmtPortagensLabel">Portagens</h4>
@@ -296,7 +293,7 @@
                     </div>
                 </div>
 
-                <!-- LINHA 3: MÓDULO DAC7 (4 CARDS) -->
+                <!-- LINHA 3: MÓDULO DAC7 -->
                 <div class="module-row">
                     <div class="module-card full-width">
                         <h4 id="moduleDac7Title"><i class="fas fa-envelope-open-text"></i> MÓDULO DAC7 (DECOMPOSIÇÃO)</h4>
@@ -325,7 +322,7 @@
                     </div>
                 </div>
 
-                <!-- QUANTUM BOX (ART. 103 RGIT) -->
+                <!-- QUANTUM BOX -->
                 <div id="quantumBox" class="quantum-box" style="display: none;">
                     <h4 id="quantumTitle"><i class="fas fa-exclamation-triangle"></i> QUANTUM DO BENEFÍCIO ILÍCITO (ART. 103.º RGIT)</h4>
                     <div id="quantumValue" class="quantum-value">0,00 €</div>
@@ -353,7 +350,7 @@
                     </div>
                 </div>
 
-                <!-- DASHBOARD FIXED - CARDS PRINCIPAIS -->
+                <!-- DASHBOARD FIXED -->
                 <div class="dashboard-fixed">
                     <div class="stat-card">
                         <h4 id="cardNet"><i class="fas fa-coins"></i> VALOR LÍQUIDO RECONSTRUÍDO</h4>
@@ -403,7 +400,7 @@
                     </div>
                 </div>
 
-                <!-- CONSOLE DE AUDITORIA - MAIS LARGO -->
+                <!-- CONSOLE DE AUDITORIA -->
                 <div class="console-section">
                     <div class="console-header">
                         <h3 id="consoleTitle"><i class="fas fa-terminal"></i> LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA · BIG DATA</h3>
@@ -426,7 +423,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS - COM DRAG & DROP -->
+    <!-- MODAL DE GESTÃO DE EVIDÊNCIAS -->
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
