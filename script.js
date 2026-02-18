@@ -1,6 +1,6 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7 RETA FINAL
- * VERSÃO FINAL CORRIGIDA - TODAS AS RETIFICAÇÕES APLICADAS
+ * VERSÃO FINAL CONSOLIDADA - TODAS AS CORREÇÕES APLICADAS
  * ====================================================================
  */
 
@@ -17,7 +17,7 @@ if (pdfjsLib) {
 }
 
 // ============================================================================
-// 2. DADOS DAS PLATAFORMAS & BANCO DE PERGUNTAS
+// 2. DADOS DAS PLATAFORMAS
 // ============================================================================
 const PLATFORM_DATA = {
     bolt: {
@@ -93,44 +93,28 @@ const forensicRound = (num) => {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 };
 
-// FUNÇÃO CORRIGIDA PARA FORMATO EUROPEU (ponto milhar, vírgula decimal)
 const toForensicNumber = (v) => {
     if (!v) return 0;
     let str = v.toString().trim();
     
-    // Remover caracteres de controlo
     str = str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
-    
-    // Remover espaços
     str = str.replace(/\s/g, '');
+    str = str.replace(/€/g, '');
     
-    // FORMATO EUROPEU: ponto como separador de milhares, vírgula como decimal
-    // Exemplo: "3.157,94" → 3157.94
-    
-    // Verificar se tem vírgula (formato europeu)
     if (str.includes(',')) {
-        // Remover todos os pontos (separadores de milhares)
-        str = str.replace(/\./g, '');
-        // Substituir vírgula por ponto (decimal)
-        str = str.replace(',', '.');
-    } else {
-        // Se não tem vírgula, pode ser formato com ponto decimal
-        // Mas remover todos os pontos exceto o último
+        if (str.includes('.') && str.indexOf(',') > str.lastIndexOf('.')) {
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else {
+            str = str.replace(',', '.');
+        }
+    } else if (str.includes('.')) {
         const partes = str.split('.');
         if (partes.length > 2) {
-            // Tem múltiplos pontos - provavelmente é formato europeu sem vírgula
-            str = partes.join('');
+            str = partes.slice(0, -1).join('') + '.' + partes[partes.length - 1];
         }
     }
     
-    // Remover caracteres não numéricos restantes (exceto ponto decimal e sinal negativo)
     str = str.replace(/[^\d.-]/g, '');
-    
-    // Garantir que só tem um ponto decimal
-    const decimalParts = str.split('.');
-    if (decimalParts.length > 2) {
-        str = decimalParts[0] + '.' + decimalParts.slice(1).join('');
-    }
     
     const result = parseFloat(str);
     return isNaN(result) ? 0 : result;
@@ -150,9 +134,6 @@ const formatCurrency = (value) => {
     return forensicRound(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 };
 
-// ============================================================================
-// FUNÇÃO DE RISCO
-// ============================================================================
 const getRiskVerdict = (delta, gross) => {
     if (gross === 0 || isNaN(gross)) return { 
         level: 'INCONCLUSIVO', 
@@ -502,11 +483,9 @@ const VDCSystem = {
     counts: { total: 0 }
 };
 
-// Throttle para logs
 let lastLogTime = 0;
 const LOG_THROTTLE = 100;
 
-// Queue para processamento assíncrono
 const fileProcessingQueue = [];
 let isProcessingQueue = false;
 
@@ -887,16 +866,12 @@ async function processQueue() {
     showToast(`${total} ficheiro(s) processados em lote`, 'success');
 }
 
-// ============================================================================
-// FUNÇÃO DETECT FILE TYPE - VERSÃO CORRIGIDA (RECONHECE FATURAS PELO PADRÃO PT)
-// ============================================================================
 function detectFileType(file) {
     const name = file.name.toLowerCase();
     
-    // Padrões para faturas - MAIS ABRANGENTE
     if (name.includes('fatura') || 
         name.includes('invoice') || 
-        name.match(/pt\d{4}-\d{5}/i) ||  // Padrão PT1124-91599
+        name.match(/pt\d{4}-\d{5}/i) ||
         name.match(/pt\d{4,5}-\d{3,5}/i) ||
         (file.type === 'application/pdf' && name.match(/\d{4}-\d{5}/))) {
         return 'invoice';
@@ -1011,9 +986,6 @@ function switchLanguage() {
     logAudit(`Idioma: ${currentLang.toUpperCase()}`, 'info');
 }
 
-// ============================================================================
-// 11. REGISTO DE CLIENTE
-// ============================================================================
 function registerClient() {
     const name = document.getElementById('clientNameFixed').value.trim();
     const nif = document.getElementById('clientNIFFixed').value.trim();
@@ -1034,7 +1006,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 12. PROCESSAMENTO DE FICHEIROS - VERSÃO CORRIGIDA FINAL
+// 11. PROCESSAMENTO DE FICHEIROS - VERSÃO FINAL CORRIGIDA
 // ============================================================================
 async function processFile(file, type) {
     const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
@@ -1114,7 +1086,7 @@ async function processFile(file, type) {
     });
 
     // ============================================================
-    // PROCESSAMENTO DE EXTRATOS
+    // PROCESSAMENTO DE EXTRATOS - VERSÃO FINAL
     // ============================================================
     if (type === 'statement') {
         try {
@@ -1125,83 +1097,108 @@ async function processFile(file, type) {
                 logAudit(`   Mês detetado: ${yearMonth}`, 'info');
             }
             
-            const ganhosPattern = /Ganhos na app\s*([\d\s,.]+)/i;
-            const campanhasPattern = /Ganhos da campanha\s*([\d\s,.]+)/i;
-            const gorjetasPattern = /Gorjetas dos passageiros\s*([\d\s,.]+)/i;
-            const taxasCancelPattern = /Taxas de cancelamento\s*([\d\s,.]+)/i;
-            const comissaoPattern = /Comissão da app\s*-?\s*([\d\s,.]+)/i;
-            
-            const liquidosPattern = /Ganhos líquidos[\s\S]*?Ganhos\s*([\d\s,.]+)[\s\S]*?Despesas\s*-?\s*([\d\s,.]+)[\s\S]*?Ganhos líquidos\s*([\d\s,.]+)/i;
+            const isFormatoSetembro = text.includes('DESCRIÇÃO DA TARIFA') || 
+                                      text.includes('Taxa de viagem') ||
+                                      text.includes('OUTRAS EVENTUAIS DEDUÇÕES');
             
             let ganhos = 0, campanhas = 0, gorjetas = 0, taxasCancel = 0, comissao = 0;
-            let ganhosLiq = 0, despesasLiq = 0, liquidosLiq = 0;
+            let portagens = 0, ganhosLiq = 0;
             
-            const ganhosMatch = text.match(ganhosPattern);
-            if (ganhosMatch) {
-                ganhos = toForensicNumber(ganhosMatch[1]);
-                logAudit(`   Ganhos na app extraídos: ${formatCurrency(ganhos)}`, 'success');
-            }
-            
-            const campanhasMatch = text.match(campanhasPattern);
-            if (campanhasMatch) {
-                campanhas = toForensicNumber(campanhasMatch[1]);
-                logAudit(`   Ganhos da campanha extraídos: ${formatCurrency(campanhas)}`, 'info');
-            }
-            
-            const gorjetasMatch = text.match(gorjetasPattern);
-            if (gorjetasMatch) {
-                gorjetas = toForensicNumber(gorjetasMatch[1]);
-                logAudit(`   Gorjetas extraídas: ${formatCurrency(gorjetas)}`, 'info');
-            }
-            
-            const taxasCancelMatch = text.match(taxasCancelPattern);
-            if (taxasCancelMatch) {
-                taxasCancel = toForensicNumber(taxasCancelMatch[1]);
-                logAudit(`   Taxas de cancelamento extraídas: ${formatCurrency(taxasCancel)}`, 'info');
-            }
-            
-            const comissaoMatch = text.match(comissaoPattern);
-            if (comissaoMatch) {
-                comissao = toForensicNumber(comissaoMatch[1]);
-                logAudit(`   Comissão da app extraída: ${formatCurrency(comissao)}`, 'info');
-            }
-            
-            const liquidosMatch = text.match(liquidosPattern);
-            if (liquidosMatch) {
-                ganhosLiq = toForensicNumber(liquidosMatch[1]);
-                despesasLiq = toForensicNumber(liquidosMatch[2]);
-                liquidosLiq = toForensicNumber(liquidosMatch[3]);
+            if (isFormatoSetembro) {
+                logAudit(`   Formato setembro detetado`, 'info');
                 
-                logAudit(`   Ganhos líquidos (tabela): ${formatCurrency(ganhosLiq)}`, 'info');
-                logAudit(`   Despesas (comissões): ${formatCurrency(despesasLiq)}`, 'info');
-                logAudit(`   Transferência bancária: ${formatCurrency(liquidosLiq)}`, 'success');
+                const taxaViagemMatch = text.match(/Taxa de viagem\s*€?\s*([\d\s,.]+)/i);
+                if (taxaViagemMatch) {
+                    ganhos = toForensicNumber(taxaViagemMatch[1]);
+                    logAudit(`   Taxa de viagem: ${formatCurrency(ganhos)}`, 'success');
+                }
+                
+                const taxaCancelMatch = text.match(/Taxa de cancelamento\s*€?\s*([\d\s,.]+)/i);
+                if (taxaCancelMatch) {
+                    taxasCancel = toForensicNumber(taxaCancelMatch[1]);
+                    logAudit(`   Taxa de cancelamento: ${formatCurrency(taxasCancel)}`, 'info');
+                }
+                
+                const portagemMatch = text.match(/Portagem\s*€?\s*([\d\s,.]+)/i);
+                if (portagemMatch) {
+                    portagens = toForensicNumber(portagemMatch[1]);
+                    logAudit(`   Portagem: ${formatCurrency(portagens)}`, 'info');
+                }
+                
+                const comissaoBoltMatch = text.match(/Comissão da Bolt\s*€?\s*([\d\s,.]+)/i);
+                if (comissaoBoltMatch) {
+                    comissao = toForensicNumber(comissaoBoltMatch[1]);
+                    logAudit(`   Comissão da Bolt: ${formatCurrency(comissao)}`, 'info');
+                }
+                
+                const outrasComissõesMatch = text.match(/Outras comissões\s*€?\s*([\d\s,.]+)/i);
+                if (outrasComissõesMatch) {
+                    comissao += toForensicNumber(outrasComissõesMatch[1]);
+                    logAudit(`   Outras comissões: +${formatCurrency(toForensicNumber(outrasComissõesMatch[1]))}`, 'info');
+                }
+                
+                const ganhosTotais = ganhos + taxasCancel + portagens;
+                ganhos = ganhosTotais;
+                ganhosLiq = ganhos - comissao;
+                
+                logAudit(`   Ganhos totais: ${formatCurrency(ganhos)}`, 'success');
+                logAudit(`   Comissões totais: ${formatCurrency(comissao)}`, 'info');
+                logAudit(`   Ganhos líquidos: ${formatCurrency(ganhosLiq)}`, 'success');
+                
             } else {
-                ganhosLiq = ganhos + campanhas + gorjetas - comissao - taxasCancel;
-                liquidosLiq = ganhosLiq;
-                logAudit(`   Ganhos líquidos calculados: ${formatCurrency(ganhosLiq)}`, 'info');
-            }
-            
-            if (!VDCSystem.documents.statements.totals) {
-                VDCSystem.documents.statements.totals = {
-                    records: 0, ganhosApp: 0, campanhas: 0, gorjetas: 0, 
-                    portagens: 0, taxasCancelamento: 0, despesasComissao: 0, ganhosLiquidos: 0
-                };
+                const ganhosPattern = /Ganhos na app\s*([\d\s,.]+)/i;
+                const campanhasPattern = /Ganhos da campanha\s*([\d\s,.]+)/i;
+                const gorjetasPattern = /Gorjetas dos passageiros\s*([\d\s,.]+)/i;
+                const taxasCancelPattern = /Taxas de cancelamento\s*([\d\s,.]+)/i;
+                const comissaoPattern = /Comissão da app\s*-?\s*([\d\s,.]+)/i;
+                
+                const liquidosPattern = /Ganhos líquidos[\s\S]*?Ganhos\s*([\d\s,.]+)[\s\S]*?Despesas\s*-?\s*([\d\s,.]+)[\s\S]*?Ganhos líquidos\s*([\d\s,.]+)/i;
+                
+                const ganhosMatch = text.match(ganhosPattern);
+                if (ganhosMatch) {
+                    ganhos = toForensicNumber(ganhosMatch[1]);
+                }
+                
+                const campanhasMatch = text.match(campanhasPattern);
+                if (campanhasMatch) {
+                    campanhas = toForensicNumber(campanhasMatch[1]);
+                }
+                
+                const gorjetasMatch = text.match(gorjetasPattern);
+                if (gorjetasMatch) {
+                    gorjetas = toForensicNumber(gorjetasMatch[1]);
+                }
+                
+                const taxasCancelMatch = text.match(taxasCancelPattern);
+                if (taxasCancelMatch) {
+                    taxasCancel = toForensicNumber(taxasCancelMatch[1]);
+                }
+                
+                const comissaoMatch = text.match(comissaoPattern);
+                if (comissaoMatch) {
+                    comissao = toForensicNumber(comissaoMatch[1]);
+                }
+                
+                const liquidosMatch = text.match(liquidosPattern);
+                if (liquidosMatch) {
+                    ganhosLiq = toForensicNumber(liquidosMatch[3]);
+                } else {
+                    ganhosLiq = ganhos + campanhas + gorjetas - comissao - taxasCancel;
+                }
             }
             
             VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
             VDCSystem.documents.statements.totals.campanhas = (VDCSystem.documents.statements.totals.campanhas || 0) + campanhas;
             VDCSystem.documents.statements.totals.gorjetas = (VDCSystem.documents.statements.totals.gorjetas || 0) + gorjetas;
+            VDCSystem.documents.statements.totals.portagens = (VDCSystem.documents.statements.totals.portagens || 0) + portagens;
             VDCSystem.documents.statements.totals.taxasCancelamento = (VDCSystem.documents.statements.totals.taxasCancelamento || 0) + taxasCancel;
             VDCSystem.documents.statements.totals.despesasComissao = (VDCSystem.documents.statements.totals.despesasComissao || 0) + comissao;
-            VDCSystem.documents.statements.totals.ganhosLiquidos = (VDCSystem.documents.statements.totals.ganhosLiquidos || 0) + liquidosLiq;
+            VDCSystem.documents.statements.totals.ganhosLiquidos = (VDCSystem.documents.statements.totals.ganhosLiquidos || 0) + ganhosLiq;
             
-            ValueSource.registerValue('stmtGanhosValue', ganhos, file.name, 'tabela Transações');
-            ValueSource.registerValue('stmtCampanhasValue', campanhas, file.name, 'tabela Transações');
-            ValueSource.registerValue('stmtGorjetasValue', gorjetas, file.name, 'tabela Transações');
-            ValueSource.registerValue('stmtTaxasCancelValue', taxasCancel, file.name, 'tabela Transações');
-            ValueSource.registerValue('stmtComissaoValue', comissao, file.name, 'tabela Transações/Despesas');
+            ValueSource.registerValue('stmtGanhosValue', ganhos, file.name, isFormatoSetembro ? 'tabela DESCRIÇÃO DA TARIFA' : 'tabela Transações');
+            ValueSource.registerValue('stmtComissaoValue', comissao, file.name, isFormatoSetembro ? 'tabela OUTRAS EVENTUAIS DEDUÇÕES' : 'tabela Transações');
             
-            logAudit(`📊 Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Líquido: ${formatCurrency(liquidosLiq)}`, 'success');
+            logAudit(`📊 Extrato processado: ${file.name} | Ganhos: ${formatCurrency(ganhos)} | Comissões: ${formatCurrency(comissao)} | Líquido: ${formatCurrency(ganhosLiq)}`, 'success');
             
         } catch(e) {
             console.warn(`Erro ao processar extrato ${file.name}:`, e);
@@ -1210,17 +1207,15 @@ async function processFile(file, type) {
     }
 
     // ============================================================
-    // PROCESSAMENTO DE FATURAS - VERSÃO MELHORADA
+    // PROCESSAMENTO DE FATURAS - VERSÃO FINAL
     // ============================================================
     if (type === 'invoice' || (type === 'unknown' && file.name.match(/pt\d{4}-\d{5}/i))) {
         try {
-            // Se veio como unknown mas é fatura, reclassificar
             if (type === 'unknown') {
                 type = 'invoice';
                 logAudit(`📌 Ficheiro reclassificado como fatura: ${file.name}`, 'info');
             }
             
-            // Extrair número da fatura
             const faturaPattern = /Fatura n\.º\s*([A-Z0-9\-\s]+)/i;
             const ptPattern = /(PT\d{4,5}-\d{3,5})/i;
             
@@ -1233,64 +1228,42 @@ async function processFile(file, type) {
                 logAudit(`   Nº Fatura: ${ptMatch[1]}`, 'info');
             }
             
-            // Extrair período
             const periodoPattern = /Período:\s*(\d{2}-\d{2}-\d{4})\s*-\s*(\d{2}-\d{2}-\d{4})/i;
             const periodoMatch = text.match(periodoPattern);
             if (periodoMatch) {
                 logAudit(`   Período: ${periodoMatch[1]} a ${periodoMatch[2]}`, 'info');
             }
             
-            // EXTRAIR VALOR - MÚLTIPLAS ESTRATÉGIAS
             let valorFatura = 0;
             
-            // Estratégia 1: Procurar por "Comissões da Bolt" seguido de valor
-            const comissaoPattern = /Comissões da Bolt.*?([\d\s,.]+)/i;
-            const comissaoMatch = text.match(comissaoPattern);
+            const tabelaPattern = /Comissões da Bolt.*?(\d+\.\d+).*?(\d+\.\d+).*?(\d+\.\d+).*?(\d+\.\d+)/is;
+            const tabelaMatch = text.match(tabelaPattern);
             
-            if (comissaoMatch) {
-                const val = toForensicNumber(comissaoMatch[1]);
-                if (val > 0) {
-                    valorFatura = val;
-                    logAudit(`   Comissões da Bolt: ${formatCurrency(valorFatura)}`, 'info');
+            if (tabelaMatch) {
+                valorFatura = toForensicNumber(tabelaMatch[4]);
+                logAudit(`   Valor da tabela (coluna Total): ${formatCurrency(valorFatura)}`, 'success');
+            }
+            
+            if (valorFatura === 0) {
+                const totalIVAPattern = /Total com IVA\s*\(EUR\)\s*([\d\s,.]+)/i;
+                const totalIVAMatch = text.match(totalIVAPattern);
+                if (totalIVAMatch) {
+                    valorFatura = toForensicNumber(totalIVAMatch[1]);
+                    logAudit(`   Total com IVA (EUR): ${formatCurrency(valorFatura)}`, 'success');
                 }
             }
             
-            // Estratégia 2: Procurar valores no formato europeu (ex: 239,00)
             if (valorFatura === 0) {
-                const valorPattern = /(\d{1,3}(?:\.\d{3})*,\d{2})/g;
+                const valorPattern = /(\d+\.\d{2})/g;
                 const valores = [...text.matchAll(valorPattern)];
-                
                 for (const match of valores) {
-                    const val = toForensicNumber(match[1]);
-                    if (val > 100 && val < 1000) {
-                        valorFatura = val;
-                        logAudit(`   Valor encontrado: ${formatCurrency(valorFatura)}`, 'info');
-                        break;
-                    }
-                }
-            }
-            
-            // Estratégia 3: Procurar "A pagar: X€"
-            if (valorFatura === 0) {
-                const aPagarPattern = /A pagar:\s*([\d\s,.]+)€/i;
-                const aPagarMatch = text.match(aPagarPattern);
-                if (aPagarMatch) {
-                    valorFatura = toForensicNumber(aPagarMatch[1]);
-                    logAudit(`   Valor "A pagar": ${formatCurrency(valorFatura)}`, 'info');
-                }
-            }
-            
-            // Estratégia 4: Fallback - qualquer valor com 2 casas decimais
-            if (valorFatura === 0) {
-                const fallbackPattern = /(\d+[.,]\d{2})/g;
-                const matches = [...text.matchAll(fallbackPattern)];
-                for (const match of matches) {
-                    const val = toForensicNumber(match[1]);
+                    const val = parseFloat(match[1]);
                     if (val > 0 && val < 1000) {
                         valorFatura = val;
-                        logAudit(`   Valor extraído (fallback): ${formatCurrency(valorFatura)}`, 'info');
-                        break;
                     }
+                }
+                if (valorFatura > 0) {
+                    logAudit(`   Valor encontrado: ${formatCurrency(valorFatura)}`, 'info');
                 }
             }
             
@@ -1302,29 +1275,11 @@ async function processFile(file, type) {
                 VDCSystem.documents.invoices.totals.invoiceValue = (VDCSystem.documents.invoices.totals.invoiceValue || 0) + valorFatura;
                 VDCSystem.documents.invoices.totals.records = (VDCSystem.documents.invoices.totals.records || 0) + 1;
                 
-                if (!VDCSystem.documents.invoices.files) {
-                    VDCSystem.documents.invoices.files = [];
-                }
-                
-                const fileExists = VDCSystem.documents.invoices.files.some(f => f.name === file.name);
-                if (!fileExists) {
-                    VDCSystem.documents.invoices.files.push({
-                        name: file.name,
-                        size: file.size,
-                        valor: valorFatura
-                    });
-                }
-                
                 ValueSource.registerValue('kpiInvValue', valorFatura, file.name, 'extração de fatura');
                 
                 logAudit(`💰 Fatura processada: ${file.name} | +${formatCurrency(valorFatura)} | Total acumulado: ${formatCurrency(VDCSystem.documents.invoices.totals.invoiceValue)} (${VDCSystem.documents.invoices.totals.records} faturas)`, 'success');
             } else {
                 logAudit(`⚠️ Não foi possível extrair valor da fatura: ${file.name}`, 'warning');
-                // Mesmo sem valor, contar como fatura para contadores
-                if (!VDCSystem.documents.invoices.totals) {
-                    VDCSystem.documents.invoices.totals = { invoiceValue: 0, records: 0 };
-                }
-                VDCSystem.documents.invoices.totals.records = (VDCSystem.documents.invoices.totals.records || 0) + 1;
             }
             
         } catch(e) {
@@ -1478,7 +1433,6 @@ async function processFile(file, type) {
         logAudit(`🔐 Ficheiro de controlo registado: ${file.name}`, 'info');
     }
 
-    // Atualizar lista no modal
     const listId = getListIdForType(type);
     const listEl = document.getElementById(listId);
     
@@ -1559,7 +1513,7 @@ function updateCounters() {
 }
 
 // ============================================================================
-// 13. MODO DEMO
+// 12. MODO DEMO
 // ============================================================================
 function activateDemoMode() {
     if(VDCSystem.processing) return;
@@ -1666,7 +1620,7 @@ function simulateUpload(type, count) {
 }
 
 // ============================================================================
-// 14. MOTOR DE PERÍCIA FORENSE
+// 13. MOTOR DE PERÍCIA FORENSE
 // ============================================================================
 function performAudit() {
     if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
@@ -1695,6 +1649,7 @@ function performAudit() {
             const stmtCommission = VDCSystem.documents.statements?.totals?.despesasComissao || 0;
             const stmtCampanhas = VDCSystem.documents.statements?.totals?.campanhas || 0;
             const stmtGorjetas = VDCSystem.documents.statements?.totals?.gorjetas || 0;
+            const stmtPortagens = VDCSystem.documents.statements?.totals?.portagens || 0;
             const stmtCancelamentos = VDCSystem.documents.statements?.totals?.taxasCancelamento || 0;
             const stmtLiquido = VDCSystem.documents.statements?.totals?.ganhosLiquidos || 0;
             
@@ -1713,6 +1668,7 @@ function performAudit() {
                 comissaoApp: platformCommission,
                 campanhas: stmtCampanhas,
                 gorjetas: stmtGorjetas,
+                portagens: stmtPortagens,
                 taxasCancelamento: stmtCancelamentos,
                 ganhosLiquidos: stmtLiquido,
                 faturaPlataforma: invoiceVal,
@@ -1732,7 +1688,8 @@ function performAudit() {
             const duration = (VDCSystem.performanceTiming.end - VDCSystem.performanceTiming.start).toFixed(2);
             
             logAudit(`📊 VALORES UTILIZADOS NA PERÍCIA:`, 'info');
-            logAudit(`   Comissões Extrato: ${formatCurrency(platformCommission)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   Ganhos App: ${formatCurrency(stmtGross)} (${VDCSystem.documents.statements?.files?.length || 0} ficheiros)`, 'info');
+            logAudit(`   Comissões Extrato: ${formatCurrency(platformCommission)}`, 'info');
             logAudit(`   Fatura Comissões: ${formatCurrency(invoiceVal)} (${VDCSystem.documents.invoices?.files?.length || 0} ficheiros)`, 'info');
             logAudit(`   Discrepância: ${formatCurrency(platformCommission - invoiceVal)}`, 'info');
             logAudit(`   Meses com dados: ${VDCSystem.dataMonths.size}`, 'info');
@@ -2015,7 +1972,7 @@ function renderChart() {
 }
 
 // ============================================================================
-// 15. EXPORTAÇÕES
+// 14. EXPORTAÇÕES
 // ============================================================================
 function exportDataJSON() {
     const sources = {};
@@ -2059,6 +2016,7 @@ function exportDataJSON() {
                 ganhos: VDCSystem.documents.statements?.totals?.ganhosApp || 0,
                 campanhas: VDCSystem.documents.statements?.totals?.campanhas || 0,
                 gorjetas: VDCSystem.documents.statements?.totals?.gorjetas || 0,
+                portagens: VDCSystem.documents.statements?.totals?.portagens || 0,
                 taxasCancelamento: VDCSystem.documents.statements?.totals?.taxasCancelamento || 0,
                 comissao: VDCSystem.documents.statements?.totals?.despesasComissao || 0,
                 files: VDCSystem.documents.statements?.files?.map(f => f.name) || []
@@ -2197,7 +2155,7 @@ function exportPDF() {
 }
 
 // ============================================================================
-// 16. FUNÇÕES AUXILIARES
+// 15. FUNÇÕES AUXILIARES
 // ============================================================================
 function generateMasterHash() {
     const data = JSON.stringify({
@@ -2382,14 +2340,11 @@ function updateAnalysisButton() {
     }
 }
 
-// ============================================================================
-// EXPOR OBJETOS GLOBAIS
-// ============================================================================
 window.VDCSystem = VDCSystem;
 window.ValueSource = ValueSource;
 window.forensicDataSynchronization = forensicDataSynchronization;
 
 /* =====================================================================
    FIM DO FICHEIRO SCRIPT.JS · v12.7.1 FINAL
-   TODAS AS RETIFICAÇÕES APLICADAS
+   TODAS AS CORREÇÕES APLICADAS
    ===================================================================== */
