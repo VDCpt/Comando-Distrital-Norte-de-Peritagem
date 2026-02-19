@@ -228,7 +228,6 @@ const getForensicMetadata = () => {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
 };
-
 // ============================================================================
 // 5. SISTEMA DE LOGS FORENSES (ART. 30 RGPD)
 // ============================================================================
@@ -244,18 +243,16 @@ const ForensicLogger = {
             user: VDCSystem.client?.name || 'Anónimo',
             action: action,
             data: data,
-            ip: 'local', // Processamento local, não há IP
+            ip: 'local',
             userAgent: navigator.userAgent
         };
         
         this.logs.push(entry);
         
-        // Limitar logs a 1000 entradas para não sobrecarregar memória
         if (this.logs.length > 1000) {
             this.logs = this.logs.slice(-1000);
         }
         
-        // Guardar em localStorage como backup
         try {
             localStorage.setItem('vdc_forensic_logs', JSON.stringify(this.logs.slice(-100)));
         } catch(e) { /* Ignorar erros de quota */ }
@@ -282,7 +279,7 @@ const ForensicLogger = {
         if (!el) return;
         
         el.innerHTML = '';
-        const logsToShow = this.logs.slice(-50).reverse(); // Últimos 50, mais recentes primeiro
+        const logsToShow = this.logs.slice(-50).reverse();
         
         if (logsToShow.length === 0) {
             el.innerHTML = '<div class="log-entry log-info">[Nenhum registo de atividade disponível]</div>';
@@ -349,16 +346,11 @@ const ValueSource = {
 // ============================================================================
 const translations = {
     pt: {
-        // Splash
         startBtn: "INICIAR PERÍCIA v12.7",
         splashLogsBtn: "REGISTO DE ATIVIDADES (LOG)",
         navDemo: "CASO SIMULADO",
         langBtn: "EN",
-        
-        // Header
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA",
-        
-        // Sidebar
         sidebarIdTitle: "IDENTIFICAÇÃO DO SUJEITO PASSIVO",
         lblClientName: "Nome / Denominação Social",
         lblNIF: "NIF / Número de Identificação Fiscal",
@@ -369,11 +361,7 @@ const translations = {
         lblPlatform: "PLATAFORMA DIGITAL",
         btnEvidence: "GESTÃO DE EVIDÊNCIAS",
         btnAnalyze: "EXECUTAR PERÍCIA",
-        
-        // Toolbar
         btnPDF: "RELATÓRIO PERICIAL",
-        
-        // Dashboard Cards
         cardNet: "VALOR LÍQUIDO RECONSTRUÍDO",
         cardComm: "COMISSÕES DETETADAS",
         cardJuros: "FOSSO FISCAL",
@@ -382,24 +370,14 @@ const translations = {
         irc: "IRC (21% + Derrama)",
         iva6: "IVA 6% OMITIDO",
         iva23: "IVA 23% OMITIDO",
-        
-        // KPI Section
         kpiTitle: "TRIANGULAÇÃO FINANCEIRA · BIG DATA ALGORITHM v12.7",
         kpiGross: "BRUTO REAL",
         kpiCommText: "COMISSÕES",
         kpiNetText: "LÍQUIDO",
         kpiInvText: "FATURADO",
-        
-        // Chart
         chartTitle: "REPRESENTAÇÃO GRÁFICA DA ANÁLISE",
-        
-        // Console
         consoleTitle: "LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA · BIG DATA",
-        
-        // Footer
         footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 · RFC 3161)",
-        
-        // Modal Evidence
         modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
         uploadSaftText: "FICHEIROS SAF-T (131509*.csv)",
@@ -408,8 +386,6 @@ const translations = {
         uploadDac7Text: "DECLARAÇÃO DAC7",
         summaryTitle: "RESUMO DE PROCESSAMENTO PROBATÓRIO",
         modalSaveBtn: "SELAR EVIDÊNCIAS",
-        
-        // Modules
         moduleSaftTitle: "MÓDULO SAF-T (EXTRAÇÃO)",
         moduleStatementTitle: "MÓDULO EXTRATOS (MAPEAMENTO)",
         moduleDac7Title: "MÓDULO DAC7 (DECOMPOSIÇÃO)",
@@ -425,21 +401,13 @@ const translations = {
         dac7Q2: "2.º Trimestre",
         dac7Q3: "3.º Trimestre",
         dac7Q4: "4.º Trimestre",
-        
-        // Quantum
         quantumTitle: "CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA",
         quantumFormula: "Base Omitida vs Faturada",
         quantumNote: "IVA em falta (23%): 0,00 €",
-        
-        // Verdict
         verdictPercent: "PARECER TÉCNICO N.º",
-        
-        // Alerts
         alertCriticalTitle: "🔫 SMOKING GUN · DIVERGÊNCIA CRÍTICA",
         alertOmissionText: "Comissão Retida (Extrato) vs Faturada (Plataforma):",
         alertAccumulatedNote: "Base Omitida (Omissão Fiscal)",
-        
-        // PDF
         pdfTitle: "PARECER PERICIAL DE INVESTIGAÇÃO DIGITAL",
         pdfSection1: "1. IDENTIFICAÇÃO E METADADOS",
         pdfSection2: "2. ANÁLISE FINANCEIRA CRUZADA",
@@ -467,27 +435,18 @@ const translations = {
         pdfLabelPlatform: "Plataforma",
         pdfLabelAddress: "Morada",
         pdfLabelNIFPlatform: "NIF Plataforma",
-        
-        // Logs Modal
         logsModalTitle: "REGISTO DE ATIVIDADES DE TRATAMENTO (Art. 30.º RGPD)",
         exportLogsBtn: "EXPORTAR LOGS (JSON)",
         clearLogsBtn: "LIMPAR LOGS",
         closeLogsBtn: "FECHAR",
-        
-        // Wipe Button
         wipeBtnText: "PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA)"
     },
     en: {
-        // Splash
         startBtn: "START FORENSIC EXAM v12.7",
         splashLogsBtn: "ACTIVITY LOG (GDPR Art. 30)",
         navDemo: "SIMULATED CASE",
         langBtn: "PT",
-        
-        // Header
         headerSubtitle: "ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA",
-        
-        // Sidebar
         sidebarIdTitle: "TAXPAYER IDENTIFICATION",
         lblClientName: "Name / Corporate Name",
         lblNIF: "Tax ID / NIF",
@@ -498,11 +457,7 @@ const translations = {
         lblPlatform: "DIGITAL PLATFORM",
         btnEvidence: "DIGITAL EVIDENCE MANAGEMENT",
         btnAnalyze: "EXECUTE FORENSIC EXAM",
-        
-        // Toolbar
         btnPDF: "EXPERT REPORT",
-        
-        // Dashboard Cards
         cardNet: "RECONSTRUCTED NET VALUE",
         cardComm: "DETECTED COMMISSIONS",
         cardJuros: "TAX GAP",
@@ -511,24 +466,14 @@ const translations = {
         irc: "CIT (21% + Surtax)",
         iva6: "VAT 6% OMITTED",
         iva23: "VAT 23% OMITTED",
-        
-        // KPI Section
         kpiTitle: "FINANCIAL TRIANGULATION · BIG DATA ALGORITHM v12.7",
         kpiGross: "REAL GROSS",
         kpiCommText: "COMMISSIONS",
         kpiNetText: "NET",
         kpiInvText: "INVOICED",
-        
-        // Chart
         chartTitle: "GRAPHICAL ANALYSIS REPRESENTATION",
-        
-        // Console
         consoleTitle: "CUSTODY LOG · CHAIN OF CUSTODY · BIG DATA",
-        
-        // Footer
         footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 · RFC 3161)",
-        
-        // Modal Evidence
         modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
         uploadSaftText: "SAF-T FILES (131509*.csv)",
@@ -537,8 +482,6 @@ const translations = {
         uploadDac7Text: "DAC7 DECLARATION",
         summaryTitle: "EVIDENCE PROCESSING SUMMARY",
         modalSaveBtn: "SEAL EVIDENCE",
-        
-        // Modules
         moduleSaftTitle: "SAF-T MODULE (EXTRACTION)",
         moduleStatementTitle: "STATEMENT MODULE (MAPPING)",
         moduleDac7Title: "DAC7 MODULE (BREAKDOWN)",
@@ -554,21 +497,13 @@ const translations = {
         dac7Q2: "2nd Quarter",
         dac7Q3: "3rd Quarter",
         dac7Q4: "4th Quarter",
-        
-        // Quantum
         quantumTitle: "TAX CALCULATION · SMOKING GUN",
         quantumFormula: "Omitted Base vs Invoiced",
         quantumNote: "Missing VAT (23%): 0,00 €",
-        
-        // Verdict
         verdictPercent: "TECHNICAL OPINION No.",
-        
-        // Alerts
         alertCriticalTitle: "🔫 SMOKING GUN · CRITICAL DIVERGENCE",
         alertOmissionText: "Commission Withheld (Statement) vs Invoiced (Platform):",
         alertAccumulatedNote: "Omitted Base (Tax Omission)",
-        
-        // PDF
         pdfTitle: "DIGITAL FORENSIC EXPERT REPORT",
         pdfSection1: "1. IDENTIFICATION & METADATA",
         pdfSection2: "2. CROSS-FINANCIAL ANALYSIS",
@@ -596,20 +531,15 @@ const translations = {
         pdfLabelPlatform: "Platform",
         pdfLabelAddress: "Address",
         pdfLabelNIFPlatform: "Platform Tax ID",
-        
-        // Logs Modal
         logsModalTitle: "PROCESSING ACTIVITY RECORD (GDPR Art. 30)",
         exportLogsBtn: "EXPORT LOGS (JSON)",
         clearLogsBtn: "CLEAR LOGS",
         closeLogsBtn: "CLOSE",
-        
-        // Wipe Button
         wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)"
     }
 };
 
 let currentLang = 'pt';
-
 // ============================================================================
 // 8. ESTADO GLOBAL
 // ============================================================================
@@ -764,7 +694,19 @@ function forensicDataSynchronization() {
 }
 
 // ============================================================================
-// 10. INICIALIZAÇÃO
+// 10. FUNÇÃO DE ABRIR MODAL DE LOGS (CORRIGIDA)
+// ============================================================================
+function openLogsModal() {
+    const modal = document.getElementById('logsModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        ForensicLogger.renderLogsToElement('logsDisplayArea');
+        ForensicLogger.addEntry('LOGS_MODAL_OPENED');
+    }
+}
+
+// ============================================================================
+// 11. INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     setupStaticListeners();
@@ -785,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
         newClearBtn.addEventListener('click', clearConsole);
     }
     
-    // Carregar logs do localStorage
     try {
         const savedLogs = localStorage.getItem('vdc_forensic_logs');
         if (savedLogs) {
@@ -1006,9 +947,8 @@ function setupMainListeners() {
 
     setupUploadListeners();
 }
-
 // ============================================================================
-// 11. DRAG & DROP GLOBAL
+// 12. DRAG & DROP GLOBAL
 // ============================================================================
 function setupDragAndDrop() {
     const dropZone = document.getElementById('globalDropZone');
@@ -1065,7 +1005,7 @@ function handleGlobalFileSelect(e) {
 }
 
 // ============================================================================
-// 12. PROCESSAMENTO EM LOTE
+// 13. PROCESSAMENTO EM LOTE
 // ============================================================================
 async function processBatchFiles(files) {
     if (files.length === 0) return;
@@ -1175,109 +1115,6 @@ function setupUploadListeners() {
             });
         }
     });
-}
-
-// ============================================================================
-// 13. SISTEMA DE TRADUÇÃO
-// ============================================================================
-function switchLanguage() {
-    currentLang = currentLang === 'pt' ? 'en' : 'pt';
-    const t = translations[currentLang];
-    
-    ForensicLogger.addEntry('LANGUAGE_CHANGED', { lang: currentLang });
-
-    // Splash
-    setElementText('splashStartBtnText', t.startBtn);
-    setElementText('splashLogsBtnText', t.splashLogsBtn);
-    
-    // Header/Nav
-    setElementText('demoBtnText', t.navDemo);
-    setElementText('currentLangLabel', t.langBtn);
-    setElementText('headerSubtitle', t.headerSubtitle);
-    
-    // Sidebar
-    setElementText('sidebarIdTitle', t.sidebarIdTitle);
-    setElementText('lblClientName', t.lblClientName);
-    setElementText('lblNIF', t.lblNIF);
-    setElementText('btnRegister', t.btnRegister);
-    setElementText('sidebarParamTitle', t.sidebarParamTitle);
-    setElementText('lblFiscalYear', t.lblFiscalYear);
-    setElementText('lblPeriodo', t.lblPeriodo);
-    setElementText('lblPlatform', t.lblPlatform);
-    setElementText('btnEvidence', t.btnEvidence);
-    setElementText('btnAnalyze', t.btnAnalyze);
-    setElementText('wipeBtnText', t.wipeBtnText);
-    
-    // Toolbar
-    setElementText('btnPDF', t.btnPDF);
-    
-    // Dashboard Cards
-    setElementText('cardNet', t.cardNet);
-    setElementText('cardComm', t.cardComm);
-    setElementText('cardJuros', t.cardJuros);
-    
-    // KPI Section
-    setElementText('kpiTitle', t.kpiTitle);
-    setElementText('kpiGross', t.kpiGross);
-    setElementText('kpiCommText', t.kpiCommText);
-    setElementText('kpiNetText', t.kpiNetText);
-    setElementText('kpiInvText', t.kpiInvText);
-    
-    // Chart
-    setElementText('chartTitle', t.chartTitle);
-    
-    // Console
-    setElementText('consoleTitle', t.consoleTitle);
-    
-    // Footer
-    setElementText('footerHashTitle', t.footerHashTitle);
-    
-    // Modal Evidence
-    setElementText('modalTitle', t.modalTitle);
-    setElementText('uploadControlText', t.uploadControlText);
-    setElementText('uploadSaftText', t.uploadSaftText);
-    setElementText('uploadInvoiceText', t.uploadInvoiceText);
-    setElementText('uploadStatementText', t.uploadStatementText);
-    setElementText('uploadDac7Text', t.uploadDac7Text);
-    setElementText('summaryTitle', t.summaryTitle);
-    setElementText('modalSaveBtn', t.modalSaveBtn);
-    
-    // Modules
-    setElementText('moduleSaftTitle', t.moduleSaftTitle);
-    setElementText('moduleStatementTitle', t.moduleStatementTitle);
-    setElementText('moduleDac7Title', t.moduleDac7Title);
-    setElementText('saftIliquidoLabel', t.saftIliquido);
-    setElementText('saftIvaLabel', t.saftIva);
-    setElementText('saftBrutoLabel', t.saftBruto);
-    setElementText('stmtGanhosLabel', t.stmtGanhos);
-    setElementText('stmtCampanhasLabel', t.stmtCampanhas);
-    setElementText('stmtGorjetasLabel', t.stmtGorjetas);
-    setElementText('stmtPortagensLabel', t.stmtPortagens);
-    setElementText('stmtTaxasCancelLabel', t.stmtTaxasCancel);
-    setElementText('dac7Q1Label', t.dac7Q1);
-    setElementText('dac7Q2Label', t.dac7Q2);
-    setElementText('dac7Q3Label', t.dac7Q3);
-    setElementText('dac7Q4Label', t.dac7Q4);
-    
-    // Quantum
-    setElementText('quantumTitle', t.quantumTitle);
-    setElementText('quantumFormula', t.quantumFormula);
-    setElementText('quantumNote', t.quantumNote);
-    
-    // Verdict
-    setElementText('verdictPercentLabel', t.verdictPercent);
-    
-    // Alerts
-    setElementText('alertCriticalTitle', t.alertCriticalTitle);
-    setElementText('alertAccumulatedNote', t.alertAccumulatedNote);
-    
-    // Logs Modal
-    setElementText('logsModalTitle', t.logsModalTitle);
-    setElementText('exportLogsBtnText', t.exportLogsBtn);
-    setElementText('clearLogsBtnText', t.clearLogsBtn);
-    setElementText('closeLogsBtnText', t.closeLogsBtn);
-    
-    logAudit(`Idioma: ${currentLang.toUpperCase()}`, 'info');
 }
 
 // ============================================================================
@@ -2076,26 +1913,20 @@ function performForensicCrossings() {
     const dac7Q4 = ev.dac7Q4 || 0;
     const ganhosLiquidos = ev.ganhosLiquidos || 0;
 
-    // REGRA 1: Soma Total SAF-T vs DAC7
     cross.saftVsDac7Alert = Math.abs(saftBruto - dac7Q4) > 0.01;
     
-    // REGRA 2: SAF-T - Comissão vs Ganhos Líquidos
     const saftMenosComissao = saftBruto - comissaoTotal;
     cross.saftMenosComissaoVsLiquidoAlert = Math.abs(saftMenosComissao - ganhosLiquidos) > 0.01;
     
-    // REGRA 3: SAF-T vs Ganhos Brutos
     cross.saftVsGanhosAlert = Math.abs(saftBruto - ganhosApp) > 0.01;
     
-    // REGRA 4: Comissões vs Fatura (PROVA RAINHA)
     cross.discrepanciaCritica = comissaoTotal - faturaPlataforma;
     cross.percentagemOmissao = comissaoTotal > 0 ? (cross.discrepanciaCritica / comissaoTotal) * 100 : 0;
     cross.ivaFalta = cross.discrepanciaCritica * 0.23;
     cross.ivaFalta6 = cross.discrepanciaCritica * 0.06;
     
-    // Percentagem da discrepância (para o verdict display)
     cross.percentagemDiscrepancia = comissaoTotal > 0 ? (cross.discrepanciaCritica / comissaoTotal) * 100 : 0;
     
-    // Cálculo do Impacto no Mercado (38.000 motoristas, 7 anos)
     const mesesDados = VDCSystem.dataMonths.size || 1;
     const discrepanciaMensalMedia = cross.discrepanciaCritica / mesesDados;
     
@@ -2106,19 +1937,15 @@ function performForensicCrossings() {
     cross.impactoAnualMercado = cross.impactoMensalMercado * 12;
     cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
     
-    // NOVOS CÁLCULOS PARA BOXES DE ALERTA
     cross.discrepancia5IMT = cross.discrepanciaCritica * 0.05;
     cross.agravamentoBrutoIRC = cross.discrepanciaCritica * 12;
     cross.ircEstimado = cross.agravamentoBrutoIRC * 0.21;
     
-    // Ativar alerta principal se houver discrepância crítica
     cross.bigDataAlertActive = Math.abs(cross.discrepanciaCritica) > 0.01;
     
-    // Verdict baseado na percentagem de omissão
     const baseComparacao = Math.max(saftBruto, ganhosApp, dac7Q4);
     VDCSystem.analysis.verdict = getRiskVerdict(Math.abs(cross.discrepanciaCritica), baseComparacao);
     
-    // CORREÇÃO: Guardar a percentagem correta no verdict
     if (VDCSystem.analysis.verdict) {
         VDCSystem.analysis.verdict.percent = cross.percentagemDiscrepancia.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
     }
@@ -2165,7 +1992,6 @@ function updateDashboard() {
     setElementText('kpiNetValue', formatCurrency(netValue));
     setElementText('kpiInvValue', formatCurrency(ev.faturaPlataforma || 0));
 
-    // NOVAS BOXES DE ALERTA
     setElementText('discrepancy5Value', formatCurrency(cross.discrepancia5IMT || 0));
     setElementText('agravamentoBrutoValue', formatCurrency(cross.agravamentoBrutoIRC || 0));
     setElementText('ircValue', formatCurrency(cross.ircEstimado || 0));
@@ -2224,7 +2050,6 @@ function updateDashboard() {
         `;
     }
 
-    // Mostrar/esconder boxes de alerta baseado nos valores
     const jurosCard = document.getElementById('jurosCard');
     if(jurosCard) jurosCard.style.display = (Math.abs(cross.discrepanciaCritica) > 0) ? 'block' : 'none';
     
@@ -2248,7 +2073,6 @@ function updateDashboard() {
         quantumBox.style.display = (Math.abs(cross.impactoSeteAnosMercado) > 0) ? 'block' : 'none';
     }
     
-    // ATIVAR ALERTAS INTERMITENTES
     activateIntermittentAlerts();
 }
 
@@ -2329,7 +2153,6 @@ function showAlerts() {
     const cross = VDCSystem.analysis.crossings;
     const t = translations[currentLang];
 
-    // Verdict Display - Parecer Técnico com percentagem corrigida
     const verdictDisplay = document.getElementById('verdictDisplay');
     if(verdictDisplay && VDCSystem.analysis.verdict) {
         verdictDisplay.style.display = 'block';
@@ -2380,7 +2203,6 @@ function showAlerts() {
         document.getElementById('verdictLevel').style.color = VDCSystem.analysis.verdict.color;
     }
 
-    // Big Data Alert - Smoking Gun
     const bigDataAlert = document.getElementById('bigDataAlert');
     if(bigDataAlert) {
         if(cross.bigDataAlertActive && Math.abs(cross.discrepanciaCritica) > 0.01) {
@@ -2583,20 +2405,16 @@ function exportPDF() {
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
 
-        // Função para adicionar footer com hash e QR code lado a lado
         const addFooter = () => {
             const footerY = pageHeight - 15;
             
-            // Fundo do footer
             doc.setFillColor(2, 6, 23);
             doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
             
-            // Hash à esquerda
             doc.setTextColor(148, 163, 184);
             doc.setFontSize(6);
             doc.text(`Master Hash SHA-256: ${VDCSystem.masterHash || 'NÃO GERADA'} · RFC 3161`, left, footerY);
             
-            // QR Code à direita - vamos desenhar um quadrado simulando QR
             doc.setFillColor(255, 255, 255);
             doc.rect(pageWidth - 30, footerY - 5, 10, 10, 'F');
             doc.setTextColor(0, 0, 0);
@@ -2604,7 +2422,6 @@ function exportPDF() {
             doc.text('QR', pageWidth - 26, footerY);
         };
 
-        // Página 1: Identificação e Metadados
         doc.setFillColor(2, 6, 23);
         doc.rect(0, 0, 210, 35, 'F');
         doc.setTextColor(0, 229, 255);
@@ -2636,7 +2453,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 2: Análise Financeira Cruzada
         doc.setTextColor(0, 229, 255);
         doc.setFontSize(12);
         doc.text(t.pdfSection2, left, y); y += 8;
@@ -2656,7 +2472,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 3: Veredicto de Risco
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection3, left, y); y += 8;
         
@@ -2678,7 +2493,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 4: PROVA RAINHA (SMOKING GUN)
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection4, left, y); y += 8;
         
@@ -2703,7 +2517,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 5: Enquadramento Legal
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection5, left, y); y += 8;
         
@@ -2726,7 +2539,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 6: Metodologia Pericial
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection6, left, y); y += 8;
         
@@ -2745,7 +2557,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 7: Certificação Digital
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection7, left, y); y += 8;
         
@@ -2764,7 +2575,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 8: Análise Pericial Detalhada
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection8, left, y); y += 8;
         
@@ -2782,7 +2592,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 9: Fatos Constatados (continuação)
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection9, left, y); y += 8;
         
@@ -2804,15 +2613,14 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 10: Impacto Fiscal
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection10, left, y); y += 8;
         
         doc.setTextColor(60, 60, 60);
         doc.setFontSize(10);
-        doc.text(`${t.discrepancy5 || 'DISCREPÂNCIA 5% IMT/AMT'}: ${formatCurrency(cross.discrepancia5IMT || 0)}`, left, y); y += 6;
-        doc.text(`${t.agravamentoBruto || 'AGRAVAMENTO BRUTO/IRC'} (${currentLang === 'pt' ? 'anual' : 'annual'}): ${formatCurrency(cross.agravamentoBrutoIRC || 0)}`, left, y); y += 6;
-        doc.text(`${t.irc || 'IRC'} (21% + Derrama): ${formatCurrency(cross.ircEstimado || 0)}`, left, y); y += 6;
+        doc.text(`${t.discrepancy5}: ${formatCurrency(cross.discrepancia5IMT || 0)}`, left, y); y += 6;
+        doc.text(`${t.agravamentoBruto} (${currentLang === 'pt' ? 'anual' : 'annual'}): ${formatCurrency(cross.agravamentoBrutoIRC || 0)}`, left, y); y += 6;
+        doc.text(`${t.irc}: ${formatCurrency(cross.ircEstimado || 0)}`, left, y); y += 6;
         
         if (Math.abs(cross.impactoSeteAnosMercado) > 0) {
             y += 5;
@@ -2833,7 +2641,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 11: Cadeia de Custódia
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection11, left, y); y += 8;
         
@@ -2852,7 +2659,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 12: Questionário Pericial Estratégico
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection12, left, y); y += 8;
         
@@ -2867,7 +2673,6 @@ function exportPDF() {
         doc.addPage();
         y = 45;
         
-        // Página 13: Conclusão
         doc.setTextColor(0, 229, 255);
         doc.text(t.pdfSection13, left, y); y += 8;
         
@@ -2883,7 +2688,6 @@ function exportPDF() {
         
         addFooter();
         
-        // Salvar PDF
         doc.save(`VDC_Parecer_${VDCSystem.sessionId}.pdf`);
         logAudit('✅ PDF exportado com sucesso', 'success');
         showToast('PDF gerado', 'success');
@@ -3188,28 +2992,22 @@ function setupWipeButton() {
         if (confirm('⚠️ PURGA TOTAL DE DADOS\n\nEsta ação irá eliminar permanentemente TODOS os ficheiros carregados, registos de cliente e logs de atividade. Esta ação é irreversível.\n\nTem a certeza absoluta?')) {
             ForensicLogger.addEntry('WIPE_INITIATED');
             
-            // Limpar localStorage
             localStorage.removeItem('vdc_client_data_bd_v12_7');
             localStorage.removeItem('vdc_forensic_logs');
             
-            // Reset total do sistema
             resetAllValues();
             
-            // Limpar logs forenses
             ForensicLogger.clearLogs();
             
-            // Limpar campos de cliente
             document.getElementById('clientNameFixed').value = '';
             document.getElementById('clientNIFFixed').value = '';
             document.getElementById('clientStatusFixed').style.display = 'none';
             VDCSystem.client = null;
             
-            // Gerar nova sessão
             VDCSystem.sessionId = generateSessionId();
             setElementText('sessionIdDisplay', VDCSystem.sessionId);
             setElementText('verdictSessionId', VDCSystem.sessionId);
             
-            // Forçar reload do console
             const consoleOutput = document.getElementById('consoleOutput');
             if (consoleOutput) {
                 consoleOutput.innerHTML = '';
@@ -3230,7 +3028,6 @@ function setupWipeButton() {
 // 23. DETEÇÃO DE ECRÃ SECUNDÁRIO / MODO APRESENTAÇÃO
 // ============================================================================
 function setupDualScreenDetection() {
-    // Verificar se é um ecrã grande (TV/Monitor secundário)
     const checkScreen = () => {
         const width = window.screen.width;
         const height = window.screen.height;
@@ -3242,7 +3039,6 @@ function setupDualScreenDetection() {
             document.body.classList.remove('secondary-screen');
         }
         
-        // Deteção de múltiplos ecrãs (tentativa)
         if (window.screen.isExtended) {
             document.body.classList.add('dual-screen');
         }
@@ -3251,7 +3047,6 @@ function setupDualScreenDetection() {
     checkScreen();
     window.addEventListener('resize', checkScreen);
     
-    // Atalho de teclado para ativar/desativar modo apresentação (Ctrl+Shift+P)
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.shiftKey && e.key === 'P') {
             e.preventDefault();
