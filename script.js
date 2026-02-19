@@ -1,7 +1,7 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.3 SMOKING GUN · CSC
- * VERSÃO FINAL CORRIGIDA - PROVA RAINHA, CÁLCULOS TRIBUTÁRIOS, PARECER TÉCNICO
- * NOVAS BOXES DE ALERTA, PERCENTAGEM CORRIGIDA, PDF COMPLETO, QR CODE
+ * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.4 SMOKING GUN · CSC
+ * VERSÃO FINAL CORRIGIDA - PORTUGUÊS DE PORTUGAL
+ * CORREÇÕES: BOTÕES DE LOG, LIMPAR CONSOLE, PURGA, PT/EN
  * + RGPD: Registo de Atividades (Art. 30), Privacy by Design, Limpeza Binária
  * + Dual-Screen / Modo Apresentação
  * ====================================================================
@@ -9,7 +9,7 @@
 
 'use strict';
 
-console.log('VDC SCRIPT v12.7.3 · SMOKING GUN · CSC · MODO PROFISSIONAL ATIVADO');
+console.log('VDC SCRIPT v12.7.4 · SMOKING GUN · CSC · MODO PROFISSIONAL ATIVADO');
 
 // ============================================================================
 // 1. CONFIGURAÇÃO DO PDF.JS
@@ -62,7 +62,7 @@ const PLATFORM_DATA = {
 };
 
 // ============================================================================
-// 3. QUESTIONÁRIO PERICIAL ESTRATÉGICO (ATUALIZADO)
+// 3. QUESTIONÁRIO PERICIAL ESTRATÉGICO
 // ============================================================================
 const QUESTIONS_CACHE = [
     { id: 1, text: "Qual a justificação para a diferença entre a comissão retida nos extratos e o valor faturado pela plataforma?", type: "high" },
@@ -228,6 +228,7 @@ const getForensicMetadata = () => {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
 };
+
 // ============================================================================
 // 5. SISTEMA DE LOGS FORENSES (ART. 30 RGPD)
 // ============================================================================
@@ -239,8 +240,8 @@ const ForensicLogger = {
             id: this.logs.length + 1,
             timestamp: new Date().toISOString(),
             timestampUnix: Math.floor(Date.now() / 1000),
-            sessionId: VDCSystem.sessionId || 'PRE_SESSION',
-            user: VDCSystem.client?.name || 'Anónimo',
+            sessionId: typeof VDCSystem !== 'undefined' && VDCSystem.sessionId ? VDCSystem.sessionId : 'PRE_SESSION',
+            user: typeof VDCSystem !== 'undefined' && VDCSystem.client?.name ? VDCSystem.client.name : 'Anónimo',
             action: action,
             data: data,
             ip: 'local',
@@ -267,7 +268,7 @@ const ForensicLogger = {
     clearLogs() {
         this.logs = [];
         localStorage.removeItem('vdc_forensic_logs');
-        this.addEntry('SYSTEM', { action: 'Logs cleared' });
+        this.addEntry('SYSTEM', { action: 'Logs limpos' });
     },
     
     exportLogs() {
@@ -439,7 +440,8 @@ const translations = {
         exportLogsBtn: "EXPORTAR LOGS (JSON)",
         clearLogsBtn: "LIMPAR LOGS",
         closeLogsBtn: "FECHAR",
-        wipeBtnText: "PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA)"
+        wipeBtnText: "PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA)",
+        clearConsoleBtn: "LIMPAR CONSOLE"
     },
     en: {
         startBtn: "START FORENSIC EXAM v12.7",
@@ -535,16 +537,18 @@ const translations = {
         exportLogsBtn: "EXPORT LOGS (JSON)",
         clearLogsBtn: "CLEAR LOGS",
         closeLogsBtn: "CLOSE",
-        wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)"
+        wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)",
+        clearConsoleBtn: "CLEAR CONSOLE"
     }
 };
 
 let currentLang = 'pt';
+
 // ============================================================================
 // 8. ESTADO GLOBAL
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.7.3-SMOKING-GUN-CSC',
+    version: 'v12.7.4-SMOKING-GUN-CSC',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPeriodo: 'anual',
@@ -683,7 +687,8 @@ function forensicDataSynchronization() {
     
     const total = controlFiles + saftFiles + invoiceFiles + statementFiles + dac7Files;
     setElementText('summaryTotal', total);
-    document.getElementById('evidenceCountTotal').textContent = total;
+    const evidenceCountEl = document.getElementById('evidenceCountTotal');
+    if (evidenceCountEl) evidenceCountEl.textContent = total;
     VDCSystem.counts.total = total;
     
     logAudit(`🔬 SINCRONIZAÇÃO: ${total} total (CTRL:${controlFiles} SAFT:${saftFiles} FAT:${invoiceFiles} EXT:${statementFiles} DAC7:${dac7Files})`, 'success');
@@ -694,14 +699,17 @@ function forensicDataSynchronization() {
 }
 
 // ============================================================================
-// 10. FUNÇÃO DE ABRIR MODAL DE LOGS (CORRIGIDA)
+// 10. FUNÇÃO DE ABRIR MODAL DE LOGS
 // ============================================================================
 function openLogsModal() {
+    console.log('openLogsModal chamada');
     const modal = document.getElementById('logsModal');
     if (modal) {
         modal.style.display = 'flex';
         ForensicLogger.renderLogsToElement('logsDisplayArea');
         ForensicLogger.addEntry('LOGS_MODAL_OPENED');
+    } else {
+        console.error('Modal de logs não encontrado');
     }
 }
 
@@ -709,6 +717,7 @@ function openLogsModal() {
 // 11. INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded - Inicializando sistema');
     setupStaticListeners();
     populateAnoFiscal();
     populateYears();
@@ -719,13 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLogsModal();
     setupDualScreenDetection();
     setupWipeButton();
-    
-    const clearBtn = document.getElementById('clearConsoleBtn');
-    if (clearBtn) {
-        const newClearBtn = clearBtn.cloneNode(true);
-        clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
-        newClearBtn.addEventListener('click', clearConsole);
-    }
+    setupClearConsoleButton();
     
     try {
         const savedLogs = localStorage.getItem('vdc_forensic_logs');
@@ -738,10 +741,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupStaticListeners() {
-    document.getElementById('startSessionBtn')?.addEventListener('click', startGatekeeperSession);
-    document.getElementById('langToggleBtn')?.addEventListener('click', switchLanguage);
-    document.getElementById('viewLogsBtn')?.addEventListener('click', openLogsModal);
-    document.getElementById('viewLogsHeaderBtn')?.addEventListener('click', openLogsModal);
+    console.log('Configurando listeners estáticos');
+    const startBtn = document.getElementById('startSessionBtn');
+    if (startBtn) {
+        startBtn.addEventListener('click', startGatekeeperSession);
+        console.log('Listener startSessionBtn adicionado');
+    }
+    
+    const langBtn = document.getElementById('langToggleBtn');
+    if (langBtn) {
+        langBtn.addEventListener('click', switchLanguage);
+        console.log('Listener langToggleBtn adicionado');
+    }
+    
+    const viewLogsBtn = document.getElementById('viewLogsBtn');
+    if (viewLogsBtn) {
+        viewLogsBtn.addEventListener('click', openLogsModal);
+        console.log('Listener viewLogsBtn adicionado');
+    }
+    
+    const viewLogsHeaderBtn = document.getElementById('viewLogsHeaderBtn');
+    if (viewLogsHeaderBtn) {
+        viewLogsHeaderBtn.addEventListener('click', openLogsModal);
+        console.log('Listener viewLogsHeaderBtn adicionado');
+    }
 }
 
 function startGatekeeperSession() {
@@ -788,7 +811,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.3... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.4... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -803,11 +826,16 @@ function showMainInterface() {
             ForensicLogger.addEntry('MAIN_INTERFACE_SHOWN');
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.7.3 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
+    logAudit('SISTEMA VDC v12.7.4 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
     
-    document.getElementById('analyzeBtn').disabled = false;
-    document.getElementById('exportPDFBtn').disabled = false;
-    document.getElementById('exportJSONBtn').disabled = false;
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) analyzeBtn.disabled = false;
+    
+    const exportPDFBtn = document.getElementById('exportPDFBtn');
+    if (exportPDFBtn) exportPDFBtn.disabled = false;
+    
+    const exportJSONBtn = document.getElementById('exportJSONBtn');
+    if (exportJSONBtn) exportJSONBtn.disabled = false;
     
     setTimeout(forensicDataSynchronization, 1000);
 }
@@ -894,40 +922,55 @@ function generateQRCode() {
 }
 
 function setupMainListeners() {
-    document.getElementById('registerClientBtnFixed')?.addEventListener('click', registerClient);
-    document.getElementById('demoModeBtn')?.addEventListener('click', activateDemoMode);
+    const registerBtn = document.getElementById('registerClientBtnFixed');
+    if (registerBtn) registerBtn.addEventListener('click', registerClient);
+    
+    const demoBtn = document.getElementById('demoModeBtn');
+    if (demoBtn) demoBtn.addEventListener('click', activateDemoMode);
 
-    document.getElementById('anoFiscal')?.addEventListener('change', (e) => {
-        VDCSystem.selectedYear = parseInt(e.target.value);
-        logAudit(`Ano fiscal em exame alterado para: ${e.target.value}`, 'info');
-        ForensicLogger.addEntry('YEAR_CHANGED', { year: e.target.value });
-    });
+    const anoFiscal = document.getElementById('anoFiscal');
+    if (anoFiscal) {
+        anoFiscal.addEventListener('change', (e) => {
+            VDCSystem.selectedYear = parseInt(e.target.value);
+            logAudit(`Ano fiscal em exame alterado para: ${e.target.value}`, 'info');
+            ForensicLogger.addEntry('YEAR_CHANGED', { year: e.target.value });
+        });
+    }
 
-    document.getElementById('periodoAnalise')?.addEventListener('change', (e) => {
-        VDCSystem.selectedPeriodo = e.target.value;
-        const periodos = {
-            'anual': 'Exercício Completo (Anual)',
-            '1s': '1.º Semestre',
-            '2s': '2.º Semestre',
-            'trimestral': 'Análise Trimestral',
-            'mensal': 'Análise Mensal'
-        };
-        logAudit(`Período temporal alterado para: ${periodos[e.target.value] || e.target.value}`, 'info');
-        ForensicLogger.addEntry('PERIOD_CHANGED', { period: e.target.value });
-    });
+    const periodoAnalise = document.getElementById('periodoAnalise');
+    if (periodoAnalise) {
+        periodoAnalise.addEventListener('change', (e) => {
+            VDCSystem.selectedPeriodo = e.target.value;
+            const periodos = {
+                'anual': 'Exercício Completo (Anual)',
+                '1s': '1.º Semestre',
+                '2s': '2.º Semestre',
+                'trimestral': 'Análise Trimestral',
+                'mensal': 'Análise Mensal'
+            };
+            logAudit(`Período temporal alterado para: ${periodos[e.target.value] || e.target.value}`, 'info');
+            ForensicLogger.addEntry('PERIOD_CHANGED', { period: e.target.value });
+        });
+    }
 
-    document.getElementById('selPlatformFixed')?.addEventListener('change', (e) => {
-        VDCSystem.selectedPlatform = e.target.value;
-        logAudit(`Plataforma alterada para: ${e.target.value.toUpperCase()}`, 'info');
-        ForensicLogger.addEntry('PLATFORM_CHANGED', { platform: e.target.value });
-    });
+    const selPlatform = document.getElementById('selPlatformFixed');
+    if (selPlatform) {
+        selPlatform.addEventListener('change', (e) => {
+            VDCSystem.selectedPlatform = e.target.value;
+            logAudit(`Plataforma alterada para: ${e.target.value.toUpperCase()}`, 'info');
+            ForensicLogger.addEntry('PLATFORM_CHANGED', { platform: e.target.value });
+        });
+    }
 
-    document.getElementById('openEvidenceModalBtn')?.addEventListener('click', () => {
-        document.getElementById('evidenceModal').style.display = 'flex';
-        updateEvidenceSummary();
-        forensicDataSynchronization();
-        ForensicLogger.addEntry('EVIDENCE_MODAL_OPENED');
-    });
+    const openEvidenceBtn = document.getElementById('openEvidenceModalBtn');
+    if (openEvidenceBtn) {
+        openEvidenceBtn.addEventListener('click', () => {
+            document.getElementById('evidenceModal').style.display = 'flex';
+            updateEvidenceSummary();
+            forensicDataSynchronization();
+            ForensicLogger.addEntry('EVIDENCE_MODAL_OPENED');
+        });
+    }
 
     const closeModal = () => {
         document.getElementById('evidenceModal').style.display = 'none';
@@ -936,19 +979,49 @@ function setupMainListeners() {
         ForensicLogger.addEntry('EVIDENCE_MODAL_CLOSED');
     };
 
-    document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
-    document.getElementById('closeAndSaveBtn')?.addEventListener('click', closeModal);
-    document.getElementById('evidenceModal')?.addEventListener('click', (e) => { if(e.target.id === 'evidenceModal') closeModal(); });
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+    
+    const closeAndSaveBtn = document.getElementById('closeAndSaveBtn');
+    if (closeAndSaveBtn) closeAndSaveBtn.addEventListener('click', closeModal);
+    
+    const evidenceModal = document.getElementById('evidenceModal');
+    if (evidenceModal) {
+        evidenceModal.addEventListener('click', (e) => { 
+            if(e.target.id === 'evidenceModal') closeModal(); 
+        });
+    }
 
-    document.getElementById('analyzeBtn')?.addEventListener('click', performAudit);
-    document.getElementById('exportPDFBtn')?.addEventListener('click', exportPDF);
-    document.getElementById('exportJSONBtn')?.addEventListener('click', exportDataJSON);
-    document.getElementById('resetBtn')?.addEventListener('click', resetSystem);
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) analyzeBtn.addEventListener('click', performAudit);
+    
+    const exportPDFBtn = document.getElementById('exportPDFBtn');
+    if (exportPDFBtn) exportPDFBtn.addEventListener('click', exportPDF);
+    
+    const exportJSONBtn = document.getElementById('exportJSONBtn');
+    if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportDataJSON);
+    
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) resetBtn.addEventListener('click', resetSystem);
 
     setupUploadListeners();
 }
+
 // ============================================================================
-// 12. DRAG & DROP GLOBAL
+// 12. SETUP DO BOTÃO LIMPAR CONSOLE
+// ============================================================================
+function setupClearConsoleButton() {
+    const clearBtn = document.getElementById('clearConsoleBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearConsole);
+        console.log('Listener clearConsoleBtn adicionado');
+    } else {
+        console.error('Botão clearConsoleBtn não encontrado');
+    }
+}
+
+// ============================================================================
+// 13. DRAG & DROP GLOBAL
 // ============================================================================
 function setupDragAndDrop() {
     const dropZone = document.getElementById('globalDropZone');
@@ -1005,7 +1078,7 @@ function handleGlobalFileSelect(e) {
 }
 
 // ============================================================================
-// 13. PROCESSAMENTO EM LOTE
+// 14. PROCESSAMENTO EM LOTE
 // ============================================================================
 async function processBatchFiles(files) {
     if (files.length === 0) return;
@@ -1118,7 +1191,90 @@ function setupUploadListeners() {
 }
 
 // ============================================================================
-// 14. REGISTO DE CLIENTE
+// 15. SISTEMA DE TRADUÇÃO
+// ============================================================================
+function switchLanguage() {
+    console.log('switchLanguage chamado. currentLang antes:', currentLang);
+    currentLang = currentLang === 'pt' ? 'en' : 'pt';
+    console.log('currentLang depois:', currentLang);
+    
+    const t = translations[currentLang];
+    
+    ForensicLogger.addEntry('LANGUAGE_CHANGED', { lang: currentLang });
+
+    setElementText('splashStartBtnText', t.startBtn);
+    setElementText('splashLogsBtnText', t.splashLogsBtn);
+    setElementText('demoBtnText', t.navDemo);
+    setElementText('currentLangLabel', t.langBtn);
+    setElementText('headerSubtitle', t.headerSubtitle);
+    setElementText('sidebarIdTitle', t.sidebarIdTitle);
+    setElementText('lblClientName', t.lblClientName);
+    setElementText('lblNIF', t.lblNIF);
+    setElementText('btnRegister', t.btnRegister);
+    setElementText('sidebarParamTitle', t.sidebarParamTitle);
+    setElementText('lblFiscalYear', t.lblFiscalYear);
+    setElementText('lblPeriodo', t.lblPeriodo);
+    setElementText('lblPlatform', t.lblPlatform);
+    setElementText('btnEvidence', t.btnEvidence);
+    setElementText('btnAnalyze', t.btnAnalyze);
+    setElementText('wipeBtnText', t.wipeBtnText);
+    setElementText('btnPDF', t.btnPDF);
+    setElementText('clearConsoleBtn', t.clearConsoleBtn);
+    setElementText('cardNet', t.cardNet);
+    setElementText('cardComm', t.cardComm);
+    setElementText('cardJuros', t.cardJuros);
+    setElementText('kpiTitle', t.kpiTitle);
+    setElementText('kpiGross', t.kpiGross);
+    setElementText('kpiCommText', t.kpiCommText);
+    setElementText('kpiNetText', t.kpiNetText);
+    setElementText('kpiInvText', t.kpiInvText);
+    setElementText('chartTitle', t.chartTitle);
+    setElementText('consoleTitle', t.consoleTitle);
+    setElementText('footerHashTitle', t.footerHashTitle);
+    setElementText('modalTitle', t.modalTitle);
+    setElementText('uploadControlText', t.uploadControlText);
+    setElementText('uploadSaftText', t.uploadSaftText);
+    setElementText('uploadInvoiceText', t.uploadInvoiceText);
+    setElementText('uploadStatementText', t.uploadStatementText);
+    setElementText('uploadDac7Text', t.uploadDac7Text);
+    setElementText('summaryTitle', t.summaryTitle);
+    setElementText('modalSaveBtn', t.modalSaveBtn);
+    setElementText('moduleSaftTitle', t.moduleSaftTitle);
+    setElementText('moduleStatementTitle', t.moduleStatementTitle);
+    setElementText('moduleDac7Title', t.moduleDac7Title);
+    setElementText('saftIliquidoLabel', t.saftIliquido);
+    setElementText('saftIvaLabel', t.saftIva);
+    setElementText('saftBrutoLabel', t.saftBruto);
+    setElementText('stmtGanhosLabel', t.stmtGanhos);
+    setElementText('stmtCampanhasLabel', t.stmtCampanhas);
+    setElementText('stmtGorjetasLabel', t.stmtGorjetas);
+    setElementText('stmtPortagensLabel', t.stmtPortagens);
+    setElementText('stmtTaxasCancelLabel', t.stmtTaxasCancel);
+    setElementText('dac7Q1Label', t.dac7Q1);
+    setElementText('dac7Q2Label', t.dac7Q2);
+    setElementText('dac7Q3Label', t.dac7Q3);
+    setElementText('dac7Q4Label', t.dac7Q4);
+    setElementText('quantumTitle', t.quantumTitle);
+    setElementText('quantumFormula', t.quantumFormula);
+    setElementText('quantumNote', t.quantumNote);
+    setElementText('verdictPercentLabel', t.verdictPercent);
+    setElementText('alertCriticalTitle', t.alertCriticalTitle);
+    setElementText('alertAccumulatedNote', t.alertAccumulatedNote);
+    setElementText('logsModalTitle', t.logsModalTitle);
+    setElementText('exportLogsBtnText', t.exportLogsBtn);
+    setElementText('clearLogsBtnText', t.clearLogsBtn);
+    setElementText('closeLogsBtnText', t.closeLogsBtn);
+    
+    if (VDCSystem.analysis.extractedValues) {
+        updateDashboard();
+        updateModulesUI();
+    }
+    
+    logAudit(`Idioma: ${currentLang.toUpperCase()}`, 'info');
+}
+
+// ============================================================================
+// 16. REGISTO DE CLIENTE
 // ============================================================================
 function registerClient() {
     const name = document.getElementById('clientNameFixed').value.trim();
@@ -1141,7 +1297,7 @@ function registerClient() {
 }
 
 // ============================================================================
-// 15. PROCESSAMENTO DE FICHEIROS
+// 17. PROCESSAMENTO DE FICHEIROS
 // ============================================================================
 async function processFile(file, type) {
     const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
@@ -1222,9 +1378,6 @@ async function processFile(file, type) {
         processedAt: new Date().toISOString()
     });
 
-    // ============================================================
-    // PROCESSAMENTO DE EXTRATOS
-    // ============================================================
     if (type === 'statement') {
         try {
             let yearMonth = null;
@@ -1379,9 +1532,6 @@ async function processFile(file, type) {
         }
     }
 
-    // ============================================================
-    // PROCESSAMENTO DE FATURAS
-    // ============================================================
     if (type === 'invoice' || (type === 'unknown' && file.name.match(/pt\d{4}-\d{5}/i))) {
         try {
             if (type === 'unknown') {
@@ -1463,9 +1613,6 @@ async function processFile(file, type) {
         }
     }
 
-    // ============================================================
-    // PROCESSAMENTO DE SAF-T
-    // ============================================================
     if (type === 'saft' && file.name.match(/131509.*\.csv$/i)) {
         try {
             const monthMatch = file.name.match(/131509_(\d{6})/);
@@ -1572,9 +1719,6 @@ async function processFile(file, type) {
         }
     }
 
-    // ============================================================
-    // PROCESSAMENTO DE DAC7
-    // ============================================================
     if (type === 'dac7') {
         try {
             const dac7AnualRegex = /Total de receitas anuais:\s*([\d\s,.]+)€/i;
@@ -1603,9 +1747,6 @@ async function processFile(file, type) {
         }
     }
 
-    // ============================================================
-    // PROCESSAMENTO DE CONTROLO
-    // ============================================================
     if (type === 'control') {
         logAudit(`🔐 Ficheiro de controlo registado: ${file.name}`, 'info');
         ForensicLogger.addEntry('CONTROL_FILE_ADDED', { filename: file.name });
@@ -1691,7 +1832,7 @@ function updateCounters() {
 }
 
 // ============================================================================
-// 16. MODO DEMO
+// 18. MODO DEMO
 // ============================================================================
 function activateDemoMode() {
     if(VDCSystem.processing) return;
@@ -1706,7 +1847,7 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.3 SMOKING GUN...', 'info');
+    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.4 SMOKING GUN...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
@@ -1801,7 +1942,7 @@ function simulateUpload(type, count) {
 }
 
 // ============================================================================
-// 17. MOTOR DE PERÍCIA FORENSE
+// 19. MOTOR DE PERÍCIA FORENSE
 // ============================================================================
 function performAudit() {
     if (!VDCSystem.client) return showToast('Registe o sujeito passivo primeiro.', 'error');
@@ -2297,7 +2438,7 @@ function renderChart() {
 }
 
 // ============================================================================
-// 18. EXPORTAÇÕES
+// 20. EXPORTAÇÕES
 // ============================================================================
 function exportDataJSON() {
     ForensicLogger.addEntry('JSON_EXPORT_STARTED');
@@ -2379,7 +2520,7 @@ function exportDataJSON() {
 }
 
 // ============================================================================
-// 19. EXPORTAÇÃO PDF
+// 21. EXPORTAÇÃO PDF
 // ============================================================================
 function exportPDF() {
     if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
@@ -2569,7 +2710,7 @@ function exportPDF() {
         doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
-        doc.text(`Certificação: VDC Forense v12.7.3`, left, y); y += 10;
+        doc.text(`Certificação: VDC Forense v12.7.4`, left, y); y += 10;
         
         addFooter();
         doc.addPage();
@@ -2703,7 +2844,7 @@ function exportPDF() {
 }
 
 // ============================================================================
-// 20. FUNÇÕES AUXILIARES
+// 22. FUNÇÕES AUXILIARES
 // ============================================================================
 function generateMasterHash() {
     const data = JSON.stringify({
@@ -2765,6 +2906,7 @@ function showToast(message, type = 'info') {
 }
 
 function clearConsole() {
+    console.log('clearConsole chamado');
     const consoleOutput = document.getElementById('consoleOutput');
     if (consoleOutput) {
         consoleOutput.innerHTML = '';
@@ -2854,7 +2996,9 @@ function resetAllValues() {
         }
     });
     
-    document.getElementById('verdictDesc').innerHTML = 'Execute a perícia para obter o veredicto.';
+    const verdictDesc = document.getElementById('verdictDesc');
+    if (verdictDesc) verdictDesc.innerHTML = 'Execute a perícia para obter o veredicto.';
+    
     const verdictPercentSpan = document.getElementById('verdictPercentSpan');
     if (verdictPercentSpan) verdictPercentSpan.textContent = '0,00%';
     
@@ -2932,7 +3076,7 @@ function updateAnalysisButton() {
 }
 
 // ============================================================================
-// 21. GESTÃO DE LOGS (ART. 30 RGPD)
+// 23. GESTÃO DE LOGS (ART. 30 RGPD)
 // ============================================================================
 function setupLogsModal() {
     const modal = document.getElementById('logsModal');
@@ -2948,41 +3092,49 @@ function setupLogsModal() {
         ForensicLogger.renderLogsToElement('logsDisplayArea');
     };
     
-    document.getElementById('viewLogsBtn')?.addEventListener('click', openModal);
-    document.getElementById('viewLogsHeaderBtn')?.addEventListener('click', openModal);
+    const viewLogsBtn = document.getElementById('viewLogsBtn');
+    if (viewLogsBtn) viewLogsBtn.addEventListener('click', openModal);
+    
+    const viewLogsHeaderBtn = document.getElementById('viewLogsHeaderBtn');
+    if (viewLogsHeaderBtn) viewLogsHeaderBtn.addEventListener('click', openModal);
     
     const closeModal = () => {
         modal.style.display = 'none';
     };
     
-    closeBtn?.addEventListener('click', closeModal);
-    closeBtn2?.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (closeBtn2) closeBtn2.addEventListener('click', closeModal);
+    
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
     
-    exportBtn?.addEventListener('click', () => {
-        const logs = ForensicLogger.exportLogs();
-        const blob = new Blob([logs], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `VDC_LOGS_${VDCSystem.sessionId || 'PRE_SESSION'}.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showToast('Logs exportados', 'success');
-    });
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const logs = ForensicLogger.exportLogs();
+            const blob = new Blob([logs], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `VDC_LOGS_${VDCSystem.sessionId || 'PRE_SESSION'}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Logs exportados', 'success');
+        });
+    }
     
-    clearBtn?.addEventListener('click', () => {
-        if (confirm('Tem a certeza que deseja limpar todos os registos de atividade?')) {
-            ForensicLogger.clearLogs();
-            ForensicLogger.renderLogsToElement('logsDisplayArea');
-            showToast('Logs limpos', 'success');
-        }
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Tem a certeza que deseja limpar todos os registos de atividade?')) {
+                ForensicLogger.clearLogs();
+                ForensicLogger.renderLogsToElement('logsDisplayArea');
+                showToast('Logs limpos', 'success');
+            }
+        });
+    }
 }
 
 // ============================================================================
-// 22. LIMPEZA BINÁRIA (PURGA TOTAL DE DADOS)
+// 24. LIMPEZA BINÁRIA (PURGA TOTAL DE DADOS)
 // ============================================================================
 function setupWipeButton() {
     const wipeBtn = document.getElementById('forensicWipeBtn');
@@ -3025,7 +3177,7 @@ function setupWipeButton() {
 }
 
 // ============================================================================
-// 23. DETEÇÃO DE ECRÃ SECUNDÁRIO / MODO APRESENTAÇÃO
+// 25. DETEÇÃO DE ECRÃ SECUNDÁRIO / MODO APRESENTAÇÃO
 // ============================================================================
 function setupDualScreenDetection() {
     const checkScreen = () => {
@@ -3059,13 +3211,16 @@ function setupDualScreenDetection() {
 }
 
 // ============================================================================
-// 24. EXPOSIÇÃO GLOBAL
+// 26. EXPOSIÇÃO GLOBAL
 // ============================================================================
 window.VDCSystem = VDCSystem;
 window.ValueSource = ValueSource;
 window.ForensicLogger = ForensicLogger;
 window.forensicDataSynchronization = forensicDataSynchronization;
+window.switchLanguage = switchLanguage;
+window.openLogsModal = openLogsModal;
+window.clearConsole = clearConsole;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v12.7.3 SMOKING GUN · CSC
+   FIM DO FICHEIRO SCRIPT.JS · v12.7.4 SMOKING GUN · CSC
    ===================================================================== */
