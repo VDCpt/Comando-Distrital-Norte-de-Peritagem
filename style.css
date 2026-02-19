@@ -1,8 +1,9 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.3 SMOKING GUN · CSI
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.4 SMOKING GUN · CSI
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
+   PORTUGUÊS DE PORTUGAL
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -42,7 +43,6 @@
     --shadow-glow-fbi-yellow: 0 0 25px rgba(255, 200, 0, 0.8), 0 0 40px rgba(255, 200, 0, 0.4);
     --shadow-glow-csc: 0 0 30px rgba(255, 215, 0, 0.9), 0 0 60px rgba(255, 215, 0, 0.5);
     
-    /* Modo Apresentação - Variáveis aumentadas */
     --presentation-scale: 1.2;
     --presentation-font-size-base: 1.1rem;
     --presentation-font-size-large: 2rem;
@@ -71,7 +71,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   2. SPLASH SCREEN PANORÂMICO - CORREÇÃO DE LEGIBILIDADE
+   2. SPLASH SCREEN PANORÂMICO
    --------------------------------------------------------------------- */
 .splash-screen {
     position: fixed;
@@ -463,7 +463,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   5. SIDEBAR - MAIS LARGA (420px) + NOVOS SELOS
+   5. SIDEBAR
    --------------------------------------------------------------------- */
 .app-container {
     display: grid;
@@ -737,7 +737,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* NOVOS SELOS DE CONFORMIDADE */
 .conformity-seals {
     margin-top: 1.5rem;
     padding: 1rem;
@@ -965,7 +964,6 @@ body {
     animation: blink-alert 1s infinite;
 }
 
-/* NOVAS CLASSES PARA ALERTAS INTERMITENTES */
 .kpi-card.alert-intermitent,
 .stat-card.alert-intermitent {
     animation: blink-yellow 1.2s infinite;
@@ -1158,7 +1156,6 @@ body {
     border-top-color: var(--warn-secondary);
 }
 
-/* QUANTUM BOX - CÁLCULO TRIBUTÁRIO PERICIAL */
 .quantum-box {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
     border: 2px solid var(--warn-primary);
@@ -1225,7 +1222,6 @@ body {
     font-weight: 700;
 }
 
-/* VERDICT DISPLAY - PARECER TÉCNICO */
 .verdict-display {
     display: none;
     text-align: left;
@@ -1283,7 +1279,6 @@ body {
     padding-top: 0.5rem;
 }
 
-/* BIG DATA ALERT - SMOKING GUN */
 .bigdata-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.2) 0%, rgba(255, 159, 26, 0.2) 100%);
     border: 3px solid var(--warn-primary);
@@ -1881,7 +1876,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   9. MODO APRESENTAÇÃO (NOVO)
+   9. MODO APRESENTAÇÃO
    --------------------------------------------------------------------- */
 body.presentation-mode {
     font-size: var(--presentation-font-size-base);
@@ -1923,7 +1918,6 @@ body.presentation-mode .conformity-seals {
     transform-origin: bottom;
 }
 
-/* Deteção de ecrã secundário (será ativado via JS) */
 @media (min-width: 1920px) {
     body.secondary-screen .analysis-area {
         font-size: 1.1rem;
@@ -2124,7 +2118,7 @@ body.presentation-mode .conformity-seals {
 }
 
 /* ---------------------------------------------------------------------
-   12. PRINT (PDF) - Atualizado para incluir hash e QR code no footer
+   12. PRINT (PDF)
    --------------------------------------------------------------------- */
 @media print {
     .splash-screen,
@@ -2186,7 +2180,6 @@ body.presentation-mode .conformity-seals {
         page-break-inside: avoid;
     }
     
-    /* Footer com Hash e QR Code lado a lado */
     .action-footer {
         position: running(footer);
         display: flex !important;
