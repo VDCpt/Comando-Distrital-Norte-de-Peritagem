@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Sistema de Peritagem Forense - Módulo de Análise Financeira e Fiscal v12.7.1 PROVA RAINHA">
+    <meta name="description" content="VDC Sistema de Peritagem Forense - Módulo de Análise Financeira e Fiscal v12.7.2 PROVA RAINHA">
     <meta name="author" content="VDC Systems International">
-    <title>VDC FORENSE · v12.7.1 · SMOKING GUN · COLARINHO BRANCO</title>
+    <title>VDC FORENSE · v12.7.2 · SMOKING GUN · COLARINHO BRANCO · CSC</title>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
@@ -14,12 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -36,7 +38,7 @@
             </div>
             <h1>SISTEMA DE PERITAGEM FORENSE</h1>
             <h2>VDC SYSTEMS INTERNATIONAL</h2>
-            <p class="splash-subtitle">MÓDULO DE INVESTIGAÇÃO DIGITAL · ISO/IEC 27037 · BIG DATA ACCUMULATOR</p>
+            <p class="splash-subtitle">MÓDULO DE INVESTIGAÇÃO DIGITAL · ISO/IEC 27037 · BIG DATA ACCUMULATOR · CSC</p>
 
             <div class="splash-warning-box">
                 <p><i class="fas fa-gavel"></i> AVISO DE PROTEÇÃO VDC SISTEMA FORENSE</p>
@@ -50,7 +52,7 @@
 
             <div class="splash-footer">
                 <p>Ao continuar, declara estar autorizado a realizar esta perícia.</p>
-                <p class="version">VDC © 2024/2026 v12.7.1 · SMOKING GUN · COLARINHO BRANCO · BIG DATA</p>
+                <p class="version">VDC © 2024/2026 v12.7.2 · SMOKING GUN · COLARINHO BRANCO · CSC · BIG DATA</p>
             </div>
         </div>
     </div>
@@ -79,9 +81,9 @@
                     <div>
                         <h1>
                             VDC FORENSE 
-                            <span class="version-badge">v12.7.1</span>
+                            <span class="version-badge">v12.7.2</span>
                         </h1>
-                        <p class="subtitle" id="headerSubtitle">ISO/IEC 27037 | NIST SP 800-86 | Interpol Digital Forensics | BIG DATA</p>
+                        <p class="subtitle" id="headerSubtitle">ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA</p>
                     </div>
                 </div>
 
@@ -322,7 +324,7 @@
                     </div>
                 </div>
 
-                <!-- QUANTUM BOX - AGORA CÁLCULO TRIBUTÁRIO PERICIAL -->
+                <!-- QUANTUM BOX - CÁLCULO TRIBUTÁRIO PERICIAL -->
                 <div id="quantumBox" class="quantum-box" style="display: none;">
                     <h4 id="quantumTitle"><i class="fas fa-exclamation-triangle"></i> CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA</h4>
                     <div id="quantumValue" class="quantum-value">0,00 €</div>
@@ -331,16 +333,16 @@
                     <div id="quantumBreakdown" class="quantum-breakdown"></div>
                 </div>
 
-                <!-- VEREDICTO DE RISCO - AGORA PARECER TÉCNICO -->
+                <!-- VEREDICTO DE RISCO - PARECER TÉCNICO -->
                 <div id="verdictDisplay" class="verdict-display">
                     <p class="verdict-title" id="verdictPercentLabel">PARECER TÉCNICO N.º <span id="verdictSessionId">--------</span></p>
                     <p id="verdictLevel" class="verdict-level">AGUARDANDO ANÁLISE</p>
-                    <p id="verdictPercentValue" class="verdict-percent">Discrepância: 0,00%</p>
-                    <p id="verdictDesc" class="verdict-desc">Execute a perícia para obter o veredicto.</p>
+                    <p id="verdictPercentValue" class="verdict-percent">Discrepância: <span id="verdictPercentSpan">0,00%</span></p>
+                    <div id="verdictDesc" class="verdict-desc">Execute a perícia para obter o veredicto.</div>
                     <div id="verdictLegal" class="verdict-legal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px dashed var(--border-color); padding-top: 0.5rem;"></div>
                 </div>
 
-                <!-- ALERTA BIG DATA - AGORA SMOKING GUN -->
+                <!-- ALERTA BIG DATA - SMOKING GUN -->
                 <div id="bigDataAlert" class="bigdata-alert smoking-gun">
                     <i class="fas fa-radiation"></i>
                     <div>
@@ -351,14 +353,14 @@
                     </div>
                 </div>
 
-                <!-- DASHBOARD FIXED -->
-                <div class="dashboard-fixed">
+                <!-- DASHBOARD FIXED - NOVAS BOXES DE ALERTA -->
+                <div class="dashboard-fixed" id="dashboardAlerts">
                     <div class="stat-card">
                         <h4 id="cardNet"><i class="fas fa-coins"></i> VALOR LÍQUIDO RECONSTRUÍDO</h4>
                         <p id="statNet">0,00 €</p>
                         <span class="stat-desc">Resultado Bruto - Comissões</span>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="statCommCard">
                         <h4 id="cardComm"><i class="fas fa-percentage"></i> COMISSÕES DETETADAS</h4>
                         <p id="statComm">0,00 €</p>
                         <span class="stat-desc">Taxa de serviço plataforma</span>
@@ -367,6 +369,37 @@
                         <h4 id="cardJuros"><i class="fas fa-chart-line"></i> FOSSO FISCAL</h4>
                         <p id="statJuros">0,00 €</p>
                         <span class="stat-desc">Discrepância calculada (Big Data)</span>
+                    </div>
+                    
+                    <!-- NOVAS BOXES DE ALERTA -->
+                    <div class="stat-card alert" id="discrepancy5Card" style="display: none;">
+                        <h4><i class="fas fa-exclamation-triangle"></i> DISCREPÂNCIA 5% IMT/AMT</h4>
+                        <p id="discrepancy5Value">0,00 €</p>
+                        <span class="stat-desc">Valores omitidos não pagos</span>
+                    </div>
+                    
+                    <div class="stat-card alert" id="agravamentoBrutoCard" style="display: none;">
+                        <h4><i class="fas fa-chart-line"></i> AGRAVAMENTO BRUTO/IRC</h4>
+                        <p id="agravamentoBrutoValue">0,00 €</p>
+                        <span class="stat-desc">Impacto no lucro tributável</span>
+                    </div>
+                    
+                    <div class="stat-card alert" id="ircCard" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> IRC (21% + Derrama)</h4>
+                        <p id="ircValue">0,00 €</p>
+                        <span class="stat-desc">Estimativa de imposto</span>
+                    </div>
+                    
+                    <div class="stat-card alert" id="iva6Card" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> IVA 6% OMITIDO</h4>
+                        <p id="iva6Value">0,00 €</p>
+                        <span class="stat-desc">Valor não pago pelo sujeito passivo</span>
+                    </div>
+                    
+                    <div class="stat-card alert" id="iva23Card" style="display: none;">
+                        <h4><i class="fas fa-percent"></i> IVA 23% OMITIDO</h4>
+                        <p id="iva23Value">0,00 €</p>
+                        <span class="stat-desc">Valor não pago pelo sujeito passivo</span>
                     </div>
                 </div>
 
@@ -378,7 +411,7 @@
                             <h4 id="kpiGross">BRUTO REAL</h4>
                             <p id="kpiGrossValue">0,00 €</p>
                         </div>
-                        <div class="kpi-card">
+                        <div class="kpi-card" id="kpiCommCard">
                             <h4 id="kpiCommText">COMISSÕES</h4>
                             <p id="kpiCommValue">0,00 €</p>
                         </div>
@@ -386,7 +419,7 @@
                             <h4 id="kpiNetText">LÍQUIDO</h4>
                             <p id="kpiNetValue">0,00 €</p>
                         </div>
-                        <div class="kpi-card danger">
+                        <div class="kpi-card danger" id="kpiInvCard">
                             <h4 id="kpiInvText">FATURADO</h4>
                             <p id="kpiInvValue">0,00 €</p>
                         </div>
@@ -416,7 +449,8 @@
                             <strong id="footerHashTitle">INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 · RFC 3161)</strong>
                             <span id="masterHashValue">A aguardar dados...</span>
                         </div>
-                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.7.1 | SMOKING GUN | COLARINHO BRANCO</p>
+                        <div id="qrcodeContainer" style="margin-top: 10px; display: flex; justify-content: center;"></div>
+                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.7.2 | SMOKING GUN | COLARINHO BRANCO | CSC</p>
                     </div>
                 </footer>
 
