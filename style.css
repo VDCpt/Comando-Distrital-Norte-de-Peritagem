@@ -1,8 +1,8 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.1 SMOKING GUN
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.2 SMOKING GUN · CSC
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
-   BIG DATA ACCUMULATOR · CORREÇÕES: LETRA MAIOR (16px), DRAG & DROP GLOBAL
-   NOVO: LUZ FBI/CSI, BOX AZUL TAXAS CANCELAMENTO
+   BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
+   ESTILO FBI/INTERPOL/CSC · QR CODE · PAGINAÇÃO PDF
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -37,10 +37,11 @@
     --shadow-glow-green: 0 0 15px rgba(16, 185, 129, 0.4);
     --shadow-glow-orange: 0 0 15px rgba(245, 158, 11, 0.4);
     
-    /* NOVOS BRILHOS FBI/CSI */
+    /* NOVOS BRILHOS FBI/CSI/CSC */
     --shadow-glow-fbi-red: 0 0 25px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.4);
     --shadow-glow-fbi-blue: 0 0 25px rgba(0, 100, 255, 0.8), 0 0 40px rgba(0, 100, 255, 0.4);
     --shadow-glow-fbi-yellow: 0 0 25px rgba(255, 200, 0, 0.8), 0 0 40px rgba(255, 200, 0, 0.4);
+    --shadow-glow-csc: 0 0 30px rgba(255, 215, 0, 0.9), 0 0 60px rgba(255, 215, 0, 0.5);
 }
 
 *,
@@ -843,6 +844,27 @@ body {
     animation: blink-alert 1s infinite;
 }
 
+/* NOVAS CLASSES PARA ALERTAS INTERMITENTES */
+.kpi-card.alert-intermitent,
+.stat-card.alert-intermitent {
+    animation: blink-yellow 1.2s infinite;
+    border-color: var(--warn-secondary) !important;
+    box-shadow: var(--shadow-glow-orange);
+}
+
+@keyframes blink-yellow {
+    0%, 100% { 
+        border-color: var(--warn-secondary); 
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        background: rgba(245, 158, 11, 0.1);
+    }
+    50% { 
+        border-color: #ffaa00; 
+        box-shadow: 0 0 25px rgba(255, 170, 0, 0.9);
+        background: rgba(245, 158, 11, 0.3);
+    }
+}
+
 .toolbar-section {
     margin-bottom: 1.5rem;
     background: rgba(0,0,0,0.2);
@@ -905,6 +927,7 @@ body {
     overflow: hidden;
     border-radius: var(--border-radius-sm);
     width: 100%;
+    transition: all 0.3s ease;
 }
 
 .stat-card h4 {
@@ -939,6 +962,11 @@ body {
 .stat-card.alert {
     border-left-color: var(--warn-primary);
     background: rgba(239, 68, 68, 0.05);
+}
+
+.stat-card.warning {
+    border-left-color: var(--warn-secondary);
+    background: rgba(245, 158, 11, 0.05);
 }
 
 .kpi-section {
@@ -1005,7 +1033,11 @@ body {
     border-top-color: var(--warn-primary);
 }
 
-/* QUANTUM BOX - AGORA CÁLCULO TRIBUTÁRIO PERICIAL */
+.kpi-card.warning {
+    border-top-color: var(--warn-secondary);
+}
+
+/* QUANTUM BOX - CÁLCULO TRIBUTÁRIO PERICIAL */
 .quantum-box {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
     border: 2px solid var(--warn-primary);
@@ -1072,7 +1104,7 @@ body {
     font-weight: 700;
 }
 
-/* VERDICT DISPLAY - AGORA PARECER TÉCNICO */
+/* VERDICT DISPLAY - PARECER TÉCNICO */
 .verdict-display {
     display: none;
     text-align: left;
@@ -1084,6 +1116,7 @@ body {
     position: relative;
     z-index: 10;
     backdrop-filter: blur(5px);
+    border-left: 4px solid var(--accent-primary);
 }
 
 .verdict-display.active {
@@ -1119,6 +1152,7 @@ body {
     font-size: 0.85rem;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
 
 .verdict-legal {
@@ -1128,7 +1162,7 @@ body {
     padding-top: 0.5rem;
 }
 
-/* BIG DATA ALERT - AGORA SMOKING GUN */
+/* BIG DATA ALERT - SMOKING GUN */
 .bigdata-alert {
     background: linear-gradient(135deg, rgba(232, 65, 24, 0.2) 0%, rgba(255, 159, 26, 0.2) 100%);
     border: 3px solid var(--warn-primary);
@@ -1329,6 +1363,8 @@ body {
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius-sm);
     background: rgba(0,0,0,0.3);
+    max-width: 100%;
+    word-break: break-all;
 }
 
 .master-hash strong {
@@ -1342,6 +1378,20 @@ body {
 .master-hash span {
     color: var(--accent-secondary);
     word-break: break-all;
+}
+
+#qrcodeContainer {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+}
+
+#qrcodeContainer canvas,
+#qrcodeContainer img {
+    background: white;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
 }
 
 .copyright {
@@ -1891,7 +1941,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   11. PRINT
+   11. PRINT (PDF)
    --------------------------------------------------------------------- */
 @media print {
     .splash-screen,
@@ -1921,6 +1971,7 @@ body {
     .chart-container {
         border: 1px solid #ccc;
         height: 300px;
+        page-break-inside: avoid;
     }
     .verdict-display {
         border: 2px solid #000 !important;
@@ -1928,6 +1979,7 @@ body {
         background: #f0f0f0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        page-break-inside: avoid;
     }
     .stat-card,
     .kpi-card {
@@ -1944,6 +1996,7 @@ body {
     .master-hash {
         border: 1px solid #333;
         color: #333;
+        page-break-inside: avoid;
     }
     .module-card .kpi-card {
         border: 1px solid #000;
@@ -1953,6 +2006,29 @@ body {
     .module-card .kpi-card h4,
     .module-card .kpi-card p {
         color: #000 !important;
+    }
+    .quantum-box,
+    .bigdata-alert,
+    .verdict-display {
+        page-break-inside: avoid;
+    }
+    #qrcodeContainer {
+        display: flex !important;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    footer {
+        position: running(footer);
+        text-align: center;
+        font-size: 8pt;
+        color: #666;
+    }
+    @page {
+        size: A4;
+        margin: 2cm;
+        @bottom-center {
+            content: element(footer);
+        }
     }
 }
 
