@@ -1,9 +1,10 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.7 GOLD · SMOKING GUN · CSC
- * VERSÃO FINAL GOLD - CORREÇÕES DE ESPAÇAMENTO, 10 NOVAS QUESTÕES, SELAGEM QR/HASH
- * + Redação do Veredicto para Mandato de Advogados
- * + Selagem de Páginas com QR Code (15x15mm) e Hash SHA-256
- * + Ajuste de layout PDF para ecrãs de alta gama
+ * VERSÃO FINAL GOLD - REVISÃO DE LAYOUT A4 PARA CONFORMIDADE JURÍDICA
+ * + Correção de espaçamento do cabeçalho (currentY + 20 / 1.5cm)
+ * + Expansão do questionário para 10 itens
+ * + Selagem de todas as páginas com QR Code e Hash SHA-256
+ * + Redação da Conclusão para "Prova Digital Material" (proteção de mandato)
  * ====================================================================
  */
 
@@ -2542,7 +2543,7 @@ function exportDataJSON() {
 }
 
 // ============================================================================
-// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.7 - ESTILO INSTITUCIONAL + QR/HASH)
+// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.7 - LAYOUT A4 + SELAGEM)
 // ============================================================================
 function exportPDF() {
     if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
@@ -2654,8 +2655,8 @@ function exportPDF() {
         doc.text(`DATA: ${new Date().toLocaleDateString('pt-PT')}`, doc.internal.pageSize.getWidth() - left, 42, { align: 'right', lineHeightFactor: 1.5 });
         doc.text(`OBJETO: RECONSTITUIÇÃO FINANCEIRA / ART. 103.º RGIT`, left, 48, { lineHeightFactor: 1.5 });
 
-        // Ajuste de y após a caixa: currentY + 15 (y atual era 48, agora será 48 + 15 = 63)
-        y = 63; 
+        // Ajuste de y após a caixa: currentY + 20 (y atual era 48, agora será 48 + 20 = 68)
+        y = 68; 
 
         // --- Protocolo de Cadeia de Custódia (Página 1) ---
         doc.setFontSize(10);
@@ -2993,7 +2994,7 @@ function exportPDF() {
         doc.addPage();
         pageNumber++;
 
-        // --- Página 12: QUESTIONÁRIO PERICIAL ESTRATÉGICO ---
+        // --- Página 12: QUESTIONÁRIO PERICIAL ESTRATÉGICO (com 10 questões) ---
         y = 20;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -3001,9 +3002,21 @@ function exportPDF() {
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        VDCSystem.analysis.selectedQuestions.forEach((q, index) => {
+        // Buscar até 10 questões selecionadas
+        const questionsToShow = VDCSystem.analysis.selectedQuestions.slice(0, 10);
+        questionsToShow.forEach((q, index) => {
             doc.text(`${index+1}. ${q.text}`, left, y); y += 5;
         });
+        // Se houver menos de 10, adicionar questões padrão de alta prioridade para completar?
+        // Para cumprir a diretiva, vamos garantir que mostramos 10. Se não houver 10 selecionadas,
+        // podemos preencher com as primeiras de alta prioridade da QUESTIONS_CACHE.
+        if (questionsToShow.length < 10) {
+            const additionalQuestions = QUESTIONS_CACHE.filter(q => q.type === 'high' || q.type === 'med')
+                                                        .slice(0, 10 - questionsToShow.length);
+            additionalQuestions.forEach((q, index) => {
+                doc.text(`${questionsToShow.length + index + 1}. ${q.text} (Suplementar)`, left, y); y += 5;
+            });
+        }
         y += 5;
         
         addPageSeal(); // Adicionar selo na página 12
