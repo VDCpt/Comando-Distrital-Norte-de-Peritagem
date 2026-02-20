@@ -5,6 +5,7 @@
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
    + v12.7.5: Suporte para novos atributos (data-original-file, pageCount)
+   + v12.7.5: Splash Screen refatorado para orientação horizontal (landscape)
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -72,7 +73,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------
-   2. SPLASH SCREEN PANORÂMICO
+   2. SPLASH SCREEN PANORÂMICO - REFATORADO PARA ORIENTAÇÃO HORIZONTAL
    --------------------------------------------------------------------- */
 .splash-screen {
     position: fixed;
@@ -80,11 +81,11 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: radial-gradient(circle at top right, #172554 0%, #020617 60%, #000000 100%);
+    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 10000;
     overflow: hidden;
     transition: opacity 0.5s ease;
 }
@@ -130,23 +131,36 @@ body {
 }
 
 .splash-content {
-    text-align: center;
-    z-index: 20;
+    width: 90%;
+    max-width: 1280px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 3rem;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+    align-items: center;
+    border-radius: 8px;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-    max-width: 800px;
-    border-radius: var(--border-radius-sm);
+    position: relative;
+    z-index: 20;
+}
+
+/* Coluna Esquerda - Identidade Visual */
+.splash-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: left;
 }
 
 .splash-logo {
-    font-size: 5rem;
+    font-size: 4rem;
     color: var(--accent-primary);
     text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     animation: pulse-glow 2s infinite;
 }
 
@@ -155,38 +169,131 @@ body {
     50% { text-shadow: 0 0 40px var(--accent-primary), 0 0 60px var(--accent-secondary); }
 }
 
-.splash-screen h1 {
-    font-size: 2.5rem;
-    letter-spacing: 4px;
+.splash-left h1 {
+    font-size: 2.2rem;
+    letter-spacing: 3px;
     text-transform: uppercase;
     font-weight: 900;
-    margin-bottom: 0.75rem;
     color: #fff;
     line-height: 1.2;
 }
 
-.splash-screen h2 {
-    font-size: 1.5rem;
+.splash-left h2 {
+    font-size: 1.3rem;
     color: var(--accent-primary);
     font-weight: 300;
     letter-spacing: 2px;
-    margin-bottom: 2rem;
 }
 
-.splash-subtitle {
-    font-family: var(--font-mono);
-    font-size: 1.1rem;
+.privacy-highlight {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--success-primary);
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius-sm);
+    margin-top: 0.5rem;
+}
+
+.privacy-highlight i {
+    font-size: 1.5rem;
+    color: var(--success-primary);
+}
+
+.privacy-highlight span {
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    margin-bottom: 1.5rem;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
+.privacy-highlight strong {
+    color: var(--success-primary);
+    display: inline;
+    font-size: 0.85rem;
+}
+
+/* Coluna Direita - Ações e Metadados */
+.splash-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    text-align: right;
+}
+
+.metadata-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-sm);
+    text-align: left;
+}
+
+.metadata-panel p {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.metadata-panel strong {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.splash-btn {
+    background: transparent;
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+    padding: 1rem 2rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    width: fit-content;
+}
+
+.splash-btn:hover {
+    background: var(--accent-primary);
+    color: #000;
+    box-shadow: var(--shadow-glow-cyan);
+}
+
+#viewLogsBtn {
+    border-color: var(--text-tertiary);
+    color: var(--text-tertiary);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+#viewLogsBtn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: rgba(0, 229, 255, 0.05);
+}
+
+/* Aviso Jurídico na Parte Inferior (Ocupa ambas as colunas) */
 .splash-warning-box {
+    grid-column: 1 / -1;
     border-left: 3px solid var(--warn-secondary);
     background: rgba(245, 158, 11, 0.05);
     padding: 1.5rem;
-    margin: 2rem 0;
     text-align: left;
+    margin-top: 1rem;
 }
 
 .splash-warning-box p {
@@ -199,50 +306,26 @@ body {
 .splash-warning-box small {
     color: var(--text-tertiary);
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.5;
 }
 
-.splash-btn {
-    background: transparent;
-    color: var(--accent-primary);
-    border: 1px solid var(--accent-primary);
-    padding: 1.2rem 3rem;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 1.1rem;
-    margin: 0 0.5rem;
-}
-
-.splash-btn:hover {
-    background: var(--accent-primary);
-    color: #000;
-    box-shadow: var(--shadow-glow-cyan);
-}
-
 .splash-footer {
-    margin-top: 2.5rem;
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
     color: var(--text-tertiary);
-    font-size: 1rem;
-}
-
-.splash-footer p {
-    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 1.5rem;
 }
 
 .splash-footer .version {
     color: var(--success-primary);
     font-weight: 800;
     font-family: var(--font-mono);
-    margin-top: 0.75rem;
-    font-size: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
 }
 
 /* ---------------------------------------------------------------------
