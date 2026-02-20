@@ -26,37 +26,53 @@
 </head>
 <body>
 
-    <!-- SPLASH SCREEN PANORÂMICO COM LASERS -->
+    <!-- SPLASH SCREEN PANORÂMICO COM LASERS - VERSÃO HORIZONTAL -->
     <div id="splashScreen" class="splash-screen">
         <div class="laser-h"></div>
         <div class="laser-v"></div>
 
         <div class="splash-content">
-            <div class="splash-logo">
-                <i class="fas fa-fingerprint"></i>
+            <!-- COLUNA ESQUERDA: Identidade Visual -->
+            <div class="splash-left">
+                <div class="splash-logo">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <h1>SISTEMA DE PERITAGEM FORENSE</h1>
+                <h2>VDC SYSTEMS INTERNATIONAL</h2>
+                <div class="privacy-highlight">
+                    <i class="fas fa-lock"></i>
+                    <span><strong>Privacy by Design</strong><br>Processamento 100% local (browser)</span>
+                </div>
             </div>
-            <h1>SISTEMA DE PERITAGEM FORENSE</h1>
-            <h2>VDC SYSTEMS INTERNATIONAL</h2>
-            <p class="splash-subtitle">MÓDULO DE INVESTIGAÇÃO DIGITAL · ISO/IEC 27037 · BIG DATA ACCUMULATOR · CSI</p>
-            <p class="splash-subtitle">Processamento em conformidade com o Art. 5.º do RGPD</p>
-            <p class="splash-subtitle">(Integridade e Confidencialidade)</p>
-            
+
+            <!-- COLUNA DIREITA: Ações e Metadados -->
+            <div class="splash-right">
+                <div class="metadata-panel">
+                    <p><strong>ISO/IEC 27037</strong> · Preservação de Prova Digital</p>
+                    <p><strong>NIST SP 800-86</strong> · Guia de Integração Forense</p>
+                    <p><strong>INTERPOL</strong> · CSC · BIG DATA</p>
+                    <p><strong>Art. 5.º RGPD</strong> · Integridade e Confidencialidade</p>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="viewLogsBtn" class="splash-btn">
+                        <i class="fas fa-history"></i> <span id="splashLogsBtnText">REGISTO DE ATIVIDADES (LOG)</span>
+                    </button>
+                    
+                    <button id="startSessionBtn" class="splash-btn">
+                        <i class="fas fa-power-off"></i>
+                        <span id="splashStartBtnText">INICIAR METODOLOGIA DE ANÁLISE E PERITAGEM FORENSE</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AVISO LEGAL (ocupa a largura total das duas colunas) -->
             <div class="splash-warning-box">
                 <p><i class="fas fa-gavel"></i> AVISO DE PROTEÇÃO VDC SISTEMA FORENSE</p>
                 <small>Este sistema destina-se exclusivamente a uso pericial autorizado. O acesso não autorizado constitui crime de Acesso Ilegítimo, previsto no Artigo 6.º da Lei do Cibercrime (Lei n.º 109/2009, de 15 de setembro). Ao iniciar o utilizador aceita os termos e condições aqui mencionados.</small>
             </div>
 
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
-                <button id="viewLogsBtn" class="splash-btn">
-                    <i class="fas fa-history"></i> <span id="splashLogsBtnText">REGISTO DE ATIVIDADES (LOG)</span>
-                </button>
-            </div>
-
-            <button id="startSessionBtn" class="splash-btn">
-                <i class="fas fa-power-off"></i>
-                <span id="splashStartBtnText">INICIAR METODOLOGIA DE ANÁLISE E PERITAGEM FORENSE</span>
-            </button>
-
+            <!-- RODAPÉ (também ocupa largura total) -->
             <div class="splash-footer">
                 <p>Ao clicar em "INICIAR", declara estar autorizado a realizar a perícia.</p>
                 <p class="version">VDC © 2024/2026 v12.7.5 · SMOKING GUN · COLARINHO BRANCO · CSI · BIG DATA</p>
@@ -372,7 +388,7 @@
                 <div id="bigDataAlert" class="bigdata-alert smoking-gun">
                     <i class="fas fa-radiation"></i>
                     <div>
-                        <h4 id="alertCriticalTitle">🔫 SMOKING GUN · DIVERGÊNCIA CRÍTICA</h4>
+                        <h4 id="alertCriticalTitle">SMOKING GUN · DIVERGÊNCIA CRÍTICA</h4>
                         <p id="alertOmissionText">Comissão Retida (Extrato) vs Faturada (Plataforma):</p>
                         <strong id="alertDeltaValue" style="font-size: 1.2rem; color: var(--warn-primary);">0,00 €</strong>
                         <small id="alertAccumulatedNote">Base Omitida (Omissão Fiscal)</small>
