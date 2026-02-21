@@ -1,10 +1,10 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.9 · COURT READY · GOLD
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.8.0 · COURT READY · GOLD
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
-   + v12.7.9: Suporte otimizado para impressão PDF (estilo jurídico)
+   + v12.8.0: Correção de sobreposição na Página 2 para impressão PDF
    + Two-Axis Discrepancy Analysis: Estilos para Revenue Gap e Expense Gap
    ===================================================================== */
 
@@ -2251,7 +2251,7 @@ body.presentation-mode .conformity-seals {
 }
 
 /* ---------------------------------------------------------------------
-   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.7.9
+   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.8.0
    --------------------------------------------------------------------- */
 @media print {
     /* Ocultar todos os elementos da interface */
@@ -2348,6 +2348,15 @@ body.presentation-mode .conformity-seals {
         white-space: normal !important;
         word-wrap: break-word !important;
         text-overflow: clip !important;
+    }
+
+    /* CORREÇÃO DA SOBREPOSIÇÃO NA PÁGINA 2 */
+    /* Esta classe será aplicada via JavaScript à tabela na Página 2 do PDF */
+    .pdf-table-after-line {
+        margin-top: 1.5cm !important; /* 1.5cm de espaçamento seguro */
+        clear: both !important;
+        display: block !important;
+        page-break-before: avoid !important; /* Evitar quebra de página antes da tabela */
     }
     
     /* Configuração da página A4 */
