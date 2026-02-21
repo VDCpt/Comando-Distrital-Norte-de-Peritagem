@@ -1,11 +1,12 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.9 GOLD · "COURT READY"
  * VERSÃO FINAL ABSOLUTA - CORREÇÃO CIRÚRGICA DO PDF
- * + QR Code reduzido para 15x15mm (57x57 pontos)
- * + Tabela Página 2: startY = currentY + 18
+ * + QR Code reduzido para metade (dimensões e posição)
+ * + Tabela Página 2: startY = currentY + 18 (garante 1.5cm de espaço)
  * + Eliminação de duplicidade do Parecer Técnico na Página 13
  * + Nomenclatura atualizada: SAF-T (Data Proxy) e Ganhos da Empresa (Fleet/Ledger)
  * + Nota Metodológica Forense na Página 1
+ * + Single Source of Truth: PDF usa VDCSystem.analysis.totals
  * ====================================================================
  */
 
@@ -555,7 +556,7 @@ const translations = {
         logsModalTitle: "PROCESSING ACTIVITY RECORD (GDPR Art. 30)",
         exportLogsBtn: "EXPORT LOGS (JSON)",
         clearLogsBtn: "CLEAR LOGS",
-        closeLogsBtn: "CLOSE",
+        closeLogsBtn: "FOCar",
         wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)",
         clearConsoleBtn: "CLEAR CONSOLE",
         // New texts for PDF (English version)
@@ -567,7 +568,7 @@ const translations = {
 let currentLang = 'pt';
 
 // ============================================================================
-// 8. ESTADO GLOBAL
+// 8. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH)
 // ============================================================================
 const VDCSystem = {
     version: 'v12.7.9-COURT-READY-GOLD',
@@ -612,7 +613,24 @@ const VDCSystem = {
         } }
     },
     analysis: {
-        extractedValues: {},
+        // totals é a ÚNICA FONTE DE VERDADE para todos os valores calculados
+        totals: {
+            saftBruto: 0,
+            saftIliquido: 0,
+            saftIva: 0,
+            ganhosApp: 0,
+            comissaoApp: 0,
+            campanhas: 0,
+            gorjetas: 0,
+            portagens: 0,
+            taxasCancelamento: 0,
+            ganhosLiquidos: 0,
+            faturaPlataforma: 0,
+            dac7Q4: 0,
+            rendimentosBrutos: 0,
+            comissaoTotal: 0,
+            netValue: 0
+        },
         crossings: { 
             delta: 0, 
             bigDataAlertActive: false, 
@@ -942,8 +960,8 @@ function generateQRCode() {
     if (typeof QRCode !== 'undefined') {
         new QRCode(container, {
             text: sessionData,
-            width: 100,
-            height: 100,
+            width: 75,  // Reduzido para metade (150 -> 75)
+            height: 75, // Reduzido para metade (150 -> 75)
             colorDark: "#00e5ff",
             colorLight: "#020617",
             correctLevel: QRCode.CorrectLevel.H
@@ -1295,7 +1313,7 @@ function switchLanguage() {
     setElementText('clearLogsBtnText', t.clearLogsBtn);
     setElementText('closeLogsBtnText', t.closeLogsBtn);
     
-    if (VDCSystem.analysis.extractedValues) {
+    if (VDCSystem.analysis.totals) {
         updateDashboard();
         updateModulesUI();
     }
@@ -1541,6 +1559,7 @@ async function processFile(file, type) {
                 }
             }
             
+            // Atualizar os totals no objeto VDCSystem (SINGLE SOURCE OF TRUTH)
             VDCSystem.documents.statements.totals.ganhosApp = (VDCSystem.documents.statements.totals.ganhosApp || 0) + ganhos;
             VDCSystem.documents.statements.totals.campanhas = (VDCSystem.documents.statements.totals.campanhas || 0) + campanhas;
             VDCSystem.documents.statements.totals.gorjetas = (VDCSystem.documents.statements.totals.gorjetas || 0) + gorjetas;
@@ -2015,7 +2034,8 @@ function performAudit() {
             const grossRevenue = stmtGross > 0 ? stmtGross : saftBruto;
             const platformCommission = stmtCommission;
             
-            VDCSystem.analysis.extractedValues = {
+            // Atualizar a SINGLE SOURCE OF TRUTH (VDCSystem.analysis.totals)
+            VDCSystem.analysis.totals = {
                 saftBruto: saftBruto,
                 saftIliquido: saftIliquido,
                 saftIva: saftIva,
@@ -2029,7 +2049,8 @@ function performAudit() {
                 faturaPlataforma: invoiceVal,
                 dac7Q4: dac7Q4,
                 rendimentosBrutos: grossRevenue,
-                comissaoTotal: platformCommission
+                comissaoTotal: platformCommission,
+                netValue: grossRevenue - platformCommission
             };
 
             performForensicCrossings();
@@ -2074,15 +2095,15 @@ function performAudit() {
 }
 
 function performForensicCrossings() {
-    const ev = VDCSystem.analysis.extractedValues;
+    const totals = VDCSystem.analysis.totals;
     const cross = VDCSystem.analysis.crossings;
 
-    const saftBruto = ev.saftBruto || 0;
-    const ganhosApp = ev.ganhosApp || 0;
-    const comissaoTotal = ev.comissaoTotal || 0;
-    const faturaPlataforma = ev.faturaPlataforma || 0;
-    const dac7Q4 = ev.dac7Q4 || 0;
-    const ganhosLiquidos = ev.ganhosLiquidos || 0;
+    const saftBruto = totals.saftBruto || 0;
+    const ganhosApp = totals.ganhosApp || 0;
+    const comissaoTotal = totals.comissaoTotal || 0;
+    const faturaPlataforma = totals.faturaPlataforma || 0;
+    const dac7Q4 = totals.dac7Q4 || 0;
+    const ganhosLiquidos = totals.ganhosLiquidos || 0;
 
     cross.saftVsDac7Alert = Math.abs(saftBruto - dac7Q4) > 0.01;
     
@@ -2149,19 +2170,19 @@ function selectQuestions(riskKey) {
 }
 
 function updateDashboard() {
-    const ev = VDCSystem.analysis.extractedValues;
+    const totals = VDCSystem.analysis.totals;
     const cross = VDCSystem.analysis.crossings;
     
-    const netValue = (ev.rendimentosBrutos || 0) - (ev.comissaoTotal || 0);
+    const netValue = totals.netValue || 0;
 
     setElementText('statNet', formatCurrency(netValue));
-    setElementText('statComm', formatCurrency(ev.comissaoTotal || 0));
+    setElementText('statComm', formatCurrency(totals.comissaoTotal || 0));
     setElementText('statJuros', formatCurrency(cross.discrepanciaCritica || 0));
 
-    setElementText('kpiGrossValue', formatCurrency(ev.rendimentosBrutos || 0));
-    setElementText('kpiCommValue', formatCurrency(ev.comissaoTotal || 0));
+    setElementText('kpiGrossValue', formatCurrency(totals.rendimentosBrutos || 0));
+    setElementText('kpiCommValue', formatCurrency(totals.comissaoTotal || 0));
     setElementText('kpiNetValue', formatCurrency(netValue));
-    setElementText('kpiInvValue', formatCurrency(ev.faturaPlataforma || 0));
+    setElementText('kpiInvValue', formatCurrency(totals.faturaPlataforma || 0));
 
     setElementText('discrepancy5Value', formatCurrency(cross.discrepancia5IMT || 0));
     setElementText('agravamentoBrutoValue', formatCurrency(cross.agravamentoBrutoIRC || 0));
@@ -2279,21 +2300,21 @@ function activateIntermittentAlerts() {
 }
 
 function updateModulesUI() {
-    const ev = VDCSystem.analysis.extractedValues;
+    const totals = VDCSystem.analysis.totals;
     
-    setElementText('saftIliquidoValue', formatCurrency(ev.saftIliquido || 0));
-    setElementText('saftIvaValue', formatCurrency(ev.saftIva || 0));
-    setElementText('saftBrutoValue', formatCurrency(ev.saftBruto || 0));
+    setElementText('saftIliquidoValue', formatCurrency(totals.saftIliquido || 0));
+    setElementText('saftIvaValue', formatCurrency(totals.saftIva || 0));
+    setElementText('saftBrutoValue', formatCurrency(totals.saftBruto || 0));
     
-    setElementText('stmtGanhosValue', formatCurrency(ev.ganhosApp || 0));
-    setElementText('stmtCampanhasValue', formatCurrency(ev.campanhas || 0));
-    setElementText('stmtGorjetasValue', formatCurrency(ev.gorjetas || 0));
-    setElementText('stmtPortagensValue', formatCurrency(ev.portagens || 0));
-    setElementText('stmtTaxasCancelValue', formatCurrency(ev.taxasCancelamento || 0));
+    setElementText('stmtGanhosValue', formatCurrency(totals.ganhosApp || 0));
+    setElementText('stmtCampanhasValue', formatCurrency(totals.campanhas || 0));
+    setElementText('stmtGorjetasValue', formatCurrency(totals.gorjetas || 0));
+    setElementText('stmtPortagensValue', formatCurrency(totals.portagens || 0));
+    setElementText('stmtTaxasCancelValue', formatCurrency(totals.taxasCancelamento || 0));
     
     const comissaoEl = document.getElementById('stmtComissaoValue');
     if (comissaoEl) {
-        const comissao = ev.comissaoTotal || 0;
+        const comissao = totals.comissaoTotal || 0;
         comissaoEl.textContent = formatCurrency(comissao);
         if (VDCSystem.analysis.crossings?.discrepanciaCritica > 0.01) {
             comissaoEl.classList.add('alert');
@@ -2302,10 +2323,10 @@ function updateModulesUI() {
         }
     }
     
-    setElementText('dac7Q1Value', formatCurrency(ev.dac7Q1 || 0));
-    setElementText('dac7Q2Value', formatCurrency(ev.dac7Q2 || 0));
-    setElementText('dac7Q3Value', formatCurrency(ev.dac7Q3 || 0));
-    setElementText('dac7Q4Value', formatCurrency(ev.dac7Q4 || 0));
+    setElementText('dac7Q1Value', formatCurrency(0));
+    setElementText('dac7Q2Value', formatCurrency(0));
+    setElementText('dac7Q3Value', formatCurrency(0));
+    setElementText('dac7Q4Value', formatCurrency(totals.dac7Q4 || 0));
     
     const sourceElements = document.querySelectorAll('[id$="Source"]');
     sourceElements.forEach(el => {
@@ -2320,7 +2341,7 @@ function updateModulesUI() {
 }
 
 function showAlerts() {
-    const ev = VDCSystem.analysis.extractedValues;
+    const totals = VDCSystem.analysis.totals;
     const cross = VDCSystem.analysis.crossings;
     const t = translations[currentLang];
 
@@ -2345,8 +2366,8 @@ function showAlerts() {
             </div>
             <div style="margin-bottom: 1rem;">
                 <strong style="color: var(--accent-primary);">II. FATOS CONSTATADOS:</strong><br>
-                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Comissão Real Retida (Extrato): ' : 'Actual Commission Withheld (Statement): '}${formatCurrency(ev.comissaoTotal || 0)}.</span><br>
-                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Valor Faturado (Fatura): ' : 'Invoiced Amount: '}${formatCurrency(ev.faturaPlataforma || 0)}.</span><br>
+                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Comissão Real Retida (Extrato): ' : 'Actual Commission Withheld (Statement): '}${formatCurrency(totals.comissaoTotal || 0)}.</span><br>
+                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Valor Faturado (Fatura): ' : 'Invoiced Amount: '}${formatCurrency(totals.faturaPlataforma || 0)}.</span><br>
                 <span style="color: var(--warn-primary); font-weight: 700;">${currentLang === 'pt' ? 'Diferença Omitida: ' : 'Omitted Difference: '}${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)</span>
             </div>
             <div style="margin-bottom: 1rem;">
@@ -2398,7 +2419,7 @@ function renderChart() {
     if(!ctx) return;
     if(VDCSystem.chart) VDCSystem.chart.destroy();
 
-    const ev = VDCSystem.analysis.extractedValues;
+    const totals = VDCSystem.analysis.totals;
     const cross = VDCSystem.analysis.crossings;
     
     const t = translations[currentLang];
@@ -2414,12 +2435,12 @@ function renderChart() {
     ];
     
     const data = [
-        ev.saftBruto || 0,
-        ev.ganhosApp || 0,
-        ev.comissaoTotal || 0,
-        ev.faturaPlataforma || 0,
-        ev.dac7Q4 || 0,
-        ev.ganhosLiquidos || 0,
+        totals.saftBruto || 0,
+        totals.ganhosApp || 0,
+        totals.comissaoTotal || 0,
+        totals.faturaPlataforma || 0,
+        totals.dac7Q4 || 0,
+        totals.ganhosLiquidos || 0,
         cross.ivaFalta || 0
     ];
     
@@ -2495,7 +2516,7 @@ function exportDataJSON() {
             dataMonths: Array.from(VDCSystem.dataMonths)
         },
         analysis: {
-            totals: VDCSystem.analysis.extractedValues,
+            totals: VDCSystem.analysis.totals,  // Usar a SINGLE SOURCE OF TRUTH
             discrepancies: VDCSystem.analysis.crossings,
             verdict: VDCSystem.analysis.verdict,
             selectedQuestions: VDCSystem.analysis.selectedQuestions,
@@ -2567,7 +2588,8 @@ function exportPDF() {
         const doc = new jsPDF();
         const t = translations[currentLang];
         const platform = PLATFORM_DATA[VDCSystem.selectedPlatform] || PLATFORM_DATA.outra;
-        const ev = VDCSystem.analysis.extractedValues;
+        // Usar a SINGLE SOURCE OF TRUTH: VDCSystem.analysis.totals
+        const totals = VDCSystem.analysis.totals;
         const cross = VDCSystem.analysis.crossings;
         const verdict = VDCSystem.analysis.verdict || { level: { pt: 'N/A', en: 'N/A' }, key: 'low', color: '#8c7ae6', description: { pt: 'Perícia não executada.', en: 'Forensic exam not executed.' }, percent: '0.00%' };
 
@@ -2600,20 +2622,20 @@ function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.text('RFC 3161 SECURE SEAL', pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos) - REDUZIDO
-            const qrX = pageWidth - margin - 57;
-            const qrY = pageHeight - 75; // Posicionar 75pt acima do fundo para caber
+            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos) - REDUZIDO PARA METADE
+            const qrX = pageWidth - margin - 28;  // 57 -> 28 (metade)
+            const qrY = pageHeight - 45; // Ajustar posição (75 -> 45)
 
             // Gerar QR Code como data URL contendo o Master Hash
             const qrData = VDCSystem.masterHash || 'HASH_INDISPONIVEL';
 
             if (typeof QRCode !== 'undefined') {
-                // Criar um elemento canvas temporário para gerar o QR
+                // Criar um elemento canvas temporário para gerar o QR (tamanho reduzido)
                 const qrContainer = document.createElement('div');
                 new QRCode(qrContainer, {
                     text: qrData,
-                    width: 57,
-                    height: 57,
+                    width: 28,  // Reduzido para metade (57 -> 28)
+                    height: 28, // Reduzido para metade (57 -> 28)
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
@@ -2622,7 +2644,7 @@ function exportPDF() {
                 const qrCanvas = qrContainer.querySelector('canvas');
                 if (qrCanvas) {
                     const qrDataUrl = qrCanvas.toDataURL('image/png');
-                    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, 57, 57); // 57 pontos = 15mm
+                    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, 28, 28); // 28 pontos ≈ 7.4mm
                 } else {
                     // Fallback: não adicionar QR se não for possível gerar
                     console.warn('Não foi possível gerar canvas do QR Code para a página.');
@@ -2718,7 +2740,13 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.text(t.pdfSection2, left, y); y += 8;
 
-        // Definir startY para a tabela: currentY + 18 para evitar sobreposição
+        // CORREÇÃO DE ESPAÇAMENTO: 1.5cm (18pt) após a linha separadora
+        // Desenhar a linha separadora
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.5);
+        doc.line(left, y, doc.internal.pageSize.getWidth() - left, y);
+        
+        // Garantir 1.5cm de espaço em branco (18pt)
         let tableStartY = y + 18;
 
         doc.setFontSize(8);
@@ -2746,13 +2774,13 @@ function exportPDF() {
             return 'N/A';
         };
 
-        // Linhas da tabela com nomenclatura atualizada
+        // Linhas da tabela com nomenclatura atualizada (usando VDCSystem.analysis.totals - SINGLE SOURCE OF TRUTH)
         const rows = [
-            { desc: `SAF-T (Data Proxy: Fleet Extract)`, value: ev.saftBruto || 0, sourceId: 'saftBruto' },
-            { desc: `Ganhos da Empresa (Fleet/Ledger)`, value: ev.ganhosApp || 0, sourceId: 'stmtGanhos' },
-            { desc: `Comissões Extrato`, value: ev.comissaoTotal || 0, sourceId: 'stmtComissao' },
-            { desc: `Fatura Comissões`, value: ev.faturaPlataforma || 0, sourceId: 'kpiInv' },
-            { desc: `DAC7 Q4`, value: ev.dac7Q4 || 0, sourceId: 'dac7Q4' },
+            { desc: `SAF-T (Data Proxy: Fleet Extract)`, value: totals.saftBruto || 0, sourceId: 'saftBruto' },
+            { desc: `Ganhos da Empresa (Fleet/Ledger)`, value: totals.ganhosApp || 0, sourceId: 'stmtGanhos' },
+            { desc: `Comissões Extrato`, value: totals.comissaoTotal || 0, sourceId: 'stmtComissao' },
+            { desc: `Fatura Comissões`, value: totals.faturaPlataforma || 0, sourceId: 'kpiInv' },
+            { desc: `DAC7 Q4`, value: totals.dac7Q4 || 0, sourceId: 'dac7Q4' },
             { desc: `DISCREPÂNCIA CRÍTICA`, value: cross.discrepanciaCritica || 0, sourceId: null, isCritical: true },
             { desc: `IVA em falta (23%)`, value: cross.ivaFalta || 0, sourceId: null },
             { desc: `IVA em falta (6%)`, value: cross.ivaFalta6 || 0, sourceId: null }
@@ -2827,8 +2855,8 @@ function exportPDF() {
         
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
-        doc.text(`${currentLang === 'pt' ? 'Comissão Retida (Extrato): ' : 'Commission Withheld (Statement): '}${formatCurrency(ev.comissaoTotal || 0)}`, left, y); y += 6;
-        doc.text(`${currentLang === 'pt' ? 'Comissão Faturada (Plataforma): ' : 'Commission Invoiced (Platform): '}${formatCurrency(ev.faturaPlataforma || 0)}`, left, y); y += 6;
+        doc.text(`${currentLang === 'pt' ? 'Comissão Retida (Extrato): ' : 'Commission Withheld (Statement): '}${formatCurrency(totals.comissaoTotal || 0)}`, left, y); y += 6;
+        doc.text(`${currentLang === 'pt' ? 'Comissão Faturada (Plataforma): ' : 'Commission Invoiced (Platform): '}${formatCurrency(totals.faturaPlataforma || 0)}`, left, y); y += 6;
         doc.text(`${currentLang === 'pt' ? 'DIVERGÊNCIA DE BASE (OMISSÃO): ' : 'BASE DIVERGENCE (OMISSION): '}${formatCurrency(cross.discrepanciaCritica || 0)} (${cross.percentagemOmissao?.toFixed(2) || '0.00'}%)`, left, y); y += 6;
         doc.text(`${currentLang === 'pt' ? 'IVA EM FALTA (23% SOBRE DIVERGÊNCIA): ' : 'MISSING VAT (23% ON DIVERGENCE): '}${formatCurrency(cross.ivaFalta || 0)}`, left, y); y += 6;
         doc.text(`${currentLang === 'pt' ? 'IVA EM FALTA (6% IMT/AMT): ' : 'MISSING VAT (6% IMT/AMT): '}${formatCurrency(cross.ivaFalta6 || 0)}`, left, y); y += 10;
@@ -2916,8 +2944,8 @@ function exportPDF() {
         doc.text(`${currentLang === 'pt' ? 'Discrepância grave detetada entre valores retidos pela ' : 'Serious discrepancy detected between amounts retained by '}${platform.name} ${currentLang === 'pt' ? 'e valores faturados.' : 'and invoiced amounts.'}`, left, y); y += 6;
         
         doc.text(`II. FATOS CONSTATADOS:`, left, y); y += 5;
-        doc.text(`${currentLang === 'pt' ? 'Comissão Real Retida (Extrato): ' : 'Actual Commission Withheld (Statement): '}${formatCurrency(ev.comissaoTotal || 0)}.`, left, y); y += 4;
-        doc.text(`${currentLang === 'pt' ? 'Valor Faturado (Fatura): ' : 'Invoiced Amount: '}${formatCurrency(ev.faturaPlataforma || 0)}.`, left, y); y += 4;
+        doc.text(`${currentLang === 'pt' ? 'Comissão Real Retida (Extrato): ' : 'Actual Commission Withheld (Statement): '}${formatCurrency(totals.comissaoTotal || 0)}.`, left, y); y += 4;
+        doc.text(`${currentLang === 'pt' ? 'Valor Faturado (Fatura): ' : 'Invoiced Amount: '}${formatCurrency(totals.faturaPlataforma || 0)}.`, left, y); y += 4;
         doc.text(`${currentLang === 'pt' ? 'Diferença Omitida: ' : 'Omitted Difference: '}${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)`, left, y); y += 6;
         
         doc.addPage();
@@ -3193,7 +3221,25 @@ function resetAllValues() {
     VDCSystem.analysis.evidenceIntegrity = [];
     ValueSource.sources.clear();
     
-    VDCSystem.analysis.extractedValues = {};
+    // Reset da SINGLE SOURCE OF TRUTH
+    VDCSystem.analysis.totals = {
+        saftBruto: 0,
+        saftIliquido: 0,
+        saftIva: 0,
+        ganhosApp: 0,
+        comissaoApp: 0,
+        campanhas: 0,
+        gorjetas: 0,
+        portagens: 0,
+        taxasCancelamento: 0,
+        ganhosLiquidos: 0,
+        faturaPlataforma: 0,
+        dac7Q4: 0,
+        rendimentosBrutos: 0,
+        comissaoTotal: 0,
+        netValue: 0
+    };
+    
     VDCSystem.analysis.crossings = { 
         delta: 0, 
         bigDataAlertActive: false, 
