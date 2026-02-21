@@ -1,10 +1,11 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.8.1 · COURT READY · GOLD
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.8.2 · COURT READY · GOLD
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
-   + v12.8.1: Correção de sobreposição na Página 2 para impressão PDF
+   + v12.8.2: Correção de parsing (ponto vs vírgula), QR Code funcional,
+     numeração de páginas (X de 7), espaçamento PDF, estrutura 7 páginas
    + Two-Axis Discrepancy Analysis: Estilos para Revenue Gap e Expense Gap
    ===================================================================== */
 
@@ -1619,7 +1620,7 @@ body {
     justify-content: center;
 }
 
-/* QR Code reduzido para metade do tamanho original */
+/* QR Code com alto contraste (preto no branco) */
 #qrcodeContainer canvas,
 #qrcodeContainer img {
     background: white;
@@ -2251,7 +2252,7 @@ body.presentation-mode .conformity-seals {
 }
 
 /* ---------------------------------------------------------------------
-   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.8.1
+   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.8.2
    --------------------------------------------------------------------- */
 @media print {
     /* Ocultar todos os elementos da interface */
@@ -2350,13 +2351,34 @@ body.presentation-mode .conformity-seals {
         text-overflow: clip !important;
     }
 
-    /* CORREÇÃO DA SOBREPOSIÇÃO NA PÁGINA 2 */
-    /* Esta classe será aplicada via JavaScript à tabela na Página 2 do PDF */
+    /* CORREÇÃO DA SOBREPOSIÇÃO NA PÁGINA 2 - VERSÃO DEFINITIVA */
+    .pdf-table-container {
+        margin-top: 25px !important;
+        clear: both !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .pdf-table-header {
+        margin-bottom: 8px !important;
+        font-weight: bold !important;
+    }
+    
+    .pdf-table-line {
+        margin: 10px 0 15px 0 !important;
+        border-top: 1px solid #000 !important;
+        width: 100% !important;
+    }
+    
+    .pdf-table-row {
+        margin-bottom: 4px !important;
+        line-height: 1.4 !important;
+    }
+    
     .pdf-table-after-line {
-        margin-top: 1.5cm !important; /* 1.5cm de espaçamento seguro */
+        margin-top: 1.5cm !important;
         clear: both !important;
         display: block !important;
-        page-break-before: avoid !important; /* Evitar quebra de página antes da tabela */
+        page-break-before: avoid !important;
     }
     
     /* Configuração da página A4 */
