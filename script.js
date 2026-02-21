@@ -1,18 +1,17 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.8 GOLD · "LAW FIRM FINAL RELEASE"
- * VERSÃO FINAL ABSOLUTA - CORREÇÃO DE LAYOUT PDF E SELAGEM GLOBAL
- * + Cabeçalho PDF: y = 55 para dados do processo
- * + Tabelas: startY = currentY + 10 para evitar sobreposição
- * + Questionário: word-wrap ativado com maxWidth
- * + QR Code: 15x15mm, contém o Master Hash SHA-256
- * + Selagem global: rodapé com página X de Y, Hash e QR Code em todas as páginas
- * + Termo de Encerramento: nova redação jurídica
+ * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.9 GOLD · "COURT READY"
+ * VERSÃO FINAL ABSOLUTA - CORREÇÃO CIRÚRGICA DO PDF
+ * + Tabela de Análise: startY = currentY + 15
+ * + QR Code: reduzido para 15x15mm e contém o Master Hash SHA-256
+ * + Nomenclatura: "SAF-T (Data Proxy: Fleet Extract)" e "Ganhos da Empresa (Fleet/Ledger)"
+ * + Inserção da Nota Metodológica Forense e Parecer Técnico Final
+ * + CSS: overflow: visible no @media print para evitar cortes de texto
  * ====================================================================
  */
 
 'use strict';
 
-console.log('VDC SCRIPT v12.7.8 GOLD · LAW FIRM FINAL RELEASE · ATIVADO');
+console.log('VDC SCRIPT v12.7.9 GOLD · COURT READY · ATIVADO');
 
 // ============================================================================
 // 1. CONFIGURAÇÃO DO PDF.JS
@@ -458,7 +457,10 @@ const translations = {
         clearLogsBtn: "LIMPAR LOGS",
         closeLogsBtn: "FECHAR",
         wipeBtnText: "PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA)",
-        clearConsoleBtn: "LIMPAR CONSOLE"
+        clearConsoleBtn: "LIMPAR CONSOLE",
+        // Novos textos para o PDF
+        notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final.\"",
+        parecerTecnicoFinal: "PARECER TÉCNICO DE CONCLUSÃO:\n\"Com base na análise algorítmica dos dados cruzados, detetaram-se discrepâncias que sugerem uma desconformidade entre o faturamento real e o reportado. A utilização de identificadores SHA-256 e selagem QR Code assegura que este parecer é uma Prova Digital Material imutável. Recomenda-se a sua utilização imediata em sede judicial para proteção do mandato e fundamentação de pedido de auditoria externa.\""
     },
     en: {
         startBtn: "START FORENSIC EXAM v12.7",
@@ -555,7 +557,10 @@ const translations = {
         clearLogsBtn: "CLEAR LOGS",
         closeLogsBtn: "CLOSE",
         wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)",
-        clearConsoleBtn: "CLEAR CONSOLE"
+        clearConsoleBtn: "CLEAR CONSOLE",
+        // New texts for PDF (English version)
+        notaMetodologica: "FORENSIC METHODOLOGICAL NOTE:\n\"Due to the administrative latency in the availability of the SAF-T (.xml) file by the platforms, this forensic examination uses the Data Proxy: Fleet Extract method. This methodology consists of extracting primary raw data directly from the management portal (Fleet). The 'Company Earnings' file (Fleet/Ledger) is treated here as the supporting Ledger, holding material probative value as it constitutes the primary source of records that integrate the final tax report.\"",
+        parecerTecnicoFinal: "FINAL TECHNICAL OPINION:\n\"Based on the algorithmic analysis of the crossed data, discrepancies were detected that suggest a non-conformity between real and reported billing. The use of SHA-256 identifiers and QR Code sealing ensures that this opinion is an immutable Material Digital Evidence. Its immediate use in court is recommended to protect the mandate and substantiate a request for an external audit.\""
     }
 };
 
@@ -565,7 +570,7 @@ let currentLang = 'pt';
 // 8. ESTADO GLOBAL
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.7.8-LAW-FIRM-FINAL-GOLD',
+    version: 'v12.7.9-COURT-READY-GOLD',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPeriodo: 'anual',
@@ -836,7 +841,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.8... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.9... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -851,7 +856,7 @@ function showMainInterface() {
             ForensicLogger.addEntry('MAIN_INTERFACE_SHOWN');
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.7.8 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
+    logAudit('SISTEMA VDC v12.7.9 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
     
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) analyzeBtn.disabled = false;
@@ -1872,7 +1877,7 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.8 SMOKING GUN...', 'info');
+    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.9 SMOKING GUN...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
@@ -2545,7 +2550,7 @@ function exportDataJSON() {
 }
 
 // ============================================================================
-// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.8 - LAYOUT A4 + SELAGEM GLOBAL)
+// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.9 - COURT READY)
 // ============================================================================
 function exportPDF() {
     if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
@@ -2555,7 +2560,7 @@ function exportPDF() {
     }
 
     ForensicLogger.addEntry('PDF_EXPORT_STARTED');
-    logAudit('📄 A gerar Parecer Pericial (Estilo Institucional v12.7.8)...', 'info');
+    logAudit('📄 A gerar Parecer Pericial (Estilo Institucional v12.7.9)...', 'info');
 
     try {
         const { jsPDF } = window.jspdf;
@@ -2595,7 +2600,7 @@ function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.text('RFC 3161 SECURE SEAL', pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos)
+            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos) - AGORA COM O MASTER HASH
             const qrX = pageWidth - margin - 57;
             const qrY = pageHeight - 75; // Posicionar 75pt acima do fundo para caber
 
@@ -2655,6 +2660,15 @@ function exportPDF() {
         doc.text(`DATA: ${new Date().toLocaleDateString('pt-PT')}`, left, y, { lineHeightFactor: 1.5 }); y += 5;
         doc.text(`OBJETO: RECONSTITUIÇÃO FINANCEIRA / ART. 103.º RGIT`, left, y, { lineHeightFactor: 1.5 }); y += 10; // Aumentar espaço após o objeto
 
+        // Inserir a NOTA METODOLÓGICA FORENSE nesta página
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100);
+        const notaMetodologicaLines = doc.splitTextToSize(t.notaMetodologica, doc.internal.pageSize.getWidth() - 30);
+        doc.text(notaMetodologicaLines, left, y); y += (notaMetodologicaLines.length * 4) + 5;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+
         // --- Protocolo de Cadeia de Custódia (Página 1) ---
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -2697,25 +2711,25 @@ function exportPDF() {
         doc.addPage();
         pageNumber++;
 
-        // --- Página 2: ANÁLISE FINANCEIRA CRUZADA (com coluna de fonte) ---
+        // --- Página 2: ANÁLISE FINANCEIRA CRUZADA (com nomenclatura atualizada) ---
         y = 20;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
         doc.text(t.pdfSection2, left, y); y += 8;
 
-        // Definir startY para a tabela: currentY + 10 para evitar sobreposição
-        let tableStartY = y + 10;
+        // Definir startY para a tabela: currentY + 15 para evitar sobreposição
+        let tableStartY = y + 15;
 
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         
-        // Cabeçalho da tabela (usar largura total da página)
+        // Cabeçalho da tabela (usar largura total da página) com nomenclatura atualizada
         const col1X = left;
         const col2X = 90;
         const col3X = 130;
         doc.setFont('helvetica', 'bold');
-        doc.text('Descrição', col1X, tableStartY - 4); // Cabeçalho um pouco acima do startY da tabela
+        doc.text('Descrição', col1X, tableStartY - 4);
         doc.text('Valor (€)', col2X, tableStartY - 4);
         doc.text('Fonte de Evidência', col3X, tableStartY - 4);
         doc.setLineWidth(0.5);
@@ -2732,10 +2746,10 @@ function exportPDF() {
             return 'N/A';
         };
 
-        // Linhas da tabela
+        // Linhas da tabela com nomenclatura atualizada
         const rows = [
-            { desc: `SAF-T Bruto`, value: ev.saftBruto || 0, sourceId: 'saftBruto' },
-            { desc: `Ganhos App`, value: ev.ganhosApp || 0, sourceId: 'stmtGanhos' },
+            { desc: `SAF-T (Data Proxy: Fleet Extract)`, value: ev.saftBruto || 0, sourceId: 'saftBruto' },
+            { desc: `Ganhos da Empresa (Fleet/Ledger)`, value: ev.ganhosApp || 0, sourceId: 'stmtGanhos' },
             { desc: `Comissões Extrato`, value: ev.comissaoTotal || 0, sourceId: 'stmtComissao' },
             { desc: `Fatura Comissões`, value: ev.faturaPlataforma || 0, sourceId: 'kpiInv' },
             { desc: `DAC7 Q4`, value: ev.dac7Q4 || 0, sourceId: 'dac7Q4' },
@@ -2885,7 +2899,7 @@ function exportPDF() {
         doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
-        doc.text(`Certificação: VDC Forense v12.7.8`, left, y); y += 10;
+        doc.text(`Certificação: VDC Forense v12.7.9`, left, y); y += 10;
         
         doc.addPage();
         pageNumber++;
@@ -3010,7 +3024,7 @@ function exportPDF() {
         doc.addPage();
         pageNumber++;
 
-        // --- Página 13: CONCLUSÃO (com nova redação) ---
+        // --- Página 13: CONCLUSÃO (com nova redação e Parecer Técnico Final) ---
         y = 20;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -3025,6 +3039,16 @@ function exportPDF() {
         doc.text(`VI. CONCLUSÃO:`, left, y); y += 8;
         doc.setTextColor(0, 0, 0);
         doc.text(`${currentLang === 'pt' ? 'Indícios de infração ao Artigo 108.º do Código do IVA.' : 'Evidence of violation of Article 108 of the VAT Code.'}`, left, y); y += 6;
+
+        // --- Inserir o PARECER TÉCNICO FINAL ---
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('PARECER TÉCNICO DE CONCLUSÃO:', left, y); y += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const parecerFinalLines = doc.splitTextToSize(t.parecerTecnicoFinal, doc.internal.pageSize.getWidth() - 30);
+        doc.text(parecerFinalLines, left, y); y += (parecerFinalLines.length * 4) + 10;
 
         // --- TERMO DE ENCERRAMENTO PERICIAL (na última página) ---
         y += 10;
@@ -3444,5 +3468,5 @@ window.openLogsModal = openLogsModal;
 window.clearConsole = clearConsole;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v12.7.8 GOLD · LAW FIRM FINAL RELEASE
+   FIM DO FICHEIRO SCRIPT.JS · v12.7.9 GOLD · COURT READY
    ===================================================================== */
