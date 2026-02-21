@@ -1,10 +1,10 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.6 · SMOKING GUN · CSI
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.7.9 · COURT READY · GOLD
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
-   + v12.7.6: Suporte otimizado para impressão PDF (estilo jurídico)
+   + v12.7.9: Suporte otimizado para impressão PDF (estilo jurídico)
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -2225,7 +2225,7 @@ body.presentation-mode .conformity-seals {
 }
 
 /* ---------------------------------------------------------------------
-   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.7.6
+   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.7.9
    --------------------------------------------------------------------- */
 @media print {
     /* Ocultar todos os elementos da interface */
@@ -2312,10 +2312,16 @@ body.presentation-mode .conformity-seals {
     }
 
     /* Garantir que o texto não seja cortado na impressão */
-    .console-output, .verdict-desc, .quantum-breakdown {
+    .console-output, 
+    .verdict-desc, 
+    .quantum-breakdown,
+    .kpi-card p,
+    .stat-card p,
+    .module-card .kpi-card p {
         overflow: visible !important;
         white-space: normal !important;
         word-wrap: break-word !important;
+        text-overflow: clip !important;
     }
     
     /* Configuração da página A4 */
