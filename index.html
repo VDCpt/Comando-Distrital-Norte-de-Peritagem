@@ -364,6 +364,23 @@
                     </div>
                 </div>
 
+                <!-- NOVOS ALERTAS DE DUPLO EIXO (TWO-AXIS DISCREPANCY) -->
+                <div class="dashboard-fixed" id="twoAxisAlerts">
+                    <!-- EIXO DE VENDAS (REVENUE GAP) -->
+                    <div class="stat-card warning" id="revenueGapCard" style="display: none;">
+                        <h4><i class="fas fa-chart-line"></i> <span id="revenueGapTitle">OMISSÃO DE FATURAMENTO</span></h4>
+                        <p id="revenueGapValue">0,00 €</p>
+                        <span class="stat-desc" id="revenueGapDesc">SAF-T Bruto vs Ganhos App</span>
+                    </div>
+
+                    <!-- EIXO DE CUSTOS (EXPENSE GAP) -->
+                    <div class="stat-card alert" id="expenseGapCard" style="display: none;">
+                        <h4><i class="fas fa-percentage"></i> <span id="expenseGapTitle">OMISSÃO DE CUSTOS/IVA</span></h4>
+                        <p id="expenseGapValue">0,00 €</p>
+                        <span class="stat-desc" id="expenseGapDesc">Comissões Retidas (BTOR) vs Faturadas (BTF)</span>
+                    </div>
+                </div>
+
                 <!-- QUANTUM BOX - CÁLCULO TRIBUTÁRIO PERICIAL -->
                 <div id="quantumBox" class="quantum-box" style="display: none;">
                     <h4 id="quantumTitle"><i class="fas fa-exclamation-triangle"></i> CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA</h4>
@@ -382,8 +399,8 @@
                     <div id="verdictLegal" class="verdict-legal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px dashed var(--border-color); padding-top: 0.5rem;"></div>
                 </div>
 
-                <!-- ALERTA BIG DATA - SMOKING GUN -->
-                <div id="bigDataAlert" class="bigdata-alert smoking-gun">
+                <!-- ALERTA BIG DATA - SMOKING GUN (DEPRECATED, MANTIDO POR COMPATIBILIDADE) -->
+                <div id="bigDataAlert" class="bigdata-alert smoking-gun" style="display: none;">
                     <i class="fas fa-radiation"></i>
                     <div>
                         <h4 id="alertCriticalTitle">SMOKING GUN · DIVERGÊNCIA CRÍTICA</h4>
@@ -393,7 +410,7 @@
                     </div>
                 </div>
 
-                <!-- DASHBOARD FIXED -->
+                <!-- DASHBOARD FIXED (ALERTS EXISTENTES) -->
                 <div class="dashboard-fixed" id="dashboardAlerts">
                     <div class="stat-card">
                         <h4 id="cardNet"><i class="fas fa-coins"></i> VALOR LÍQUIDO RECONSTRUÍDO</h4>
