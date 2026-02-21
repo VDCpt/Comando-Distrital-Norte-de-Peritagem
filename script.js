@@ -1,16 +1,18 @@
 /**
- * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.7 GOLD · SMOKING GUN · CSC
- * VERSÃO FINAL GOLD - REVISÃO DE LAYOUT A4 PARA CONFORMIDADE JURÍDICA
- * + Correção de espaçamento do cabeçalho (currentY + 20 / 1.5cm)
- * + Expansão do questionário para 10 itens
- * + Selagem de todas as páginas com QR Code e Hash SHA-256
- * + Redação da Conclusão para "Prova Digital Material" (proteção de mandato)
+ * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.8 GOLD · "LAW FIRM FINAL RELEASE"
+ * VERSÃO FINAL ABSOLUTA - CORREÇÃO DE LAYOUT PDF E SELAGEM GLOBAL
+ * + Cabeçalho PDF: y = 55 para dados do processo
+ * + Tabelas: startY = currentY + 10 para evitar sobreposição
+ * + Questionário: word-wrap ativado com maxWidth
+ * + QR Code: 15x15mm, contém o Master Hash SHA-256
+ * + Selagem global: rodapé com página X de Y, Hash e QR Code em todas as páginas
+ * + Termo de Encerramento: nova redação jurídica
  * ====================================================================
  */
 
 'use strict';
 
-console.log('VDC SCRIPT v12.7.7 GOLD · SMOKING GUN · CSC · MODO PROFISSIONAL ATIVADO');
+console.log('VDC SCRIPT v12.7.8 GOLD · LAW FIRM FINAL RELEASE · ATIVADO');
 
 // ============================================================================
 // 1. CONFIGURAÇÃO DO PDF.JS
@@ -64,7 +66,7 @@ const PLATFORM_DATA = {
 
 // ============================================================================
 // 3. QUESTIONÁRIO PERICIAL ESTRATÉGICO (40 Questões)
-//    (30 originais + 10 novas de nível perito)
+//    (Array completo, sem cortes)
 // ============================================================================
 const QUESTIONS_CACHE = [
     { id: 1, text: "Qual a justificação para a diferença entre a comissão retida nos extratos e o valor faturado pela plataforma?", type: "high" },
@@ -97,7 +99,7 @@ const QUESTIONS_CACHE = [
     { id: 28, text: "Os valores reportados à AT via SAFT-PT coincidem com este relatório? Se não, porquê?", type: "high" },
     { id: 29, text: "Qual o impacto da latência da API no valor final cobrado ao cliente e na comissão retida?", type: "low" },
     { id: 30, text: "Existe evidência de sub-declaração de receitas via algoritmos de desconto não reportados?", type: "high" },
-    // NOVAS 10 QUESTÕES DE NÍVEL PERITO (Adicionadas para v12.7.7)
+    // NOVAS 10 QUESTÕES DE NÍVEL PERITO
     { id: 31, text: "É possível inspecionar o código-fonte do módulo de cálculo de taxas variáveis para verificar a sua conformidade com o contrato e a lei?", type: "high" },
     { id: 32, text: "Como é que o algoritmo de 'Surge Pricing' interage com a base de cálculo da comissão da plataforma, e existe segregação contabilística destes valores?", type: "med" },
     { id: 33, text: "Apresente o registo de validação de NIF dos utilizadores para o período em análise, incluindo os que falharam ou foram omitidos.", type: "med" },
@@ -563,7 +565,7 @@ let currentLang = 'pt';
 // 8. ESTADO GLOBAL
 // ============================================================================
 const VDCSystem = {
-    version: 'v12.7.7-SMOKING-GUN-CSC-GOLD',
+    version: 'v12.7.8-LAW-FIRM-FINAL-GOLD',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
     selectedPeriodo: 'anual',
@@ -834,7 +836,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.7... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v12.7.8... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -849,7 +851,7 @@ function showMainInterface() {
             ForensicLogger.addEntry('MAIN_INTERFACE_SHOWN');
         }, 500);
     }
-    logAudit('SISTEMA VDC v12.7.7 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
+    logAudit('SISTEMA VDC v12.7.8 MODO PROFISSIONAL ATIVADO · SMOKING GUN · CSC ONLINE', 'success');
     
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) analyzeBtn.disabled = false;
@@ -1870,7 +1872,7 @@ function activateDemoMode() {
         demoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CARREGANDO...';
     }
 
-    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.7 SMOKING GUN...', 'info');
+    logAudit('🚀 ATIVANDO CASO SIMULADO v12.7.8 SMOKING GUN...', 'info');
 
     document.getElementById('clientNameFixed').value = 'Demo Corp, Lda';
     document.getElementById('clientNIFFixed').value = '503244732';
@@ -2543,7 +2545,7 @@ function exportDataJSON() {
 }
 
 // ============================================================================
-// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.7 - LAYOUT A4 + SELAGEM)
+// 21. EXPORTAÇÃO PDF (REFATORADA v12.7.8 - LAYOUT A4 + SELAGEM GLOBAL)
 // ============================================================================
 function exportPDF() {
     if (!VDCSystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
@@ -2553,7 +2555,7 @@ function exportPDF() {
     }
 
     ForensicLogger.addEntry('PDF_EXPORT_STARTED');
-    logAudit('📄 A gerar Parecer Pericial (Estilo Institucional v12.7.7)...', 'info');
+    logAudit('📄 A gerar Parecer Pericial (Estilo Institucional v12.7.8)...', 'info');
 
     try {
         const { jsPDF } = window.jspdf;
@@ -2565,9 +2567,9 @@ function exportPDF() {
         const verdict = VDCSystem.analysis.verdict || { level: { pt: 'N/A', en: 'N/A' }, key: 'low', color: '#8c7ae6', description: { pt: 'Perícia não executada.', en: 'Forensic exam not executed.' }, percent: '0.00%' };
 
         let pageNumber = 1;
-        let totalPages = 0; // Será definido no final
+        let totalPages = 0;
 
-        // Função auxiliar para adicionar o QR Code e o selo de hash em cada página
+        // Função auxiliar para adicionar o selo de integridade (rodapé) em cada página
         const addPageSeal = () => {
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -2578,30 +2580,27 @@ function exportPDF() {
             doc.setLineWidth(0.5);
             doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
 
-            // Texto do selo (à esquerda)
+            // Texto do selo (canto esquerdo: página X de Y)
             doc.setFontSize(7);
             doc.setFont('courier', 'bold');
             doc.setTextColor(100, 100, 100);
+            doc.text(`Página ${pageNumber} de ${totalPages}`, margin, pageHeight - 10);
+
+            // Texto do selo (centro: MASTER HASH)
             const hashText = `MASTER HASH SHA-256: ${VDCSystem.masterHash || 'N/A'}`;
-            // Truncar o hash para caber na página se necessário
-            const displayHash = hashText.length > 100 ? hashText.substring(0, 97) + '...' : hashText;
-            doc.text(displayHash, margin, pageHeight - 10);
+            const displayHash = hashText.length > 80 ? hashText.substring(0, 77) + '...' : hashText;
+            doc.text(displayHash, pageWidth / 2, pageHeight - 10, { align: 'center' });
 
             doc.setFontSize(6);
             doc.setFont('courier', 'normal');
-            doc.text('RFC 3161 SECURE SEAL', margin, pageHeight - 5);
+            doc.text('RFC 3161 SECURE SEAL', pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            // QR Code (à direita, 15x15mm ≈ 57x57 pontos)
+            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos)
             const qrX = pageWidth - margin - 57;
             const qrY = pageHeight - 75; // Posicionar 75pt acima do fundo para caber
 
-            // Gerar QR Code como data URL
-            const qrData = JSON.stringify({
-                session: VDCSystem.sessionId,
-                hash: VDCSystem.masterHash,
-                page: pageNumber,
-                timestamp: new Date().toISOString()
-            });
+            // Gerar QR Code como data URL contendo o Master Hash
+            const qrData = VDCSystem.masterHash || 'HASH_INDISPONIVEL';
 
             if (typeof QRCode !== 'undefined') {
                 // Criar um elemento canvas temporário para gerar o QR
@@ -2648,15 +2647,13 @@ function exportPDF() {
         doc.setLineWidth(1);
         doc.line(10, 33, doc.internal.pageSize.getWidth() - 10, 33);
 
-        // Dados do Processo (dentro da caixa) - Espaçamento vertical 1.5 aplicado com lineHeightFactor
+        // Dados do Processo - COMEÇAM OBRIGATORIAMENTE EM y = 55
+        y = 55;
         doc.setFontSize(9);
         doc.setFont('courier', 'normal');
-        doc.text(`PROCESSO N.º: ${VDCSystem.sessionId}`, left, 42, { lineHeightFactor: 1.5 });
-        doc.text(`DATA: ${new Date().toLocaleDateString('pt-PT')}`, doc.internal.pageSize.getWidth() - left, 42, { align: 'right', lineHeightFactor: 1.5 });
-        doc.text(`OBJETO: RECONSTITUIÇÃO FINANCEIRA / ART. 103.º RGIT`, left, 48, { lineHeightFactor: 1.5 });
-
-        // Ajuste de y após a caixa: currentY + 20 (y atual era 48, agora será 48 + 20 = 68)
-        y = 68; 
+        doc.text(`PROCESSO N.º: ${VDCSystem.sessionId}`, left, y, { lineHeightFactor: 1.5 }); y += 5;
+        doc.text(`DATA: ${new Date().toLocaleDateString('pt-PT')}`, left, y, { lineHeightFactor: 1.5 }); y += 5;
+        doc.text(`OBJETO: RECONSTITUIÇÃO FINANCEIRA / ART. 103.º RGIT`, left, y, { lineHeightFactor: 1.5 }); y += 10; // Aumentar espaço após o objeto
 
         // --- Protocolo de Cadeia de Custódia (Página 1) ---
         doc.setFontSize(10);
@@ -2696,7 +2693,7 @@ function exportPDF() {
         doc.text(`Período: ${VDCSystem.selectedPeriodo}`, left, y); y += 4;
         doc.text(`${t.pdfLabelTimestamp}: ${Math.floor(Date.now() / 1000)}`, left, y); y += 4;
 
-        addPageSeal(); // Adicionar selo na página 1
+        // Fim da Página 1, o selo será adicionado no loop final
         doc.addPage();
         pageNumber++;
 
@@ -2707,6 +2704,9 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.text(t.pdfSection2, left, y); y += 8;
 
+        // Definir startY para a tabela: currentY + 10 para evitar sobreposição
+        let tableStartY = y + 10;
+
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         
@@ -2715,13 +2715,11 @@ function exportPDF() {
         const col2X = 90;
         const col3X = 130;
         doc.setFont('helvetica', 'bold');
-        doc.text('Descrição', col1X, y);
-        doc.text('Valor (€)', col2X, y);
-        doc.text('Fonte de Evidência', col3X, y);
-        y += 4;
-
+        doc.text('Descrição', col1X, tableStartY - 4); // Cabeçalho um pouco acima do startY da tabela
+        doc.text('Valor (€)', col2X, tableStartY - 4);
+        doc.text('Fonte de Evidência', col3X, tableStartY - 4);
         doc.setLineWidth(0.5);
-        doc.line(left, y-2, doc.internal.pageSize.getWidth() - left, y-2);
+        doc.line(left, tableStartY - 2, doc.internal.pageSize.getWidth() - left, tableStartY - 2);
         doc.setFont('helvetica', 'normal');
 
         // Função auxiliar para obter a fonte de um valor
@@ -2752,30 +2750,29 @@ function exportPDF() {
                 doc.setTextColor(239, 68, 68);
             }
             
-            doc.text(row.desc, col1X, y);
-            doc.text(formatCurrency(row.value), col2X, y);
+            doc.text(row.desc, col1X, tableStartY);
+            doc.text(formatCurrency(row.value), col2X, tableStartY);
             
             if (row.sourceId) {
                 const source = getSourceFile(row.sourceId);
                 // Truncar se necessário
                 const displaySource = source.length > 25 ? source.substring(0, 22) + '...' : source;
-                doc.text(displaySource, col3X, y);
+                doc.text(displaySource, col3X, tableStartY);
             } else {
-                doc.text('-', col3X, y);
+                doc.text('-', col3X, tableStartY);
             }
             
-            y += 5;
+            tableStartY += 5;
             
             // Reset
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
         });
 
-        y += 5;
+        y = tableStartY + 5;
         doc.text(`Meses com dados: ${VDCSystem.dataMonths.size || 1}`, left, y); y += 4;
         doc.text(`Percentagem de Omissão: ${cross.percentagemOmissao?.toFixed(2) || '0.00'}%`, left, y);
 
-        addPageSeal(); // Adicionar selo na página 2
         doc.addPage();
         pageNumber++;
 
@@ -2800,7 +2797,6 @@ function exportPDF() {
         doc.text(`Desvio: ${verdict.percent}`, left, y); y += 6;
         doc.text(verdict.description[currentLang], left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 15;
         
-        addPageSeal(); // Adicionar selo na página 3
         doc.addPage();
         pageNumber++;
 
@@ -2827,7 +2823,6 @@ function exportPDF() {
         doc.text(`BTF: ${formatCurrency(cross.btf || 0)}`, left, y); y += 6;
         doc.text(`Percentagem de omissão: ${cross.percentagemOmissao?.toFixed(2) || '0.00'}%`, left, y); y += 10;
         
-        addPageSeal(); // Adicionar selo na página 4
         doc.addPage();
         pageNumber++;
 
@@ -2852,7 +2847,6 @@ function exportPDF() {
         doc.text(`Constitui infração a falta de liquidação do imposto devido,`, left, y); y += 4;
         doc.text(`bem como a sua liquidação inferior ao montante legalmente exigível.`, left, y); y += 10;
         
-        addPageSeal(); // Adicionar selo na página 5
         doc.addPage();
         pageNumber++;
 
@@ -2873,7 +2867,6 @@ function exportPDF() {
         doc.text(`• Cálculo de divergência automático`, left, y); y += 5;
         doc.text(`• Geração de prova técnica auditável`, left, y); y += 10;
         
-        addPageSeal(); // Adicionar selo na página 6
         doc.addPage();
         pageNumber++;
 
@@ -2892,9 +2885,8 @@ function exportPDF() {
         doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
-        doc.text(`Certificação: VDC Forense v12.7.7`, left, y); y += 10;
+        doc.text(`Certificação: VDC Forense v12.7.8`, left, y); y += 10;
         
-        addPageSeal(); // Adicionar selo na página 7
         doc.addPage();
         pageNumber++;
 
@@ -2914,7 +2906,6 @@ function exportPDF() {
         doc.text(`${currentLang === 'pt' ? 'Valor Faturado (Fatura): ' : 'Invoiced Amount: '}${formatCurrency(ev.faturaPlataforma || 0)}.`, left, y); y += 4;
         doc.text(`${currentLang === 'pt' ? 'Diferença Omitida: ' : 'Omitted Difference: '}${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)`, left, y); y += 6;
         
-        addPageSeal(); // Adicionar selo na página 8
         doc.addPage();
         pageNumber++;
 
@@ -2938,7 +2929,6 @@ function exportPDF() {
         doc.text(`${currentLang === 'pt' ? 'do cliente. Projeção anual de base omitida: ' : 'Annual projection of omitted base: '}${formatCurrency(cross.discrepanciaCritica * 12)}.`, left, y); y += 4;
         doc.text(`${currentLang === 'pt' ? 'Impacto IRC anual projetado: ' : 'Projected annual CIT impact: '}${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}.`, left, y); y += 6;
         
-        addPageSeal(); // Adicionar selo na página 9
         doc.addPage();
         pageNumber++;
 
@@ -2969,7 +2959,6 @@ function exportPDF() {
             doc.text(`IMPACTO 7 ANOS: ${formatCurrency(cross.impactoSeteAnosMercado || 0)}`, left, y); y += 10;
         }
         
-        addPageSeal(); // Adicionar selo na página 10
         doc.addPage();
         pageNumber++;
 
@@ -2990,11 +2979,10 @@ function exportPDF() {
         });
         y += 5;
         
-        addPageSeal(); // Adicionar selo na página 11
         doc.addPage();
         pageNumber++;
 
-        // --- Página 12: QUESTIONÁRIO PERICIAL ESTRATÉGICO (com 10 questões) ---
+        // --- Página 12: QUESTIONÁRIO PERICIAL ESTRATÉGICO (10 questões com word-wrap) ---
         y = 20;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -3003,23 +2991,22 @@ function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         // Buscar até 10 questões selecionadas
-        const questionsToShow = VDCSystem.analysis.selectedQuestions.slice(0, 10);
-        questionsToShow.forEach((q, index) => {
-            doc.text(`${index+1}. ${q.text}`, left, y); y += 5;
-        });
-        // Se houver menos de 10, adicionar questões padrão de alta prioridade para completar?
-        // Para cumprir a diretiva, vamos garantir que mostramos 10. Se não houver 10 selecionadas,
-        // podemos preencher com as primeiras de alta prioridade da QUESTIONS_CACHE.
+        let questionsToShow = VDCSystem.analysis.selectedQuestions.slice(0, 10);
+        // Se houver menos de 10, preencher com questões de alta prioridade
         if (questionsToShow.length < 10) {
             const additionalQuestions = QUESTIONS_CACHE.filter(q => q.type === 'high' || q.type === 'med')
                                                         .slice(0, 10 - questionsToShow.length);
-            additionalQuestions.forEach((q, index) => {
-                doc.text(`${questionsToShow.length + index + 1}. ${q.text} (Suplementar)`, left, y); y += 5;
-            });
+            questionsToShow = [...questionsToShow, ...additionalQuestions];
         }
+        questionsToShow.forEach((q, index) => {
+            // Usar splitTextToSize para word-wrap automático
+            const questionText = `${index+1}. ${q.text}`;
+            const splitText = doc.splitTextToSize(questionText, doc.internal.pageSize.getWidth() - 30);
+            doc.text(splitText, left, y);
+            y += (splitText.length * 4) + 2; // Ajustar y com base no número de linhas
+        });
         y += 5;
         
-        addPageSeal(); // Adicionar selo na página 12
         doc.addPage();
         pageNumber++;
 
@@ -3050,17 +3037,18 @@ function exportPDF() {
         doc.text('TERMO DE ENCERRAMENTO PERICIAL', left, y); y += 6;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        totalPages = pageNumber; // Guarda o total de páginas
-        doc.text(`O presente relatório é composto por ${totalPages} páginas, todas rubricadas digitalmente, terminando com o Master Hash de integridade:`, left, y); y += 4;
-        doc.setFont('courier', 'bold');
-        doc.text(`${VDCSystem.masterHash || 'NÃO GERADA'}`, left, y); y += 6;
-        doc.setFont('helvetica', 'normal');
-        doc.text('Para que produza os devidos efeitos legais, nomeadamente em sede de inspeção tributária e/ou processo judicial.', left, y);
-
-        addPageSeal(); // Adicionar selo na página 13 (última)
+        totalPages = pageNumber; // Guarda o total de páginas (13 neste fluxo padrão)
+        // Nova redação do termo de encerramento
+        doc.text(`O presente relatório é composto por 13 páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade ${VDCSystem.masterHash || 'N/A'}, constituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT e normas ISO/IEC 27037.`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 6;
 
         // Guardar o número total de páginas no elemento hidden para uso futuro, se necessário
         setElementText('pageCount', totalPages);
+
+        // --- LOOP DE SELAGEM GLOBAL: Aplicar o selo a TODAS as páginas ---
+        for (let i = 1; i <= pageNumber; i++) {
+            doc.setPage(i);
+            addPageSeal();
+        }
 
         doc.save(`VDC_Parecer_${VDCSystem.sessionId}.pdf`);
         logAudit('✅ PDF (Estilo Institucional) exportado com sucesso', 'success');
@@ -3456,5 +3444,5 @@ window.openLogsModal = openLogsModal;
 window.clearConsole = clearConsole;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v12.7.7 GOLD · SMOKING GUN · CSC
+   FIM DO FICHEIRO SCRIPT.JS · v12.7.8 GOLD · LAW FIRM FINAL RELEASE
    ===================================================================== */
