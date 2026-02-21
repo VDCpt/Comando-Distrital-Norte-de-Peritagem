@@ -1,11 +1,11 @@
 /**
  * VDC SISTEMA DE PERITAGEM FORENSE · v12.7.9 GOLD · "COURT READY"
  * VERSÃO FINAL ABSOLUTA - CORREÇÃO CIRÚRGICA DO PDF
- * + Tabela de Análise: startY = currentY + 15
- * + QR Code: reduzido para 15x15mm e contém o Master Hash SHA-256
- * + Nomenclatura: "SAF-T (Data Proxy: Fleet Extract)" e "Ganhos da Empresa (Fleet/Ledger)"
- * + Inserção da Nota Metodológica Forense e Parecer Técnico Final
- * + CSS: overflow: visible no @media print para evitar cortes de texto
+ * + QR Code reduzido para 15x15mm (57x57 pontos)
+ * + Tabela Página 2: startY = currentY + 18
+ * + Eliminação de duplicidade do Parecer Técnico na Página 13
+ * + Nomenclatura atualizada: SAF-T (Data Proxy) e Ganhos da Empresa (Fleet/Ledger)
+ * + Nota Metodológica Forense na Página 1
  * ====================================================================
  */
 
@@ -2600,7 +2600,7 @@ function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.text('RFC 3161 SECURE SEAL', pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos) - AGORA COM O MASTER HASH
+            // QR Code (canto direito, 15x15mm ≈ 57x57 pontos) - REDUZIDO
             const qrX = pageWidth - margin - 57;
             const qrY = pageHeight - 75; // Posicionar 75pt acima do fundo para caber
 
@@ -2622,7 +2622,7 @@ function exportPDF() {
                 const qrCanvas = qrContainer.querySelector('canvas');
                 if (qrCanvas) {
                     const qrDataUrl = qrCanvas.toDataURL('image/png');
-                    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, 57, 57);
+                    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, 57, 57); // 57 pontos = 15mm
                 } else {
                     // Fallback: não adicionar QR se não for possível gerar
                     console.warn('Não foi possível gerar canvas do QR Code para a página.');
@@ -2718,8 +2718,8 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.text(t.pdfSection2, left, y); y += 8;
 
-        // Definir startY para a tabela: currentY + 15 para evitar sobreposição
-        let tableStartY = y + 15;
+        // Definir startY para a tabela: currentY + 18 para evitar sobreposição
+        let tableStartY = y + 18;
 
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
@@ -3024,7 +3024,7 @@ function exportPDF() {
         doc.addPage();
         pageNumber++;
 
-        // --- Página 13: CONCLUSÃO (com nova redação e Parecer Técnico Final) ---
+        // --- Página 13: CONCLUSÃO (com nova redação e Parecer Técnico Final - APENAS UMA VEZ) ---
         y = 20;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -3040,7 +3040,7 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.text(`${currentLang === 'pt' ? 'Indícios de infração ao Artigo 108.º do Código do IVA.' : 'Evidence of violation of Article 108 of the VAT Code.'}`, left, y); y += 6;
 
-        // --- Inserir o PARECER TÉCNICO FINAL ---
+        // --- Inserir o PARECER TÉCNICO FINAL (UMA ÚNICA VEZ) ---
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
