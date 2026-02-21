@@ -5,6 +5,7 @@
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
    + v12.7.9: Suporte otimizado para impressão PDF (estilo jurídico)
+   + Two-Axis Discrepancy Analysis: Estilos para Revenue Gap e Expense Gap
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
@@ -1182,6 +1183,28 @@ body {
     background: rgba(245, 158, 11, 0.05);
 }
 
+/* Estilos específicos para os alertas de Two-Axis Discrepancy */
+#revenueGapCard,
+#expenseGapCard {
+    transition: all 0.3s ease;
+}
+
+#revenueGapCard:hover,
+#expenseGapCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-fbi-yellow);
+}
+
+#revenueGapCard {
+    border-left-color: var(--warn-secondary);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+#expenseGapCard {
+    border-left-color: var(--warn-primary);
+    background: rgba(239, 68, 68, 0.05);
+}
+
 .kpi-section {
     background: rgba(0,0,0,0.2);
     padding: 1rem;
@@ -1600,11 +1623,11 @@ body {
 #qrcodeContainer canvas,
 #qrcodeContainer img {
     background: white;
-    padding: 4px; /* Reduzido de 8px para 4px */
+    padding: 4px;
     border-radius: 4px;
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
-    width: 75px !important; /* Aproximadamente metade de 150px */
-    height: 75px !important; /* Aproximadamente metade de 150px */
+    width: 75px !important;
+    height: 75px !important;
 }
 
 .copyright {
