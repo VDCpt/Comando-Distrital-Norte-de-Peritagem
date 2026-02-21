@@ -1596,12 +1596,15 @@ body {
     justify-content: center;
 }
 
+/* QR Code reduzido para metade do tamanho original */
 #qrcodeContainer canvas,
 #qrcodeContainer img {
     background: white;
-    padding: 8px;
+    padding: 4px; /* Reduzido de 8px para 4px */
     border-radius: 4px;
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+    width: 75px !important; /* Aproximadamente metade de 150px */
+    height: 75px !important; /* Aproximadamente metade de 150px */
 }
 
 .copyright {
