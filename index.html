@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VDC Sistema de Peritagem Forense - Módulo de Análise Financeira e Fiscal v12.8.2 · COURT READY · GOLD">
+    <meta name="description" content="VDC Sistema de Peritagem Forense - Módulo de Análise Financeira e Fiscal v12.8.3 · COURT READY · GOLD · PROVA DIGITAL MATERIAL">
     <meta name="author" content="VDC Systems International">
-    <title>VDC FORENSE · v12.8.2 · COURT READY · GOLD · SMOKING GUN</title>
+    <title>VDC FORENSE · v12.8.3 · COURT READY · GOLD · SMOKING GUN · CADEIA DE CUSTÓDIA</title>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
@@ -51,7 +51,7 @@
             <div class="splash-right">
                 <div class="metadata-panel">
                     <p><strong>Módulo:</strong> Investigação Digital · ISO/IEC 27037</p>
-                    <p><strong>Big Data Accumulator:</strong> v12.8.2 · Smoking Gun</p>
+                    <p><strong>Big Data Accumulator:</strong> v12.8.3 · Smoking Gun</p>
                     <p><strong>CSC:</strong> Cadeia de Custódia Ativa</p>
                 </div>
                 
@@ -73,7 +73,7 @@
                 </div>
                 
                 <p class="declaration-text">Ao clicar em "INICIAR", declara estar autorizado a realizar a perícia.</p>
-                <p class="version-footer">VDC © 2024/2026 v12.8.2 · SMOKING GUN · COURT READY · GOLD · BIG DATA</p>
+                <p class="version-footer">VDC © 2024/2026 v12.8.3 · SMOKING GUN · COURT READY · GOLD · BIG DATA</p>
             </div>
         </div>
     </div>
@@ -102,7 +102,7 @@
                     <div>
                         <h1>
                             VDC FORENSE 
-                            <span class="version-badge">v12.8.2</span>
+                            <span class="version-badge">v12.8.3</span>
                         </h1>
                         <p class="subtitle" id="headerSubtitle">ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA</p>
                     </div>
@@ -386,7 +386,7 @@
                     <h4 id="quantumTitle"><i class="fas fa-exclamation-triangle"></i> CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA</h4>
                     <div id="quantumValue" class="quantum-value">0,00 €</div>
                     <p id="quantumFormula" class="quantum-formula">Base Omitida vs Faturada</p>
-                    <p id="quantumNote" class="quantum-formula">IVA em falta (23%): 0,00 €</p>
+                    <p id="quantumNote" class="quantum-formula">IVA em falta (23%): 0,00 € | IVA (6%): 0,00 €</p>
                     <div id="quantumBreakdown" class="quantum-breakdown"></div>
                 </div>
 
@@ -399,7 +399,7 @@
                     <div id="verdictLegal" class="verdict-legal" style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px dashed var(--border-color); padding-top: 0.5rem;"></div>
                 </div>
 
-                <!-- ALERTA BIG DATA - SMOKING GUN (DEPRECATED, MANTIDO POR COMPATIBILIDADE) -->
+                <!-- ALERTA BIG DATA - SMOKING GUN -->
                 <div id="bigDataAlert" class="bigdata-alert smoking-gun" style="display: none;">
                     <i class="fas fa-radiation"></i>
                     <div>
@@ -423,16 +423,16 @@
                         <span class="stat-desc">Taxa de serviço plataforma</span>
                     </div>
                     <div class="stat-card success" id="jurosCard" style="display: none;">
-                        <h4 id="cardJuros"><i class="fas fa-chart-line"></i> FOSSO FISCAL</h4>
+                        <h4 id="cardJuros"><i class="fas fa-chart-line"></i> DISCREPÂNCIA COMISSÕES</h4>
                         <p id="statJuros">0,00 €</p>
-                        <span class="stat-desc">Discrepância calculada (Big Data)</span>
+                        <span class="stat-desc">Comissões Extrato vs Fatura</span>
                     </div>
                     
                     <!-- NOVAS BOXES DE ALERTA -->
                     <div class="stat-card alert" id="discrepancy5Card" style="display: none;">
-                        <h4><i class="fas fa-exclamation-triangle"></i> DISCREPÂNCIA 5% IMT/AMT</h4>
+                        <h4><i class="fas fa-exclamation-triangle"></i> DISCREPÂNCIA SAF-T vs DAC7</h4>
                         <p id="discrepancy5Value">0,00 €</p>
-                        <span class="stat-desc">Valores omitidos não pagos</span>
+                        <span class="stat-desc">Valores omitidos no reporte DAC7</span>
                     </div>
                     
                     <div class="stat-card alert" id="agravamentoBrutoCard" style="display: none;">
@@ -483,11 +483,19 @@
                     </div>
                 </div>
 
-                <!-- GRÁFICO -->
+                <!-- GRÁFICO DE DISPERSÃO (GAP ANALYSIS) -->
                 <div class="chart-section">
-                    <h3 id="chartTitle"><i class="fas fa-chart-bar"></i> REPRESENTAÇÃO GRÁFICA DA ANÁLISE</h3>
+                    <h3 id="chartTitle"><i class="fas fa-chart-line"></i> ANÁLISE DE DISCREPÂNCIAS · GAP FORENSE</h3>
                     <div class="chart-container">
                         <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- SEGUNDO GRÁFICO (DISCREPÂNCIA SAF-T vs DAC7) -->
+                <div class="chart-section">
+                    <h3 id="chartTitle2"><i class="fas fa-chart-bar"></i> DISCREPÂNCIA SAF-T vs DAC7</h3>
+                    <div class="chart-container">
+                        <canvas id="discrepancyChart"></canvas>
                     </div>
                 </div>
 
@@ -507,7 +515,7 @@
                             <span id="masterHashValue">A aguardar dados...</span>
                         </div>
                         <div id="qrcodeContainer" style="margin-top: 10px; display: flex; justify-content: center;"></div>
-                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8.2 | COURT READY | GOLD | SMOKING GUN</p>
+                        <p class="copyright">VDC Systems International © 2024/2026 | Módulo de Peritagem Forense v12.8.3 | COURT READY | GOLD | SMOKING GUN</p>
                         <span id="pageCount" style="display: none;"></span>
                     </div>
                 </footer>
@@ -656,6 +664,33 @@
             </div>
             <div class="modal-footer">
                 <button id="closeLogsBtn" class="btn-primary"><i class="fas fa-check"></i> <span id="closeLogsBtnText">FECHAR</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE VERIFICAÇÃO DE HASH -->
+    <div id="hashVerificationModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-shield-alt"></i> <span id="hashModalTitle">VERIFICAÇÃO DE INTEGRIDADE · CADEIA DE CUSTÓDIA</span></h3>
+                <button id="closeHashModalBtn" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="hashVerificationContent" style="font-family: var(--font-mono); font-size: 0.8rem; background: #0f172a; padding: 1.5rem; border-radius: var(--border-radius-sm); border: 1px solid var(--accent-primary);">
+                    <p><strong>MASTER HASH SHA-256:</strong></p>
+                    <p id="masterHashFull" style="word-break: break-all; color: var(--accent-primary); margin-bottom: 1.5rem;"></p>
+                    
+                    <p><strong>EVIDÊNCIAS PROCESSADAS:</strong></p>
+                    <div id="evidenceHashList" style="max-height: 300px; overflow-y: auto; margin-top: 0.5rem;"></div>
+                    
+                    <p style="margin-top: 1.5rem; color: var(--success-primary);"><i class="fas fa-check-circle"></i> A integridade dos documentos é garantida pela correspondência dos hashes SHA-256.</p>
+                    <p style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 0.5rem;">Qualquer alteração aos ficheiros originais resultaria numa hash divergente, invalidando a cadeia de custódia.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeHashBtn" class="btn-primary"><i class="fas fa-check"></i> <span id="closeHashBtnText">VALIDAR E FECHAR</span></button>
             </div>
         </div>
     </div>
