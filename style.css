@@ -1,11 +1,13 @@
 /* =====================================================================
-   VDC SISTEMA DE PERITAGEM FORENSE · v12.8.2 · COURT READY · GOLD
+   VDC SISTEMA DE PERITAGEM FORENSE · v12.8.3 · COURT READY · GOLD
    ESTÉTICA: PANORAMIC SPLASH + CRUZAMENTO LASER H+V + GLASSMORPHISM
    BIG DATA ACCUMULATOR · CORREÇÕES: ALERTAS INTERMITENTES, NOVAS BOXES
    ESTILO FBI/INTERPOL/CSI · QR CODE · PAGINAÇÃO PDF
    PORTUGUÊS DE PORTUGAL
-   + v12.8.2: Correção de parsing (ponto vs vírgula), QR Code funcional,
-     numeração de páginas (X de 7), espaçamento PDF, estrutura 7 páginas
+   + v12.8.3: Correção de hashes SHA-256 completos, QR Code com master hash,
+     duas discrepâncias (Comissão vs Fatura e SAF-T vs DAC7),
+     Decreto-Lei n.º 28/2019, diferenciação IVA 6% vs 23%,
+     gráficos de dispersão, cadeia de custódia com hashes completos
    + Two-Axis Discrepancy Analysis: Estilos para Revenue Gap e Expense Gap
    ===================================================================== */
 
@@ -1629,6 +1631,14 @@ body {
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
     width: 75px !important;
     height: 75px !important;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#qrcodeContainer canvas:hover,
+#qrcodeContainer img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px var(--accent-primary);
 }
 
 .copyright {
@@ -1937,6 +1947,47 @@ body {
 .modal-footer .btn-primary:hover {
     box-shadow: var(--shadow-glow-cyan);
     transform: translateY(-2px);
+}
+
+/* Estilos específicos para o Modal de Hash */
+#hashVerificationModal .modal-content {
+    max-width: 600px;
+}
+
+#hashVerificationContent {
+    font-family: var(--font-mono);
+    line-height: 1.6;
+}
+
+#masterHashFull {
+    font-size: 0.75rem;
+    word-break: break-all;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.evidence-hash-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.evidence-hash-filename {
+    color: var(--accent-primary);
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.evidence-hash-value {
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+    word-break: break-all;
+    font-family: var(--font-mono);
+    margin-top: 0.2rem;
 }
 
 /* ---------------------------------------------------------------------
@@ -2252,7 +2303,7 @@ body.presentation-mode .conformity-seals {
 }
 
 /* ---------------------------------------------------------------------
-   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.8.2
+   13. PRINT (PDF) - OTIMIZADO PARA ESTILO JURÍDICO v12.8.3
    --------------------------------------------------------------------- */
 @media print {
     /* Ocultar todos os elementos da interface */
@@ -2379,6 +2430,14 @@ body.presentation-mode .conformity-seals {
         clear: both !important;
         display: block !important;
         page-break-before: avoid !important;
+    }
+    
+    /* Estilo para hashes completos no PDF */
+    .full-hash-pdf {
+        font-family: 'Courier New', monospace;
+        font-size: 0.6rem;
+        word-break: break-all;
+        margin-bottom: 2px;
     }
     
     /* Configuração da página A4 */
